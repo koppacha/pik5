@@ -1,0 +1,87 @@
+
+version: "3"
+
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile
+    container_name: nginx
+    ports:
+      - ${WEB_PORT}:80
+      - "9900:9900"
+#    volumes:
+#      - type: volume
+#        source: php-fpm-socket
+#        target: /var/run/php-fpm
+#        volume:
+#          nocopy: true
+#      - type: bind
+#        source: ./laravel
+#        target: /var/www/laravel
+
+  laravel:
+    build:
+      context: .
+      dockerfile: ./laravel/Dockerfile
+      args:
+        - TZ=${TZ}
+    container_name: laravel
+    volumes:
+      - ./laravel:/var/www/laravel
+    links:
+      - mysql
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=mysql
+      - DB_DATABASE=${DB_NAME}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASS}
+      - TZ=${TZ}
+      - MAIL_HOST=${MAIL_HOST}
+      - MAIL_PORT=${MAIL_PORT}
+
+  mysql:
+    container_name: mysql
+    image: mysql:5.7
+    platform: linux/x86_64
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
+      - TZ=${TZ}
+    ports:
+      - ${DB_PORT}:3306
+
+  nuxt:
+    build:
+      context: .
+      dockerfile: ./nuxt/Dockerfile
+      args:
+        - TZ=${TZ}
+    container_name: nuxt
+    tty: true
+    volumes:
+      - ./nuxt:/var/www/nuxt
+    ports:
+      - "3000:3000"
+    links:
+      - nginx
+    depends_on:
+      - nginx
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    depends_on:
+      - mysql
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOSTS: mysql
+      PMA_USER: root
+      PMA_PASSWORD: root
+    ports:
+      - "6000:80"
