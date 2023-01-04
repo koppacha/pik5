@@ -19,18 +19,22 @@
         </q-card-actions>
       </q-card>
     </q-dialog>
-
-    {{ data }}
+    <ul>
+      <li v-for="item in items" :key="item.id">
+        {{ item.id }} {{ item.name }} {{ item.detail }}
+      </li>
+    </ul>
   </div>
 </template>
 
 <script setup>
  import { ref } from 'vue';
- import {useFetch} from "nuxt/app";
+ import { useFetch } from "nuxt/app";
 
  let id = 0;
- let confirm = ref(false);
 
+ // 変数名.value = ref(型定義)で同名のv-modelの値を取得できるようになる
+ let confirm = ref(false);
  const names = ref('');
  const details = ref('');
 
@@ -44,6 +48,6 @@
           }
         });
   }
-  const { data, refresh } = useFetch('/api/product');
+  const { data: items, refresh, error } = await useFetch('/api/product');
 
 </script>
