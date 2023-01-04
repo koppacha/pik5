@@ -21,10 +21,9 @@ class ProductController extends Controller
     public function index(): JsonResponse
     {
         $data = Product::all();
-        return response()->json([
-            "message" => "test",
-            "data" => $data
-        ]);
+        return response()->json(
+            $data
+        );
     }
 
     /**
