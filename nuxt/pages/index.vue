@@ -2,7 +2,8 @@
   <div>
     <!-- Remove this component to get started! -->
     <!--    <NuxtWelcome />-->
-    aaaa
+    仮リンク<br>
+    <NuxtLink to="/stage/101">こてしらべの洞窟</NuxtLink>
   </div>
 </template>
 
