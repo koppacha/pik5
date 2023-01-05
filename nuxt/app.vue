@@ -1,73 +1,42 @@
 <template>
-  <div>
     <!-- Remove this component to get started! -->
     <!--    <NuxtWelcome />-->
-    <q-btn label="投稿する" color="primary" @click="posts = true"></q-btn>
-    <q-dialog v-model="posts" persistent>
-      <q-card style="min-width: 500px">
-        <q-card-section>
-          <div class="text-h6">投稿フォーム</div>
-        </q-card-section>
+    <q-layout view="hHh lpR fFf">
 
-        <q-card-section class="q-pt-none">
-          名前<br>
-          <q-input dense v-model="names" autofocus @keyup.enter="prompt = false" />
-        </q-card-section>
+      <q-header elevated class="bg-primary text-white" height-hint="98">
+        <q-toolbar>
+          <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
 
-        <q-card-section class="q-pt-none">
-          内容<br>
-          <q-input dense v-model="details" autofocus @keyup.enter="prompt = false" />
-        </q-card-section>
+          <q-toolbar-title>
+            新ピクチャレ大会 ver.3.00 beta 1
+          </q-toolbar-title>
+        </q-toolbar>
 
-        <q-card-actions align="right" class="text-primary">
-          <q-btn flat label="キャンセル" v-close-popup />
-          <q-btn flat label="投稿する" v-close-popup @click="confirm = true" />
-        </q-card-actions>
-      <br>
-      </q-card>
-    </q-dialog>
-    <q-dialog v-model="confirm" persistent>
-      <q-card>
-        <q-card-section class="row items-center">
-          <span class="q-ml-sm">本当に送信していいですか？</span>
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="キャンセル" color="primary" v-close-popup></q-btn>
-          <q-btn flat label="送信" color="primary" v-close-popup @click="post();refresh()"></q-btn>
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
-    <ul>
-      <li v-for="item in items" :key="item.post_id">
-        {{ item.user_name }}
-      </li>
-    </ul>
-  </div>
+        <q-tabs align="center">
+          <q-route-tab to="/total/10" label="ピクミン" />
+          <q-route-tab to="/total/20" label="ピクミン2" />
+          <q-route-tab to="/total/30" label="ピクミン3" />
+          <q-route-tab to="/total/40" label="ピクミン4" />
+          <q-route-tab to="/total/80" label="期間限定" />
+          <q-route-tab to="/total/91" label="本編地下RTA" />
+        </q-tabs>
+      </q-header>
+
+      <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
+        <!-- drawer content -->
+      </q-drawer>
+
+      <q-page-container>
+        <router-view />
+      </q-page-container>
+
+    </q-layout>
 </template>
 
 <script setup>
  import { ref } from 'vue';
  import { useFetch } from "nuxt/app";
 
- let id = 0;
-
- // 変数名.value = ref(型定義)で同名のv-modelの値を取得できるようになる
- const confirm = ref(false);
- const posts = ref(false);
- const prompt = ref(false);
- const names = ref('');
- const details = ref('');
-
-  const post = await function (){
-    return useFetch('/api/record',
-        {
-          method: "POST",
-          body: {
-            name: names,
-            detail: details
-          }
-        });
-  }
-  const { data: items, refresh, error } = await useFetch('/api/record');
+ const toggleLeftDrawer = ref(false);
 
 </script>
