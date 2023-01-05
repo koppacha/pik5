@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Product;
+use App\Models\Record;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-class ProductController extends Controller
+class RecordController extends Controller
 {
     public function __invoke(): string
     {
@@ -20,7 +20,7 @@ class ProductController extends Controller
      */
     public function index(): JsonResponse
     {
-        $data = Product::all();
+        $data = Record::all();
         return response()->json(
             $data
         );
@@ -34,11 +34,11 @@ class ProductController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        $data = new Product;
+        $data = new Record;
 
         $data->fill([
-            'name' => $request['name'],
-            'detail' => $request['detail']
+            'user_name' => $request['user_name'],
+            'score' => $request['score']
         ]);
 
         $data->save();
@@ -52,8 +52,8 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return void
      */
     public function store(Request $request)
     {
@@ -63,10 +63,10 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Product  $product
+     * @param  \App\Models\Record  $product
      * @return \Illuminate\Http\Response
      */
-    public function show(Product $product)
+    public function show(Record $product)
     {
         //
     }
@@ -74,10 +74,10 @@ class ProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Product  $product
+     * @param  \App\Models\Record  $product
      * @return \Illuminate\Http\Response
      */
-    public function edit(Product $product)
+    public function edit(Record $product)
     {
         //
     }
@@ -85,11 +85,11 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Product  $product
+     * @param Request $request
+     * @param  \App\Models\Record  $product
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Product $product)
+    public function update(Request $request, Record $product)
     {
         //
     }
@@ -97,10 +97,10 @@ class ProductController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Product  $product
+     * @param  \App\Models\Record  $product
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Product $product)
+    public function destroy(Record $product)
     {
         //
     }

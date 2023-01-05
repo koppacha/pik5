@@ -38,8 +38,8 @@
       </q-card>
     </q-dialog>
     <ul>
-      <li v-for="item in items" :key="item.id">
-        {{ item.id }} {{ item.name }} {{ item.detail }}
+      <li v-for="item in items" :key="item.post_id">
+        {{ item.user_name }}
       </li>
     </ul>
   </div>
@@ -52,14 +52,14 @@
  let id = 0;
 
  // 変数名.value = ref(型定義)で同名のv-modelの値を取得できるようになる
- let confirm = ref(false);
- let posts = ref(false);
- let prompt = ref(false);
+ const confirm = ref(false);
+ const posts = ref(false);
+ const prompt = ref(false);
  const names = ref('');
  const details = ref('');
 
   const post = await function (){
-    return useFetch('/api/product',
+    return useFetch('/api/record',
         {
           method: "POST",
           body: {
@@ -68,6 +68,6 @@
           }
         });
   }
-  const { data: items, refresh, error } = await useFetch('/api/product');
+  const { data: items, refresh, error } = await useFetch('/api/record');
 
 </script>
