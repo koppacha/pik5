@@ -2,12 +2,30 @@
   <div>
     <!-- Remove this component to get started! -->
     <!--    <NuxtWelcome />-->
-    名前<br>
-    <q-input model-value="" v-model="names"/><br>
-    <br>
-    内容<br>
-    <q-input model-value="" v-model="details"/><br>
-    <q-btn label="Confirm" color="primary" @click="confirm = true"></q-btn>
+    <q-btn label="投稿する" color="primary" @click="posts = true"></q-btn>
+    <q-dialog v-model="posts" persistent>
+      <q-card style="min-width: 500px">
+        <q-card-section>
+          <div class="text-h6">投稿フォーム</div>
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          名前<br>
+          <q-input dense v-model="names" autofocus @keyup.enter="prompt = false" />
+        </q-card-section>
+
+        <q-card-section class="q-pt-none">
+          内容<br>
+          <q-input dense v-model="details" autofocus @keyup.enter="prompt = false" />
+        </q-card-section>
+
+        <q-card-actions align="right" class="text-primary">
+          <q-btn flat label="キャンセル" v-close-popup />
+          <q-btn flat label="投稿する" v-close-popup @click="confirm = true" />
+        </q-card-actions>
+      <br>
+      </q-card>
+    </q-dialog>
     <q-dialog v-model="confirm" persistent>
       <q-card>
         <q-card-section class="row items-center">
@@ -35,6 +53,8 @@
 
  // 変数名.value = ref(型定義)で同名のv-modelの値を取得できるようになる
  let confirm = ref(false);
+ let posts = ref(false);
+ let prompt = ref(false);
  const names = ref('');
  const details = ref('');
 

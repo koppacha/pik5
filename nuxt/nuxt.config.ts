@@ -59,5 +59,6 @@ export default defineNuxtConfig({
 
     cli: {
         bannerColor: 'yellow'
-    }
+    },
+
 })
