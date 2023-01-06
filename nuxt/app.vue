@@ -1,41 +1,98 @@
 <template>
-    <!-- Remove this component to get started! -->
-    <!--    <NuxtWelcome />-->
-    <q-layout view="hHh lpR fFf">
+  <v-app id="inspire">
+    <v-app-bar
+        class="px-3"
+        color="white"
+        flat
+        density="compact"
+        height="64"
+    >
+      <v-avatar
+          color="grey-darken-1"
+          size="32"
+      ></v-avatar>
 
-      <q-header elevated class="bg-primary text-white" height-hint="98">
-        <q-toolbar>
-          <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
+      <v-app-bar-title>
+        テスト
+      </v-app-bar-title>
 
-          <q-toolbar-title>
-            新ピクチャレ大会 ver.3.00 beta 1
-          </q-toolbar-title>
-        </q-toolbar>
+      <v-spacer></v-spacer>
 
-        <q-tabs align="center">
-          <q-route-tab to="/total/10" label="ピクミン" />
-          <q-route-tab to="/total/20" label="ピクミン2" />
-          <q-route-tab to="/total/30" label="ピクミン3" />
-          <q-route-tab to="/total/40" label="ピクミン4" />
-          <q-route-tab to="/total/80" label="期間限定" />
-          <q-route-tab to="/total/91" label="本編地下RTA" />
-        </q-tabs>
-      </q-header>
+      <v-tabs
+          center
+          color="grey-darken-2"
+      >
+        <v-tab
+            v-for="link in links"
+            :key="link"
+        >
+          {{ link }}
+        </v-tab>
+      </v-tabs>
+      <v-spacer></v-spacer>
 
-      <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
-        <!-- drawer content -->
-      </q-drawer>
+      <v-avatar
+          class="hidden-sm-and-down"
+          color="grey-darken-1"
+          size="32"
+      ></v-avatar>
+    </v-app-bar>
 
-      <q-page-container>
-        <router-view />
-      </q-page-container>
+    <v-main class="bg-grey-lighten-3">
+      <router-view />
+      <!--/ #TODO ここから下はとりあえず未使用 /-->
+      <v-container>
+        <v-row>
+          <v-col
+              cols="12"
+              sm="2"
+          >
+            <v-sheet
+                rounded="lg"
+                min-height="268"
+            >
+              <!--  -->
+            </v-sheet>
+          </v-col>
 
-    </q-layout>
+          <v-col
+              cols="12"
+              sm="8"
+          >
+            <v-sheet
+                min-height="70vh"
+                rounded="lg"
+            >
+              <!--  -->
+            </v-sheet>
+          </v-col>
+
+          <v-col
+              cols="12"
+              sm="2"
+          >
+            <v-sheet
+                rounded="lg"
+                min-height="268"
+            >
+              <!--  -->
+            </v-sheet>
+          </v-col>
+        </v-row>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script setup>
  import { ref } from 'vue';
 
- const toggleLeftDrawer = ref(false);
+ const links = [
+     'ホーム',
+     'ピクミン',
+     'ピクミン2',
+     'ピクミン3',
+     'ピクミン4',
+ ]
 
 </script>

@@ -1,40 +1,41 @@
 <template>
   ステージIDは {{ stage_id }}<br>
-  <q-btn label="投稿する" color="primary" @click="posts = true"></q-btn>
-  <q-dialog v-model="posts" persistent>
-    <q-card style="min-width: 500px">
-      <q-card-section>
+  <v-btn color="primary" @click="posts = true">投稿する</v-btn>
+  <v-dialog v-model="posts" persistent>
+    <v-card style="min-width: 500px">
+      <v-card-item>
         <div class="text-h6">投稿フォーム</div>
-      </q-card-section>
+      </v-card-item>
 
-      <q-card-section class="q-pt-none">
+      <v-card-item class="q-pt-none">
         ユーザー名<br>
-        <q-input dense v-model="names" autofocus @keyup.enter="prompt = false" />
-      </q-card-section>
+        <v-text-field v-model="names" autofocus/>
+      </v-card-item>
 
-      <q-card-section class="q-pt-none">
+      <v-card-item class="q-pt-none">
         内容<br>
-        <q-input dense v-model="details" autofocus @keyup.enter="prompt = false" />
-      </q-card-section>
+        <v-text-field v-model="details"/>
+      </v-card-item>
 
-      <q-card-actions align="right" class="text-primary">
-        <q-btn flat label="キャンセル" v-close-popup />
-        <q-btn flat label="投稿する" v-close-popup @click="confirm = true" />
-      </q-card-actions>
+      <v-card-actions>
+        <v-btn color="primary" flat @click="posts = false">キャンセル</v-btn>
+        <v-btn color="primary" flat @click="posts = false;confirm = true">投稿する</v-btn>
+      </v-card-actions>
       <br>
-    </q-card>
-  </q-dialog>
-  <q-dialog v-model="confirm" persistent>
-    <q-card>
-      <q-card-section class="row items-center">
+    </v-card>
+  </v-dialog>
+  <v-dialog v-model="confirm" persistent>
+    <v-card>
+      <v-card-item class="row items-center">
         <span class="q-ml-sm">本当に送信していいですか？</span>
-      </q-card-section>
-      <q-card-actions align="right">
-        <q-btn flat label="キャンセル" color="primary" v-close-popup></q-btn>
-        <q-btn flat label="送信" color="primary" v-close-popup @click="post();refresh()"></q-btn>
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </v-card-item>
+      <v-card-actions>
+        <v-btn color="primary" right flat @click="confirm = false">キャンセル</v-btn>
+        <v-btn color="primary" right flat @click="post();refresh();confirm = false">送信</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  記録<br>
   <ul>
     <li v-for="item in items" :key="item.post_id">
       {{ item.user_name }}
@@ -55,7 +56,7 @@ const posts = ref(false);
 const prompt = ref(false);
 const names = ref('');
 const details = ref('');
-const { stage_id } = route.params;
+let { stage_id } = route.params;
 const post = await function (){
   return useFetch('/api/record',
       {
@@ -68,4 +69,8 @@ const post = await function (){
 }
 const { data: items, refresh, error } = await useFetch('/api/record');
 
+// ルートがアップデートされたら遷移前と遷移後をオブジェクトで取得する
+onBeforeRouteUpdate(async (to) => {
+  stage_id = to.params.stage_id;
+});
 </script>
