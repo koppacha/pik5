@@ -35,7 +35,6 @@
 
 <script setup>
  import { ref } from 'vue';
- import { useFetch } from "nuxt/app";
 
  const toggleLeftDrawer = ref(false);
 
