@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Record;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class RecordController extends Controller
 {
@@ -63,19 +64,22 @@ class RecordController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Record  $product
-     * @return \Illuminate\Http\Response
+     * @param Record $record
+     * @return JsonResponse
      */
-    public function show(Record $product)
+    public function show(Request $request): JsonResponse
     {
-        //
+        $data = Record::where('stage_id',$request['id'])->get();
+        return response()->json(
+            $data
+        );
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Record  $product
-     * @return \Illuminate\Http\Response
+     * @param Record $product
+     * @return Response
      */
     public function edit(Record $product)
     {
@@ -86,8 +90,8 @@ class RecordController extends Controller
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param  \App\Models\Record  $product
-     * @return \Illuminate\Http\Response
+     * @param Record $product
+     * @return Response
      */
     public function update(Request $request, Record $product)
     {
@@ -97,8 +101,8 @@ class RecordController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Record  $product
-     * @return \Illuminate\Http\Response
+     * @param Record $product
+     * @return Response
      */
     public function destroy(Record $product)
     {

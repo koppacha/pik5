@@ -1,7 +1,5 @@
 // https://v3.nuxtjs.org/api/configuration/nuxt.config
-import {defineNuxtConfig} from "nuxt/config";
 
-// @ts-ignore
 export default defineNuxtConfig({
     // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
     ssr: false,
@@ -13,7 +11,7 @@ export default defineNuxtConfig({
     head: {
         title: 'nuxt-sample',
         htmlAttrs: {
-            lang: 'en'
+            lang: 'ja'
         },
         meta: [
             { charset: 'utf-8' },

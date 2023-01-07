@@ -6,10 +6,10 @@ import * as directives from 'vuetify/directives'
 import { aliases, mdi } from 'vuetify/iconsets/mdi'
 import '@mdi/font/css/materialdesignicons.css'
 
-const basicTypographyColor = colors.grey.darken3
+const basicTypographyColor = colors.white
 
 const customTheme: ThemeDefinition = {
-    dark: false,
+    dark: true,
     colors: {
         primary: colors.blue.base,
         'on-surface': basicTypographyColor,

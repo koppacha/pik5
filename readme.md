@@ -8,7 +8,27 @@
 ## 開発に参加したいという方へ
 まずはTwitterかDiscordで管理人へ気軽にお問い合わせください。
 下記の環境構築を試してみていただき、新規ブランチで開発していただく分にはなんの制限もありません。
-devブランチへマージする際にはプルリクエストを投げておいてください。
+masterブランチへのマージは管理者権限が必要です。その場合はプルリクエストを投げておいてください。
+**他所でGitを使っている人は名前とメールアドレスの流出にご注意を！**
+
+## おすすめ開発環境
+* OS：macOS https://www.apple.com/jp/macos/ventura/
+* Infra：Docker Desktop https://www.docker.com/products/docker-desktop/
+* IDE：Intellij IDEA https://www.jetbrains.com/ja-jp/idea/
+* API：Postman https://www.postman.com/
+* Browser：Google Chrome https://www.google.com/intl/ja_jp/chrome/
+
+＊原則として最新版を利用
+
+## 各種マニュアル
+* PHP：https://www.php.net/manual/ja/index.php
+* Laravel：https://readouble.com/laravel/
+* JavaScript：https://ja.javascript.info/
+* Vue.js：https://ja.vuejs.org/guide/introduction.html (Composition API)
+* Nuxt.js：https://zenn.dev/torish/scraps/16676a3500ad99 (暫定)
+* Vuetify：https://vuetifyjs.com/ja/introduction/why-vuetify/
+* Docker：https://docs.docker.jp/index.html
+* Git：https://tracpath.com/docs/
 
 ## 環境構築手順
 ```shell
@@ -16,26 +36,50 @@ devブランチへマージする際にはプルリクエストを投げてお�
 $ git clone https://github.com/koppacha/pik5.git
 $ cd pik5
 
-# 仮想環境コンテナを構築（初回は時間がかかります）
-$ docker compose up -d
-
 # 定数ファイルをコピー
 $ cp sanple.env .env
 
+# 仮想環境コンテナを構築（初回は時間がかかります）
+$ docker compose up -d
+
 # 以下実行前にフロントサーバー用に新しいターミナルを起動
 $ docker compose exec nuxt bash
-$ npm install
-$ npm run dev # 終了するときはCtrl+C
+$ yarn install
+$ yarn dev # 終了するときはCtrl+C
 
 # 以下実行前にバックエンドサーバー用に新しいターミナルを起動
 $ docker compose exec laravel bash
 $ composer install
+$ php artisan migrate:fresh
+$ php artisan db:seed
 $ php artisan serve --host 0.0.0.0 # 終了するときはCtrl+C
 
-# 開発を終了する際は以下でコンテナを廃棄する
+# 開発を終了する際は以下でコンテナを廃棄する（再開するたびにコンテナ構築からやり直す）
 $ docker compose down
 ```
 上記実行後、 http://localhost:3000 にアクセス
+
+## バージョン管理のルール
+```shell
+# 作業が終わったら
+$ git checkout -b your_branch # your_branchはあなたと判別できる任意のブランチ名
+$ git add .
+$ git commit -m "コメント" # コメントは作業内容
+$ git push your_branch
+
+# push後、https://github.com/koppacha/pik5/pulls からプルリクエストを投げてください
+
+# 作業を再開するためにマスターブランチの内容を反映する
+$ git fetch
+$ git checkout master
+$ git marge your_branch
+$ git checkout your_branch
+
+# 他の人があなたのブランチを編集した場合、その差分を取り込む
+$ git fetch
+$ git pull origin your_branch
+
+```
 
 ## バージョン履歴
 ### ver.1.00〜2.78（2007/04/29〜2023/XX/XX）

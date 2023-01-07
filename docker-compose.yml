@@ -68,6 +68,7 @@ services:
       - ./nuxt:/var/www/nuxt
     ports:
       - "3000:3000"
+      - "24678:24678"
     links:
       - nginx
     depends_on:
