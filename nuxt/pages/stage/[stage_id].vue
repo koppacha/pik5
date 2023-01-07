@@ -67,7 +67,7 @@ const post = await function (){
         }
       });
 }
-const { data: items, refresh, error } = await useFetch('/api/record');
+const { data: items, refresh, error } = await useFetch(`/api/record/${stage_id}`);
 
 // ルートがアップデートされたら遷移前と遷移後をオブジェクトで取得する
 onBeforeRouteUpdate(async (to) => {
