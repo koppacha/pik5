@@ -41,6 +41,11 @@
       {{ item.user_name }}
     </li>
   </ul>
+
+  仮リンク<br>
+  <NuxtLink to="/stage/201" @click="refresh()">こてしらべの洞窟</NuxtLink><br>
+  <NuxtLink to="/stage/202">新参者の試練場</NuxtLink><br>
+  <NuxtLink to="/stage/203">神々のおもちゃ箱</NuxtLink>
 </template>
 
 <script setup>
@@ -56,6 +61,8 @@ const posts = ref(false);
 const prompt = ref(false);
 const names = ref('');
 const details = ref('');
+const email = ref('');
+const password = ref('');
 let { stage_id } = route.params;
 const post = await function (){
   return useFetch('/api/record',
@@ -67,10 +74,20 @@ const post = await function (){
         }
       });
 }
+const login = await function (){
+  return useFetch('api/login',
+      {
+        method: "POST",
+        body: {
+          email: email,
+          password: password,
+        }
+      })
+}
 const { data: items, refresh, error } = await useFetch(`/api/record/${stage_id}`);
 
 // ルートがアップデートされたら遷移前と遷移後をオブジェクトで取得する
 onBeforeRouteUpdate(async (to) => {
-  stage_id = to.params.stage_id;
+  stage_id = to.params.stage_id
 });
 </script>

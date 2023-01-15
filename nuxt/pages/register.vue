@@ -1,0 +1,97 @@
+<template>
+  <div
+      class="relative flex flex-col justify-center min-h-screen overflow-hidden"
+  >
+    <div class="w-full p-6 m-auto bg-white rounded shadow-lg lg:max-w-md">
+      <h1 class="text-3xl font-semibold text-center text-purple-700">
+        Sign Up
+      </h1>
+
+      <form class="mt-6" ref="registerform" @submit.prevent="register">
+        <div>
+          <label for="name" class="block text-sm text-gray-800">name</label>
+          <input
+              v-model="form.name"
+              name="name"
+              type="text"
+              class="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
+          />
+        </div>
+        <div>
+          <label for="email" class="block text-sm text-gray-800">Email</label>
+          <input
+              v-model="form.email"
+              name="email"
+              type="email"
+              class="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
+          />
+        </div>
+        <div class="mt-4">
+          <div>
+            <label for="password" class="block text-sm text-gray-800"
+            >Password</label
+            >
+            <input
+                v-model="form.password"
+                name="password"
+                type="password"
+                class="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
+            />
+          </div>
+          <div>
+            <label for="password" class="block text-sm text-gray-800"
+            >Password Confirmation</label
+            >
+            <input
+                v-model="form.password_confirmation"
+                name="password_confirmation"
+                type="password"
+                class="block w-full px-4 py-2 mt-2 text-purple-700 bg-white border rounded-md focus:border-purple-400 focus:ring-purple-300 focus:outline-none focus:ring focus:ring-opacity-40"
+            />
+          </div>
+          <div class="mt-6">
+            <button
+                type="submit"
+                class="w-full px-4 py-2 tracking-wide text-white transition-colors duration-200 transform bg-purple-700 rounded-md hover:bg-purple-600 focus:outline-none focus:bg-purple-600"
+            >
+              Submit
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</template>
+<script>
+export default {
+  auth: "guest",
+  data() {
+    return {
+      form: {
+        name: null,
+        email: null,
+        password: null,
+        password_confirmation: null
+      },
+      errors: []
+    }
+  },
+  mounted() {
+    this.$axios.$get("/sanctum/csrf-cookie");
+  },
+  methods: {
+    register() {
+      try {
+        this.$axios.post("/register", this.form).then((res) => {
+          this.$auth.loginWith("laravelSanctum", { data: this.form });
+          this.$router.push({
+            path: "/",
+          });
+        });
+      } catch (err) {
+        console.log(err);
+      }
+    },
+  },
+};
+</script>

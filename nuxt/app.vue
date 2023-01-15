@@ -26,7 +26,7 @@
             v-for="link in links"
             :key="link"
         >
-          {{ link }}
+          <NuxtLink>{{ link }}</NuxtLink>
         </v-tab>
       </v-tabs>
       <v-spacer></v-spacer>

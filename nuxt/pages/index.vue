@@ -7,6 +7,13 @@
     <NuxtLink to="/stage/202">新参者の試練場</NuxtLink><br>
     <NuxtLink to="/stage/203">神々のおもちゃ箱</NuxtLink>
   </div>
+  <div v-if="!$auth.loggedIn">
+    <h3>Home</h3>
+  </div>
+  <div v-if="$auth.loggedIn">
+    <div>Name:{{ $auth.user.name }}</div>
+    <div>Name:{{ $auth.user.email }}</div>
+  </div>
 </template>
 
 <script setup>
