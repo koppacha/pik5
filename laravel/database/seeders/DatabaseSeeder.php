@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
         // ]);
         $this->call([
             RecordSeeder::class,
+            UsersTableSeeder::class
         ]);
     }
 }

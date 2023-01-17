@@ -35,17 +35,32 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+  <br>
   記録<br>
   <ul>
     <li v-for="item in items" :key="item.post_id">
       {{ item.user_name }}
+
     </li>
   </ul>
 
   仮リンク<br>
-  <NuxtLink to="/stage/201" @click="refresh()">こてしらべの洞窟</NuxtLink><br>
+  <NuxtLink to="/stage/201">こてしらべの洞窟</NuxtLink><br>
   <NuxtLink to="/stage/202">新参者の試練場</NuxtLink><br>
   <NuxtLink to="/stage/203">神々のおもちゃ箱</NuxtLink>
+  <br>
+  ログイン<br>
+  メールアドレス<v-text-field v-model="emails"/>
+  パスワード<v-text-field v-model="passwords"/>
+  <v-btn color="primary" @click="login()">送信</v-btn><br>
+
+  Logged In?<br>
+  <span>{{ loggedIn ? 'yes':'no' }}</span><br>
+  <div v-if="loggedIn">
+    Users name?<br>
+    <span>{{ user.name }}</span>
+  </div>
+
 </template>
 
 <script setup>
@@ -54,6 +69,9 @@
 import {ref} from "vue";
 import {useFetch} from "#app";
 
+const { $sanctumAuth } = useNuxtApp()
+const errors = ref([])
+
 const route = useRoute();
 
 const confirm = ref(false);
@@ -61,11 +79,13 @@ const posts = ref(false);
 const prompt = ref(false);
 const names = ref('');
 const details = ref('');
-const email = ref('');
-const password = ref('');
+const emails = ref('');
+const passwords = ref('');
+let resp = ref('');
 let { stage_id } = route.params;
+
 const post = await function (){
-  return useFetch('/api/record',
+  return useFetch('http://localhost:8000/api/record',
       {
         method: "POST",
         body: {
@@ -74,20 +94,27 @@ const post = await function (){
         }
       });
 }
-const login = await function (){
-  return useFetch('api/login',
-      {
-        method: "POST",
-        body: {
-          email: email,
-          password: password,
-        }
-      })
+const login = async () => {
+  try {
+    await $sanctumAuth.login({
+      email: 'test1@pik5.net',
+      password: 'password'
+    })
+  } catch (e){
+    errors.value = e.errors
+  }
 }
-const { data: items, refresh, error } = await useFetch(`/api/record/${stage_id}`);
+const logout = async () => {
+  await $sanctumAuth.logout()
+}
+
+const { user, loggedIn } = useState('auth').value
+
+const { data: items, refresh, error } = await useFetch(`http://localhost:8000/api/record/${stage_id}`);
 
 // ルートがアップデートされたら遷移前と遷移後をオブジェクトで取得する
 onBeforeRouteUpdate(async (to) => {
   stage_id = to.params.stage_id
 });
+
 </script>
