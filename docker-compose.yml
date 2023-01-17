@@ -67,8 +67,25 @@ services:
     volumes:
       - ./nuxt:/var/www/nuxt
     ports:
-      - "3000:3000"
+      - "3001:3001"
       - "24678:24678"
+    links:
+      - nginx
+    depends_on:
+      - nginx
+
+  next:
+    build:
+      context: .
+      dockerfile: ./next/Dockerfile
+      args:
+        - TZ=${TZ}
+    container_name: next
+    tty: true
+    volumes:
+      - ./next:/var/www/next
+    ports:
+      - "3000:3000"
     links:
       - nginx
     depends_on:
