@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\RecordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,21 +17,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
+//    return $request->user();
+    Route::get('user',[UserController::class, 'index']);
 });
-
-Route::get('/test', function () { return '接続テスト成功！'; });
-
-Route::get('/check', function (){
-    return response()->json([
-        'message'=>'hello world.'
-    ]);
-});
-
-//Route::apiResource('/books', BookController::class);
-
-Route::get('products',RecordController::class);
 
 Route::group(['middleware' => ['api']], static function () {
     Route::get('record', [RecordController::class, 'index']);
@@ -37,4 +28,6 @@ Route::group(['middleware' => ['api']], static function () {
     Route::post('record', [RecordController::class, 'create']);
     Route::patch('record/{id}', [RecordController::class, 'update']);
     Route::delete('record/{id}', [RecordController::class, 'destroy']);
+
+    Route::post('login',[LoginController::class, 'login']);
 });

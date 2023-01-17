@@ -39,14 +39,14 @@ export default defineNuxtConfig({
     // Modules: https://go.nuxtjs.dev/config-modules
     modules: [
         // https://www.npmjs.com/package/@nuxtjs/proxy
-        '@nuxtjs/axios'
-        // '@nuxtjs/auth-next'
+        // TODO: とりあえず暫定で使う。公式のauthやsidebase製がsanctum対応したら乗り換える
+        'nuxt-sanctum-auth'
     ],
-    publicRuntimeConfig: {
-      axios: {
-          baseURL: process.env.API_URL,
-      }
-    },
+    // publicRuntimeConfig: {
+    //   axios: {
+    //       baseURL: process.env.API_URL,
+    //   }
+    // },
     // Axios module configuration: https://go.nuxtjs.dev/config-axios
     axios: {
         // proxy: true
@@ -56,20 +56,6 @@ export default defineNuxtConfig({
         // '/api': 'http://localhost:8000'
     },
 
-    auth: {
-        strategies: {
-            laravelSanctum: {
-                provider: 'laravel/sanctum',
-                url: 'http://localhost:8000',
-                endpoints: {
-                    login: {
-                        url: '/login'
-                    }
-                }
-            },
-        }
-    },
-
     // Build Configuration: https://go.nuxtjs.dev/config-build
     build: {},
 
@@ -77,4 +63,18 @@ export default defineNuxtConfig({
         bannerColor: 'yellow'
     },
 
+    nuxtSanctumAuth: {
+        baseUrl: 'http://localhost:8000/',
+        endpoints: {
+            csrf: '/sanctum/csrf-cookie',
+            login: 'api/login',
+            logout: 'api/logout',
+            user: 'api/user'
+        },
+        redirects: {
+            home: 'api/account',
+            login: '/auth/login',
+            logout: '/'
+        }
+    }
 })

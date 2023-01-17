@@ -129,6 +129,8 @@
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/league/config" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/nette/schema" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/nette/utils" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/laravel/ui" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/laravel/breeze" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
