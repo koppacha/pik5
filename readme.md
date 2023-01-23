@@ -20,13 +20,19 @@ masterブランチへのマージは管理者権限が必要です。その場�
 
 ＊原則として最新版を利用
 
+## 開発コンセプト
+Laravel（PHP）とNext.js（JavaScript、React）の疎結合でフロントエンドとバックエンドをそれぞれ独立させた開発を目指します。
+当初はNuxt.js（Vue.js）を採用していましたが、
+最新バージョンの仕様が揺れていることや英語圏を含むインターネット全体での知見不足からNext.jsに乗り換えました。  
+開発にはPHPとJavaScriptの知識が必須になります。
+
 ## 各種マニュアル
 * PHP：https://www.php.net/manual/ja/index.php
 * Laravel：https://readouble.com/laravel/
 * JavaScript：https://ja.javascript.info/
-* Vue.js：https://ja.vuejs.org/guide/introduction.html (Composition API)
-* Nuxt.js：https://zenn.dev/torish/scraps/16676a3500ad99 (暫定)
-* Vuetify：https://vuetifyjs.com/ja/introduction/why-vuetify/
+* React：https://ja.reactjs.org/docs/getting-started.html
+* Next.js：https://nextjs.org/docs/getting-started
+* Material UI：https://mui.com/material-ui/getting-started/overview/
 * Docker：https://docs.docker.jp/index.html
 * Git：https://tracpath.com/docs/
 
@@ -43,7 +49,7 @@ $ cp sanple.env .env
 $ docker compose up -d
 
 # 以下実行前にフロントサーバー用に新しいターミナルを起動
-$ docker compose exec nuxt bash
+$ docker compose exec next bash
 $ yarn install
 $ yarn dev # 終了するときはCtrl+C
 
