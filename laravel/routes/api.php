@@ -1,10 +1,8 @@
 <?php
 
-use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\RecordController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Auth\LoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,16 +16,13 @@ use App\Http\Controllers\Auth\LoginController;
 */
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
-//    return $request->user();
-    Route::get('user',[UserController::class, 'index']);
+    return $request->user();
 });
 
-Route::group(['middleware' => ['api']], static function () {
-    Route::get('record', [RecordController::class, 'index']);
-    Route::get('record/{id}', [RecordController::class, 'show']);
-    Route::post('record', [RecordController::class, 'create']);
-    Route::patch('record/{id}', [RecordController::class, 'update']);
-    Route::delete('record/{id}', [RecordController::class, 'destroy']);
-
-    Route::post('login',[LoginController::class, 'login']);
+Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
+    Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
+    Route :: get ( 'record/{id}' , [ RecordController ::class, 'show' ]);
+    Route :: post ( 'record' , [ RecordController ::class, 'create' ]);
+    Route :: patch ( 'record/{id}' , [ RecordController ::class, 'update' ]);
+    Route :: delete ( 'record/{id}' , [ RecordController ::class, 'destroy' ]);
 });
