@@ -65,6 +65,12 @@ $ docker compose down
 ```
 上記実行後、 http://localhost:3000 にアクセス
 
+## 開発環境のURL一覧
+* フロントエンド画面 http://localhost:3000
+* バックエンド（API） http://localhost:8000
+* phpmyadmin（DB） http://localhost:6000
+* mailhog http://localhost:8045
+
 ## バージョン管理のルール
 ```shell
 # 作業が終わったら
