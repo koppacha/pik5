@@ -46,6 +46,7 @@ services:
   mail:
     container_name: mail
     image: mailhog/mailhog
+    platform: linux/amd64
     ports:
       - "1025:1025"
       - "8045:8025"
@@ -100,6 +101,7 @@ services:
 
   pma:
     image: phpmyadmin/phpmyadmin
+    platform: linux/amd64
     container_name: pma
     depends_on:
       - mysql
