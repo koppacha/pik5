@@ -1,4 +1,8 @@
 import {useEffect, useState} from "react";
+import {en} from "../../locale/en";
+import {ja} from "../../locale/ja";
+import { useRouter } from "next/router";
+import Record from "../../components/Record";
 
 // ステージ番号をアクセスされるたびに取得する（サーバーサイド）
 export async function getServerSideProps(context){
@@ -14,14 +18,18 @@ export async function getServerSideProps(context){
 
 // レンダラー本体（フロントサイド）
 export default function Stage(param){
+
+    const { locale } = useRouter();
+    const t = (locale === "en") ? en : ja;
+
     return (
         <>
-            ステージ番号：{ param.stage }<br/>
+            ステージ：{ t.stage[param.stage] }<br/>
             <br/>
             <ul>
                 {
                     param.data.map(post =>
-                        <li key={post.user_id}>{post.user_name}</li>
+                        <Record data={post} />
                     )
                 }
             </ul>

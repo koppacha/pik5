@@ -20,7 +20,7 @@ class UsersTableSeeder extends Seeder
         $data = [
             [
                 'name' => 'テストユーザー',
-                'email' => 'test1@pik5.net',
+                'email' => 'test3@pik5.net',
                 'password' => Hash::make('password')
             ],
         ];
