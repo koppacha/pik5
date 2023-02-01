@@ -1,5 +1,8 @@
 export default function Record(props) {
+
+    const r = props.data;
+
     return (
-        <li key={props.data.user_id}>a{props.data.user_name}</li>
+        <li>{r.user_name}さん</li>
     )
 }

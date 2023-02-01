@@ -1,7 +1,7 @@
 import {
     AppBar,
     Badge,
-    Box, Container,
+    Box, Button, Container,
     IconButton, InputBase,
     Menu,
     MenuItem,
@@ -19,6 +19,9 @@ import MoreIcon from "@mui/icons-material/MoreVert";
 import * as React from "react";
 import PropTypes from "prop-types";
 import {alpha, styled} from "@mui/material/styles";
+import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -224,6 +227,9 @@ export default function HeaderMenu({props}){
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                        <IconButton size="middle" aria-label="show 4 new mails" color="inherit">
+                            <FontAwesomeIcon icon={faDiscord} />
+                        </IconButton>
                         <IconButton size="large" aria-label="show 4 new mails" color="inherit">
                             <Badge badgeContent={4} color="error">
                                 <MailIcon />

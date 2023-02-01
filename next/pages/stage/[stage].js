@@ -3,6 +3,8 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import { useRouter } from "next/router";
 import Record from "../../components/Record";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCompass } from '@fortawesome/free-solid-svg-icons'
 
 // ステージ番号をアクセスされるたびに取得する（サーバーサイド）
 export async function getServerSideProps(context){
@@ -24,6 +26,7 @@ export default function Stage(param){
 
     return (
         <>
+            <FontAwesomeIcon icon={faCompass} />
             ステージ：{ t.stage[param.stage] }<br/>
             <br/>
             <ul>

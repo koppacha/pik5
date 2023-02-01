@@ -78,10 +78,10 @@ class RecordController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Record $product
+     * @param Record $record
      * @return Response
      */
-    public function edit(Record $product)
+    public function edit(Record $record)
     {
         //
     }
@@ -101,10 +101,10 @@ class RecordController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Record $product
+     * @param Record $record
      * @return Response
      */
-    public function destroy(Record $product)
+    public function destroy(Record $record)
     {
         //
     }
