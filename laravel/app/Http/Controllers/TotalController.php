@@ -72,10 +72,16 @@ class TotalController extends Controller
     public function show(Request $request): JsonResponse
     {
         $stage_list = [
-            201 => [
+            100 => [
+                101, 102, 103, 104, 105
+            ],
+            200 => [
                 201, 202, 203
             ],
-            202 => [
+            210 => [
+                202, 204, 206
+            ],
+            220 => [
                 202, 204, 206
             ]
         ];

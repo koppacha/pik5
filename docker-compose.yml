@@ -64,24 +64,6 @@ services:
     ports:
       - ${DB_PORT}:3306
 
-  nuxt:
-    build:
-      context: .
-      dockerfile: ./nuxt/Dockerfile
-      args:
-        - TZ=${TZ}
-    container_name: nuxt
-    tty: true
-    volumes:
-      - ./nuxt:/var/www/nuxt
-    ports:
-      - "3001:3001"
-      - "24678:24678"
-    links:
-      - nginx
-    depends_on:
-      - nginx
-
   next:
     build:
       context: .

@@ -201,28 +201,28 @@ export default function HeaderMenu({props}){
                         />
                     </Search>
                     <MenuItem>
-                        <Link href="/total/1">総合ランキング</Link>
+                        <Link href="/total/001">総合ランキング</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/10">ピクミン</Link>
+                        <Link href="/total/100">ピクミン</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/20">ピクミン2</Link>
+                        <Link href="/total/200">ピクミン2</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/30">ピクミン3</Link>
+                        <Link href="/total/300">ピクミン3</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/40">ピクミン4</Link>
+                        <Link href="/total/400">ピクミン4</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/91">期間限定</Link>
+                        <Link href="/total/910">期間限定</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/92">日替わり</Link>
+                        <Link href="/total/920">日替わり</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/99">その他</Link>
+                        <Link href="/total/990">その他</Link>
                     </MenuItem>
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
