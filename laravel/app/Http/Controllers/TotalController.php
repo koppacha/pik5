@@ -75,19 +75,21 @@ class TotalController extends Controller
             100 => [
                 101, 102, 103, 104, 105
             ],
-            200 => [
-                201, 202, 203
-            ],
+            200 => range(201, 230)
+            ,
             210 => [
-                202, 204, 206
+                201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230
             ],
             220 => [
-                202, 204, 206
-            ]
+                203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227
+            ],
+            300 => range(301, 350)
         ];
         $model = Record::whereIn('stage_id',$stage_list[$request['id']])->get();
         $datas = $model->toArray();
-        $res   = array();
+        $res   = array(
+            "stage_list" => $stage_list[$request['id']]
+        );
 
         // 対象の記録群からユニークなユーザー配列を作成し、値を初期化
         foreach($users = array_unique( array_column($datas, 'user_name') ) as $user){
