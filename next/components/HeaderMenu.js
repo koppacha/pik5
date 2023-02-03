@@ -22,6 +22,9 @@ import {alpha, styled} from "@mui/material/styles";
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import { faDiscord } from '@fortawesome/free-brands-svg-icons'
+import {useRouter} from "next/router";
+import {en} from "@/locale/en";
+import {ja} from "@/locale/ja";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -92,6 +95,9 @@ export default function HeaderMenu({props}){
 
     const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
+
+    const { locale } = useRouter();
+    const t = (locale === "en") ? en : ja;
 
     const handleProfileMenuOpen = (event) => {
         setAnchorEl(event.currentTarget);
@@ -189,7 +195,7 @@ export default function HeaderMenu({props}){
             <ThinAppBar>
                 <Toolbar>
                     <Typography variant="h6" component="div">
-                        ピクチャレ大会（仮）
+                        {t.title[0]}
                     </Typography>
                     <Search>
                         <SearchIconWrapper>
@@ -201,28 +207,28 @@ export default function HeaderMenu({props}){
                         />
                     </Search>
                     <MenuItem>
-                        <Link href="/total/001">総合ランキング</Link>
+                        <Link href="/total/001">{t.title[6]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/100">ピクミン</Link>
+                        <Link href="/total/100">{t.title[1]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/200">ピクミン2</Link>
+                        <Link href="/total/200">{t.title[2]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/300">ピクミン3</Link>
+                        <Link href="/total/300">{t.title[3]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/400">ピクミン4</Link>
+                        <Link href="/total/400">{t.title[4]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/910">期間限定</Link>
+                        <Link href="/total/910">{t.title[7]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/920">日替わり</Link>
+                        <Link href="/total/920">{t.title[8]}</Link>
                     </MenuItem>
                     <MenuItem>
-                        <Link href="/total/990">その他</Link>
+                        <Link href="/total/990">{t.title[9]}</Link>
                     </MenuItem>
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />

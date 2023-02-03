@@ -1,19 +1,15 @@
 import {useRouter} from "next/router";
 import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
-import Record from "../../components/Record";
+import {Box, Grid} from "@mui/material";
+import Link from "next/link";
 
 export async function getServerSideProps(context){
     const series = context.query.series
-    // TODO: 合計点算出はNext.jsのサーバーサイドで表示ごとに処理
 
     // シリーズ番号に基づいて集計対象ステージをバックエンドで選別して持ってくる
     const res = await fetch(`http://laravel:8000/api/total/${series}`)
     const data = await res.json()
-
-    // 持ってきたデータを人別にまとめて配列に入れる
-
-    // 合計点に基づいて並べて順位を付与する
 
     return {
         props: {
@@ -31,16 +27,33 @@ export default function Series(param){
         return (a.score > b.score) ? -1 : 1
     })
 
-    console.log(result)
-
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
+
+    const stages = result.shift() // ソート後にstage_listは先頭に来るのでそれを取り出す
 
     return (
         <>
             ステージ：{ t.stage[param.series.slice(0,2)] }<br/>
-            操作方法：{ t.stage[param.series.slice(-1)] }<br/>
+            操作方法：{ t.console[param.series.slice(-1)] }<br/>
             <br/>
+            <Grid container>
+                {
+                    stages.map(stage =>
+                    <Grid xs={1.5}>
+                        <Link href={'/stage/'+stage}><Box sx={{
+                            border: 'solid 1px #fff',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            margin: '4px',
+                            fontSize: '0.8em'}}>
+                            <span>#{stage}</span><br/>
+                            {t.stage[stage]}</Box>
+                        </Link>
+                    </Grid>
+                    )
+                }
+            </Grid>
             <ul>
                 {
                     result.map(data =>
