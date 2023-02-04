@@ -25,6 +25,7 @@ import { faDiscord } from '@fortawesome/free-brands-svg-icons'
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
+import CustomMenu from "@/components/CustomMenu";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -93,14 +94,14 @@ export default function HeaderMenu({props}){
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
-    const isMenuOpen = Boolean(anchorEl);
+    // const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
 
     const handleProfileMenuOpen = (event) => {
-        setAnchorEl(event.currentTarget);
+        // setAnchorEl(event.currentTarget);
     };
 
     const handleMobileMenuClose = () => {
@@ -117,6 +118,7 @@ export default function HeaderMenu({props}){
     };
 
     const menuId = 'primary-search-account-menu';
+
     const renderMenu = (
         <Menu
             anchorEl={anchorEl}
@@ -130,7 +132,7 @@ export default function HeaderMenu({props}){
                 vertical: 'top',
                 horizontal: 'right',
             }}
-            open={isMenuOpen}
+            // open={open}
             onClose={handleMenuClose}
         >
             <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
@@ -139,6 +141,7 @@ export default function HeaderMenu({props}){
     );
 
     const mobileMenuId = 'primary-search-account-menu-mobile';
+
     const renderMobileMenu = (
         <Menu
             anchorEl={mobileMoreAnchorEl}
@@ -197,39 +200,26 @@ export default function HeaderMenu({props}){
                     <Typography variant="h6" component="div">
                         {t.title[0]}
                     </Typography>
-                    <Search>
-                        <SearchIconWrapper>
-                            <SearchIcon />
-                        </SearchIconWrapper>
-                        <StyledInputBase
-                            placeholder="Search…"
-                            inputProps={{ 'aria-label': 'search' }}
-                        />
-                    </Search>
-                    <MenuItem>
-                        <Link href="/total/001">{t.title[6]}</Link>
-                    </MenuItem>
+                    {/*<Search>*/}
+                    {/*    <SearchIconWrapper>*/}
+                    {/*        <SearchIcon />*/}
+                    {/*    </SearchIconWrapper>*/}
+                    {/*    <StyledInputBase*/}
+                    {/*        placeholder="Search…"*/}
+                    {/*        inputProps={{ 'aria-label': 'search' }}*/}
+                    {/*    />*/}
+                    {/*</Search>*/}
+                    <CustomMenu series={6}/>
                     <MenuItem>
                         <Link href="/total/100">{t.title[1]}</Link>
                     </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/200">{t.title[2]}</Link>
-                    </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/300">{t.title[3]}</Link>
-                    </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/400">{t.title[4]}</Link>
-                    </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/910">{t.title[7]}</Link>
-                    </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/920">{t.title[8]}</Link>
-                    </MenuItem>
-                    <MenuItem>
-                        <Link href="/total/990">{t.title[9]}</Link>
-                    </MenuItem>
+                    <CustomMenu series={2}/>
+                    <CustomMenu series={3}/>
+                    <CustomMenu series={4}/>
+                    <CustomMenu series={7}/>
+                    <CustomMenu series={8}/>
+                    <CustomMenu series={9}/>
+
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
