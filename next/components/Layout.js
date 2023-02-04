@@ -16,9 +16,6 @@ export default function Layout({children}) {
                     <li><Link href="/">Home</Link></li>
                     <li><Link href="/login">Login</Link></li>
                     <li><Link href="/register">Register</Link></li>
-                    <li><Link href="/stage/201">こてしらべの洞窟</Link></li>
-                    <li><Link href="/stage/202">新参者の試練場</Link></li>
-                    <li><Link href="/stage/203">神々のおもちゃ箱</Link></li>
                 </ul>
                 <br/>
                 <main>{children}</main>
