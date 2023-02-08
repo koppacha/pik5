@@ -30,7 +30,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'サライムシ',
@@ -46,7 +49,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'ウジャダニ',
@@ -62,7 +68,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'タマゴムシ',
@@ -78,7 +87,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'トテツチホカシ',
@@ -94,7 +106,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'ウジンコ',
@@ -110,7 +125,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ],
             [
                 'user_name' => 'タマゴムシ',
@@ -126,7 +144,10 @@ class RecordSeeder extends Seeder
                 'user_host' => '*.home.ne.jp',
                 'user_agent' => 'Firefox 102',
                 'img_url' => 'test.jpg',
-                'video_url' => 'https://youtu.be/9YAqwBp0m8Y'
+                'video_url' => 'https://youtu.be/9YAqwBp0m8Y',
+                'flg' => 0,
+                'created_at' => new \DateTime(),
+                'updated_at' => new \DateTime(),
             ]
         ];
         foreach($params as $param) {

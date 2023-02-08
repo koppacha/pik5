@@ -29,6 +29,7 @@ return new class extends Migration
             $table->string('user_agent');
             $table->string('img_url');
             $table->string('video_url');
+            $table->string('flg');
             $table->timestamps();
         });
     }
