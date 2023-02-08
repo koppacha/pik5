@@ -29,13 +29,11 @@ export default function Stage(param){
             <FontAwesomeIcon icon={faCompass} />
             ステージ：{ t.stage[param.stage] }<br/>
             <br/>
-            <ul>
                 {
                     param.data.map(post =>
                         <Record data={post} />
                     )
                 }
-            </ul>
         </>
     )
 }

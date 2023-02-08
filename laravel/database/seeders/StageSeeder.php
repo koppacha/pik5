@@ -19,14 +19,17 @@ class StageSeeder extends Seeder
             [
                 'stage_id' => 201,
                 'parent' => 21,
+                'Time' => 240,
             ],
             [
                 'stage_id' => 202,
                 'parent' => 21,
+                'Time' => 240,
             ],
             [
                 'stage_id' => 203,
                 'parent' => 22,
+                'Time' => 240,
             ],
         ];
         foreach($params as $param) {

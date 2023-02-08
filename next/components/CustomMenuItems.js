@@ -32,10 +32,10 @@ export default function CustomMenuItems(props){
                 <Link href="/total/200"><MenuItem>ピクミン２総合</MenuItem></Link>
                 <Link href="/total/210"><MenuItem>タマゴあり</MenuItem></Link>
                 <Link href="/total/220"><MenuItem>タマゴなし</MenuItem></Link>
-                <Link href="/total/230"><MenuItem>本編地下</MenuItem></Link>
-                <Link href="/total/240"><MenuItem>タマゴムシ縛り</MenuItem></Link>
-                <Link href="/total/250"><MenuItem>スプレー縛り</MenuItem></Link>
-                <Link href="/total/260"><MenuItem>ソロバトル</MenuItem></Link>
+                <Link href="/total/230"><MenuItem>タマゴムシ縛り</MenuItem></Link>
+                <Link href="/total/240"><MenuItem>スプレー縛り等</MenuItem></Link>
+                <Link href="/total/250"><MenuItem>ソロバトル</MenuItem></Link>
+                <Link href="/total/260"><MenuItem>本編地下</MenuItem></Link>
                 <Link href="/total/270"><MenuItem>2Pチャレンジ</MenuItem></Link>
             </>
         )
@@ -46,8 +46,8 @@ export default function CustomMenuItems(props){
                 <Link href="/total/300"><MenuItem>ピクミン３総合</MenuItem></Link>
                 <Link href="/total/310"><MenuItem>お宝をあつめろ！</MenuItem></Link>
                 <Link href="/total/320"><MenuItem>原生生物をたおせ！</MenuItem></Link>
-                <Link href="/total/330"><MenuItem>巨大生物をたおせ！</MenuItem></Link>
-                <Link href="/total/340"><MenuItem>サイドストーリー</MenuItem></Link>
+                <Link href="/total/330"><MenuItem>サイドストーリー</MenuItem></Link>
+                <Link href="/total/340"><MenuItem>巨大生物をたおせ</MenuItem></Link>
                 <Link href="/total/350"><MenuItem>ソロビンゴ</MenuItem></Link>
                 <Link href="/total/360"><MenuItem>2Pチャレンジ</MenuItem></Link>
             </>
@@ -56,7 +56,7 @@ export default function CustomMenuItems(props){
         // ピクミン４のサブメニュー（仮）
         return (
             <>
-                <MenuItem onClick={handleClose}>ピクミン４総合</MenuItem>
+                <Link href="/total/400"><MenuItem>ピクミン４総合</MenuItem></Link>
             </>
         )
     } else if(props.series === 7){

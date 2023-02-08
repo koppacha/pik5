@@ -46,6 +46,7 @@ export default function Series(param){
                             borderRadius: '6px',
                             padding: '8px',
                             margin: '4px',
+                            minHeight: '6em',
                             fontSize: '0.8em'}}>
                             <span>#{stage}</span><br/>
                             {t.stage[stage]}</Box>
