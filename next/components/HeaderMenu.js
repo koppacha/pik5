@@ -198,7 +198,7 @@ export default function HeaderMenu({props}){
             <ThinAppBar>
                 <Toolbar>
                     <Typography variant="h6" component="div">
-                        {t.title[0]}
+                        <Link href="/">{t.title[0]}</Link>
                     </Typography>
                     {/*<Search>*/}
                     {/*    <SearchIconWrapper>*/}
@@ -219,6 +219,8 @@ export default function HeaderMenu({props}){
                     <CustomMenu series={7}/>
                     <CustomMenu series={8}/>
                     <CustomMenu series={9}/>
+                    <MenuItem><Link href="/login">ログイン</Link></MenuItem>
+                    <MenuItem><Link href="/register">アカウント作成</Link></MenuItem>
 
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
