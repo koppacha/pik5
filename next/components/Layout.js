@@ -12,12 +12,6 @@ export default function Layout({children}) {
         <>
             <HeaderMenu/>
             <OffsetContainer maxWidth="lg">
-                <ul>
-                    <li><Link href="/">Home</Link></li>
-                    <li><Link href="/login">Login</Link></li>
-                    <li><Link href="/register">Register</Link></li>
-                </ul>
-                <br/>
                 <main>{children}</main>
             </OffsetContainer>
         </>
