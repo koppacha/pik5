@@ -210,49 +210,35 @@ export default function HeaderMenu({props}){
                     {/*    />*/}
                     {/*</Search>*/}
                     <CustomMenu series={6}/>
-                    <MenuItem>
-                        <Link href="/total/100">{t.title[1]}</Link>
-                    </MenuItem>
+                    <CustomMenu series={1}/>
                     <CustomMenu series={2}/>
                     <CustomMenu series={3}/>
                     <CustomMenu series={4}/>
                     <CustomMenu series={7}/>
                     <CustomMenu series={8}/>
                     <CustomMenu series={9}/>
-                    <MenuItem><Link href="/login">ログイン</Link></MenuItem>
-                    <MenuItem><Link href="/register">アカウント作成</Link></MenuItem>
 
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-                        <IconButton size="middle" aria-label="show 4 new mails" color="inherit">
-                            <FontAwesomeIcon icon={faDiscord} />
-                        </IconButton>
-                        <IconButton size="large" aria-label="show 4 new mails" color="inherit">
-                            <Badge badgeContent={4} color="error">
-                                <MailIcon />
-                            </Badge>
-                        </IconButton>
-                        <IconButton
-                            size="large"
-                            aria-label="show 17 new notifications"
-                            color="inherit"
-                        >
-                            <Badge badgeContent={17} color="error">
-                                <NotificationsIcon />
-                            </Badge>
-                        </IconButton>
-                        <IconButton
-                            size="large"
-                            edge="end"
-                            aria-label="account of current user"
-                            aria-controls={menuId}
-                            aria-haspopup="true"
-                            onClick={handleProfileMenuOpen}
-                            color="inherit"
-                        >
-                            <AccountCircle />
-                        </IconButton>
+                        {/*<IconButton size="middle" aria-label="show 4 new mails" color="inherit">*/}
+                        {/*    <FontAwesomeIcon icon={faDiscord} />*/}
+                        {/*</IconButton>*/}
+                        {/*<IconButton size="large" aria-label="show 4 new mails" color="inherit">*/}
+                        {/*    <Badge badgeContent={4} color="error">*/}
+                        {/*        <MailIcon />*/}
+                        {/*    </Badge>*/}
+                        {/*</IconButton>*/}
+                        {/*<IconButton*/}
+                        {/*    size="large"*/}
+                        {/*    aria-label="show 17 new notifications"*/}
+                        {/*    color="inherit"*/}
+                        {/*>*/}
+                        {/*    <Badge badgeContent={17} color="error">*/}
+                        {/*        <NotificationsIcon />*/}
+                        {/*    </Badge>*/}
+                        {/*</IconButton>*/}
+                        <CustomMenu series={10}/>
                     </Box>
                     <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
                         <IconButton
