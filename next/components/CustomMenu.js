@@ -4,6 +4,8 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import CustomMenuItems from "@/components/CustomMenuItems";
+import {AccountCircle} from "@mui/icons-material";
+import * as React from "react";
 
 export default function CustomMenu(props){
 
@@ -24,13 +26,20 @@ export default function CustomMenu(props){
     return (
         <MenuItem>
             <Button
-                sx={{ color:'#fff',fontSize: '1em' }}
+                sx={{
+                    color:'#fff',
+                    backgroundColor:'#999',
+                    fontSize: '0.9em'
+            }}
                 id="basic-button"
                 aria-controls={open ? 'total-menu' : undefined}
                 aria-haspopup="true"
                 aria-expanded={open ? 'true' : undefined}
                 onClick={handleClick}>
-                {t.title[props.series]}
+                {props.series < 10
+                    ? t.title[props.series]
+                    : <AccountCircle />
+                }
             </Button>
             <Menu
                 id="total-menu"

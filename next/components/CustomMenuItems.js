@@ -1,9 +1,10 @@
-import {MenuItem} from "@mui/material";
+import {Box, MenuItem} from "@mui/material";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import {useState} from "react";
 import Link from "next/link";
+import * as React from "react";
 
 export default function CustomMenuItems(props){
 
@@ -25,10 +26,20 @@ export default function CustomMenuItems(props){
                 <Link href="/total/90"><MenuItem>特殊総合ランキング</MenuItem></Link>
             </>
         )
+    } else if(props.series === 1){
+        // ピクミンのサブメニュー
+        return (
+            <>
+                <Link href="/total/100"><MenuItem>ピクミン総合</MenuItem></Link>
+                <Link href="/total/110"><MenuItem>全回収タイムアタック</MenuItem></Link>
+            </>
+        )
     } else if(props.series === 2){
         // ピクミン２のサブメニュー
         return (
-            <>
+            <Box sx={{
+                width:'100%'
+            }}>
                 <Link href="/total/200"><MenuItem>ピクミン２総合</MenuItem></Link>
                 <Link href="/total/210"><MenuItem>タマゴあり</MenuItem></Link>
                 <Link href="/total/220"><MenuItem>タマゴなし</MenuItem></Link>
@@ -37,7 +48,7 @@ export default function CustomMenuItems(props){
                 <Link href="/total/250"><MenuItem>ソロバトル</MenuItem></Link>
                 <Link href="/total/260"><MenuItem>本編地下</MenuItem></Link>
                 <Link href="/total/270"><MenuItem>2Pチャレンジ</MenuItem></Link>
-            </>
+            </Box>
         )
     } else if(props.series === 3){
         // ピクミン３のサブメニュー
@@ -84,6 +95,15 @@ export default function CustomMenuItems(props){
                 <MenuItem onClick={handleClose}>ルール集</MenuItem>
                 <MenuItem onClick={handleClose}>Speedrun.com</MenuItem>
                 <MenuItem onClick={handleClose}>Pikmin Wiki</MenuItem>
+            </>
+        )
+    } else {
+        // ユーザーアカウントのサブメニュー
+        return (
+            <>
+                <MenuItem><Link href="/login">ログイン</Link></MenuItem>
+                <MenuItem><Link href="/register">アカウント作成</Link></MenuItem>
+                <MenuItem><Link href="/user/me">マイページ</Link></MenuItem>
             </>
         )
     }
