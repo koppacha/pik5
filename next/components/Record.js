@@ -1,12 +1,13 @@
 import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
-import {Box, Grid, Typography} from "@mui/material";
+import {Box, createTheme, Grid, Typography} from "@mui/material";
 import Link from "next/link";
 import {faHashtag, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 
+// 日付をフォーマットする関数
 function dateFormat(value){
     const date = new Date(value)
     const y  = date.getFullYear()
@@ -23,16 +24,48 @@ export default function Record(props) {
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
 
-    const r = props.data;
+    const r = props.data
+
+    // 順位によってテーマカラーを決定する [0]文字色 [1]背景
+    function rank2color(rank){
+        rank = Number(rank)
+        if(rank === 1){
+            return [
+                '#f2ee0c',
+                '#595959'
+                ]
+        } else if(rank === 2){
+            return [
+                '#0cf232',
+                '#313131'
+                ]
+        } else if(rank === 3){
+            return [
+                '#0ca2f2',
+                '#111111'
+                ]
+        } else if(rank < 11){
+            return [
+                '#eae4e4',
+                '#000000'
+                ]
+        } else if(rank < 21){
+            return '#c0bbbb'
+        } else {
+            return '#a8a0a0'
+        }
+    }
+
+    const rankColor = rank2color(r.post_rank)
 
     return (
         <Grid container sx={{
-            borderLeft:'10px solid #fff',
-            borderBottom:'1px solid #fff',
-            backgroundColor: '#555',
+            borderLeft:'10px solid ' + rankColor[0],
+            borderBottom:'1px solid ' + rankColor[0],
+            backgroundColor: rankColor[1],
             borderRadius: '8px',
             padding: '4px',
-            marginY: '20px',
+            marginY: '10px',
             textAlign: 'center'
         }}>
             <Grid xs={1} sx={{
@@ -73,16 +106,16 @@ export default function Record(props) {
                     <Grid xs={6} sx={{
                         textAlign:'right'
                     }}>
-                        {r.stage_id}#{t.stage[r.stage_id]}
+                        {r.stage_id ? <>{r.stage_id + '#' + t.stage[r.stage_id]}</>:undefined}
                     </Grid>
                     <Grid xs={12} sx={{
                         borderTop:'1px solid #777',
                         paddingTop:'8px'
                     }}>
-                        <Link href={'/image/'+r.img_url}><FontAwesomeIcon icon={faImage} /></Link>
-                        <Link href={r.video_url}><FontAwesomeIcon icon={faYoutube}/></Link>
-                        <Link href={'/record/'+r.unique_id}><FontAwesomeIcon icon={faTag}/></Link>
-                        {r.post_comment}
+                        {r.img_url ? <Link href={'/image/'+r.img_url}><FontAwesomeIcon icon={faImage} /></Link>: undefined}
+                        {r.video_url ? <Link href={r.video_url}><FontAwesomeIcon icon={faYoutube}/></Link>: undefined}
+                        {r.unique_id ? <Link href={'/record/'+r.unique_id}><FontAwesomeIcon icon={faTag}/></Link>: undefined}
+                        {r.post_comment ? r.post_comment : undefined}
                     </Grid>
                 </Grid>
             </Grid>

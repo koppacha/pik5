@@ -3,6 +3,7 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import {AppBar, Box, Container, Grid, Typography} from "@mui/material";
 import Link from "next/link";
+import Record from "../../components/Record";
 
 export async function getServerSideProps(context){
     const series = context.query.series
@@ -20,17 +21,11 @@ export async function getServerSideProps(context){
 
 export default function Series(param){
 
-    // デフォルト設定ではスコア降順で並び替え（sort関数を使うためにオブジェクトを配列に変換）
-    const result = Object.keys(param.data).map(function (key){
-        return param.data[key]
-    }).sort( function(a, b){
-        return (a.score > b.score) ? -1 : 1
-    })
-
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
 
-    const stages = result.shift() // ソート後にstage_listは先頭に来るのでそれを取り出す
+    const stages = param.data.stage_list; // ソート後にstage_listは先頭に来るのでそれを取り出す
+    const records = param.data.data;
 
     const consoles = [0, 1, 2]
 
@@ -80,8 +75,8 @@ export default function Series(param){
             </Grid>
             <ul>
                 {
-                    result.map(data =>
-                        <li>{data.user_name}:{data.score}pts/{data.rps}rps</li>
+                    Object.keys(records).map(e =>
+                        <Record data={records[e]} />
                     )
                 }
             </ul>

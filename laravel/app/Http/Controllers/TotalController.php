@@ -93,17 +93,22 @@ class TotalController extends Controller
         ];
         $model = Record::whereIn('stage_id',$stage_list[$request['id']])->get();
         $datas = $model->toArray();
-        $res   = array(
+        $res   = [
+            // メタ情報をあらかじめ配列に投入しておく
             "stage_list" => $stage_list[$request['id']]
-        );
+        ];
+
+        // ここからランキング出力本体
+        $ranking = [];
 
         // 対象の記録群からユーザー配列を作成し、値を初期化
         foreach($users = array_unique( array_column($datas, 'user_name') ) as $user){
-            $res[$user]["user_name"] = $user;
-            $res[$user]["score"] = 0;
-            $res[$user]["rps"]   = 0;
-            $res[$user]["count"] = 0;
-            $res[$user]["ranks"] = array();
+            $ranking[$user]["user_name"] = $user;
+            $ranking[$user]["score"] = 0;
+            $ranking[$user]["rps"]   = 0;
+            $ranking[$user]["count"] = 0;
+            $ranking[$user]["created_at"] = "2006/09/01 00:00:00";
+            $ranking[$user]["ranks"] = array();
         }
         // ユーザー配列に各種データを入れ込む
         foreach($users as $user){
@@ -111,12 +116,36 @@ class TotalController extends Controller
                 if($user !== $data["user_name"]) {
                     continue;
                 }
-                $res[$user]["score"] += $data["score"];
-                $res[$user]["rps"]   += $data["rps"];
-                $res[$user]["count"] ++;
-                $res[$user]["ranks"][] = $data["post_rank"];
+                // 最終更新日を取得
+                if($ranking[$user]["created_at"] < $data["created_at"]){
+                    $ranking[$user]["created_at"] = $data["created_at"];
+                }
+                $ranking[$user]["score"] += $data["score"];
+                $ranking[$user]["rps"]   += $data["rps"];
+                $ranking[$user]["count"] ++;
+                $ranking[$user]["ranks"][] = $data["post_rank"];
             }
         }
+        // 降順に並び替え
+        $score_column = array_column($ranking, "score");
+        array_multisort($score_column, SORT_DESC, SORT_NUMERIC, $ranking);
+
+        // 順位を計算して入れる
+        $rank = 1;
+        $count = 1;
+        $before = 0;
+        foreach($ranking as $key => $value){
+            if($before !== $value["score"]){
+                $rank = $count;
+            }
+            $ranking[$key]["post_rank"] = $rank;
+            $before = $value["score"];
+            $count++;
+        }
+
+        // 出力用配列に入れる
+        $res["data"] = $ranking;
+
         return response()->json(
             $res
         );
