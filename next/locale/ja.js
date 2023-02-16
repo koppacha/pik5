@@ -1,4 +1,8 @@
 export const ja = {
+    g: {
+      'rankTail': "位",
+      'rankHead': "",
+    },
     title: {
       0: "ピクチャレ大会（仮）",
       1: "ピクミン",
