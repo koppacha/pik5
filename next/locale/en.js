@@ -1,4 +1,8 @@
 export const en = {
+    g: {
+        'rankTail': "",
+        'rankHead': "#",
+    },
     stage: {
         201: "Explorer's Cave",
         202: "Novice Training",

@@ -1,9 +1,9 @@
 import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
-import {Box, createTheme, Grid, Typography} from "@mui/material";
+import {Grid, Typography} from "@mui/material";
 import Link from "next/link";
-import {faHashtag, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
+import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 
@@ -23,6 +23,10 @@ export default function Record(props) {
 
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
+    const shadow =  '2px 2px 2px #000, -2px 2px 2px #000,' +
+                    ' 2px -2px 2px #000, -2px -2px 2px #000,' +
+                    ' 2px 0 2px #000, 0 2px 2px #000,' +
+                    ' -2px 0 2px #000, 0 -2px 2px #000';
 
     const r = props.data
 
@@ -31,28 +35,28 @@ export default function Record(props) {
         rank = Number(rank)
         if(rank === 1){
             return [
-                '#f2ee0c',
+                '#f6f24e',
                 '#595959'
                 ]
         } else if(rank === 2){
             return [
-                '#0cf232',
-                '#313131'
+                '#42f35d',
+                '#363636'
                 ]
         } else if(rank === 3){
             return [
-                '#0ca2f2',
-                '#111111'
+                '#23abf1',
+                '#1e1e1e'
                 ]
         } else if(rank < 11){
             return [
                 '#eae4e4',
-                '#000000'
+                '#181818'
                 ]
         } else if(rank < 21){
-            return '#c0bbbb'
+            return '#a8a2a2'
         } else {
-            return '#a8a0a0'
+            return '#777171'
         }
     }
 
@@ -71,26 +75,41 @@ export default function Record(props) {
             <Grid xs={1} sx={{
                 borderRight: '1px solid #fff'
             }}>
-                <Typography sx={{
+                <Typography component="span" sx={{color:'#999'}}>{t.g.rankHead}</Typography>
+                <Typography component="span" sx={{
                     fontSize:'2em',
-                    fontFamily:["Outfit","cursive"].join(",")
+                    fontWeight: '200',
+                    fontFamily:['"Kulim Park"',"cursive"].join(","),
+                    textShadow: shadow,
                 }}>{r.post_rank}</Typography>
+                <Typography component="span" sx={{
+                    color:'#999',
+                    textShadow: shadow,
+                }}> {t.g.rankTail}</Typography>
                 <Typography sx={{fontSize:'0.7em',color:'#999'}}>[{r.rps} rps]</Typography>
             </Grid>
             <Grid xs={3} sx={{
+                borderRight: '1px solid #777',
+            }}><Typography component="span" sx={{
                 lineHeight: '3em',
                 fontSize: '1.25em',
-                borderRight: '1px solid #777'
-            }}>
-                {r.user_name}
+                fontFamily:['"M PLUS 1 CODE"'].join(","),
+                textShadow: shadow,
+            }}>{r.user_name}</Typography>
             </Grid>
             <Grid xs={3} sx={{
+                borderRight: '1px solid #777',
+            }}><Typography component="span" sx={{
                 lineHeight: '3em',
                 fontSize: '1.3em',
-                borderRight: '1px solid #777',
-                fontFamily:["Outfit","cursive"].join(",")
+                fontFamily:['"Proza Libre"',"cursive"].join(","),
+                textShadow: shadow,
             }}>
-                {r.score.toLocaleString()}
+                {r.score.toLocaleString()}</Typography>
+                <Typography component="span" sx={{
+                    color:'#999',
+                    textShadow: shadow,
+                }}> pts.</Typography>
             </Grid>
             <Grid xs={5} sx={{
                 textAlign: 'left',

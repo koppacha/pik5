@@ -7,7 +7,6 @@ config.autoAddCss = false
 
 export default function App({ Component, pageProps: { session, ...pageProps }, router }: AppProps) {
 
-
     return (
       <>
           <Layout>
