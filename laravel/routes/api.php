@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\TotalController;
+use App\Http\Controllers\UserNameController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +21,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// ステージ別記録取得API
+// 記録取得API
 Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
     Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
     Route :: get ( 'record/{id}' , [ RecordController ::class, 'show' ]);
@@ -33,4 +34,9 @@ Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
 Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
     Route :: get ( 'total/{id}' , [ TotalController ::class, 'show' ]);
     Route :: post ( 'total' , [ TotalController ::class, 'create' ]);
+});
+
+// ユーザーIDからユーザー名を取得する
+Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
+    Route:: get('user/name/{id}', [UserNameController ::class, 'requestName']);
 });
