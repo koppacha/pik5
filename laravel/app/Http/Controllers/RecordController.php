@@ -64,12 +64,25 @@ class RecordController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Record $record
+     * @param Request $request
      * @return JsonResponse
      */
     public function show(Request $request): JsonResponse
     {
-        $data = Record::where('stage_id',$request['id'])->get();
+        // 取得先のカラムを定義
+        $where = '';
+        if(is_numeric($request['id'])) {
+            $where = 'stage_id';
+        } else {
+            $where = 'user_id';
+        }
+
+        // 記録をリクエストしてJSONに変換
+        $data = Record::with(['user' => function($q){
+            $q->select('user_name','user_id');
+            }])
+                ->where($where, $request['id'])->get();
+
         return response()->json(
             $data
         );

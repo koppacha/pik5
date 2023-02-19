@@ -17,7 +17,7 @@ class RecordSeeder extends Seeder
     {
         $params = [
             [
-                'user_name' => 'タマゴムシ',
+                'user_id' => 'tamagomushi',
                 'stage_id' => 201,
                 'score' => 35000,
                 'console' => 1,
@@ -36,7 +36,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'サライムシ',
+                'user_id' => 'saraimushi',
                 'stage_id' => 201,
                 'score' => 34980,
                 'console' => 1,
@@ -55,7 +55,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'ウジャダニ',
+                'user_id' => 'ujadani',
                 'stage_id' => 201,
                 'score' => 34950,
                 'console' => 2,
@@ -74,7 +74,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'タマゴムシ',
+                'user_id' => 'tamagomushi',
                 'stage_id' => 202,
                 'score' => 25000,
                 'console' => 1,
@@ -93,7 +93,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'トテツチホカシ',
+                'user_id' => 'totetsuchihokashi',
                 'stage_id' => 202,
                 'score' => 24300,
                 'console' => 2,
@@ -112,7 +112,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'ウジンコ',
+                'user_id' => 'ujinko',
                 'stage_id' => 202,
                 'score' => 24100,
                 'console' => 1,
@@ -131,7 +131,7 @@ class RecordSeeder extends Seeder
                 'updated_at' => new \DateTime(),
             ],
             [
-                'user_name' => 'タマゴムシ',
+                'user_id' => 'tamagomushi',
                 'stage_id' => 203,
                 'score' => 40200,
                 'console' => 1,

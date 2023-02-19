@@ -95,7 +95,7 @@ export default function Record(props) {
                 fontSize: '1.25em',
                 fontFamily:['"M PLUS 1 CODE"'].join(","),
                 textShadow: shadow,
-            }}>{r.user_name}</Typography>
+            }}><Link href={"/user/"+r.user_id}>{r.user.user_name}</Link></Typography>
             </Grid>
             <Grid xs={3} sx={{
                 borderRight: '1px solid #777',
@@ -125,7 +125,7 @@ export default function Record(props) {
                     <Grid xs={6} sx={{
                         textAlign:'right'
                     }}>
-                        {r.stage_id ? <>{r.stage_id + '#' + t.stage[r.stage_id]}</>:undefined}
+                        {r.stage_id ? <><Link href={'/stage/'+r.stage_id}>{r.stage_id + '#' + t.stage[r.stage_id]}</Link></>:undefined}
                     </Grid>
                     <Grid xs={12} sx={{
                         borderTop:'1px solid #777',

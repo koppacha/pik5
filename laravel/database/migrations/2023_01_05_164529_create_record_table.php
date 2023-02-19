@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('records', static function (Blueprint $table) {
             $table->bigIncrements('post_id');
-            $table->string('user_name');
+            $table->string('user_id');
             $table->bigInteger('score');
             $table->bigInteger('stage_id');
             $table->smallInteger('console');

@@ -91,7 +91,9 @@ class TotalController extends Controller
             360 => range(3301,3350),// 2Pミッション
             400 => range(401, 405),
         ];
-        $model = Record::whereIn('stage_id',$stage_list[$request['id']])->get();
+        $model = Record::with(['user' => function($q){
+            $q->select('user_name','user_id');
+        }])->whereIn('stage_id',$stage_list[$request['id']])->get();
         $datas = $model->toArray();
         $res   = [
             // メタ情報をあらかじめ配列に投入しておく
@@ -102,8 +104,9 @@ class TotalController extends Controller
         $ranking = [];
 
         // 対象の記録群からユーザー配列を作成し、値を初期化
-        foreach($users = array_unique( array_column($datas, 'user_name') ) as $user){
-            $ranking[$user]["user_name"] = $user;
+        foreach($users = array_unique( array_column($datas, 'user_id') ) as $user){
+            $ranking[$user]["user"]["user_id"] = $user;
+            $ranking[$user]["user"]["user_name"] = (new UserNameController)->getName($user)[0]['user_name'];
             $ranking[$user]["score"] = 0;
             $ranking[$user]["rps"]   = 0;
             $ranking[$user]["count"] = 0;
@@ -113,7 +116,7 @@ class TotalController extends Controller
         // ユーザー配列に各種データを入れ込む
         foreach($users as $user){
             foreach($datas as $data){
-                if($user !== $data["user_name"]) {
+                if($user !== $data["user_id"]) {
                     continue;
                 }
                 // 最終更新日を取得
