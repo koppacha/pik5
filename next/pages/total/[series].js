@@ -24,7 +24,7 @@ export default function Series(param){
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
 
-    const stages = param.data.stage_list; // ソート後にstage_listは先頭に来るのでそれを取り出す
+    const stages = param.data.stage_list;
     const records = param.data.data;
 
     const consoles = [0, 1, 2]

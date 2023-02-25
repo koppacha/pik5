@@ -70,7 +70,8 @@ export default function Record(props) {
             borderRadius: '8px',
             padding: '4px',
             marginY: '10px',
-            textAlign: 'center'
+            textAlign: 'center',
+            boxShadow: '-3px 1px 4px ' + rankColor[0]
         }}>
             <Grid xs={1} sx={{
                 borderRight: '1px solid #fff'
@@ -95,7 +96,7 @@ export default function Record(props) {
                 fontSize: '1.25em',
                 fontFamily:['"M PLUS 1 CODE"'].join(","),
                 textShadow: shadow,
-            }}><Link href={"/user/"+r.user_id}>{r.user.user_name}</Link></Typography>
+            }}><Link href={"/user/"+r.user.user_id}>{r.user.user_name}</Link></Typography>
             </Grid>
             <Grid xs={3} sx={{
                 borderRight: '1px solid #777',
