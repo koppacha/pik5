@@ -69,13 +69,16 @@ class RecordController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        // 取得先のカラムを定義
-        $where = '';
-        if(is_numeric($request['id'])) {
-            $where = 'stage_id';
-        } else {
-            $where = 'user_id';
-        }
+        /*
+         * $request の中身
+         * id: ステージIDまたはユーザーID（必須）
+         * rule: ルール区分（任意）
+         * console: 操作方法（任意）
+         * year: 集計年（任意）
+        */
+
+        // ステージIDの種別判定
+        $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
 
         // 記録をリクエストしてJSONに変換
         $data = Record::with(['user' => function($q){

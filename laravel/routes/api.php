@@ -24,7 +24,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // 記録取得API
 Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
     Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
-    Route :: get ( 'record/{id}' , [ RecordController ::class, 'show' ]);
+    Route :: get ( 'record/{id}/{rule?}/{console?}/{year?}' , [ RecordController ::class, 'show' ]);
     Route :: post ( 'record' , [ RecordController ::class, 'create' ]);
     Route :: patch ( 'record/{id}' , [ RecordController ::class, 'update' ]);
     Route :: delete ( 'record/{id}' , [ RecordController ::class, 'destroy' ]);
