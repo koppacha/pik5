@@ -75,7 +75,7 @@ services:
     volumes:
       - ./next:/var/www/next
     ports:
-      - "3000:3000"
+      - "8080:3000"
     links:
       - nginx
     depends_on:
