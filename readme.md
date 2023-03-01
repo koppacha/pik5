@@ -93,6 +93,27 @@ $ git pull origin your_branch
 
 ```
 
+## AWSで動かす際のメモ
+```shell
+# docker composeが入っていないので下記コマンドで入れる
+$ DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+$ mkdir -p $DOCKER_CONFIG/cli-plugins
+$ curl -SL https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+$ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+
+# デフォルト設定だとyarn installで落ちるのでボリュームを拡張する
+# 　・インスタンス一覧→インスタンスIDをクリック→ボリュームタブ
+# 　・ボリュームIDをクリック→ボリュームを選択して「アクション」タブ
+# 　・ボリュームの変更をクリック→最低でも15GiB以上に設定する
+# 下記コマンドでボリューム名を確認
+$ df -h
+
+# ボリュームへの割り当てを実行
+$ sudo growpart /dev/nvme0n1 1
+$ sudo xfs_growfs -d /
+
+```
+
 ## バージョン履歴
 ### ver.1.00〜2.78（2007/04/29〜2023/XX/XX）
 * ver.1：ピクミン３同盟内コンテンツ時代（2007/04/29〜2015/08/31）
