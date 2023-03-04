@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Record;
+use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -80,11 +81,29 @@ class RecordController extends Controller
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
 
+        // オプション引数
+        $console = $request['console'] ?: 0;
+        $rule    = $request['rule']    ?: 10;
+        $year    = $request['year']    ?: date("Y");
+
+        // オプション引数を加工する
+        $year = intval($year) + 1;
+        $console_operation = $console? "=" : ">";
+
+        // 対象年からフィルターする年月日を算出
+        $datetime = new DateTime("{$year}-01-01 00:00:00");
+        $date = $datetime->format("Y-m-d H:i:s");
+
         // 記録をリクエストしてJSONに変換
         $data = Record::with(['user' => function($q){
-            $q->select('user_name','user_id');
-            }])
-                ->where($where, $request['id'])->get();
+                // user_idに基づいてUserテーブルからユーザー名を取得する
+                $q->select('user_name','user_id');
+                }])
+                ->where($where, $request['id'])
+                ->where('console', $console_operation, $console)
+                ->where('rule',$rule)
+                ->where('created_at','<', $date)
+            ->get();
 
         return response()->json(
             $data

@@ -9,10 +9,10 @@ import {FormControl, MenuItem, NativeSelect, Select, Typography} from "@mui/mate
 export async function getServerSideProps(context){
     const query = context.query.stage
     const stage = query[0]
-    const rule  = query[1] ? String(query[1]).substring(0, 2) : 10
-    const console = query[1] ? String(query[1]).substring(2, 1) : 0
-    const year  = query[2] || 0
-    const res = await fetch(`http://laravel:8000/api/record/${stage}`)
+    const rule  = query[2] || 10
+    const console = query[1] || 0
+    const year  = query[3] || 2023
+    const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
     const data = await res.json()
     return {
         props: {
@@ -29,6 +29,7 @@ export default function Stage(param){
 
     return (
         <>
+            ##{param.console}<br/>
             #{param.stage}<br/>
             {t.title[param.stage.slice(0,1)]+" "+t.g.challenge}<br/>
             <Typography variant="h3" sx={{
@@ -46,6 +47,9 @@ export default function Stage(param){
                     <MenuItem value={12}>{t.rule[12]}</MenuItem>
                     <MenuItem value={13}>{t.rule[13]}</MenuItem>
                     <MenuItem value={14}>{t.rule[14]}</MenuItem>
+                    <MenuItem value={15}>{t.rule[15]}</MenuItem>
+                    <MenuItem value={16}>{t.rule[16]}</MenuItem>
+                    <MenuItem value={17}>{t.rule[17]}</MenuItem>
                 </Select>
             </FormControl>
 

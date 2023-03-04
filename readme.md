@@ -5,11 +5,10 @@
 ## このプロジェクトについて
 * 「ピクミンシリーズチャレンジモード大会（ver.2）」のフルリプレイスプロジェクトです。 2023年夏公開予定です。公開後に旧ピクチャレ大会は閉鎖します。
 
-## 開発に参加したいという方へ
-まずはTwitterかDiscordで管理人へ気軽にお問い合わせください。
-下記の環境構築を試してみていただき、新規ブランチで開発していただく分にはなんの制限もありません。
-masterブランチへのマージは管理者権限が必要です。その場合はプルリクエストを投げておいてください。
-**他所でGitを使っている人は名前とメールアドレスの流出にご注意を！**
+## このソースコードの権利について
+当プロジェクトはオープンソースであり、ソースコードの改変や二次配布などについて制限はありませんが、
+本家と同じピクミンシリーズのコンテンツとして公開することは、競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
+ピクミン以外のゲームのランキングサイトとして公開することに関しては制限はありません。
 
 ## おすすめ開発環境
 * OS：macOS https://www.apple.com/jp/macos/ventura/
@@ -63,13 +62,32 @@ $ php artisan serve --host 0.0.0.0 # 終了するときはCtrl+C
 # 開発を終了する際は以下でコンテナを廃棄する（再開するたびにコンテナ構築からやり直す）
 $ docker compose down
 ```
-上記実行後、 http://localhost:3000 にアクセス
+
+## 初回プッシュ前の準備
+```shell
+# ~/.sshフォルダに移動し秘密鍵を作る
+$ cd ~/.ssh
+$ ssh-keygen -t rsa # Enter 3回押す
+
+# 以下のコマンドで公開鍵を表示し、コピーしてGithubに登録する
+$ cat id_rsa.pub
+
+# プロジェクトフォルダに戻って以下のコマンドで接続確認
+$ ssh -T git@github.com
+
+# HTTPSでクローンした場合はリモートURLを修正する
+$ git remote set-url origin git@github.com:koppacha/pik5.git
+
+# 本プロジェクトに使う名前とメールアドレスを設定する
+$ git config user.name "(ユーザー名)"
+$ git config user.email "(公開しても構わないメールアドレス)"
+```
 
 ## 開発環境のURL一覧
-* フロントエンド画面 http://localhost:3000
+* フロントエンド画面 http://localhost:8080
 * バックエンド（API） http://localhost:8000
 * phpmyadmin（DB） http://localhost:6000
-* mailhog http://localhost:8045
+* mail-hog http://localhost:8045
 
 ## バージョン管理のルール
 ```shell
@@ -93,7 +111,7 @@ $ git pull origin your_branch
 
 ```
 
-## AWSで動かす際のメモ
+## AWS Cloud9で動かす際のメモ
 ```shell
 # docker composeが入っていないので下記コマンドで入れる
 $ DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
@@ -109,9 +127,10 @@ $ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
 $ df -h
 
 # ボリュームへの割り当てを実行
-$ sudo growpart /dev/nvme0n1 1
+$ sudo growpart /dev/nvme0n1 1 #nvme0n1はボリューム名の例
 $ sudo xfs_growfs -d /
 
+# プレビューにはサードパーティーCookie（サイト越えトラッキング）を許可する必要があります
 ```
 
 ## バージョン履歴
