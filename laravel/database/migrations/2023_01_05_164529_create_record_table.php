@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('user_id');
             $table->bigInteger('score');
             $table->bigInteger('stage_id');
+            $table->bigInteger('rule');
             $table->smallInteger('console');
             $table->bigInteger('unique_id');
             $table->bigInteger('post_rank');
