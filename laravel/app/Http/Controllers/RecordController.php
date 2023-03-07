@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Library\Func;
 use App\Models\Record;
 use DateTime;
 use Illuminate\Http\JsonResponse;
@@ -94,7 +95,7 @@ class RecordController extends Controller
         $datetime = new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
 
-        // 記録をリクエストしてJSONに変換
+        // 記録をリクエスト
         $data = Record::with(['user' => function($q){
                 // user_idに基づいてUserテーブルからユーザー名を取得する
                 $q->select('user_name','user_id');
@@ -104,6 +105,10 @@ class RecordController extends Controller
                 ->where('rule',$rule)
                 ->where('created_at','<', $date)
             ->get();
+
+        // 順位を再計算
+        // TODO オブジェクトから配列に変換できない
+        $data = Func::rank_calc((array)$data);
 
         return response()->json(
             $data
