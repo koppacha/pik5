@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Library\Func;
 use App\Models\Record;
 use App\Models\Total;
 use Illuminate\Http\JsonResponse;
@@ -94,7 +95,7 @@ class TotalController extends Controller
         $model = Record::with(['user' => function($q){
             $q->select('user_name','user_id');
         }])->whereIn('stage_id',$stage_list[$request['id']])->get();
-        $datas = $model->toArray();
+        $dataset = $model->toArray();
         $res   = [
             // メタ情報をあらかじめ配列に投入しておく
             "stage_list" => $stage_list[$request['id']]
@@ -104,7 +105,7 @@ class TotalController extends Controller
         $ranking = [];
 
         // 対象の記録群からユーザー配列を作成し、値を初期化
-        foreach($users = array_unique( array_column($datas, 'user_id') ) as $user){
+        foreach($users = array_unique( array_column($dataset, 'user_id') ) as $user){
             $ranking[$user]["user"]["user_id"] = $user;
             $ranking[$user]["user"]["user_name"] = (new UserNameController)->getName($user)[0]['user_name'];
             $ranking[$user]["score"] = 0;
@@ -115,7 +116,7 @@ class TotalController extends Controller
         }
         // ユーザー配列に各種データを入れ込む
         foreach($users as $user){
-            foreach($datas as $data){
+            foreach($dataset as $data){
                 if($user !== $data["user_id"]) {
                     continue;
                 }
@@ -133,18 +134,8 @@ class TotalController extends Controller
         $score_column = array_column($ranking, "score");
         array_multisort($score_column, SORT_DESC, SORT_NUMERIC, $ranking);
 
-        // 順位を計算して入れる
-        $rank = 1;
-        $count = 1;
-        $before = 0;
-        foreach($ranking as $key => $value){
-            if($before !== $value["score"]){
-                $rank = $count;
-            }
-            $ranking[$key]["post_rank"] = $rank;
-            $before = $value["score"];
-            $count++;
-        }
+        // 順位を再計算
+        $ranking = Func::rank_calc($ranking);
 
         // 出力用配列に入れる
         $res["data"] = $ranking;
@@ -158,7 +149,7 @@ class TotalController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param Total $Total
-     * @return Response
+     * @return void
      */
     public function edit(Total $Total)
     {
