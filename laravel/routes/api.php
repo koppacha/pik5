@@ -32,7 +32,7 @@ Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
 
 // 通常総合ランキング取得API
 Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
-    Route :: get ( 'total/{id}' , [ TotalController ::class, 'show' ]);
+    Route :: get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController ::class, 'show' ]);
     Route :: post ( 'total' , [ TotalController ::class, 'create' ]);
 });
 

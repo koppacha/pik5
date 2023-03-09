@@ -33,7 +33,6 @@ export default function Stage(param){
 
     return (
         <>
-            ddd
             #{param.stage}<br/>
             {t.title[param.stage.slice(0,1)]+" "+t.g.challenge}<br/>
             <Typography variant="h3" sx={{
@@ -49,7 +48,6 @@ export default function Stage(param){
                 >
                     {
                         // ルールプルダウンを出力
-                        // TODO: プルダウン選択後、ページ遷移前に操作できる問題
                         rules.map(val =>
                             <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
                                 param.console+'/'+val+'/'+param.year}>{t.rule[val]}</Link></MenuItem>

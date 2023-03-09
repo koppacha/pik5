@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Library\Func;
 use App\Models\Record;
 use App\Models\Total;
+use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -92,9 +93,26 @@ class TotalController extends Controller
             360 => range(3301,3350),// 2Pミッション
             400 => range(401, 405),
         ];
+
+        // オプション引数
+        $console = $request['console'] ?: 0;
+        $rule    = $request['rule']    ?: 10;
+        $year    = $request['year']    ?: date("Y");
+
+        // オプション引数を加工する
+        $year = intval($year) + 1;
+        $console_operation = $console? "=" : ">";
+
+        // 対象年からフィルターする年月日を算出
+        $datetime = new DateTime("{$year}-01-01 00:00:00");
+        $date = $datetime->format("Y-m-d H:i:s");
+
         $model = Record::with(['user' => function($q){
             $q->select('user_name','user_id');
-        }])->whereIn('stage_id',$stage_list[$request['id']])->get();
+        }])->whereIn('stage_id',$stage_list[$request['id']])
+            ->where('console', $console_operation, $console)
+            ->where('rule',$rule)
+            ->where('created_at','<', $date)->get();
         $dataset = $model->toArray();
         $res   = [
             // メタ情報をあらかじめ配列に投入しておく

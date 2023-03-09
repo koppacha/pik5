@@ -3,10 +3,11 @@
 namespace App\Library;
 
 use Illuminate\Support\Facades\Facade;
+use Illuminate\Database\Eloquent\Collection;
 
 class Func extends Facade
 {
-    static function rank_calc (array $data) : object
+    static function rank_calc (array|Collection $data) : object
     {
         $rank = 1;
         $count = 1;
