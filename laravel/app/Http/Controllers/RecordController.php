@@ -107,8 +107,7 @@ class RecordController extends Controller
             ->get();
 
         // 順位を再計算
-        // TODO オブジェクトから配列に変換できない
-        $data = Func::rank_calc((array)$data);
+        $data = Func::rank_calc($data);
 
         return response()->json(
             $data

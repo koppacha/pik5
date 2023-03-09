@@ -1,4 +1,4 @@
-# 新ピクチャレ大会
+# 新ピクチャレ大会 Pikmin Series Leaderboards
 **Since: 2007/04/29**  
 **author:@koppachappy**
 
@@ -7,7 +7,7 @@
 
 ## このソースコードの権利について
 当プロジェクトはオープンソースであり、ソースコードの改変や二次配布などについて制限はありませんが、
-本家と同じピクミンシリーズのコンテンツとして公開することは、競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
+本家と同じピクミンシリーズのコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
 ピクミン以外のゲームのランキングサイトとして公開することに関しては制限はありません。
 
 ## おすすめ開発環境
@@ -17,13 +17,9 @@
 * API：Postman https://www.postman.com/
 * Browser：Google Chrome https://www.google.com/intl/ja_jp/chrome/
 
-＊原則として最新版を利用
-
-## 開発コンセプト
-Laravel（PHP）とNext.js（JavaScript、React）の疎結合でフロントエンドとバックエンドをそれぞれ独立させた開発を目指します。
-当初はNuxt.js（Vue.js）を採用していましたが、
-最新バージョンの仕様が揺れていることや英語圏を含むインターネット全体での知見不足からNext.jsに乗り換えました。  
-開発にはPHPとJavaScriptの知識が必須になります。
+＊原則として最新版を利用  
+＊Windows環境はDockerの動作が重いので推奨しませんが、もし開発する場合はWSL2(Ubuntu)をインストールし、
+その中にデータを入れるとある程度軽快に動きます。
 
 ## 各種マニュアル
 * PHP：https://www.php.net/manual/ja/index.php
@@ -50,7 +46,7 @@ $ docker compose up -d
 # 以下実行前にフロントサーバー用に新しいターミナルを起動
 $ docker compose exec next bash
 $ yarn install
-$ yarn dev # 終了するときはCtrl+C
+$ yarn dev # 終了するときはCtrl+C、権限エラーで動かないときは yarn install --check-files を試す
 
 # 以下実行前にバックエンドサーバー用に新しいターミナルを起動
 $ docker compose exec laravel bash

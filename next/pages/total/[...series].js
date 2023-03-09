@@ -1,44 +1,62 @@
-import {useEffect, useState} from "react";
+import {useRouter} from "next/router";
 import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
-import { useRouter } from "next/router";
-import Record from "../../components/Record";
-import {FormControl, MenuItem, NativeSelect, Select, Typography} from "@mui/material";
+import {AppBar, Box, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
+import Record from "../../components/Record";
 
-// ステージ番号をアクセスされるたびに取得する（サーバーサイド）
 export async function getServerSideProps(context){
-    const query = context.query.stage
-    const stage = query[0]
+    const query = context.query.series
+    const series = query[0]
     const rule  = query[2] || 10
     const console = query[1] || 0
     const year  = query[3] || 2023
-    const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
+
+    // シリーズ番号に基づいて集計対象ステージをバックエンドで選別して持ってくる
+    const res = await fetch(`http://laravel:8000/api/total/${series}/${console}/${rule}/${year}`)
     const data = await res.json()
+
     return {
         props: {
-            data, stage, rule, console, year
+            data, series, rule, console, year
         }
     }
 }
 
-// レンダラー本体（フロントサイド）
-export default function Stage(param){
+export default function Series(param){
 
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
+
+    const stages = param.data['stage_list'];
+    const records = param.data.data;
     const rules = [10, 11, 12, 13, 14, 15, 16, 17]
     const consoles = [0, 1, 2, 3, 4]
     const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 
     return (
         <>
-            #{param.stage}<br/>
-            {t.title[param.stage.slice(0,1)]+" "+t.g.challenge}<br/>
-            <Typography variant="h3" sx={{
-                fontFamily:['"M PLUS 1 CODE"'].join(","),
-            }}>{ t.stage[param.stage] }</Typography>
-            <Typography sx={{color:'#999'}}>{en.stage[param.stage]}</Typography>
+            総合ランキング<br/>
+            #{param.series}<br/>
+            <Typography variant="h3">{ t.stage[param.series.slice(0,2)] }</Typography>
+            <Grid container>
+                {
+                    stages.map(stage =>
+                    <Grid xs={1.5}>
+                        <Link href={'/stage/'+stage}><Box sx={{
+                            border: 'solid 1px #fff',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            margin: '4px',
+                            minHeight: '6em',
+                            fontSize: '0.8em'}}>
+                            <span>#{stage}</span><br/>
+                            {t.stage[stage]}</Box>
+                        </Link>
+                    </Grid>
+                    )
+                }
+            </Grid>
             ルール
             <FormControl>
                 <Select
@@ -49,7 +67,7 @@ export default function Stage(param){
                     {
                         // ルールプルダウンを出力
                         rules.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
+                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
                                 param.console+'/'+val+'/'+param.year}>{t.rule[val]}</Link></MenuItem>
                         )
                     }
@@ -66,7 +84,7 @@ export default function Stage(param){
                     {
                         // 操作方法プルダウンを出力
                         consoles.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
+                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
                                 val+'/'+param.rule+'/'+param.year}>{t.console[val]}</Link></MenuItem>
                         )
                     }
@@ -82,18 +100,19 @@ export default function Stage(param){
                     {
                         // 集計年プルダウンを出力
                         years.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
+                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
                                 param.console+'/'+param.rule+'/'+val}>{val}</Link></MenuItem>
                         )
                     }
                 </Select>
             </FormControl>
-            <br/>
+            <ul>
                 {
-                    param.data.map(post =>
-                        <Record data={post} />
+                    Object.keys(records).map(e =>
+                        <Record data={records[e]} />
                     )
                 }
+            </ul>
         </>
     )
 }
