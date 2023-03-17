@@ -3,7 +3,7 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import { useRouter } from "next/router";
 import Record from "../../components/Record";
-import {FormControl, MenuItem, NativeSelect, Select, Typography} from "@mui/material";
+import {FormControl, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 
 // ステージ番号をアクセスされるたびに取得する（サーバーサイド）
@@ -13,11 +13,19 @@ export async function getServerSideProps(context){
     const rule  = query[2] || 10
     const console = query[1] || 0
     const year  = query[3] || 2023
+
+    // 記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
+
+    // ステージ情報をリクエスト
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
+
     const data = await res.json()
+    const info = await stage_res.json()
+
     return {
         props: {
-            data, stage, rule, console, year
+            data, stage, rule, console, year, info
         }
     }
 }

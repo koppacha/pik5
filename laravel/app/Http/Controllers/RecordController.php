@@ -104,6 +104,7 @@ class RecordController extends Controller
                 ->where('console', $console_operation, $console)
                 ->where('rule',$rule)
                 ->where('created_at','<', $date)
+                ->where('flg', '=',0)
             ->get();
 
         // 順位を再計算

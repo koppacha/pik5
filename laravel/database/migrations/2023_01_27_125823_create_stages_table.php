@@ -19,22 +19,10 @@ return new class extends Migration
             $table->bigInteger('Time');
             $table->bigInteger('Max_Treasure');
             $table->bigInteger('Total_Pikmin');
-            $table->bigInteger('Red_Pikmin');
-            $table->bigInteger('Yellow_Pikmin');
-            $table->bigInteger('Blue_Pikmin');
-            $table->bigInteger('Purple_Pikmin');
-            $table->bigInteger('White_Pikmin');
-            $table->bigInteger('Rock_Pikmin');
-            $table->bigInteger('Winged_Pikmin');
-            $table->bigInteger('Bulbmin');
-            $table->bigInteger('Ultra_Spicy');
-            $table->bigInteger('Ultra_Bitter');
-            $table->bigInteger('wr');
-            $table->bigInteger('wrdx');
-            $table->bigInteger('border_line');
-            $table->bigInteger('border_line_701k');
-            $table->bigInteger('border_line_702k');
-            $table->bigInteger('unexpected');
+            $table->bigInteger('border1');
+            $table->bigInteger('border2');
+            $table->bigInteger('border3');
+            $table->bigInteger('border4');
             $table->timestamps();
         });
     }

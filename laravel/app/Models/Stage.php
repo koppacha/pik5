@@ -9,7 +9,4 @@ class Stage extends Model
 {
     use HasFactory;
 
-    protected $guarded = [
-        'stage_id',
-    ];
 }
