@@ -75,6 +75,9 @@ class TotalController extends Controller
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
+            7   => range(101, 405),  // 通常総合
+            8   => range(1001, 9999),// 特殊総合
+            9   => range(101, 9999), // 全総合
             100 => [101, 102, 103, 104, 105],
             200 => range(201, 230),
             210 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],
@@ -95,6 +98,7 @@ class TotalController extends Controller
         ];
 
         // オプション引数
+        // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
         $rule    = $request['rule']    ?: 10;
         $year    = $request['year']    ?: date("Y");
@@ -103,16 +107,20 @@ class TotalController extends Controller
         $year = intval($year) + 1;
         $console_operation = $console? "=" : ">";
 
+
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
+        // 共通処理ここまで
 
         $model = Record::with(['user' => function($q){
             $q->select('user_name','user_id');
-        }])->whereIn('stage_id',$stage_list[$request['id']])
+         }])->whereIn('stage_id',$stage_list[$request['id']])
             ->where('console', $console_operation, $console)
             ->where('rule',$rule)
-            ->where('created_at','<', $date)->get();
+            ->where('created_at','<', $date)
+            ->where('flg', '=',0)
+            ->get();
         $dataset = $model->toArray();
         $res   = [
             // メタ情報をあらかじめ配列に投入しておく
@@ -148,9 +156,10 @@ class TotalController extends Controller
                 $ranking[$user]["ranks"][] = $data["post_rank"];
             }
         }
-        // 降順に並び替え
-        $score_column = array_column($ranking, "score");
-        array_multisort($score_column, SORT_DESC, SORT_NUMERIC, $ranking);
+        // 集計対象に基づいて降順に並び替え
+        $target = ($request['id'] < 10) ? "rps" : "score";
+        $target_column = array_column($ranking, $target);
+        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $ranking);
 
         // 順位を再計算
         $ranking = Func::rank_calc($ranking);

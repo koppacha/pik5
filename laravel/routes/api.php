@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
 use App\Http\Controllers\UserNameController;
 use Illuminate\Http\Request;
@@ -34,6 +35,11 @@ Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
 Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
     Route :: get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController ::class, 'show' ]);
     Route :: post ( 'total' , [ TotalController ::class, 'create' ]);
+});
+
+// ステージ情報取得API
+Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
+    Route :: get ( 'stage/{id}' , [ StageController ::class, 'show' ]);
 });
 
 // ユーザーIDからユーザー名を取得する
