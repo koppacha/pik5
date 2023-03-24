@@ -86,6 +86,7 @@ class RecordController extends Controller
         $console = $request['console'] ?: 0;
         $rule    = $request['rule']    ?: 10;
         $year    = $request['year']    ?: date("Y");
+        $compare  = $request['compare']  ?: 'timebonus';
 
         // オプション引数を加工する
         $year = intval($year) + 1;
@@ -109,6 +110,9 @@ class RecordController extends Controller
 
         // 順位を再計算
         $data = Func::rank_calc($data);
+
+        // 比較値を取得
+        $data = Func::compare_calc($data, $compare);
 
         return response()->json(
             $data
