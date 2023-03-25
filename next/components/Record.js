@@ -62,6 +62,15 @@ export default function Record(props) {
 
     const rankColor = rank2color(r.post_rank)
 
+    // 比較値を整形する
+    let compare;
+    if(!Number.isNaN(r.compare)){
+        if(r.compare > 0) compare = `(+${r.compare})`
+        if(r.compare < 0) compare = `(-${r.compare})`
+    } else {
+        compare = ""
+    }
+
     return (
         <Grid container sx={{
             borderLeft:'10px solid ' + rankColor[0],
@@ -110,7 +119,14 @@ export default function Record(props) {
                 <Typography component="span" sx={{
                     color:'#999',
                     textShadow: shadow,
+                    fontFamily:['"Proza Libre"',"cursive"].join(","),
                 }}> pts.</Typography>
+                <Typography component="span" sx={{
+                    color:'#4ce600',
+                    fontSize: '0.8em',
+                    fontFamily:['"Proza Libre"',"cursive"].join(","),
+                    textShadow: shadow,
+                }}> {compare}</Typography>
             </Grid>
             <Grid xs={5} sx={{
                 textAlign: 'left',
