@@ -14,7 +14,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('records', static function (Blueprint $table) {
-            $table->bigIncrements('post_id');
+            $table->id('post_id');
             $table->string('user_id');
             $table->bigInteger('score');
             $table->bigInteger('stage_id');
@@ -23,13 +23,14 @@ return new class extends Migration
             $table->bigInteger('unique_id');
             $table->bigInteger('post_rank');
             $table->bigInteger('rps');
-            $table->string('evi_hash');
+            $table->string('hash');
             $table->string('post_comment');
             $table->string('user_ip');
             $table->string('user_host');
             $table->string('user_agent');
             $table->string('img_url');
             $table->string('video_url');
+            $table->string('post_memo');
             $table->string('flg');
             $table->timestamps();
         });

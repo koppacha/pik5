@@ -84,7 +84,7 @@ class RecordController extends Controller
 
         // オプション引数
         $console = $request['console'] ?: 0;
-        $rule    = $request['rule']    ?: 10;
+        $rule    = $request['rule']    ?: 2;
         $year    = $request['year']    ?: date("Y");
         $compare  = $request['compare']  ?: 'timebonus';
 
