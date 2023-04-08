@@ -8,6 +8,7 @@ use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 class RecordController extends Controller
 {
@@ -105,8 +106,17 @@ class RecordController extends Controller
                 ->where('console', $console_operation, $console)
                 ->where('rule',$rule)
                 ->where('created_at','<', $date)
-                ->where('flg', '=',0)
+                ->where('flg','<', 2)
+                ->orderBy('score','DESC')
             ->get();
+
+        // 重複を削除（TODO: 可能なら下記の処理はSQLで行いたいが2023/04/08調査の時点では無理っぽい）
+        $users = [];
+        $data->filter(function($item) use (&$users){
+            $flg = in_array($item->user_id, $users);
+            $users[] = $item->user_id;
+            return $flg;
+        });
 
         // 順位を再計算
         $data = Func::rank_calc($data);
