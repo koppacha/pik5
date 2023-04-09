@@ -102,21 +102,19 @@ class RecordController extends Controller
                 // user_idに基づいてUserテーブルからユーザー名を取得する
                 $q->select('user_name','user_id');
                 }])
+
+                // 絞り込み条件
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->where('rule',$rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
+                ->groupBy('user_id')
+                ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
                 ->orderBy('score','DESC')
             ->get();
 
-        // 重複を削除（TODO: 可能なら下記の処理はSQLで行いたいが2023/04/08調査の時点では無理っぽい）
-        $users = [];
-        $data->filter(function($item) use (&$users){
-            $flg = in_array($item->user_id, $users);
-            $users[] = $item->user_id;
-            return $flg;
-        });
+        // 重複を削除して並び変える（TODO: 可能なら下記の処理はSQLで行いたいが2023/04/08調査の時点では無理っぽい）
 
         // 順位を再計算
         $data = Func::rank_calc($data);
