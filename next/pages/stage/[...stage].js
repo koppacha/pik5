@@ -38,7 +38,6 @@ export default function Stage(param){
     const rules = [10, 11, 12, 13, 14, 15, 16, 17]
     const consoles = [0, 1, 2, 3, 4]
     const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
-    const datas = param.data
 
     return (
         <>
@@ -99,7 +98,7 @@ export default function Stage(param){
             </FormControl>
             <br/>
                 {
-                    datas.map(post =>
+                    Object.values(param.data).map(post =>
                         <Record data={post} />
                     )
                 }
