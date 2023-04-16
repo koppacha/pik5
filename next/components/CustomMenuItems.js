@@ -93,6 +93,7 @@ export default function CustomMenuItems(props){
                 <MenuItem onClick={handleClose}>チャレンジ複合（RTA）</MenuItem>
                 <MenuItem onClick={handleClose}>バトルモード戦績</MenuItem>
                 <MenuItem onClick={handleClose}>ルール集</MenuItem>
+                <Link href="/keyword"><MenuItem>ピクミンキーワード</MenuItem></Link>
                 <MenuItem onClick={handleClose}>Speedrun.com</MenuItem>
                 <MenuItem onClick={handleClose}>Pikmin Wiki</MenuItem>
             </>
