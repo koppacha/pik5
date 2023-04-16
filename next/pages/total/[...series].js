@@ -8,7 +8,7 @@ import Record from "../../components/Record";
 export async function getServerSideProps(context){
     const query = context.query.series
     const series = query[0]
-    const rule  = query[2] || 10
+    const rule  = query[2] || 0
     const console = query[1] || 0
     const year  = query[3] || 2023
 

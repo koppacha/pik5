@@ -15,10 +15,14 @@ return new class extends Migration
     {
         Schema::create('stages', static function (Blueprint $table) {
             $table->id('stage_id');
+            $table->string('stage_name');
+            $table->string('eng_stage_name');
+            $table->string('stage_sub');
+            $table->bigInteger('series');
             $table->bigInteger('parent');
-            $table->bigInteger('Time');
-            $table->bigInteger('Max_Treasure');
-            $table->bigInteger('Total_Pikmin');
+            $table->bigInteger('time');
+            $table->bigInteger('treasure');
+            $table->bigInteger('pikmin');
             $table->bigInteger('border1');
             $table->bigInteger('border2');
             $table->bigInteger('border3');

@@ -100,13 +100,12 @@ class TotalController extends Controller
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
-        $rule    = $request['rule']    ?: 10;
+        $rule    = $request['rule']    ?: 0;
         $year    = $request['year']    ?: date("Y");
 
         // オプション引数を加工する
         $year = intval($year) + 1;
         $console_operation = $console? "=" : ">";
-
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -119,7 +118,9 @@ class TotalController extends Controller
             ->where('console', $console_operation, $console)
             ->where('rule',$rule)
             ->where('created_at','<', $date)
-            ->where('flg', '=',0)
+            ->groupBy('user_id', 'stage_id')
+            ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
+            ->orderBy('score','DESC')
             ->get();
         $dataset = $model->toArray();
         $res   = [
@@ -153,7 +154,7 @@ class TotalController extends Controller
                 $ranking[$user]["score"] += $data["score"];
                 $ranking[$user]["rps"]   += $data["rps"];
                 $ranking[$user]["count"] ++;
-                $ranking[$user]["ranks"][] = $data["post_rank"];
+                $ranking[$user]["ranks"][] = $data["score"];
             }
         }
         // 集計対象に基づいて降順に並び替え

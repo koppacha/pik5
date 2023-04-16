@@ -10,7 +10,7 @@ import Link from "next/link";
 export async function getServerSideProps(context){
     const query = context.query.stage
     const stage = query[0]
-    const rule  = query[2] || 10
+    const rule  = query[2] || 0
     const console = query[1] || 0
     const year  = query[3] || 2023
 
@@ -35,7 +35,7 @@ export default function Stage(param){
 
     const { locale } = useRouter()
     const t = (locale === "en") ? en : ja
-    const rules = [10, 11, 12, 13, 14, 15, 16, 17]
+    const rules = [0, 11, 12, 13, 14, 15, 16, 17]
     const consoles = [0, 1, 2, 3, 4]
     const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 

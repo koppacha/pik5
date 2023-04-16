@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
 //            RecordSeeder::class,
             UsersTableSeeder::class,
-            StageSeeder::class,
+            StageCsvSeeder::class,
             RecordCsvSeeder::class,
             UserCsvSeeder::class,
         ]);
