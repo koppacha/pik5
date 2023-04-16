@@ -31,11 +31,12 @@ class Func extends Facade
             // 比較値を初期化
             $value = 0;
             $stage = Stage::where('stage_id', $record['stage_id'])->first();
+
             if($compare === 'timebonus'){
 
                 // ピクミン２のタイムボーナス
                 if($stage['parent'] >= 20 && $stage['parent'] <= 29){
-                    $value = $record['score'] - (($stage['Max_Treasure'] + $stage['Total_Pikmin']) * 10);
+                    $value = $record['score'] - (($stage['treasure'] + $stage['pikmin']) * 10);
                 }
             }
             $data[$key]['compare'] = $value;

@@ -36,17 +36,17 @@ export default function Record(props) {
         if(rank === 1){
             return [
                 '#f6f24e',
-                '#595959'
+                '#656565'
                 ]
         } else if(rank === 2){
             return [
                 '#42f35d',
-                '#363636'
+                '#4b4b4b'
                 ]
         } else if(rank === 3){
             return [
                 '#23abf1',
-                '#1e1e1e'
+                '#2a2a2a'
                 ]
         } else if(rank < 11){
             return [
@@ -54,9 +54,15 @@ export default function Record(props) {
                 '#181818'
                 ]
         } else if(rank < 21){
-            return '#a8a2a2'
+            return [
+                '#a8a2a2',
+                '#181818'
+                ]
         } else {
-            return '#777171'
+            return [
+                '#777171',
+                '#181818'
+                ]
         }
     }
 
