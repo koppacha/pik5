@@ -131,8 +131,8 @@ $ sudo xfs_growfs -d /
 
 ## その他のメモ
 ```shell
-# Laravelでコントローラーを作成する場合は必ず以下のコマンドで作る
-$ php artisan make:controller SampleController --api
+# Laravelで新規データベースを作成する場合は以下のコマンドで作ること
+$ php artisan make:model Sample -a
 ```
 
 ## バージョン履歴

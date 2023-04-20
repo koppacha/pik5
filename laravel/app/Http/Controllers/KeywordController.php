@@ -5,27 +5,40 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreKeywordRequest;
 use App\Http\Requests\UpdateKeywordRequest;
 use App\Models\Keyword;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class KeywordController extends Controller
 {
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return JsonResponse
      */
-    public function index()
+    public function index(): JsonResponse
     {
-        //
+        $data = Keyword::all();
+        return response()->json(
+            $data
+        );
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function create()
+    public function create(Request $request): JsonResponse
     {
-        //
+        Keyword::create([
+            'keyword' => $request['keyword'],
+            'yomi' => $request['yomi'],
+            'content' => $request['content'],
+        ]);
+        return response()->json(
+            ["OK", 200]
+        );
     }
 
     /**
