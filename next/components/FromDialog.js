@@ -1,4 +1,4 @@
-import React, {useState, useRef} from 'react';
+import React, {useState} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -7,7 +7,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import {Box} from "@mui/material";
 
-export default function FormDialog() {
+export default function FormDialog(props) {
 
     const [open, setOpen] = useState(false)
     const [keyword, setKeyword] = useState("")
@@ -36,21 +36,9 @@ export default function FormDialog() {
             })
             if(res.status < 300){
                 setOpen(false)
+                props.setData(undefined)
             }
         }
-
-    const getCircularReplacer = () => {
-        const seen = new WeakSet()
-        return (key, value) => {
-            if (typeof value === "object" && value !== null) {
-                if (seen.has(value)) {
-                    return
-                }
-                seen.add(value)
-            }
-            return value
-        }
-    }
 
     return (
         <div>
