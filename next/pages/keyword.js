@@ -2,6 +2,7 @@ import Record from "../components/Record";
 import {Box, Typography} from "@mui/material";
 import FormDialog from "../components/FromDialog";
 import {useRouter} from "next/router";
+import {useSSR} from "@react-libraries/use-ssr";
 
 export async function getServerSideProps(context){
 
@@ -34,14 +35,33 @@ function KeywordPost(props) {
     )
 }
 
-export default function Keyword(param){
+export default function Keyword(){
+
+    const [data, setData] = useSSR(
+        "data",
+        async (data, setData) => {
+
+            console.log(data)
+
+            if(data !== undefined) return
+            setData(null)
+
+            const result = await fetch(
+                `http://laravel:8000/api/keyword`
+            )
+                .then((r) => r.json())
+                .catch(() => null)
+
+            setData(result)
+        }
+    )
 
     return (
         <>
             ピクミンキーワード
-            <FormDialog></FormDialog>
+            <FormDialog setData={setData}></FormDialog>
             {
-                Object.values(param.data).map(post =>
+                data.map(post =>
                     <KeywordPost data={post} />
                 )
             }
