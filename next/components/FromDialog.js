@@ -6,13 +6,38 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import {Box} from "@mui/material";
+import {useRouter} from "next/router";
+import {useForm} from "react-hook-form";
+import * as yup from 'yup'
+import {yupResolver} from "@hookform/resolvers/yup";
 
-export default function FormDialog(props) {
+// バリデーションルール
+const schema = yup.object({
+    keyword: yup
+        .string()
+        .max(32, 'キーワードの最大文字数は32文字です。')
+        .required('この項目は必須です。'),
+    yomi: yup
+        .string()
+        .matches(/^[\u3040-\u309F]+$/, 'よみがなは全てひらがなで入力してください。')
+        .required('この項目は必須です。'),
+    content: yup
+        .string()
+        .required('この項目は必須です。')
+})
+
+export default function FormDialog() {
 
     const [open, setOpen] = useState(false)
     const [keyword, setKeyword] = useState("")
     const [yomi, setYomi] = useState("")
     const [content, setContent] = useState("")
+    const router = useRouter()
+    const {register,
+           handleSubmit,
+           formState: { errors}} = useForm({
+        resolver: yupResolver(schema),
+    })
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -22,7 +47,7 @@ export default function FormDialog(props) {
         setOpen(false);
     };
 
-    const handleSubmit = async () => {
+    const onSubmit = async () => {
             const res = await fetch('http://localhost:8000/api/keyword', {
                 method: 'POST',
                 headers: {
@@ -36,7 +61,7 @@ export default function FormDialog(props) {
             })
             if(res.status < 300){
                 setOpen(false)
-                props.setData(undefined)
+                router.reload()
             }
         }
 
@@ -57,6 +82,9 @@ export default function FormDialog(props) {
                         onChange={(e) => setKeyword(e.target.value)}
                         fullWidth
                         variant="standard"
+                        {...register('keyword')}
+                        error={'keyword' in errors}
+                        helperText={errors.keyword?.message}
                     />
                 </DialogContent>
                 <DialogContent>
@@ -67,6 +95,9 @@ export default function FormDialog(props) {
                         onChange={(e) => setYomi(e.target.value)}
                         fullWidth
                         variant="standard"
+                        {...register('yomi')}
+                        error={'yomi' in errors}
+                        helperText={errors.yomi?.message}
                     />
                 </DialogContent>
                 <DialogContent>
@@ -79,12 +110,15 @@ export default function FormDialog(props) {
                         multiline
                         rows={5}
                         variant="standard"
+                        {...register('content')}
+                        error={'content' in errors}
+                        helperText={errors.content?.message}
                     />
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={handleClose}>キャンセル</Button>
-                    <Button onClick={handleSubmit}>送信</Button>
+                    <Button onClick={handleClose}>閉じる</Button>
+                    <Button onClick={handleSubmit(onSubmit)}>送信</Button>
                 </DialogActions>
                 </Box>
             </Dialog>

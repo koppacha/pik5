@@ -91,7 +91,7 @@ class RecordController extends Controller
         $compare  = $request['compare']  ?: 'timebonus';
 
         // オプション引数を加工する
-        $year = intval($year) + 1;
+        $year = (int)$year + 1;
         $console_operation = $console? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
@@ -116,7 +116,9 @@ class RecordController extends Controller
             ->get();
 
         // 順位を再計算
-        if($where === "stage_id") $data = Func::rank_calc($data);
+        if($where === "stage_id") {
+            $data = Func::rank_calc($data);
+        }
 
         // 比較値を取得
         $data = Func::compare_calc($data, $compare);
