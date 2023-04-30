@@ -6,7 +6,7 @@ import Record from "../../components/Record";
 import {FormControl, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 
-// ステージ番号をアクセスされるたびに取得する（サーバーサイド）
+// サーバーサイドの処理
 export async function getServerSideProps(context){
     const query = context.query.stage
     const stage = query[0]
@@ -30,7 +30,6 @@ export async function getServerSideProps(context){
     }
 }
 
-// レンダラー本体（フロントサイド）
 export default function Stage(param){
 
     const { locale } = useRouter()

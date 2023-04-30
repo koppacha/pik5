@@ -3,12 +3,12 @@
 namespace App\Library;
 
 use App\Models\Stage;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Database\Eloquent\Collection;
 
 class Func extends Facade
 {
-    static function rank_calc (array|Collection $data) : object
+    public static function rank_calc (array|Collection $data) : Collection
     {
         $rank = 1;
         $count = 1;
@@ -21,10 +21,9 @@ class Func extends Facade
             $before = $value["score"];
             $count++;
         }
-
-        return (object)$data;
+        return $data;
     }
-    static function compare_calc (object $data, $compare) : object
+    public static function compare_calc (array|Collection $data, $compare) : Collection
     {
         foreach($data as $key => $record){
 
@@ -32,15 +31,12 @@ class Func extends Facade
             $value = 0;
             $stage = Stage::where('stage_id', $record['stage_id'])->first();
 
-            if($compare === 'timebonus'){
-
-                // ピクミン２のタイムボーナス
-                if($stage['parent'] >= 20 && $stage['parent'] <= 29){
-                    $value = $record['score'] - (($stage['treasure'] + $stage['pikmin']) * 10);
-                }
+            // ピクミン２のタイムボーナス
+            if(($compare === 'timebonus') && $stage['parent'] >= 20 && $stage['parent'] <= 29) {
+                $value = $record['score'] - (($stage['treasure'] + $stage['pikmin']) * 10);
             }
             $data[$key]['compare'] = $value;
         }
-        return (object)$data;
+        return $data;
     }
 }

@@ -8,7 +8,6 @@ use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
 
 class RecordController extends Controller
 {
@@ -82,6 +81,7 @@ class RecordController extends Controller
 
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
+        $orderby = is_numeric($request['id'])? ['score','DESC'] : ['stage_id','ASC'];
         $group = !is_numeric($request['id'])? 'stage_id' : 'user_id';
 
         // オプション引数
@@ -99,32 +99,40 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $data = Record::with(['user' => function($q){
+        $dataset = Record::with(['user' => function($q){
                 // user_idに基づいてUserテーブルからユーザー名を取得する
                 $q->select('user_name','user_id');
                 }])
 
-                // 絞り込み条件 TODO: スコア以外の情報が最も古いスコアを参照する不具合あり
-                ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
+                // 絞り込み条件
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->where('rule',$rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
-                ->groupBy($group)
-                ->orderBy('score','DESC')
+                ->orderBy($orderby[0],$orderby[1])
             ->get();
 
-        // 順位を再計算
-        if($where === "stage_id") {
-            $data = Func::rank_calc($data);
+        // ランキングページの場合は同一ユーザーの重複を削除して順位を再計算
+        $filter = [];
+        $new_data = collect([]);
+
+        // 重複を削除
+        foreach($dataset as $key => $value){
+            if(in_array($value[$group], $filter, true)){
+                continue;
+            }
+            $filter[] = $value[$group];
+            $new_data[$key] = $value;
         }
 
-        // 比較値を取得
-        $data = Func::compare_calc($data, $compare);
+        if($where === "stage_id") {
+            $new_data = Func::rank_calc($new_data);
+        }
+        $dataset = Func::compare_calc($new_data, $compare);
 
         return response()->json(
-            $data
+            $dataset
         );
     }
 

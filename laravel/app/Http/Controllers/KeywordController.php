@@ -25,9 +25,8 @@ class KeywordController extends Controller
         foreach($dataset as $data){
             if(in_array($data["keyword"], $keywords, true)){
                 continue;
-            } else {
-                $filtered_dataset[] = $data;
             }
+            $filtered_dataset[] = $data;
             $keywords[] = $data["keyword"];
         }
 
@@ -48,6 +47,7 @@ class KeywordController extends Controller
             'keyword' => $request['keyword'],
             'yomi' => $request['yomi'],
             'content' => $request['content'],
+            'created_at' => $request['created_at']
         ]);
         return response()->json(
             ["OK", 200]
