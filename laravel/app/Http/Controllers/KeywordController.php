@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateKeywordRequest;
 use App\Models\Keyword;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class KeywordController extends Controller
 {
@@ -17,9 +18,21 @@ class KeywordController extends Controller
      */
     public function index(): JsonResponse
     {
-        $data = Keyword::all();
+        $dataset = Keyword::latest()->get();
+
+        $keywords = [];
+        $filtered_dataset = [];
+        foreach($dataset as $data){
+            if(in_array($data["keyword"], $keywords, true)){
+                continue;
+            } else {
+                $filtered_dataset[] = $data;
+            }
+            $keywords[] = $data["keyword"];
+        }
+
         return response()->json(
-            $data
+            $filtered_dataset
         );
     }
 
@@ -45,7 +58,7 @@ class KeywordController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \App\Http\Requests\StoreKeywordRequest  $request
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function store(StoreKeywordRequest $request)
     {
@@ -55,19 +68,22 @@ class KeywordController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Keyword  $keyword
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function show(Keyword $keyword)
+    public function show(Request $request): JsonResponse
     {
-        //
+        $data = Keyword::where('id', $request['id'])->get();
+        return response()->json(
+            $data[0]
+        );
     }
 
     /**
      * Show the form for editing the specified resource.
      *
      * @param  \App\Models\Keyword  $keyword
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function edit(Keyword $keyword)
     {
@@ -79,7 +95,7 @@ class KeywordController extends Controller
      *
      * @param  \App\Http\Requests\UpdateKeywordRequest  $request
      * @param  \App\Models\Keyword  $keyword
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function update(UpdateKeywordRequest $request, Keyword $keyword)
     {
@@ -90,7 +106,7 @@ class KeywordController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\Keyword  $keyword
-     * @return \Illuminate\Http\Response
+     * @return Response
      */
     public function destroy(Keyword $keyword)
     {
