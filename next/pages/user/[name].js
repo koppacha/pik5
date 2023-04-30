@@ -36,7 +36,7 @@ export default function Stage(param){
             <Typography sx={{color:'#999'}}>@{param.user_id}</Typography>
             <br/>
             {
-                param.data.map(post =>
+                Object.values(param.data).map(post =>
                     <Record data={post} />
                 )
             }
