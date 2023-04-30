@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -19,34 +19,27 @@ const schema = yup.object({
         .required('この項目は必須です。'),
     yomi: yup
         .string()
-        .matches(/^[\u3040-\u309F]+$/, 'よみがなは全てひらがなで入力してください。')
+        .max(64, 'よみがなの最大文字数は64文字です。')
+        .matches(/^[ぁ-んー]+$/, 'よみがなは全てひらがなで入力してください。')
         .required('この項目は必須です。'),
     content: yup
         .string()
+        .max(2048, '本文の最大文字数は2048文字です。')
         .required('この項目は必須です。')
 })
 
-export default function FormDialog() {
+export default function FormDialog(props) {
 
-    const [open, setOpen] = useState(false)
-    const [keyword, setKeyword] = useState("")
-    const [yomi, setYomi] = useState("")
-    const [content, setContent] = useState("")
+    const now = new Date().toLocaleString()
     const router = useRouter()
     const {register,
            handleSubmit,
+           reset,
            formState: { errors}} = useForm({
-        resolver: yupResolver(schema),
-    })
+               resolver: yupResolver(schema),
+           })
 
-    const handleClickOpen = () => {
-        setOpen(true);
-    };
-
-    const handleClose = () => {
-        setOpen(false);
-    };
-
+    // キーワードをバックエンドに送信する
     const onSubmit = async () => {
             const res = await fetch('http://localhost:8000/api/keyword', {
                 method: 'POST',
@@ -54,70 +47,81 @@ export default function FormDialog() {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    'keyword': keyword,
-                    'yomi': yomi,
-                    'content': content
+                    'keyword': props.keyword,
+                    'yomi': props.yomi,
+                    'content': props.content,
+                    'created_at': now
                 })
             })
             if(res.status < 300){
-                setOpen(false)
+                props.setOpen(false)
                 router.reload()
             }
-        }
+    }
+
+    // フォームのリセット
+    useEffect(() => {
+        reset({
+            defaultValue: {
+                keyword: props.editKeyword,
+                yomi: props.editYomi,
+                content: props.editContent
+            }
+        })
+    }, [props])
 
     return (
         <div>
-            <Button variant="outlined" onClick={handleClickOpen}>
-                キーワードを新規作成
-            </Button>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={props.open} onClose={props.handleClose}>
                 <Box sx={{width:'600px'}}>
                 <DialogTitle>キーワードを新規作成する</DialogTitle>
                 <DialogContent>
                     <TextField
-                        autoFocus
+                        {...register('keyword')}
                         id="keyword"
                         label="キーワード名"
                         type="text"
-                        onChange={(e) => setKeyword(e.target.value)}
+                        onChange={(e) => props.setKeyword(e.target.value)}
                         fullWidth
                         variant="standard"
-                        {...register('keyword')}
                         error={'keyword' in errors}
                         helperText={errors.keyword?.message}
+                        defaultValue={props.editKeyword}
                     />
                 </DialogContent>
                 <DialogContent>
                     <TextField
+                        {...register('yomi')}
                         id="yomi"
                         label="よみがな"
                         type="text"
-                        onChange={(e) => setYomi(e.target.value)}
+                        onChange={(e) => props.setYomi(e.target.value)}
                         fullWidth
                         variant="standard"
-                        {...register('yomi')}
                         error={'yomi' in errors}
                         helperText={errors.yomi?.message}
+                        defaultValue={props.editYomi}
                     />
                 </DialogContent>
                 <DialogContent>
                     <TextField
+                        {...register('content')}
                         id="content"
                         label="本文"
                         type="text"
-                        onChange={(e) => setContent(e.target.value)}
+                        onChange={(e) => props.setContent(e.target.value)}
                         fullWidth
                         multiline
                         rows={5}
                         variant="standard"
-                        {...register('content')}
                         error={'content' in errors}
                         helperText={errors.content?.message}
+                        defaultValue={props.editContent}
                     />
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={handleClose}>閉じる</Button>
+                    <Button onClick={props.handleClose}>閉じる</Button>
                     <Button onClick={handleSubmit(onSubmit)}>送信</Button>
                 </DialogActions>
                 </Box>
