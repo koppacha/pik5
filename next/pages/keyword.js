@@ -3,21 +3,15 @@ import FormDialog from "../components/FromDialog";
 import KeywordPost from "../components/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
+import useSWR from "swr";
 
-export async function getServerSideProps(){
-
-    // 記録をリクエスト
-    const res = await fetch(`http://laravel:8000/api/keyword`)
-    const data = await res.json()
-
-    return {
-        props: {
-            data
-        }
-    }
+function fetcher(url){
+    return fetch(url).then((r)=>r.json())
 }
 
-export default function Keyword(props){
+export default function Keyword(){
+
+    const {data} = useSWR(`http://localhost:8000/api/keyword`, fetcher, { refreshInterval: 2000 })
 
     // 送信ボタン押下時にデータをポストする
     const [keyword, setKeyword] = useState("")
@@ -93,10 +87,10 @@ export default function Keyword(props){
                 setYomi={setYomi}
                 setContent={setContent}
                 open={open}
-                setOpen={()=> setOpen}></FormDialog>
+                setOpen={setOpen}></FormDialog>
             {
-                props.data.map(post =>
-                    <KeywordPost data={post} handleEdit={()=> handleEdit} />
+                data?.map(post =>
+                    <KeywordPost data={post} handleEdit={() => handleEdit}/>
                 )
             }
         </>

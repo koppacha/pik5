@@ -31,7 +31,6 @@ const schema = yup.object({
 export default function FormDialog(props) {
 
     const now = new Date().toLocaleString()
-    const router = useRouter()
     const {register,
            handleSubmit,
            reset,
@@ -55,7 +54,6 @@ export default function FormDialog(props) {
             })
             if(res.status < 300){
                 props.setOpen(false)
-                router.reload()
             }
     }
 
