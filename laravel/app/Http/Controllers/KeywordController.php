@@ -43,12 +43,18 @@ class KeywordController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        Keyword::create([
-            'keyword' => $request['keyword'],
-            'yomi' => $request['yomi'],
-            'content' => $request['content'],
-            'created_at' => $request['created_at']
-        ]);
+        try {
+            Keyword::create([
+                'unique_id' => $request['unique_id'] ?: bindec(random_bytes(12)),
+                'keyword' => $request['keyword'],
+                'tag' => $request['tag'] ?: "その他",
+                'yomi' => $request['yomi'],
+                'content' => $request['content'],
+                'created_at' => $request['created_at']
+            ]);
+        } catch (\Exception $e) {
+            //
+        }
         return response()->json(
             ["OK", 200]
         );
