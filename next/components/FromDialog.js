@@ -1,4 +1,4 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -6,13 +6,15 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
 import {Box} from "@mui/material";
-import {useRouter} from "next/router";
 import {useForm} from "react-hook-form";
 import * as yup from 'yup'
 import {yupResolver} from "@hookform/resolvers/yup";
 
 // バリデーションルール
 const schema = yup.object({
+    tag: yup
+        .string()
+        .max(32, 'タグの最大文字数は32文字です。'),
     keyword: yup
         .string()
         .max(32, 'キーワードの最大文字数は32文字です。')
@@ -47,6 +49,8 @@ export default function FormDialog(props) {
                 },
                 body: JSON.stringify({
                     'keyword': props.keyword,
+                    'unique_id': props.unique_id || 0,
+                    'tag': props.tag,
                     'yomi': props.yomi,
                     'content': props.content,
                     'created_at': now
@@ -61,6 +65,7 @@ export default function FormDialog(props) {
     useEffect(() => {
         reset({
             defaultValue: {
+                tag: props.editTag,
                 keyword: props.editKeyword,
                 yomi: props.editYomi,
                 content: props.editContent
@@ -72,7 +77,21 @@ export default function FormDialog(props) {
         <div>
             <Dialog open={props.open} onClose={props.handleClose}>
                 <Box sx={{width:'600px'}}>
-                <DialogTitle>キーワードを新規作成する</DialogTitle>
+                <DialogTitle>キーワードを作成・編集する</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        {...register('tag')}
+                        id="tag"
+                        label="タグ"
+                        type="text"
+                        onChange={(e) => props.setTag(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'tag' in errors}
+                        helperText={errors.tag?.message}
+                        defaultValue={props.editTag}
+                    />
+                </DialogContent>
                 <DialogContent>
                     <TextField
                         {...register('keyword')}

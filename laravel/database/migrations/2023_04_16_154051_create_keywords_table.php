@@ -11,13 +11,17 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+    public function up(): void
     {
-        Schema::create('keywords', function (Blueprint $table) {
+        Schema::create('keywords', static function (Blueprint $table) {
             $table->id();
+            $table->integer('unique_id');
             $table->string('keyword');
+            $table->string('tag');
             $table->string('yomi');
             $table->text('content');
+            $table->string('first_editor');
+            $table->string('last_editor');
             $table->timestamps();
         });
     }

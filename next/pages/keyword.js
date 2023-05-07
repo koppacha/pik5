@@ -14,17 +14,22 @@ export default function Keyword(){
     const {data} = useSWR(`http://localhost:8000/api/keyword`, fetcher, { refreshInterval: 2000 })
 
     // 送信ボタン押下時にデータをポストする
+    const [tag, setTag] = useState("")
     const [keyword, setKeyword] = useState("")
     const [yomi, setYomi] = useState("")
     const [content, setContent] = useState("")
+    const [uniqueId, setUniqueId] = useState("")
 
     // 編集ボタン押下時にデータをリクエストして渡す
+    const [editTag, setEditTag] = useState("")
     const [editKeyword, setEditKeyword] = useState("")
     const [editYomi, setEditYomi] = useState("")
     const [editContent, setEditContent] = useState("")
+    const [editUniqueId, setEditUniqueId] = useState("")
 
     const [open, setOpen] = useState(false)
 
+    // 新規キーワードを作成する
     const handleClickOpen = () => {
         setEditKeyword("")
         setEditYomi("")
@@ -32,20 +37,27 @@ export default function Keyword(){
         setKeyword("")
         setYomi("")
         setContent("")
+        setUniqueId("")
         setOpen(true)
     }
     const handleClose = () => {
         setOpen(false)
     }
+
+    // 既存のキーワードを編集する
     const handleEdit = async (btn) => {
         const res = await fetch(`http://localhost:8000/api/keyword/${btn.target.value}`)
         const data = await res.json()
+        setTag(data.tag)
         setKeyword(data.keyword)
         setYomi(data.yomi)
         setContent(data.content)
+        setUniqueId(data.unique_id)
+        setEditTag(data.tag)
         setEditKeyword(data.keyword)
         setEditYomi(data.yomi)
         setEditContent(data.content)
+        setEditUniqueId(data.unique_id)
         setOpen(true)
     }
 
@@ -77,15 +89,20 @@ export default function Keyword(){
             <FormDialog
                 handleClose={handleClose}
                 handleClickOpen={handleClickOpen}
+                editTag={editTag}
                 editKeyword={editKeyword}
                 editYomi={editYomi}
                 editContent={editContent}
+                tag={tag}
                 keyword={keyword}
                 yomi={yomi}
                 content={content}
+                uniqueId={uniqueId}
+                setTag={setTag}
                 setKeyword={setKeyword}
                 setYomi={setYomi}
                 setContent={setContent}
+                setUniqueId={setUniqueId}
                 open={open}
                 setOpen={setOpen}></FormDialog>
             {
