@@ -19,7 +19,7 @@
 
 ＊原則として最新版を利用  
 ＊Windows環境はDockerの動作が重いので推奨しませんが、もし開発する場合はWSL2(Ubuntu)をインストールし、
-その中にデータを入れるとある程度軽快に動きます。
+その中にデータを入れるとある程度軽快に動きます。＊現在、lima VMでクロスプラットフォームでも軽快に動く環境を模索中……
 
 ## 各種マニュアル
 * PHP：https://www.php.net/manual/ja/index.php
@@ -133,6 +133,9 @@ $ sudo xfs_growfs -d /
 ```shell
 # Laravelで新規データベースを作成する場合は以下のコマンドで作ること
 $ php artisan make:model Sample -a
+
+# limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド
+$ export DOCKER_HOST=unix:///var/run/docker.sock
 ```
 
 ## バージョン履歴
