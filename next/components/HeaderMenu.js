@@ -209,14 +209,23 @@ export default function HeaderMenu({props}){
                     {/*        inputProps={{ 'aria-label': 'search' }}*/}
                     {/*    />*/}
                     {/*</Search>*/}
-                    <CustomMenu series={6}/>
                     <CustomMenu series={1}/>
                     <CustomMenu series={2}/>
                     <CustomMenu series={3}/>
                     <CustomMenu series={4}/>
                     <CustomMenu series={7}/>
-                    <CustomMenu series={8}/>
                     <CustomMenu series={9}/>
+                    <Button
+                        sx={{
+                            color:'#fff',
+                            backgroundColor:'transparent',
+                            fontSize: '0.9em'
+                        }}
+                        id="basic-button"
+                        ref={anchorEl}
+                        variant="contained">
+                        <FontAwesomeIcon icon={faDiscord} />Discordはこちら！
+                    </Button>
 
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />

@@ -1,13 +1,21 @@
 import {useRef, useState} from "react";
-import {Box, Button, ClickAwayListener, Grid, Grow, Menu, MenuItem, MenuList, Paper, Popper} from "@mui/material";
-import {useRouter} from "next/router";
-import {en} from "@/locale/en";
-import {ja} from "@/locale/ja";
-import CustomMenuItems from "@/components/CustomMenuItems";
+import {Button, Fade, Popper} from "@mui/material";
 import {AccountCircle} from "@mui/icons-material";
 import * as React from "react";
+import Menu2 from "@/components/Menu2";
+import Menu1 from "@/components/Menu1";
+import Menu3 from "@/components/Menu3";
+import Menu4 from "@/components/Menu4";
+import MenuLm from "@/components/MenuLm";
+import MenuOt from "@/components/MenuOt";
+import {en} from "@/locale/en";
+import {ja} from "@/locale/ja";
+import {useRouter} from "next/router";
 
 export default function CustomMenu(props){
+
+    const { locale } = useRouter();
+    const t = (locale === "en") ? en : ja;
 
     // プルダウンメニュー駆動周り
     const anchorEl = useRef(null)
@@ -33,11 +41,50 @@ export default function CustomMenu(props){
             setOpen(false)
         }
     }
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
-
-    const noEgg = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
-    const egg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
+    function menuObject(s){
+        if(s === 1){
+            return (
+                <Menu1
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 2){
+            return (
+                <Menu2
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 3){
+            return (
+                <Menu3
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 4){
+            return (
+                <Menu4
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 7){
+            return (
+                <MenuLm
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 9){
+            return (
+                <MenuOt
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+    }
 
     return (
         <>
@@ -46,7 +93,7 @@ export default function CustomMenu(props){
                     color:'#fff',
                     backgroundColor:'transparent',
                     fontSize: '0.9em'
-            }}
+                }}
                 id="basic-button"
                 ref={anchorEl}
                 variant="contained"
@@ -69,72 +116,13 @@ export default function CustomMenu(props){
                 }}
             >
                 {({ TransitionProps, placement }) => (
-                    <Grow
+                    <Fade
                         {...TransitionProps}
-                        style={{
-                            transformOrigin: "top"
-                        }}
                     >
-                        <Paper>
-                            <ClickAwayListener onClickAway={handleClose}>
-                                <MenuList
-                                    autoFocusItem={open}
-                                    id="composition-menu"
-                                    aria-labelledby="composition-button"
-                                    onKeyDown={handleListKeyDown}
-                                    sx={{
-                                        backgroundColor:"#eee",
-                                    }}
-                                    >
-                                    <Grid container spacing={2}>
-                                        <Grid item xs={3}>
-                                            タマゴあり
-                                            {
-                                                egg.map(n=>
-                                                    <MenuItem onClick={handleClose}>#{n} {t.stage[n]}</MenuItem>
-                                                )
-                                            }
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            タマゴなし
-                                            {
-                                                noEgg.slice(0,13).map(n=>
-                                                    <MenuItem onClick={handleClose}>#{n} {t.stage[n]}</MenuItem>
-                                                )
-                                            }
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            タマゴなし
-                                            {
-                                                noEgg.slice(13).map(n=>
-                                                    <MenuItem onClick={handleClose}>#{n} {t.stage[n]}</MenuItem>
-                                                )
-                                            }
-
-                                            本編地下
-                                            <MenuItem onClick={handleClose}>メニュー1</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー2</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー3</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー4</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー5</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー6</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー7</MenuItem>
-                                        </Grid>
-                                        <Grid item xs={3}>
-                                            本編地下
-                                            <MenuItem onClick={handleClose}>メニュー8</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー9</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー10</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー11</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー12</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー13</MenuItem>
-                                            <MenuItem onClick={handleClose}>メニュー14</MenuItem>
-                                        </Grid>
-                                    </Grid>
-                                </MenuList>
-                            </ClickAwayListener>
-                        </Paper>
-                    </Grow>
+                        <div>
+                            {menuObject(props.series)}
+                        </div>
+                    </Fade>
                 )}
             </Popper>
         </>
