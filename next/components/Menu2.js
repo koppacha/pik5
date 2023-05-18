@@ -1,9 +1,20 @@
-import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material";
+import {
+    Box, Card,
+    CardContent,
+    CardHeader,
+    ClickAwayListener,
+    Grid, List, ListItem,
+    MenuItem,
+    MenuList,
+    Paper,
+    Typography
+} from "@mui/material";
 import * as React from "react";
 import {range} from "@/plugin/myfunction"
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
+import Link from "next/link";
 
 const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
 const eg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
@@ -22,8 +33,6 @@ export default function Menu2(props){
 
     return (
         <Paper sx={{
-            backgroundColor:"transparent",
-            color:"#fff"
         }}>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
@@ -33,21 +42,36 @@ export default function Menu2(props){
                     onKeyDown={props.handleListKeyDown}
                 >
                     <Grid container>
-                        <Grid item xs={3} sx={{backgroundColor:"#333"}}>
-                            <MenuItem>タマゴあり</MenuItem>
+                        <Grid item xs={2}>
+                            <Card>
+                                <CardHeader
+                                    title="ピクミン2"
+                                    subheader="[NGC/Wii] Since 2004"
+                                />
+                                <CardContent>
+                                    <List>
+                                        <ListItem>参加者数：99人</ListItem>
+                                        <ListItem component={Link} href="/total/200" onClick={props.handleClose}>総合ランキング</ListItem>
+                                        <ListItem>レギュレーション</ListItem>
+                                    </List>
+                                </CardContent>
+                            </Card>
+                        </Grid>
+                        <Grid item xs={2.5}>
+                            <MenuItem component={Link} href="/total/210" onClick={props.handleClose}>タマゴあり</MenuItem>
                             {
                                 eg.map(n=>
                                     <MenuItem sx={{
                                         borderBottom:"solid 1px "+egColor,
                                         borderLeft:"solid 10px "+egColor,
-                                        margin:"6px 4px",
+                                        margin:"6px 4px 0px 4px",
                                         height:"37px",
-                                    }} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={3} sx={{backgroundColor:"#444"}}>
-                            <MenuItem>タマゴなし</MenuItem>
+                        <Grid item xs={2.5}>
+                            <MenuItem component={Link} href="/total/220" onClick={props.handleClose}>タマゴなし</MenuItem>
                             {
                                 ne.map(n=>
                                     <MenuItem sx={{
@@ -55,12 +79,12 @@ export default function Menu2(props){
                                         borderLeft:"solid 10px "+neColor,
                                         margin:"4px 4px",
                                         height:"29px",
-                                    }} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={3} sx={{backgroundColor:"#333"}}>
-                            <MenuItem>本編地下</MenuItem>
+                        <Grid item xs={2.5}>
+                            <MenuItem component={Link} href="/total/230" onClick={props.handleClose}>本編地下</MenuItem>
                             {
                                 du.map(n=>
                                     <MenuItem sx={{
@@ -68,12 +92,12 @@ export default function Menu2(props){
                                         borderLeft:"solid 10px "+duColor,
                                         margin:"6px 4px",
                                         height:"34px",
-                                    }} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={3} sx={{backgroundColor:"#444"}}>
-                            <MenuItem>ソロバトル</MenuItem>
+                        <Grid item xs={2.5}>
+                            <MenuItem component={Link} href="/total/240" onClick={props.handleClose}>ソロバトル</MenuItem>
                             {
                                 bt.map(n=>
                                     <MenuItem sx={{
@@ -81,7 +105,7 @@ export default function Menu2(props){
                                         borderLeft:"solid 10px "+btColor,
                                         margin:"18px 4px",
                                         height:"37px",
-                                    }} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
