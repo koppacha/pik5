@@ -41,7 +41,7 @@ export default function Stage(param){
     return (
         <>
             #{param.stage}<br/>
-            {t.title[param.stage.slice(0,1)]+" "+t.g.challenge}<br/>
+            <Link href={"/total/"+param.stage.slice(0,2)}>{t.title[param.stage.slice(0,1)]+" "+t.g.challenge}</Link><br/>
             <Typography variant="h3" sx={{
                 fontFamily:['"M PLUS 1 CODE"'].join(","),
             }}>{ t.stage[param.stage] }</Typography>
