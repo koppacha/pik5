@@ -11,10 +11,11 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/myfunction";
+import {range} from "@/plugin/pik5";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
+import Link from "next/link";
 
 const s101Color = "#ffa35b"
 const s102Color = "#dc6b24"
@@ -48,7 +49,7 @@ export default function Menu1(props){
                                 <CardContent>
                                     <List>
                                         <ListItem>参加者数：99人</ListItem>
-                                        <ListItem>総合ランキング</ListItem>
+                                        <ListItem component={Link} href="/total/100">総合ランキング</ListItem>
                                         <ListItem>レギュレーション</ListItem>
                                     </List>
                                 </CardContent>
@@ -60,7 +61,7 @@ export default function Menu1(props){
                                 borderLeft:"solid 10px "+s101Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#101 {t.stage[101]}</MenuItem>
+                            }} component={Link} href="/stage/101">#101 {t.stage[101]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -68,7 +69,7 @@ export default function Menu1(props){
                                 borderLeft:"solid 10px "+s102Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#102 {t.stage[102]}</MenuItem>
+                            }} component={Link} href="/stage/102">#102 {t.stage[102]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -76,7 +77,7 @@ export default function Menu1(props){
                                 borderLeft:"solid 10px "+s103Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#103 {t.stage[103]}</MenuItem>
+                            }} component={Link} href="/stage/103">#103 {t.stage[103]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -84,7 +85,7 @@ export default function Menu1(props){
                                 borderLeft:"solid 10px "+s104Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#104 {t.stage[104]}</MenuItem>
+                            }} component={Link} href="/stage/104">#104 {t.stage[104]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -92,7 +93,7 @@ export default function Menu1(props){
                                 borderLeft:"solid 10px "+s105Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#105 {t.stage[105]}</MenuItem>
+                            }} component={Link} href="/stage/105">#105 {t.stage[105]}</MenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>

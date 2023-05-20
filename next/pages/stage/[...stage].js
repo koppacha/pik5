@@ -3,8 +3,20 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import { useRouter } from "next/router";
 import Record from "../../components/Record";
-import {FormControl, MenuItem, Select, Typography} from "@mui/material";
+import {
+    Box,
+    Card,
+    CardContent,
+    CardHeader,
+    FormControl,
+    FormHelperText,
+    Grid,
+    MenuItem,
+    Select,
+    Typography
+} from "@mui/material";
 import Link from "next/link";
+import Button from "@mui/material/Button";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -34,6 +46,7 @@ export default function Stage(param){
 
     const { locale } = useRouter()
     const t = (locale === "en") ? en : ja
+    const r = (locale === "en") ? ja : en
     const rules = [0, 11, 12, 13, 14, 15, 16, 17]
     const consoles = [0, 1, 2, 3, 4]
     const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
@@ -45,26 +58,10 @@ export default function Stage(param){
             <Typography variant="h3" sx={{
                 fontFamily:['"M PLUS 1 CODE"'].join(","),
             }}>{ t.stage[param.stage] }</Typography>
-            <Typography sx={{color:'#999'}}>{en.stage[param.stage]}</Typography>
-            ルール
-            <FormControl>
-                <Select
-                    sx={{color:'#fff'}}
-                    defaultValue={param.rule}
-                    id="select-rules"
-                >
-                    {
-                        // ルールプルダウンを出力
-                        rules.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
-                                param.console+'/'+val+'/'+param.year}>{t.rule[val]}</Link></MenuItem>
-                        )
-                    }
-                </Select>
-            </FormControl>
+            <Typography sx={{color:'#999'}}>{r.stage[param.stage]}</Typography>
 
-            操作方法
             <FormControl>
+                <FormHelperText sx={{color:"#fff"}}>操作方法</FormHelperText>
                 <Select
                     sx={{color:'#fff'}}
                     defaultValue={param.console}
@@ -73,29 +70,51 @@ export default function Stage(param){
                     {
                         // 操作方法プルダウンを出力
                         consoles.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
-                                val+'/'+param.rule+'/'+param.year}>{t.console[val]}</Link></MenuItem>
+                            <MenuItem value={val} component={Link} href={'/stage/'+param.stage+'/'+
+                                val+'/'+param.rule+'/'+param.year}>{t.console[val]}</MenuItem>
                         )
                     }
                 </Select>
             </FormControl>
-            集計年
             <FormControl>
+                <FormHelperText sx={{color:"#fff"}}>集計年</FormHelperText>
                 <Select
                     sx={{color:'#fff'}}
-                    defaultValue={2023}
+                    defaultValue={param.year}
                     id="select-year"
                 >
                     {
                         // 集計年プルダウンを出力
                         years.map(val =>
-                            <MenuItem value={val}><Link href={'/stage/'+param.stage+'/'+
-                                param.console+'/'+param.rule+'/'+val}>{val}</Link></MenuItem>
+                            <MenuItem value={val} component={Link} href={'/stage/'+param.stage+'/'+
+                                param.console+'/'+param.rule+'/'+val}>{val}</MenuItem>
                         )
                     }
                 </Select>
             </FormControl>
-            <br/>
+            <Box sx={{margin:"20px"}}>
+                <Grid container>
+                    {
+                        // ルールを出力
+                        rules.map(val =>
+                            <Grid item>
+                                <Box sx={{
+                                        border:"1px solid #fff",
+                                        borderRadius:"4px",
+                                        padding:"12px",
+                                        margin: "6px",
+                                        backgroundColor:(Number(param.rule) === val)? "#fff" : "",
+                                        color:(Number(param.rule) === val)? "#000" : "",
+                                     }}
+                                     component={Link}
+                                     href={'/stage/'+param.stage+'/'+param.console+'/'+val+'/'+param.year}>
+                                    {t.rule[val]}
+                                </Box>
+                            </Grid>
+                        )
+                    }
+                </Grid>
+            </Box>
                 {
                     Object.values(param.data).map(post =>
                         <Record data={post} />

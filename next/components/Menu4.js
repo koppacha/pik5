@@ -11,10 +11,11 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/myfunction";
+import {range} from "@/plugin/pik5";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
+import Link from "next/link";
 
 const s401Color = "#ffde5b"
 const s402Color = "#dcb724"
@@ -60,7 +61,7 @@ export default function Menu4(props){
                                 borderLeft:"solid 10px "+s401Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#401 {t.stage[401]}</MenuItem>
+                            }} component={Link} href="/stage/401">#401 {t.stage[401]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -68,7 +69,7 @@ export default function Menu4(props){
                                 borderLeft:"solid 10px "+s402Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#402 {t.stage[402]}</MenuItem>
+                            }} component={Link} href="/stage/402">#402 {t.stage[402]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -76,7 +77,7 @@ export default function Menu4(props){
                                 borderLeft:"solid 10px "+s403Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#403 {t.stage[403]}</MenuItem>
+                            }} component={Link} href="/stage/403">#403 {t.stage[403]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -84,7 +85,7 @@ export default function Menu4(props){
                                 borderLeft:"solid 10px "+s404Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#404 {t.stage[404]}</MenuItem>
+                            }} component={Link} href="/stage/404">#404 {t.stage[404]}</MenuItem>
                         </Grid>
                         <Grid item xs={2}>
                             <MenuItem sx={{
@@ -92,7 +93,7 @@ export default function Menu4(props){
                                 borderLeft:"solid 10px "+s405Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"42px",
-                            }} onClick={props.handleClose}>#405 {t.stage[405]}</MenuItem>
+                            }} component={Link} href="/stage/405">#405 {t.stage[405]}</MenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>
