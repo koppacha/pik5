@@ -26,6 +26,7 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import CustomMenu from "@/components/CustomMenu";
+import {faLanguage} from "@fortawesome/free-solid-svg-icons";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -99,6 +100,8 @@ export default function HeaderMenu({props}){
 
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
+
+    const localeReverse = (locale === "en") ? "ja" : "en";
 
     const handleProfileMenuOpen = (event) => {
         // setAnchorEl(event.currentTarget);
@@ -229,6 +232,21 @@ export default function HeaderMenu({props}){
 
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
+                    <Button
+                        sx={{
+                            color:'#fff',
+                            backgroundColor:'transparent',
+                            fontSize: '0.9em'
+                        }}
+                        component={Link}
+                        href="/"
+                        locale={localeReverse}
+                        passHref
+                        id="basic-button"
+                        ref={anchorEl}
+                        variant="contained">
+                        <FontAwesomeIcon icon={faLanguage} />
+                    </Button>
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                         {/*<IconButton size="middle" aria-label="show 4 new mails" color="inherit">*/}
                         {/*    <FontAwesomeIcon icon={faDiscord} />*/}

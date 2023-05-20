@@ -11,7 +11,7 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/myfunction";
+import {range} from "@/plugin/pik5";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
