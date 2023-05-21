@@ -21,7 +21,7 @@ class Func extends Facade
             $before = $value["score"];
             $count++;
         }
-        return $data;
+        return collect($data);
     }
     public static function compare_calc (array|Collection $data, $compare) : Collection
     {

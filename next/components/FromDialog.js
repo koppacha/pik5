@@ -74,7 +74,7 @@ export default function FormDialog(props) {
     }, [props])
 
     return (
-        <div>
+        <>
             <Dialog open={props.open} onClose={props.handleClose}>
                 <Box sx={{width:'600px'}}>
                 <DialogTitle>キーワードを作成・編集する</DialogTitle>
@@ -143,6 +143,6 @@ export default function FormDialog(props) {
                 </DialogActions>
                 </Box>
             </Dialog>
-        </div>
+        </>
     );
 }
