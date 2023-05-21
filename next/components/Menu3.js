@@ -45,25 +45,12 @@ export default function Menu3(props){
                     sx={{
                     }}
                 >
+                    <MenuItem component={Link} href="/total/300" sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} onClick={props.handleClose}>
+                        {t.title[3]}
+                    </MenuItem>
                     <Grid container spacing={2}>
-                        <Grid item xs={1.8}>
-                            <Card>
-                                <CardHeader
-                                    title="ピクミン3/DX"
-                                    subheader="[Wii U/Switch] Since 2013"
-                                />
-                                <CardContent>
-                                    <List>
-                                        <ListItem>参加者数：99人</ListItem>
-                                        <ListItem component={Link} href="/total/300" onClick={props.handleClose}>総合ランキング</ListItem>
-                                        <ListItem>レギュレーション</ListItem>
-                                    </List>
-                                </CardContent>
-
-                            </Card>
-                        </Grid>
-                        <Grid item xs={2}>
-                            <MenuItem component={Link} href="/total/310" onClick={props.handleClose}>お宝をあつめろ！</MenuItem>
+                        <Grid item xs={2.4}>
+                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/310" onClick={props.handleClose}>お宝をあつめろ！</MenuItem>
 
                             {
                                 ce.map(n=>
@@ -72,12 +59,13 @@ export default function Menu3(props){
                                         borderLeft:"solid 10px "+ceColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"34px",
+                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={2}>
-                            <MenuItem component={Link} href="/total/320" onClick={props.handleClose}>原生生物をたおせ！</MenuItem>
+                        <Grid item xs={2.4}>
+                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/320" onClick={props.handleClose}>原生生物をたおせ！</MenuItem>
                             {
                                 be.map(n=>
                                     <MenuItem sx={{
@@ -85,12 +73,13 @@ export default function Menu3(props){
                                         borderLeft:"solid 10px "+beColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"34px",
+                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={2}>
-                            <MenuItem component={Link} href="/total/330" onClick={props.handleClose}>巨大生物をたおせ！</MenuItem>
+                        <Grid item xs={2.4}>
+                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/330" onClick={props.handleClose}>巨大生物をたおせ！</MenuItem>
                             {
                                 db.map(n=>
                                     <MenuItem sx={{
@@ -98,12 +87,13 @@ export default function Menu3(props){
                                         borderLeft:"solid 10px "+dbColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
+                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={2.2}>
-                            <MenuItem component={Link} href="/total/340" onClick={props.handleClose}>サイドストーリー</MenuItem>
+                        <Grid item xs={2.4}>
+                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/340" onClick={props.handleClose}>サイドストーリー</MenuItem>
                             {
                                 ss.map(n=>
                                     <MenuItem sx={{
@@ -111,12 +101,13 @@ export default function Menu3(props){
                                         borderLeft:"solid 10px "+ssColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
+                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }
                         </Grid>
-                        <Grid item xs={2}>
-                            <MenuItem component={Link} href="/total/350" onClick={props.handleClose}>ソロビンゴ</MenuItem>
+                        <Grid item xs={2.4}>
+                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/350" onClick={props.handleClose}>ソロビンゴ</MenuItem>
                             {
                                 sb.map(n=>
                                     <MenuItem sx={{
@@ -124,6 +115,7 @@ export default function Menu3(props){
                                         borderLeft:"solid 10px "+sbColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
+                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
                                 )
                             }

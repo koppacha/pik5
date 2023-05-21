@@ -6,7 +6,7 @@ import {
     Menu,
     MenuItem,
     Slide,
-    Toolbar,
+    Toolbar, Tooltip,
     Typography,
     useScrollTrigger
 } from "@mui/material";
@@ -26,7 +26,9 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import CustomMenu from "@/components/CustomMenu";
-import {faLanguage} from "@fortawesome/free-solid-svg-icons";
+import {faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
+import {useTheme} from "next-themes";
+import {faMoon, faSun} from "@fortawesome/free-regular-svg-icons";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -95,6 +97,19 @@ export default function HeaderMenu({props}){
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [mobileMoreAnchorEl, setMobileMoreAnchorEl] = React.useState(null);
 
+    const {theme, setTheme} = useTheme()
+
+    function themeButton(){
+        if(theme === "dark"){
+            return (
+                <Button onClick={()=> setTheme('light')}><FontAwesomeIcon icon={faSun}/></Button>
+            )
+        } else {
+            return (
+                <Button onClick={()=> setTheme('dark')}><FontAwesomeIcon icon={faMoon}/></Button>
+            )
+        }
+    }
     // const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
@@ -232,21 +247,25 @@ export default function HeaderMenu({props}){
 
                     {/*ここから右よせ*/}
                     <Box sx={{ flexGrow: 1 }} />
-                    <Button
-                        sx={{
-                            color:'#fff',
-                            backgroundColor:'transparent',
-                            fontSize: '0.9em'
-                        }}
-                        component={Link}
-                        href="/"
-                        locale={localeReverse}
-                        passHref
-                        id="basic-button"
-                        ref={anchorEl}
-                        variant="contained">
-                        <FontAwesomeIcon icon={faLanguage} />
-                    </Button>
+                    <Tooltip title="テーマを変更する" arrow>
+                        <IconButton
+                            id="theme-button"
+                            sx={{color:"#fff"}}
+                            onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}>
+                            <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon}/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Switching Launguages（English - Japanese)" arrow>
+                        <IconButton
+                            component={Link}
+                            href="/"
+                            locale={localeReverse}
+                            id="translate-button"
+                            ref={anchorEl}
+                            sx={{color:"#fff"}}>
+                            <FontAwesomeIcon icon={faGlobe} />
+                        </IconButton>
+                    </Tooltip>
                     <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
                         {/*<IconButton size="middle" aria-label="show 4 new mails" color="inherit">*/}
                         {/*    <FontAwesomeIcon icon={faDiscord} />*/}
