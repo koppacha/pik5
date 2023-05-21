@@ -1,17 +1,33 @@
 import '@/styles/globals.css'
 import Layout from '@/components/Layout'
-import type { AppProps } from 'next/app'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
+import {ThemeProvider} from "next-themes"
+import {createGlobalStyle} from "styled-components";
 config.autoAddCss = false
 
-export default function App({ Component, pageProps: { session, ...pageProps }, router }: AppProps) {
+const GlobalStyle = createGlobalStyle`
+  :root {
+    --fg: #000;
+    --bg: #fff;
+  }
+  
+  [data-theme="dark"] {
+    --fg: #fff;
+    --bg: #000;
+  }
+`
+
+export default function App({ Component, pageProps: { session, ...pageProps }, router }) {
 
     return (
       <>
-          <Layout>
-              <Component {...pageProps} />
-          </Layout>
+          <GlobalStyle/>
+          <ThemeProvider>
+              <Layout>
+                  <Component {...pageProps} />
+              </Layout>
+          </ThemeProvider>
       </>
     );
 }

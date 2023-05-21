@@ -149,11 +149,14 @@ export const en = {
     rule: {
         0: "Normal Rule",
         11: "All Collect Time Attack",
-        12: "No Mitite",
-        13: "No Spray",
-        14: "2P Challenge",
-        15: "2P Mission",
-        16: "No Rules",
-        17: "TAS",
+        21: "No Mitite",
+        22: "No Spray",
+        23: "Story Mode Dungeon Time Attack",
+        24: "2P Challenge",
+        25: "No Rules",
+        26: "TAS",
+        27: "Solo Battle Mode",
+        31: "2P Mission",
+        32: "Solo Bingo Battle Mode"
     }
 }

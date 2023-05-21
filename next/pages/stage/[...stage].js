@@ -21,6 +21,8 @@ import Button from "@mui/material/Button";
 // サーバーサイドの処理
 export async function getServerSideProps(context){
     const query = context.query.stage
+
+    // 以下はすべて文字列として処理される
     const stage = query[0]
     const rule  = query[2] || 0
     const console = query[1] || 0
@@ -47,9 +49,31 @@ export default function Stage(param){
     const { locale } = useRouter()
     const t = (locale === "en") ? en : ja
     const r = (locale === "en") ? ja : en
-    const rules = [0, 11, 12, 13, 14, 15, 16, 17]
+    const rules = [0]
     const consoles = [0, 1, 2, 3, 4]
     const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
+
+    // ステージによってルールを追加
+    if(param.info.series === 1){
+        // 全回収タイムアタック
+        rules.push(11)
+    }
+    if(param.info.parent === 21){
+        // タマゴムシ縛り
+        rules.push(23, 26, 27, 28)
+    }
+    if(param.info.parent === 22){
+        if(param.stage !== "216" && param.stage !== "223"){
+            // スプレー縛り（食神のかまど、ひみつの花園は除外）
+            rules.push(24, 26, 27, 28)
+        } else {
+            // 食神のかまど、ひみつの花園
+            rules.push(26, 27, 28)
+        }
+    }
+    if(param.info.series === 3 && param.info.parent !== 35){
+        rules.push(34)
+    }
 
     return (
         <>

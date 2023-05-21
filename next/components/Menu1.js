@@ -11,7 +11,6 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/pik5";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
@@ -39,60 +38,53 @@ export default function Menu1(props){
                     sx={{
                     }}
                 >
+                    <MenuItem component={Link} href="/total/100" sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} onClick={props.handleClose}>
+                        {t.title[1]}
+                    </MenuItem>
                     <Grid container spacing={2}>
-                        <Grid item xs={2}>
-                            <Card>
-                                <CardHeader
-                                    title="ピクミン"
-                                    subheader="[NGC/Wii] Since 2001"
-                                />
-                                <CardContent>
-                                    <List>
-                                        <ListItem>参加者数：99人</ListItem>
-                                        <ListItem component={Link} href="/total/100">総合ランキング</ListItem>
-                                        <ListItem>レギュレーション</ListItem>
-                                    </List>
-                                </CardContent>
-                            </Card>
-                        </Grid>
-                        <Grid item xs={2}>
+                        <Grid item xs={2.4}>
                             <MenuItem sx={{
                                 borderBottom:"solid 1px "+s101Color,
                                 borderLeft:"solid 10px "+s101Color,
                                 margin:"6px 4px 0px 4px",
-                                height:"42px",
+                                height:"12em",
+                                fontFamily:['"M PLUS 1 CODE"'].join(","),
                             }} component={Link} href="/stage/101">#101 {t.stage[101]}</MenuItem>
                         </Grid>
-                        <Grid item xs={2}>
+                        <Grid item xs={2.4}>
                             <MenuItem sx={{
                                 borderBottom:"solid 1px "+s102Color,
                                 borderLeft:"solid 10px "+s102Color,
                                 margin:"6px 4px 0px 4px",
-                                height:"42px",
+                                height:"12em",
+                                fontFamily:['"M PLUS 1 CODE"'].join(","),
                             }} component={Link} href="/stage/102">#102 {t.stage[102]}</MenuItem>
                         </Grid>
-                        <Grid item xs={2}>
+                        <Grid item xs={2.4}>
                             <MenuItem sx={{
                                 borderBottom:"solid 1px "+s103Color,
                                 borderLeft:"solid 10px "+s103Color,
                                 margin:"6px 4px 0px 4px",
-                                height:"42px",
+                                height:"12em",
+                                fontFamily:['"M PLUS 1 CODE"'].join(","),
                             }} component={Link} href="/stage/103">#103 {t.stage[103]}</MenuItem>
                         </Grid>
-                        <Grid item xs={2}>
+                        <Grid item xs={2.4}>
                             <MenuItem sx={{
                                 borderBottom:"solid 1px "+s104Color,
                                 borderLeft:"solid 10px "+s104Color,
                                 margin:"6px 4px 0px 4px",
-                                height:"42px",
+                                height:"12em",
+                                fontFamily:['"M PLUS 1 CODE"'].join(","),
                             }} component={Link} href="/stage/104">#104 {t.stage[104]}</MenuItem>
                         </Grid>
-                        <Grid item xs={2}>
+                        <Grid item xs={2.4}>
                             <MenuItem sx={{
                                 borderBottom:"solid 1px "+s105Color,
                                 borderLeft:"solid 10px "+s105Color,
                                 margin:"6px 4px 0px 4px",
-                                height:"42px",
+                                height:"12em",
+                                fontFamily:['"M PLUS 1 CODE"'].join(","),
                             }} component={Link} href="/stage/105">#105 {t.stage[105]}</MenuItem>
                         </Grid>
                     </Grid>

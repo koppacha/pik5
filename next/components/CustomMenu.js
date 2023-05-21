@@ -11,6 +11,7 @@ import MenuOt from "@/components/MenuOt";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import {useRouter} from "next/router";
+import Link from "next/link";
 
 export default function CustomMenu(props){
 
