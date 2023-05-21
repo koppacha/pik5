@@ -104,7 +104,7 @@ export default function Keyword(){
                 setContent={setContent}
                 setUniqueId={setUniqueId}
                 open={open}
-                setOpen={setOpen}></FormDialog>
+                setOpen={setOpen}/>
             {
                 data?.map(post =>
                     <KeywordPost data={post} handleEdit={() => handleEdit}/>

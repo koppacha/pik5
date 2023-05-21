@@ -99,17 +99,6 @@ export default function HeaderMenu({props}){
 
     const {theme, setTheme} = useTheme()
 
-    function themeButton(){
-        if(theme === "dark"){
-            return (
-                <Button onClick={()=> setTheme('light')}><FontAwesomeIcon icon={faSun}/></Button>
-            )
-        } else {
-            return (
-                <Button onClick={()=> setTheme('dark')}><FontAwesomeIcon icon={faMoon}/></Button>
-            )
-        }
-    }
     // const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
@@ -211,8 +200,7 @@ export default function HeaderMenu({props}){
         </Menu>
     );
     return (
-    <HideOnScroll {...props}>
-        <div>
+        <>
             <ThinAppBar>
                 <Toolbar>
                     <Typography variant="h6" component="div">
@@ -239,7 +227,9 @@ export default function HeaderMenu({props}){
                             backgroundColor:'transparent',
                             fontSize: '0.9em'
                         }}
-                        id="basic-button"
+                        id="discord-button"
+                        component={Link}
+                        href="https://discord.gg/rQEBJQa"
                         ref={anchorEl}
                         variant="contained">
                         <FontAwesomeIcon icon={faDiscord} />Discordはこちら！
@@ -302,7 +292,6 @@ export default function HeaderMenu({props}){
             </ThinAppBar>
             {renderMobileMenu}
             {renderMenu}
-        </div>
-    </HideOnScroll>
+        </>
     )
 }
