@@ -1,0 +1,25 @@
+stage_id,stage_name,eng_stage_name,root,parent,series
+1,全総合ランキング,All Overall Ranking,0,0,0
+2,通常総合ランキング,Normal Overall Ranking,0,1,0
+3,特殊総合ランキング,Special Overall Ranking,0,1,0
+4,期間限定総合ランキング,Limited Events Overall Ranking,0,0,0
+10,ピクミン1総合ランキング,Pikmin 1 overall ranking,1,2,1
+11,ピクミン1全回収タイムアタック総合ランキング,Pikmin 1 All Recovery Time Attack Overall ranking,0,3,1
+20,ピクミン2総合ランキング,Pikmin2 overall ranking,1,2,2
+21,ピクミン2タマゴあり総合ランキング,Pikmin2 with eggs overall ranking,0,2,2
+22,ピクミン2タマゴなし総合ランキング,Pikmin2 without egg overall ranking,0,2,2
+23,ピクミン2タマゴムシ縛り総合ランキング,Pikmin2 with No Mitite overall ranking,0,3,2
+24,ピクミン2スプレー縛り総合ランキング,Pikmin2 with No Spray Overall ranking,0,3,2
+25,ピクミン2本編地下総合ランキング,Pikmin2 underground overall ranking,0,3,2
+26,ピクミン2 2Pチャレンジ総合ランキング,Pikmin2 2P challenge overall ranking,0,3,2
+27,ピクミン2実機無差別級総合ランキング,Pikmin2 real machine indiscriminate class overall ranking,0,3,2
+28,ピクミン2TAS総合ランキング,Pikmin 2 TAS overall ranking,0,3,2
+29,ピクミン2ソロバトル総合ランキング,Pikmin 2 solo battle overall ranking,0,3,2
+30,ピクミン3総合ランキング,Pikmin 3 overall ranking,1,2,3
+31,ピクミン3「お宝をあつめろ！」総合ランキング,"Pikmin 3 ""Collect the Treasure!"" Overall ranking",0,2,3
+32,ピクミン3「原生生物をたおせ！」総合ランキング,"Pikmin 3 ""Defeat the Enemy!"" Overall ranking",0,2,3
+33,ピクミン3「巨大生物をたおせ！」総合ランキング,"Pikmin 3 ""Defeat the giant creatures!"" Overall ranking",0,2,3
+34,ピクミン3 2Pミッション総合ランキング,Pikmin 3 2P mission overall ranking,0,3,3
+35,ピクミン3ソロビンゴ総合ランキング,Pikmin 3 Solo Bingo Overall ranking,0,2,3
+36,ピクミン3「サイドストーリー」総合ランキング,"Pikmin 3 ""Side Story"" Overall ranking",0,3,3
+40,ピクミン4総合ランキング,Pikmin 4 Overall ranking,1,2,4
