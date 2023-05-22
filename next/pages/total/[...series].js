@@ -4,6 +4,9 @@ import {ja} from "../../locale/ja";
 import {AppBar, Box, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 import Record from "../../components/Record";
+import PullDownConsole from "../../components/PullDownConsole";
+import PullDownYear from "../../components/PullDownYear";
+import * as React from "react";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -31,8 +34,6 @@ export default function Series(param){
     const stages = param.data['stage_list'];
     const records = param.data.data;
     const rules = [0, 11, 12, 13, 14, 15, 16, 17]
-    const consoles = [0, 1, 2, 3, 4]
-    const years = [2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015, 2014]
 
     return (
         <>
@@ -74,38 +75,16 @@ export default function Series(param){
                 </Select>
             </FormControl>
 
-            操作方法
-            <FormControl>
-                <Select
-                    sx={{color:'#fff'}}
-                    defaultValue={param.console}
-                    id="select-consoles"
-                >
-                    {
-                        // 操作方法プルダウンを出力
-                        consoles.map(val =>
-                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
-                                val+'/'+param.rule+'/'+param.year}>{t.console[val]}</Link></MenuItem>
-                        )
-                    }
-                </Select>
-            </FormControl>
-            集計年
-            <FormControl>
-                <Select
-                    sx={{color:'#fff'}}
-                    defaultValue={2023}
-                    id="select-year"
-                >
-                    {
-                        // 集計年プルダウンを出力
-                        years.map(val =>
-                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
-                                param.console+'/'+param.rule+'/'+val}>{val}</Link></MenuItem>
-                        )
-                    }
-                </Select>
-            </FormControl>
+            <PullDownConsole
+                info={param.info}
+                rule={param.rule}
+                year={param.year}/>
+
+            <PullDownYear
+                info={param.info}
+                rule={param.rule}
+                year={param.console}/>
+
             <ul>
                 {
                     Object.keys(records).map(e =>
