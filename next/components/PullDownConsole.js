@@ -12,16 +12,19 @@ export default function PullDownConsole(props){
     
     const consoles = [0]
 
+    // 取得対象が総合ランキングの場合はparentを置換する
+    const parent = (props.info.parent < 10) ? props.info.stage_id : props.info.parent
+
     // ステージによって操作方法配列を操作
     if(props.info.series === 1){
         // ピクミン１＝Wii・NGC、全回収タイムアタック
         consoles.push(1, 2)
     }
-    if(props.info.parent === 21){
+    if(parent === 21){
         // ピクミン２：タマゴムシ縛り
         consoles.push(1, 2)
     }
-    if(props.info.parent === 22){
+    if(parent === 22){
         if(props.info.stage_id !== 216 && props.info.stage_id !== 223){
             // スプレー縛り（食神のかまど、ひみつの花園は除外）
             consoles.push(1, 2)
@@ -30,7 +33,7 @@ export default function PullDownConsole(props){
             consoles.push(1, 2)
         }
     }
-    if(props.info.series === 3 && props.info.parent !== 35){
+    if(props.info.series === 3 && parent !== 35){
         consoles.push(2, 3, 4, 5, 6)
     }
     

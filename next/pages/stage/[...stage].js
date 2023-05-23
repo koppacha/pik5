@@ -17,6 +17,7 @@ import {range} from "../../plugin/pik5";
 import RecordPost from "../../components/RecordPost";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";
+import Rules from "../../components/Rules";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -39,7 +40,7 @@ export async function getServerSideProps(context){
     const info = await stage_res.json()
 
     return {
-        param: {
+        props: {
             data, stage, rule, console, year, info
         }
     }
@@ -50,30 +51,6 @@ export default function Stage(param){
     const { locale } = useRouter()
     const t = (locale === "en") ? en : ja
     const r = (locale === "en") ? ja : en
-
-    const rules = [0]
-
-    // ステージによってルール配列を操作
-    if(param.info.series === 1){
-        // ピクミン１＝Wii・NGC、全回収タイムアタック
-        rules.push(11)
-    }
-    if(param.info.parent === 21){
-        // ピクミン２：タマゴムシ縛り
-        rules.push(23, 26, 27, 28)
-    }
-    if(param.info.parent === 22){
-        if(param.info.stage_id !== 216 && param.info.stage_id !== 223){
-            // スプレー縛り（食神のかまど、ひみつの花園は除外）
-            rules.push(24, 26, 27, 28)
-        } else {
-            // 食神のかまど、ひみつの花園
-            rules.push(26, 27, 28)
-        }
-    }
-    if(param.info.series === 3 && param.info.parent !== 35){
-        rules.push(34)
-    }
 
     // ボーダーライン出力用変数
     let i = 0
@@ -98,39 +75,27 @@ export default function Stage(param){
             <Typography sx={{color:'#999'}}>{r.stage[param.stage]}</Typography>
 
             <PullDownConsole
+                console={param.console}
                 info={param.info}
                 rule={param.rule}
                 year={param.year}/>
 
             <PullDownYear
+                year={param.year}
                 info={param.info}
                 rule={param.rule}
-                year={param.console}/>
+                console={param.console}/>
 
             <Box sx={{margin:"20px"}}>
-                <Grid container>
-                    {
-                        // ルールを出力
-                        rules.map(val =>
-                            <Grid item>
-                                <Box sx={{
-                                        border:"1px solid #fff",
-                                        borderRadius:"4px",
-                                        padding:"12px",
-                                        margin: "6px",
-                                        backgroundColor:(Number(param.rule) === val)? "#fff" : "",
-                                        color:(Number(param.rule) === val)? "#000" : "",
-                                     }}
-                                     component={Link}
-                                     href={'/stage/'+param.stage+'/'+param.console+'/'+val+'/'+param.year}>
-                                    {t.rule[val]}
-                                </Box>
-                            </Grid>
-                        )
-                    }
-                    <Grid item>
-                        <RecordPost/>
-                    </Grid>
+
+            <Rules
+                rule={param.rule}
+                info={param.info}
+                console={param.console}
+                year={param.year}/>
+
+                <Grid>
+                    <RecordPost/>
                 </Grid>
             </Box>
                 {

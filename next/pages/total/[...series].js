@@ -7,6 +7,7 @@ import Record from "../../components/Record";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";
 import * as React from "react";
+import Rules from "../../components/Rules";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -19,9 +20,13 @@ export async function getServerSideProps(context){
     const res = await fetch(`http://laravel:8000/api/total/${series}/${console}/${rule}/${year}`)
     const data = await res.json()
 
+    // ステージ情報をリクエスト
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
+    const info = await stage_res.json()
+
     return {
         props: {
-            data, series, rule, console, year
+            data, series, rule, console, year, info
         }
     }
 }
@@ -58,32 +63,26 @@ export default function Series(param){
                     )
                 }
             </Grid>
-            ルール
-            <FormControl>
-                <Select
-                    sx={{color:'#fff'}}
-                    defaultValue={param.rule}
-                    id="select-rules"
-                >
-                    {
-                        // ルールプルダウンを出力
-                        rules.map(val =>
-                            <MenuItem value={val}><Link href={'/total/'+param.series+'/'+
-                                param.console+'/'+val+'/'+param.year}>{t.rule[val]}</Link></MenuItem>
-                        )
-                    }
-                </Select>
-            </FormControl>
 
             <PullDownConsole
+                console={param.console}
                 info={param.info}
                 rule={param.rule}
                 year={param.year}/>
 
             <PullDownYear
+                console={param.console}
                 info={param.info}
                 rule={param.rule}
-                year={param.console}/>
+                year={param.year}/>
+
+            <Box>
+                <Rules
+                    rule={param.rule}
+                    info={param.info}
+                    console={param.console}
+                    year={param.year}/>
+            </Box>
 
             <ul>
                 {
