@@ -26,7 +26,7 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import CustomMenu from "@/components/CustomMenu";
-import {faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
+import {faCloudMoon, faCloudSun, faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import {faMoon, faSun} from "@fortawesome/free-regular-svg-icons";
 
@@ -242,7 +242,7 @@ export default function HeaderMenu({props}){
                             id="theme-button"
                             sx={{color:"#fff"}}
                             onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}>
-                            <FontAwesomeIcon icon={theme === "dark" ? faSun : faMoon}/>
+                            <FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title="Switching Launguages（English - Japanese)" arrow>
