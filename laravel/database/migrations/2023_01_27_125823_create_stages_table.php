@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('stage_name');
             $table->string('eng_stage_name');
             $table->string('stage_sub');
+            $table->string('type');
             $table->bigInteger('series');
             $table->bigInteger('parent');
             $table->bigInteger('time');
