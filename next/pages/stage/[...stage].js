@@ -23,21 +23,21 @@ import Rules from "../../components/Rules";
 export async function getServerSideProps(context){
 
     const query = context.query.stage
-
-    // 以下はすべて文字列として処理される
     const stage = query[0]
-    const rule  = query[2] || 0
+
+    // ステージ情報をリクエスト
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
+    const info = await stage_res.json()
+
+    const rule  = query[2] || info.parent
     const console = query[1] || 0
     const year  = query[3] || 2023
 
     // 記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
 
-    // ステージ情報をリクエスト
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
 
     const data = await res.json()
-    const info = await stage_res.json()
 
     return {
         props: {
