@@ -12,17 +12,18 @@ import Rules from "../../components/Rules";
 export async function getServerSideProps(context){
     const query = context.query.series
     const series = query[0]
-    const rule  = query[2] || 0
+
+    // ステージ情報をリクエスト
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
+    const info = await stage_res.json()
+
+    const rule  = query[2] || series
     const console = query[1] || 0
     const year  = query[3] || 2023
 
     // シリーズ番号に基づいて集計対象ステージをバックエンドで選別して持ってくる
     const res = await fetch(`http://laravel:8000/api/total/${series}/${console}/${rule}/${year}`)
     const data = await res.json()
-
-    // ステージ情報をリクエスト
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
-    const info = await stage_res.json()
 
     return {
         props: {
@@ -38,7 +39,6 @@ export default function Series(param){
 
     const stages = param.data['stage_list'];
     const records = param.data.data;
-    const rules = [0, 11, 12, 13, 14, 15, 16, 17]
 
     return (
         <>

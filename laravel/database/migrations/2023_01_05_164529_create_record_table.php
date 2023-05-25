@@ -29,8 +29,8 @@ return new class extends Migration
             $table->string('user_host');
             $table->string('user_agent');
             $table->string('img_url');
-            $table->string('video_url');
-            $table->string('post_memo');
+            $table->string('video_url', 512);
+            $table->string('post_memo', 1024);
             $table->string('flg');
             $table->timestamps();
         });
