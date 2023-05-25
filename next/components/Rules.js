@@ -10,11 +10,10 @@ export default function Rules(props){
     const { locale } = useRouter();
     const t = (locale === "en") ? en : ja;
 
-    const rules = [0]
-
     // 取得対象が総合ランキングの場合はparentを置換する
-    const parent = (props.info.parent < 10) ? props.info.stage_id : props.info.parent
-    
+    const parent = (props.info.parent < 100) ? props.info.stage_id : props.info.parent
+    const rules = [parent]
+
     // ステージによってルール配列を操作
     if(props.info.series === 1){
         // ピクミン１＝Wii・NGC、全回収タイムアタック

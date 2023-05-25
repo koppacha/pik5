@@ -81,8 +81,8 @@ class RecordController extends Controller
 
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
-        $orderby = is_numeric($request['id'])? ['score','DESC'] : ['stage_id','ASC'];
-        $group = !is_numeric($request['id'])? 'stage_id' : 'user_id';
+        $orderBy = is_numeric($request['id'])? ['score','DESC'] : ['stage_id','ASC'];
+        $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
         // オプション引数
         $console = $request['console'] ?: 0;
@@ -92,7 +92,8 @@ class RecordController extends Controller
 
         // オプション引数を加工する
         $year = (int)$year + 1;
-        $console_operation = $console? "=" : ">";
+        $console_operation = $console ? "=" : ">";
+        $rule_operation = $rule ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -107,15 +108,18 @@ class RecordController extends Controller
                 // 絞り込み条件
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
-                ->where('rule',$rule)
+                ->where('rule', $rule_operation ,$rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
-                ->orderBy($orderby[0],$orderby[1])
+                ->orderBy($orderBy[0],$orderBy[1])
             ->get();
+
+        // 配列型に変換
+        $dataset = $dataset->toArray();
 
         // ランキングページの場合は同一ユーザーの重複を削除して順位を再計算
         $filter = [];
-        $new_data = collect([]);
+        $new_data = [];
 
         // 重複を削除
         foreach($dataset as $key => $value){
@@ -129,7 +133,7 @@ class RecordController extends Controller
         if($where === "stage_id") {
             $new_data = Func::rank_calc($new_data);
         }
-        $dataset = Func::compare_calc($new_data, $compare);
+         $dataset = Func::compare_calc($new_data, $compare);
 
         return response()->json(
             $dataset
