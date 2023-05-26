@@ -4,11 +4,20 @@ import * as React from "react";
 import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
+import {styled} from "@mui/material/styles";
 
 export default function PullDownConsole(props){
 
     const { locale } = useRouter()
     const t = (locale === "en") ? en : ja
+
+    const StyledSelect = styled(Select)`
+      color: #fff;
+      border: 1px solid #fff;
+      & > svg {
+        color: #fff;
+      }
+    `
     
     const consoles = [0]
 
@@ -40,8 +49,7 @@ export default function PullDownConsole(props){
     return (
         <FormControl>
             <FormHelperText sx={{color:"#fff"}}>操作方法</FormHelperText>
-            <Select
-                sx={{color:'#fff'}}
+            <StyledSelect
                 defaultValue={props.console}
                 id="select-consoles"
             >
@@ -52,7 +60,7 @@ export default function PullDownConsole(props){
                             val+'/'+props.rule+'/'+props.year}>{t.console[val]}</MenuItem>
                     )
                 }
-            </Select>
+            </StyledSelect>
         </FormControl>
     )
 }

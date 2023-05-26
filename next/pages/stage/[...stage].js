@@ -60,14 +60,14 @@ export default function Stage(param){
     const subCategory = () => {
         if(param.info.parent){
             return (
-                <Link href={"/total/"+param.info.parent+"0"}>（{t.rule[param.info.parent]}）</Link>
+                <Link href={"/total/"+param.info.parent}>（{t.rule[param.info.parent]}）</Link>
             )
         }
     }
     return (
         <>
             #{param.stage}<br/>
-            <Link href={"/total/"+param.stage.slice(0,2)+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
+            <Link href={"/total/"+param.info.series+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
             {subCategory()}<br/>
             <Typography variant="h3" sx={{
                 fontFamily:['"M PLUS 1 CODE"'].join(","),
