@@ -11,7 +11,7 @@ export default function Rules(props){
     const t = (locale === "en") ? en : ja;
 
     // 取得対象が総合ランキングの場合はparentを置換する
-    const parent = (props.info.parent < 100) ? props.info.stage_id : props.info.parent
+    const parent = (props.info.parent < 10) ? props.info.stage_id : props.info.parent
     const rules = [parent]
 
     // ステージによってルール配列を操作
