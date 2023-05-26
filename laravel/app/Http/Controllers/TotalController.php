@@ -113,7 +113,8 @@ class TotalController extends Controller
 
         // オプション引数を加工する
         $year = (int)$year + 1;
-        $console_operation = $console? "=" : ">";
+        $console_operation = $console ? "=" : ">";
+        $rule_operation = $rule ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -124,7 +125,7 @@ class TotalController extends Controller
             $q->select('user_name','user_id');
          }])->whereIn('stage_id',$stage_list[$request['id']])
             ->where('console', $console_operation, $console)
-            ->where('rule',$rule)
+            ->where('rule',$rule_operation ,$rule)
             ->where('created_at','<', $date)
             ->groupBy('user_id', 'stage_id')
             ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
