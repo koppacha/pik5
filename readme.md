@@ -1,12 +1,13 @@
 # 新ピクチャレ大会 Pikmin Series Leaderboards
-**Since: 2007/04/29**  
+**Since: 2006/09/01**  
 **author:@koppachappy**
 
 ## このプロジェクトについて
-* 「ピクミンシリーズチャレンジモード大会（ver.2）」のフルリプレイスプロジェクトです。 2023年夏公開予定です。公開後に旧ピクチャレ大会は閉鎖します。
+* 「ピクミンシリーズチャレンジモード大会（ver.2）」のフルリプレイスプロジェクトです。
+2023年07月01日公開予定です。
 
 ## このソースコードの権利について
-当プロジェクトはオープンソースであり、ソースコードの改変や二次配布などについて制限はありませんが、
+当プロジェクトはオープンソースでありソースコードの改変や二次配布などについて制限はありませんが、
 本家と同じピクミンシリーズのコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
 ピクミン以外のゲームのランキングサイトとして公開することに関しては制限はありません。
 
@@ -19,17 +20,22 @@
 
 ＊原則として最新版を利用  
 ＊Windows環境はDockerの動作が重いので推奨しませんが、もし開発する場合はWSL2(Ubuntu)をインストールし、
-その中にデータを入れるとある程度軽快に動きます。＊現在、lima VMでクロスプラットフォームでも軽快に動く環境を模索中……
+その中にデータを入れるとある程度軽快に動きます。  
+＊現在、lima VMでクロスプラットフォームでも軽快に動く環境を模索中……
 
-## 各種マニュアル
-* PHP：https://www.php.net/manual/ja/index.php
-* Laravel：https://readouble.com/laravel/
-* JavaScript：https://ja.javascript.info/
-* React：https://ja.reactjs.org/docs/getting-started.html
-* Next.js：https://nextjs.org/docs/getting-started
-* Material UI：https://mui.com/material-ui/getting-started/overview/
-* Docker：https://docs.docker.jp/index.html
-* Git：https://tracpath.com/docs/
+## 主な使用技術
+* PHP：https://www.php.net/manual/ja/index.php (backend)
+  * Laravel：https://readouble.com/laravel/ (backend framework)
+* JavaScript：https://ja.javascript.info/ (frontend)
+  * React：https://ja.reactjs.org/docs/getting-started.html (frontend framework)
+    * Next.js：https://nextjs.org/docs/getting-started (React framework)
+    * Material UI：https://mui.com/material-ui/getting-started/overview/ (UI framework)
+* Docker：https://docs.docker.jp/index.html (Infra)
+
+## その他プラグイン
+* Font Awesome：https://fontawesome.com/ (Icons)
+* Styled-Components：https://styled-components.com/ (CSS in JS)
+* Yup：https://github.com/jquense/yup (frontend Validation)
 
 ## 環境構築手順
 ```shell

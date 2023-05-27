@@ -91,14 +91,14 @@ export default function Record(props) {
             <Grid xs={1} sx={{
                 borderRight: '1px solid #fff'
             }}>
-                <Typography component="span" sx={{color:'#999'}}>{t.g.rankHead}</Typography>
+                <Typography variant="" sx={{color:'#999'}}>{t.g.rankHead}</Typography>
                 <Typography component="span" sx={{
                     fontSize:'2em',
                     fontWeight: '200',
                     fontFamily:['"Kulim Park"',"cursive"].join(","),
                     textShadow: shadow,
                 }}>{r.post_rank}</Typography>
-                <Typography component="span" sx={{
+                <Typography variant="" sx={{
                     color:'#999',
                     textShadow: shadow,
                 }}> {t.g.rankTail}</Typography>
@@ -106,10 +106,9 @@ export default function Record(props) {
             </Grid>
             <Grid xs={3} sx={{
                 borderRight: '1px solid #777',
-            }}><Typography component="span" sx={{
-                lineHeight: '3em',
-                fontSize: '1.25em',
-                fontFamily:['"M PLUS 1 CODE"'].join(","),
+            }}><Typography variant="" sx={{
+                lineHeight: r.user.user_name.length > 12 ? '3.4em' : '3em',
+                fontSize: r.user.user_name.length > 12 ? '1.1em' : '1.25em',
                 textShadow: shadow,
             }}><Link href={"/user/"+r.user.user_id}>{r.user.user_name}</Link></Typography>
             </Grid>

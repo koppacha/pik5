@@ -22,6 +22,7 @@
     "@mui/icons-material": "^5.11.0",
     "@mui/material": "^5.11.4",
     "@mui/styles": "^5.11.2",
+    "@mui/styled-engine": "npm:@mui/styled-engine-sc@latest",
     "@next/font": "13.1.2",
     "@react-libraries/use-ssr": "^1.0.17",
     "@types/node": "18.11.18",
@@ -47,5 +48,8 @@
   },
   "devDependencies": {
     "@types/styled-components": "^5.1.26"
+  },
+  "resolutions": {
+    "@mui/styled-engine": "npm:@mui/styled-engine-sc@latest"
   }
 }
