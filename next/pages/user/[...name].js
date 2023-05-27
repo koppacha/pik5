@@ -2,8 +2,11 @@
 import {useRouter} from "next/router";
 import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
-import {Typography} from "@mui/material";
+import {Grid, Typography} from "@mui/material";
 import Record from "../../components/Record";
+import PullDownConsole from "../../components/PullDownConsole";
+import PullDownYear from "../../components/PullDownYear";
+import * as React from "react";
 
 export async function getServerSideProps(context){
     // ユーザー名を取得
@@ -30,11 +33,23 @@ export default function Stage(param){
     return (
         <>
             ユーザー別ランキング<br/>
-            <Typography variant="h3" sx={{
-                fontFamily:['"M PLUS 1 CODE"'].join(","),
-            }}>{ param.userName[0].user_name }</Typography>
+            <Typography variant="">{ param.userName[0].user_name }</Typography>
             <Typography sx={{color:'#999'}}>@{param.user_id}</Typography>
-            <br/>
+            <Grid container>
+                <Grid item xs={12}>
+                    <PullDownConsole
+                        console={param.console}
+                        user={param.user_id}
+                        rule={param.rule}
+                        year={param.year}/>
+
+                    <PullDownYear
+                        console={param.console}
+                        user={param.user_id}
+                        rule={param.rule}
+                        year={param.year}/>
+                </Grid>
+            </Grid>
             {
                 Object.values(param.data).map(post =>
                     <Record data={post} />
