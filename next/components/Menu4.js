@@ -6,7 +6,6 @@ import {
     Grid,
     List,
     ListItem,
-    MenuItem,
     MenuList,
     Paper
 } from "@mui/material";
@@ -16,6 +15,7 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
+import {StyledMenuItem} from "../styles/pik5.css";
 
 const s401Color = "#ffde5b"
 const s402Color = "#dcb724"
@@ -39,54 +39,49 @@ export default function Menu4(props){
                     sx={{
                     }}
                 >
-                    <MenuItem component={Link} href="/total/400" sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} onClick={props.handleClose}>
+                    <StyledMenuItem component={Link} href="/total/40" onClick={props.handleClose}>
                         {t.title[4]}
-                    </MenuItem>
+                    </StyledMenuItem>
                     <Grid container spacing={2}>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{
+                            <StyledMenuItem sx={{
                                 borderBottom:"solid 1px "+s401Color,
                                 borderLeft:"solid 10px "+s401Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                                fontFamily:['"M PLUS 1 CODE"'].join(","),
-                            }} component={Link} href="/stage/401">#401 {t.stage[401]}</MenuItem>
+                            }} component={Link} href="/stage/401">#401 {t.stage[401]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{
+                            <StyledMenuItem sx={{
                                 borderBottom:"solid 1px "+s402Color,
                                 borderLeft:"solid 10px "+s402Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                                fontFamily:['"M PLUS 1 CODE"'].join(","),
-                            }} component={Link} href="/stage/402">#402 {t.stage[402]}</MenuItem>
+                            }} component={Link} href="/stage/402">#402 {t.stage[402]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{
+                            <StyledMenuItem sx={{
                                 borderBottom:"solid 1px "+s403Color,
                                 borderLeft:"solid 10px "+s403Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                                fontFamily:['"M PLUS 1 CODE"'].join(","),
-                            }} component={Link} href="/stage/403">#403 {t.stage[403]}</MenuItem>
+                            }} component={Link} href="/stage/403">#403 {t.stage[403]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{
+                            <StyledMenuItem sx={{
                                 borderBottom:"solid 1px "+s404Color,
                                 borderLeft:"solid 10px "+s404Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                                fontFamily:['"M PLUS 1 CODE"'].join(","),
-                            }} component={Link} href="/stage/404">#404 {t.stage[404]}</MenuItem>
+                            }} component={Link} href="/stage/404">#404 {t.stage[404]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{
+                            <StyledMenuItem sx={{
                                 borderBottom:"solid 1px "+s405Color,
                                 borderLeft:"solid 10px "+s405Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                                fontFamily:['"M PLUS 1 CODE"'].join(","),
-                            }} component={Link} href="/stage/405">#405 {t.stage[405]}</MenuItem>
+                            }} component={Link} href="/stage/405">#405 {t.stage[405]}</StyledMenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>

@@ -1,12 +1,13 @@
 import Button from "@mui/material/Button";
-import React, {useState} from "react";
+import React, {useContext, useState} from "react";
 import RecordForm from "./RecordForm";
-import {Box} from "@mui/material";
+import {Box, Grid} from "@mui/material";
+import Link from "next/link";
 
-export default function RecordPost(){
+export default function RecordPost(props){
 
     const [open, setOpen] = useState(false)
-
+    
     const handleClickOpen = () => {
         setOpen(true)
     }
@@ -16,18 +17,23 @@ export default function RecordPost(){
 
     return (
         <>
-            <Box
-                sx={{
-                    border: "1px solid #fff",
-                    borderRadius: "4px",
-                    padding: "12px",
-                    margin: "6px",
-                    backgroundColor: "#fff",
-                    color: "#000",
-                }}
-                onClick={handleClickOpen}>
-                記録を投稿する
-            </Box>
+            <Grid item>
+                <Box
+                    className={"pikmin"+props.info.series}
+                    sx={{
+                        border: "1px solid #fff",
+                        borderRadius: "4px",
+                        padding: "12px",
+                        margin: "6px",
+                        backgroundColor: "#fff",
+                        color: "#000",
+                    }}
+                    component={Link}
+                    href="#"
+                    onClick={handleClickOpen}>
+                    記録を投稿する
+                </Box>
+            </Grid>
             <RecordForm
                 open={open}
                 setOpen={setOpen}

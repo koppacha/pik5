@@ -15,6 +15,7 @@ export const en = {
         9: "Others",
     },
     stage: {
+        20 : "Pikmin2 Overall Ranking",
         101: "The Impact Site",
         102: "The Forest of Hope",
         103: "The Forest Navel",

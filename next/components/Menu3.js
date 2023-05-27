@@ -6,7 +6,6 @@ import {
     Grid,
     List,
     ListItem,
-    MenuItem,
     MenuList,
     Paper
 } from "@mui/material";
@@ -16,6 +15,7 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
+import {StyledMenuItem} from "../styles/pik5.css";
 
 const ce = range(301, 315)
 const be = range(316, 330)
@@ -45,78 +45,73 @@ export default function Menu3(props){
                     sx={{
                     }}
                 >
-                    <MenuItem component={Link} href="/total/300" sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} onClick={props.handleClose}>
+                    <StyledMenuItem component={Link} href="/total/30" onClick={props.handleClose}>
                         {t.title[3]}
-                    </MenuItem>
+                    </StyledMenuItem>
                     <Grid container spacing={2}>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/310" onClick={props.handleClose}>お宝をあつめろ！</MenuItem>
+                            <StyledMenuItem component={Link} href="/total/31" onClick={props.handleClose}>お宝をあつめろ！</StyledMenuItem>
 
                             {
                                 ce.map(n=>
-                                    <MenuItem sx={{
+                                    <StyledMenuItem sx={{
                                         borderBottom:"solid 1px "+ceColor,
                                         borderLeft:"solid 10px "+ceColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"34px",
-                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
-                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/320" onClick={props.handleClose}>原生生物をたおせ！</MenuItem>
+                            <StyledMenuItem component={Link} href="/total/32" onClick={props.handleClose}>原生生物をたおせ！</StyledMenuItem>
                             {
                                 be.map(n=>
-                                    <MenuItem sx={{
+                                    <StyledMenuItem sx={{
                                         borderBottom:"solid 1px "+beColor,
                                         borderLeft:"solid 10px "+beColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"34px",
-                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
-                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/330" onClick={props.handleClose}>巨大生物をたおせ！</MenuItem>
+                            <StyledMenuItem component={Link} href="/total/33" onClick={props.handleClose}>巨大生物をたおせ！</StyledMenuItem>
                             {
                                 db.map(n=>
-                                    <MenuItem sx={{
+                                    <StyledMenuItem sx={{
                                         borderBottom:"solid 1px "+dbColor,
                                         borderLeft:"solid 10px "+dbColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
-                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
-                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/340" onClick={props.handleClose}>サイドストーリー</MenuItem>
+                            <StyledMenuItem component={Link} href="/total/34" onClick={props.handleClose}>サイドストーリー</StyledMenuItem>
                             {
                                 ss.map(n=>
-                                    <MenuItem sx={{
+                                    <StyledMenuItem sx={{
                                         borderBottom:"solid 1px "+ssColor,
                                         borderLeft:"solid 10px "+ssColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
-                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
-                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <MenuItem sx={{fontFamily:['"M PLUS 1 CODE"'].join(","),}} component={Link} href="/total/350" onClick={props.handleClose}>ソロビンゴ</MenuItem>
+                            <StyledMenuItem component={Link} href="/total/35" onClick={props.handleClose}>ソロビンゴ</StyledMenuItem>
                             {
                                 sb.map(n=>
-                                    <MenuItem sx={{
+                                    <StyledMenuItem sx={{
                                         borderBottom:"solid 1px "+sbColor,
                                         borderLeft:"solid 10px "+sbColor,
                                         margin:"6px 4px 0px 4px",
                                         height:"37px",
-                                        fontFamily:['"M PLUS 1 CODE"'].join(","),
-                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</MenuItem>
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>

@@ -3,20 +3,8 @@ import Layout from '@/components/Layout'
 import { config } from '@fortawesome/fontawesome-svg-core'
 import '@fortawesome/fontawesome-svg-core/styles.css'
 import {ThemeProvider} from "next-themes"
-import {createGlobalStyle} from "styled-components";
+import {GlobalStyle} from "../styles/pik5.css";
 config.autoAddCss = false
-
-const GlobalStyle = createGlobalStyle`
-  :root {
-    --fg: #000;
-    --bg: #fff;
-  }
-  
-  [data-theme="dark"] {
-    --fg: #fff;
-    --bg: #000;
-  }
-`
 
 export default function App({ Component, pageProps: { session, ...pageProps }, router }) {
 

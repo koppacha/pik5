@@ -2,20 +2,23 @@ import {FormControl, FormHelperText, MenuItem, Select} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
 import {range} from "../plugin/pik5";
-import {styled} from "@mui/material/styles";
+import {StyledSelect} from "../styles/pik5.css";
 
 export default function PullDownYear(props){
 
-    const StyledSelect = styled(Select)`
-      color: #fff;
-      border: 1px solid #fff;
-      & > svg {
-        color: #fff;
-      }
-    `
-
     const now = new Date()
     const years = range(2014, now.getFullYear()).reverse()
+
+    let type = ""
+    let id   = ""
+
+    if(props.info){
+        type = props.info.type
+        id   = props.info.stage_id
+    } else {
+        type = "user"
+        id   = props.user
+    }
 
     return (
         <FormControl sx={{ marginLeft: 3}}>
@@ -27,7 +30,7 @@ export default function PullDownYear(props){
                 {
                     // 集計年プルダウンを出力
                     years.map(val =>
-                        <MenuItem value={val} component={Link} href={'/stage/'+props.stage+'/'+
+                        <MenuItem value={val} component={Link} href={'/'+type+'/'+id+'/'+
                             props.console+'/'+props.rule+'/'+val}>{val}</MenuItem>
                     )
                 }
