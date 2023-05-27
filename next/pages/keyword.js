@@ -63,9 +63,7 @@ export default function Keyword(){
 
     return (
         <>
-            <Typography variant="h5" sx={{
-                fontFamily: ['"M PLUS 1 CODE"'].join(","),
-            }}>ピクミンキーワード</Typography>
+            <Typography variant="h5">ピクミンキーワード</Typography>
             <Box sx={{
                 border:'1px solid #fff',
                 padding: '2em',

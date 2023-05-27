@@ -5,9 +5,7 @@ export default function KeywordPost(props) {
 
     return (
         <>
-            <Typography variant="h5" sx={{
-                fontFamily:['"M PLUS 1 CODE"'].join(","),
-            }}>{props.data.keyword}</Typography>
+            <Typography variant="h5">{props.data.keyword}</Typography>
             <Button variant="outlined">{props.data.tag}</Button>
             <Box sx={{
                 borderTop:"1px solid #fff",

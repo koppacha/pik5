@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useEffect, useState, createContext} from "react";
 import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import { useRouter } from "next/router";
@@ -36,7 +36,6 @@ export async function getServerSideProps(context){
     // 記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
 
-
     const data = await res.json()
 
     return {
@@ -69,33 +68,35 @@ export default function Stage(param){
             #{param.stage}<br/>
             <Link href={"/total/"+param.info.series+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
             {subCategory()}<br/>
-            <Typography variant="h3" sx={{
-                fontFamily:['"M PLUS 1 CODE"'].join(","),
-            }}>{ t.stage[param.stage] }</Typography>
-            <Typography sx={{color:'#999'}}>{r.stage[param.stage]}</Typography>
+            <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
+            <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
 
-            <PullDownConsole
-                console={param.console}
-                info={param.info}
-                rule={param.rule}
-                year={param.year}/>
+            <Grid container>
+                <Grid item xs={12}>
+                    <PullDownConsole
+                        info={param.info}
+                        console={param.console}
+                        rule={param.rule}
+                        year={param.year}/>
 
-            <PullDownYear
-                year={param.year}
-                info={param.info}
-                rule={param.rule}
-                console={param.console}/>
-
+                    <PullDownYear
+                        info={param.info}
+                        year={param.year}
+                        rule={param.rule}
+                        console={param.console}/>
+                </Grid>
+            </Grid>
             <Box sx={{margin:"20px"}}>
-
-            <Rules
-                rule={param.rule}
-                info={param.info}
-                console={param.console}
-                year={param.year}/>
-
-                <Grid>
-                    <RecordPost/>
+                <Grid container sx={{
+                    marginTop:"30px"
+                }}>
+                    <Rules
+                        info={param.info}
+                        rule={param.rule}
+                        console={param.console}
+                        year={param.year}/>
+                    <RecordPost
+                        info={param.info}/>
                 </Grid>
             </Box>
                 {
@@ -111,7 +112,6 @@ export default function Stage(param){
                                             color:"#e81fc1",
                                             borderBottom:"2px dotted #e81fc1",
                                             textAlign:"center",
-                                            fontFamily:['"M PLUS 1 CODE"'].join(","),
                                         }}>
                                             {star.repeat(4-i)} {t.border[2][i]} {border}点
                                         </Box>
