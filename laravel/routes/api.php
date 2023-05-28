@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
@@ -46,6 +47,11 @@ Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
 // ユーザーIDからユーザー名を取得する
 Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
     Route:: get('user/name/{id}', [UserNameController ::class, 'requestName']);
+});
+
+// ユーザーIDから全順位を取得する
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+    Route:: get('user/total/{id}', [UserTotalController ::class, 'show']);
 });
 
 // キーワード関連Wiki
