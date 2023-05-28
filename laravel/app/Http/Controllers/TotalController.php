@@ -103,8 +103,7 @@ class TotalController extends Controller
             94 => range(1106, 1109), // チャレンジモード全クリアRTA
             95 => 1110, // 本編カスタムRTA
             81 => range(2001, 9999) // 期間限定ランキング（スタンダード、チーム対抗戦）
-
-        ];
+            ];
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
