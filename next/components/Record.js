@@ -6,6 +6,7 @@ import Link from "next/link";
 import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
+import Image from 'next/image'
 
 // 日付をフォーマットする関数
 function dateFormat(value){
@@ -157,6 +158,11 @@ export default function Record(props) {
                         {r.video_url ? <Link href={r.video_url}><FontAwesomeIcon icon={faYoutube}/></Link>: undefined}
                         {r.unique_id ? <Link href={'/record/'+r.unique_id}><FontAwesomeIcon icon={faTag}/></Link>: undefined}
                         {r.post_comment ? r.post_comment : undefined}
+                        {r.img_url ? <Image
+                            src={"http://laravel:8000/api/img/"+r.img_url}
+                            width={500}
+                            height={500}
+                            alt="image"/>: undefined}
                     </Grid>
                 </Grid>
             </Grid>

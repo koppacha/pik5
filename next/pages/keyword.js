@@ -4,10 +4,7 @@ import KeywordPost from "../components/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR from "swr";
-
-function fetcher(url){
-    return fetch(url).then((r)=>r.json())
-}
+import {fetcher} from "../plugin/pik5";
 
 export default function Keyword(){
 
