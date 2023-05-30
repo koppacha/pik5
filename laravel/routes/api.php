@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\RecordController;
@@ -61,4 +62,9 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static  function () {
     Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
     Route :: patch ( 'keyword/{id}' , [ KeywordController ::class, 'update' ]);
     Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
+});
+
+// 証拠画像取得API
+Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
+    Route:: get('img/{file}', [GetImageController ::class, 'show']);
 });
