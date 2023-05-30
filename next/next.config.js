@@ -1,4 +1,6 @@
-/** @type {import('next').NextConfig} */
+/**
+ *  @type {import('next').NextConfig}
+ */
 
 module.exports = {
   reactStrictMode: true,
@@ -6,8 +8,17 @@ module.exports = {
     locales: ["en", "ja"],
     defaultLocale: "ja"
   },
-  experimental: {
+  compiler: {
     styledComponents: true,
   },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'laravel',
+        port: '8000',
+      }
+    ]
+  }
 }
 
