@@ -16,6 +16,7 @@ import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {StyledMenuItem} from "../styles/pik5.css";
+import {useLocale} from "../plugin/pik5";
 
 const ce = range(301, 315)
 const be = range(316, 330)
@@ -31,8 +32,7 @@ const sbColor = "#b6f153"
 
 export default function Menu3(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     return (
         <Paper>

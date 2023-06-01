@@ -13,7 +13,7 @@ import Button from "@mui/material/Button";
 import {faGlobe, faStar} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import {range} from "../../plugin/pik5";
+import {range, useLocale} from "../../plugin/pik5";
 import RecordPost from "../../components/RecordPost";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";
@@ -47,9 +47,7 @@ export async function getServerSideProps(context){
 
 export default function Stage(param){
 
-    const { locale } = useRouter()
-    const t = (locale === "en") ? en : ja
-    const r = (locale === "en") ? ja : en
+    const {t, r} = useLocale()
 
     // ボーダーライン出力用変数
     let i = 0
@@ -73,28 +71,15 @@ export default function Stage(param){
 
             <Grid container>
                 <Grid item xs={12}>
-                    <PullDownConsole
-                        info={param.info}
-                        console={param.console}
-                        rule={param.rule}
-                        year={param.year}/>
-
-                    <PullDownYear
-                        info={param.info}
-                        year={param.year}
-                        rule={param.rule}
-                        console={param.console}/>
+                    <PullDownConsole props={param}/>
+                    <PullDownYear props={param}/>
                 </Grid>
             </Grid>
             <Box sx={{margin:"20px"}}>
                 <Grid container sx={{
                     marginTop:"30px"
                 }}>
-                    <Rules
-                        info={param.info}
-                        rule={param.rule}
-                        console={param.console}
-                        year={param.year}/>
+                    <Rules props={param}/>
                     <RecordPost
                         info={param.info}/>
                 </Grid>

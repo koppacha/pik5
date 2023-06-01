@@ -12,11 +12,11 @@ import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import {useRouter} from "next/router";
 import Link from "next/link";
+import {useLocale} from "../plugin/pik5";
 
 export default function CustomMenu(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     // プルダウンメニュー駆動周り
     const anchorEl = useRef(null)
