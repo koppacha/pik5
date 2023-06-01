@@ -30,7 +30,7 @@ const schema = yup.object({
         .required('この項目は必須です。')
 })
 
-export default function FormDialog(props) {
+export default function ModalFormKeyword(props) {
 
     const now = new Date().toLocaleString()
     const {register,

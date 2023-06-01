@@ -7,6 +7,9 @@ import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 import Image from 'next/image'
+import {useLocale} from "../plugin/pik5";
+import ModalDialogImage from "./ModalDialogImage";
+import {useState} from "react";
 
 // 日付をフォーマットする関数
 function dateFormat(value){
@@ -22,14 +25,22 @@ function dateFormat(value){
 
 export default function Record(props) {
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
+
     const shadow =  '2px 2px 2px #000, -2px 2px 2px #000,' +
                     ' 2px -2px 2px #000, -2px -2px 2px #000,' +
                     ' 2px 0 2px #000, 0 2px 2px #000,' +
                     ' -2px 0 2px #000, 0 -2px 2px #000';
 
-    const r = props.data
+    const data = props.data
+
+    const [open, setOpen] = useState(false)
+    const handleClose = () => {
+        setOpen(false)
+    }
+    const handleOpen = () => {
+        setOpen(true)
+    }
 
     // 順位によってテーマカラーを決定する [0]文字色 [1]背景
     function rank2color(rank){
@@ -67,13 +78,13 @@ export default function Record(props) {
         }
     }
 
-    const rankColor = rank2color(r.post_rank)
+    const rankColor = rank2color(data.post_rank)
 
     // 比較値を整形する
     let compare;
-    if(!Number.isNaN(r.compare)){
-        if(r.compare > 0) compare = `(+${r.compare})`
-        if(r.compare < 0) compare = `(-${r.compare})`
+    if(!Number.isNaN(data.compare)){
+        if(data.compare > 0) compare = `(+${data.compare})`
+        if(data.compare < 0) compare = `(-${data.compare})`
     } else {
         compare = ""
     }
@@ -98,20 +109,20 @@ export default function Record(props) {
                     fontWeight: '200',
                     fontFamily:['"Kulim Park"',"cursive"].join(","),
                     textShadow: shadow,
-                }}>{r.post_rank}</Typography>
+                }}>{data.post_rank}</Typography>
                 <Typography variant="" sx={{
                     color:'#999',
                     textShadow: shadow,
                 }}> {t.g.rankTail}</Typography>
-                <Typography sx={{fontSize:'0.7em',color:'#999'}}>[{r.rps} rps]</Typography>
+                <Typography sx={{fontSize:'0.7em',color:'#999'}}>[{data.rps} rps]</Typography>
             </Grid>
             <Grid xs={3} sx={{
                 borderRight: '1px solid #777',
             }}><Typography variant="" sx={{
-                lineHeight: r.user.user_name.length > 12 ? '3.4em' : '3em',
-                fontSize: r.user.user_name.length > 12 ? '1.1em' : '1.25em',
+                lineHeight: data.user.user_name.length > 12 ? '3.4em' : '3em',
+                fontSize: data.user.user_name.length > 12 ? '1.1em' : '1.25em',
                 textShadow: shadow,
-            }}><Link href={"/user/"+r.user.user_id}>{r.user.user_name}</Link></Typography>
+            }}><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></Typography>
             </Grid>
             <Grid xs={3} sx={{
                 borderRight: '1px solid #777',
@@ -121,7 +132,7 @@ export default function Record(props) {
                 fontFamily:['"Proza Libre"',"cursive"].join(","),
                 textShadow: shadow,
             }}>
-                {r.score.toLocaleString()}</Typography>
+                {data.score.toLocaleString()}</Typography>
                 <Typography component="span" sx={{
                     color:'#999',
                     textShadow: shadow,
@@ -143,26 +154,25 @@ export default function Record(props) {
                     width: '95%'
                 }}>
                     <Grid xs={6}>
-                        {dateFormat(r.created_at)}
+                        {dateFormat(data.created_at)}
                     </Grid>
                     <Grid xs={6} sx={{
                         textAlign:'right'
                     }}>
-                        {r.stage_id ? <><Link href={'/stage/'+r.stage_id}>{r.stage_id + '#' + t.stage[r.stage_id]}</Link></>:undefined}
+                        {data.stage_id ? <><Link href={'/stage/'+data.stage_id}>{data.stage_id + '#' + t.stage[data.stage_id]}</Link></>:undefined}
                     </Grid>
                     <Grid xs={12} sx={{
                         borderTop:'1px solid #777',
                         paddingTop:'8px'
                     }}>
-                        {r.img_url ? <Link href={'/image/'+r.img_url}><FontAwesomeIcon icon={faImage} /></Link>: undefined}
-                        {r.video_url ? <Link href={r.video_url}><FontAwesomeIcon icon={faYoutube}/></Link>: undefined}
-                        {r.unique_id ? <Link href={'/record/'+r.unique_id}><FontAwesomeIcon icon={faTag}/></Link>: undefined}
-                        {r.post_comment ? r.post_comment : undefined}
-                        {r.img_url ? <Image
-                            src={"http://laravel:8000/api/img/"+r.img_url}
-                            width={500}
-                            height={500}
-                            alt="image"/>: undefined}
+                        {data.img_url ?
+                            <>
+                                <FontAwesomeIcon icon={faImage}  onClick={handleOpen} />
+                                <ModalDialogImage url={data.img_url} open={open} handleClose={handleClose}/>
+                            </>: undefined}
+                        {data.video_url ? <Link href={data.video_url}><FontAwesomeIcon icon={faYoutube}/></Link>: undefined}
+                        {data.unique_id ? <Link href={'/record/'+data.unique_id}><FontAwesomeIcon icon={faTag}/></Link>: undefined}
+                        {data.post_comment ? data.post_comment : undefined}
                     </Grid>
                 </Grid>
             </Grid>

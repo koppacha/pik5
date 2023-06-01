@@ -5,6 +5,7 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
+import {useLocale} from "../plugin/pik5";
 
 const RuleBox = styled(Box)`
   border :1px solid #fff;
@@ -15,15 +16,16 @@ const RuleBox = styled(Box)`
 
 export default function Rules(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const { info, rule, console, year } = props.props
+    
+    const {t} = useLocale()
     
     // 取得対象が総合ランキングの場合はparentを置換する
-    const parent = (props.info.parent < 10) ? props.info.stage_id : props.info.parent
+    const parent = (info.parent < 10) ? info.stage_id : info.parent
     const rules = [parent]
 
     // ステージによってルール配列を操作
-    if(props.info.series === 1){
+    if(info.series === 1){
         // ピクミン１＝Wii・NGC、全回収タイムアタック
         rules.push(11)
     }
@@ -32,7 +34,7 @@ export default function Rules(props){
         rules.push(20, 23, 26, 27, 28)
     }
     if(parent === 22){
-        if(props.info.stage_id !== 216 && props.info.stage_id !== 223){
+        if(info.stage_id !== 216 && info.stage_id !== 223){
             // スプレー縛り（食神のかまど、ひみつの花園は除外）
             rules.push(20, 24, 26, 27, 28)
         } else {
@@ -40,7 +42,7 @@ export default function Rules(props){
             rules.push(20, 26, 27, 28)
         }
     }
-    if(props.info.series === 3 && parent !== 35){
+    if(info.series === 3 && parent !== 35){
         rules.push(30, 34)
     }
     return (
@@ -51,11 +53,11 @@ export default function Rules(props){
                     marginBottom:"30px",
                 }}>
                     <RuleBox sx={{
-                        backgroundColor:(Number(props.rule) === val)? "#fff" : "",
-                        color:(Number(props.rule) === val)? "#000" : "",
+                        backgroundColor:(Number(rule) === val)? "#fff" : "",
+                        color:(Number(rule) === val)? "#000" : "",
                     }}
                          component={Link}
-                         href={'/'+props.info.type+'/'+props.info.stage_id+'/'+props.console+'/'+val+'/'+props.year}>
+                         href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
                         {t.rule[val]}
                     </RuleBox>
                 </Grid>

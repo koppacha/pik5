@@ -5,7 +5,7 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
-import {range} from "../plugin/pik5";
+import {range, useLocale} from "../plugin/pik5";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMinus} from "@fortawesome/free-solid-svg-icons";
 
@@ -20,8 +20,7 @@ const StyledGrid = styled(Grid)`
 
 export default function UserScoreTable(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     const ruleList = [20, 21, 22, 23, 24, 25, 26, 27, 28, 29]
     const consoleList = [0, 1, 2]

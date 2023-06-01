@@ -16,6 +16,7 @@ import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {StyledMenuItem} from "../styles/pik5.css";
+import {useLocale} from "../plugin/pik5";
 
 const s401Color = "#ffde5b"
 const s402Color = "#dcb724"
@@ -25,8 +26,7 @@ const s405Color = "#d5bb39"
 
 export default function Menu4(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     return (
         <Paper>

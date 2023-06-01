@@ -1,5 +1,5 @@
 import {Box, Typography} from "@mui/material";
-import FormDialog from "../components/FromDialog";
+import ModalFormKeyword from "../components/ModalFormKeyword";
 import KeywordPost from "../components/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
@@ -81,7 +81,7 @@ export default function Keyword(){
             <Button variant="outlined" onClick={handleClickOpen}>
                 キーワードを新規作成
             </Button>
-            <FormDialog
+            <ModalFormKeyword
                 handleClose={handleClose}
                 handleClickOpen={handleClickOpen}
                 editTag={editTag}

@@ -10,6 +10,7 @@ import * as React from "react";
 import Totals from "../../components/Totals";
 import {createContext} from "react";
 import Rules from "../../components/Rules";
+import {useLocale} from "../../plugin/pik5";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -41,9 +42,7 @@ export async function getServerSideProps(context){
 
 export default function Series(param){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
-    const r = (locale === "en") ? ja : en;
+    const {t, r} = useLocale()
 
     const stages = param.data['stage_list'];
     const records = param.data.data;
@@ -52,20 +51,12 @@ export default function Series(param){
         if(param.rule){
             // １レイヤーの総合ランキングは通常ランキングのルールコンポーネントを流用
             return (
-                <Rules
-                    rule={param.rule}
-                    info={param.info}
-                    console={param.console}
-                    year={param.year}/>
+                <Rules props={param}/>
             )
         } else {
             // ２レイヤーの総合ランキングは専用コンポーネントに分岐する
             return (
-                <Totals
-                    series={param.series}
-                    info={param.info}
-                    console={param.console}
-                    year={param.year}/>
+                <Totals props={param}/>
             )
         }
     }
@@ -97,17 +88,8 @@ export default function Series(param){
 
             <Grid container>
                 <Grid item xs={12}>
-                <PullDownConsole
-                    console={param.console}
-                    info={param.info}
-                    rule={param.rule}
-                    year={param.year}/>
-
-                <PullDownYear
-                    console={param.console}
-                    info={param.info}
-                    rule={param.rule}
-                    year={param.year}/>
+                    <PullDownConsole props={param}/>
+                    <PullDownYear props={param}/>
                 </Grid>
             </Grid>
             <Grid container sx={{

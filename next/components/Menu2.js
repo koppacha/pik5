@@ -16,6 +16,7 @@ import {ja} from "@/locale/ja";
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import {StyledMenuItem} from "../styles/pik5.css"
+import {useLocale} from "../plugin/pik5";
 
 const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
 const eg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
@@ -24,8 +25,7 @@ const bt = range(245, 254)
 
 export default function Menu2(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     const egColor = "#f13a49"
     const neColor = "#e17259"

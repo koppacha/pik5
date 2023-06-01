@@ -5,6 +5,7 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
+import {useLocale} from "../plugin/pik5";
 
 const TotalBox = styled(Box)`
   border :1px solid #fff;
@@ -15,8 +16,9 @@ const TotalBox = styled(Box)`
 
 export default function Totals(props){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const { series, console, info, year } = props.props
+
+    const {t} = useLocale()
 
     const totals = []
 
