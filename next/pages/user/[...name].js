@@ -10,6 +10,7 @@ import * as React from "react";
 import Rules from "../../components/Rules";
 import RecordPost from "../../components/RecordPost";
 import UserScoreTable from "../../components/UserScoreTable";
+import {useLocale} from "../../plugin/pik5";
 
 export async function getServerSideProps(context){
 
@@ -37,8 +38,7 @@ export async function getServerSideProps(context){
 // レンダラー本体（フロントサイド）
 export default function Stage(param){
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
+    const {t} = useLocale()
 
     return (
         <>
@@ -47,17 +47,8 @@ export default function Stage(param){
             <Typography variant="" className="subtitle">@{param.userId}</Typography>
             <Grid container>
                 <Grid item xs={12}>
-                    <PullDownConsole
-                        console={param.console}
-                        user={param.userId}
-                        rule={param.rule}
-                        year={param.year}/>
-
-                    <PullDownYear
-                        console={param.console}
-                        user={param.userId}
-                        rule={param.rule}
-                        year={param.year}/>
+                    <PullDownConsole props={param}/>
+                    <PullDownYear props={param}/>
                 </Grid>
             </Grid>
             <UserScoreTable/>

@@ -1,19 +1,8 @@
-import {useEffect, useState, createContext} from "react";
-import {en} from "../../locale/en";
-import {ja} from "../../locale/ja";
-import { useRouter } from "next/router";
-import Record from "../../components/Record";
-import {
-    Box,
-    Grid,
-    Typography
-} from "@mui/material";
-import Link from "next/link";
-import Button from "@mui/material/Button";
-import {faGlobe, faStar} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import * as React from "react";
-import {range, useLocale} from "../../plugin/pik5";
+import Record from "../../components/Record";
+import {Box, Grid, Typography} from "@mui/material";
+import Link from "next/link";
+import {useLocale} from "../../plugin/pik5";
 import RecordPost from "../../components/RecordPost";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";
@@ -57,15 +46,15 @@ export default function Stage(param){
     const subCategory = () => {
         if(param.info.parent){
             return (
-                <Link href={"/total/"+param.info.parent}>（{t.rule[param.info.parent]}）</Link>
+                <Link sx={{textDecoration:"underline"}} href={"/total/"+param.info.parent}>（{t.rule[param.info.parent]}）</Link>
             )
         }
     }
     return (
         <>
             #{param.stage}<br/>
-            <Link href={"/total/"+param.info.series+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
-            {subCategory()}<br/>
+            <Link sx={{textDecoration:"underline"}} href={"/total/"+param.info.series+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
+            　{subCategory()}<br/>
             <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
             <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
 
@@ -75,7 +64,7 @@ export default function Stage(param){
                     <PullDownYear props={param}/>
                 </Grid>
             </Grid>
-            <Box sx={{margin:"20px"}}>
+            <Box sx={{margin:"20px 0"}}>
                 <Grid container sx={{
                     marginTop:"30px"
                 }}>

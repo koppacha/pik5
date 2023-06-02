@@ -11,7 +11,7 @@ const RuleBox = styled(Box)`
   border :1px solid #fff;
   border-radius :4px;
   padding :12px;
-  margin :6px;
+  margin-right :6px;
 `
 
 export default function Rules(props){

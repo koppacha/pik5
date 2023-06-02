@@ -159,5 +159,13 @@ export const en = {
         27: "Solo Battle Mode",
         31: "2P Mission",
         32: "Solo Bingo Battle Mode"
+    },
+    border: {
+        2: {
+            0: "701,500 pts Border",
+            1: "701,000 pts Border",
+            2: "700,500 pts Border",
+            3: "700,000 pts Border"
+        }
     }
 }
