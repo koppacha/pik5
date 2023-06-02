@@ -11,19 +11,17 @@ import * as yup from 'yup'
 import {yupResolver} from "@hookform/resolvers/yup";
 import Image from "next/image";
 
-export default function ModalDialogImage(props) {
-
-    console.log(props.url)
+export default function ModalDialogImage({imgOpen, imgHandleClose, url}) {
 
     return (
         <>
-            <Dialog open={props.open} onClose={props.handleClose}>
+            <Dialog open={imgOpen} onClose={imgHandleClose}>
                 <Box sx={{width:1200,height:600,backgroundColor:'#000'}}>
                     <Image
-                        src={"http://laravel:8000/api/img/"+props.url}
+                        src={"http://laravel:8000/api/img/"+url}
                         fill={true}
                         alt="image"
-                        onClick={props.handleClose}/>
+                        onClick={imgHandleClose}/>
                 </Box>
             </Dialog>
         </>
