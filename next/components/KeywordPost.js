@@ -5,12 +5,13 @@ export default function KeywordPost(props) {
 
     return (
         <>
-            <Typography variant="h5">{props.data.keyword}</Typography>
+            <Typography variant="" className="mini-title">{props.data.keyword}</Typography><br/>
             <Button variant="outlined">{props.data.tag}</Button>
             <Box sx={{
                 borderTop:"1px solid #fff",
                 marginBottom:"40px",
-                padding:"8px"
+                padding:"8px",
+                lineHeight:"1.6em"
             }}>
                 {
                     // キーワード本文は改行コードをbrタグに変換する

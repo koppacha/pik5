@@ -1,7 +1,5 @@
 import {MenuItem, Select} from "@mui/material";
-import {styled} from "@mui/material/styles";
-import {createGlobalStyle, css} from "styled-components";
-import CustomMenuItems from "../components/CustomMenuItems";
+import styled, {createGlobalStyle} from "styled-components";
 
 export const GlobalStyle = createGlobalStyle`
   :root {
@@ -11,6 +9,9 @@ export const GlobalStyle = createGlobalStyle`
 
     .title {
       font-size: 3.5em;
+    }
+    .mini-title {
+      font-size: 2.5em;
     }
     .subtitle {
       color: #777;

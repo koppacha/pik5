@@ -1,16 +1,18 @@
 import {
     AppBar,
     Badge,
-    Box, Button, Container,
-    IconButton, InputBase,
+    Box,
+    Button,
+    IconButton,
+    InputBase,
     Menu,
     MenuItem,
     Slide,
-    Toolbar, Tooltip,
+    Toolbar,
+    Tooltip,
     Typography,
     useScrollTrigger
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 import Link from "next/link";
 import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
@@ -18,17 +20,15 @@ import {AccountCircle} from "@mui/icons-material";
 import MoreIcon from "@mui/icons-material/MoreVert";
 import * as React from "react";
 import PropTypes from "prop-types";
-import {alpha, styled} from "@mui/material/styles";
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
+import {alpha} from "@mui/material/styles";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import { faDiscord } from '@fortawesome/free-brands-svg-icons'
-import {useRouter} from "next/router";
-import {en} from "@/locale/en";
-import {ja} from "@/locale/ja";
+import {faDiscord} from '@fortawesome/free-brands-svg-icons'
 import CustomMenu from "@/components/CustomMenu";
-import {faCloudMoon, faCloudSun, faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
+import {faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
-import {faMoon, faSun} from "@fortawesome/free-regular-svg-icons";
+import styled from "styled-components"
+import {useLocale} from "../plugin/pik5";
+import {useRouter} from "next/router";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -102,10 +102,9 @@ export default function HeaderMenu({props}){
     // const isMenuOpen = Boolean(anchorEl);
     const isMobileMenuOpen = Boolean(mobileMoreAnchorEl);
 
-    const { locale } = useRouter();
-    const t = (locale === "en") ? en : ja;
-
-    const localeReverse = (locale === "en") ? "ja" : "en";
+    const {t, locale} = useLocale()
+    const r = (locale === "en") ? "ja" : "en"
+    const router = useRouter()
 
     const handleProfileMenuOpen = (event) => {
         // setAnchorEl(event.currentTarget);
@@ -248,8 +247,8 @@ export default function HeaderMenu({props}){
                     <Tooltip title="Switching Launguages（English - Japanese)" arrow>
                         <IconButton
                             component={Link}
-                            href="/"
-                            locale={localeReverse}
+                            href={router.asPath}
+                            locale={r}
                             id="translate-button"
                             ref={anchorEl}
                             sx={{color:"#fff"}}>
