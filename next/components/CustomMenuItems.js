@@ -37,7 +37,7 @@ export default function CustomMenuItems(props){
     } else if(props.series === 2){
         // ピクミン２のサブメニュー
         return (
-            <Box sx={{
+            <Box style={{
                 width:'100%'
             }}>
                 <Link href="/total/200"><MenuItem>ピクミン２総合</MenuItem></Link>

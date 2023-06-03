@@ -54,7 +54,7 @@ export default function ModalDialogVideo({videoOpen, videoHandleClose, url}) {
     return (
         <>
             <Dialog open={videoOpen} onClose={videoHandleClose}>
-                <Box sx={{width:1200,height:600,backgroundColor:'transparent'}}>
+                <Box style={{width:1200,height:600,backgroundColor:'transparent'}}>
                     <YouTube
                         videoId={id}
                         src={url}

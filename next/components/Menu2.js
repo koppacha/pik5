@@ -33,7 +33,7 @@ export default function Menu2(props){
     const btColor = "#e87058"
 
     return (
-        <Paper sx={{
+        <Paper style={{
         }}>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
@@ -50,7 +50,7 @@ export default function Menu2(props){
                             <StyledMenuItem component={Link} href="/total/21" onClick={props.handleClose}>タマゴあり</StyledMenuItem>
                             {
                                 eg.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+egColor,
                                         borderLeft:"solid 10px "+egColor,
                                         margin:"6px 4px 0px 4px",
@@ -63,7 +63,7 @@ export default function Menu2(props){
                             <StyledMenuItem component={Link} href="/total/22" onClick={props.handleClose}>タマゴなし</StyledMenuItem>
                             {
                                 ne.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+neColor,
                                         borderLeft:"solid 10px "+neColor,
                                         margin:"4px 4px",
@@ -76,7 +76,7 @@ export default function Menu2(props){
                             <StyledMenuItem component={Link} href="/total/23" onClick={props.handleClose}>本編地下</StyledMenuItem>
                             {
                                 du.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+duColor,
                                         borderLeft:"solid 10px "+duColor,
                                         margin:"6px 4px",
@@ -89,7 +89,7 @@ export default function Menu2(props){
                             <StyledMenuItem component={Link} href="/total/24" onClick={props.handleClose}>ソロバトル</StyledMenuItem>
                             {
                                 bt.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+btColor,
                                         borderLeft:"solid 10px "+btColor,
                                         margin:"18px 4px",

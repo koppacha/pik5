@@ -71,7 +71,7 @@ export default function Series(param){
                 {
                     stages.map(stage =>
                     <Grid xs={1.5}>
-                        <Link href={'/stage/'+stage}><Box sx={{
+                        <Link href={'/stage/'+stage}><Box style={{
                             border: 'solid 1px #fff',
                             borderRadius: '6px',
                             padding: '8px',
@@ -92,7 +92,7 @@ export default function Series(param){
                     <PullDownYear props={param}/>
                 </Grid>
             </Grid>
-            <Grid container sx={{
+            <Grid container style={{
                 marginTop:"30px"
             }}>
                 {

@@ -29,6 +29,7 @@ import {useTheme} from "next-themes";
 import styled from "styled-components"
 import {useLocale} from "../plugin/pik5";
 import {useRouter} from "next/router";
+import TranslateIcon from '@mui/icons-material/Translate';
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -221,7 +222,7 @@ export default function HeaderMenu({props}){
                     <CustomMenu series={7}/>
                     <CustomMenu series={9}/>
                     <Button
-                        sx={{
+                        style={{
                             color:'#fff',
                             backgroundColor:'transparent',
                             fontSize: '0.9em'
@@ -231,15 +232,15 @@ export default function HeaderMenu({props}){
                         href="https://discord.gg/rQEBJQa"
                         ref={anchorEl}
                         variant="contained">
-                        <FontAwesomeIcon icon={faDiscord} />Discordはこちら！
+                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />Discordはこちら！
                     </Button>
 
                     {/*ここから右よせ*/}
-                    <Box sx={{ flexGrow: 1 }} />
+                    <Box style={{ flexGrow: 1 }} />
                     <Tooltip title="テーマを変更する" arrow>
                         <IconButton
                             id="theme-button"
-                            sx={{color:"#fff"}}
+                            style={{color:"#fff"}}
                             onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}>
                             <FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/>
                         </IconButton>
@@ -251,11 +252,11 @@ export default function HeaderMenu({props}){
                             locale={r}
                             id="translate-button"
                             ref={anchorEl}
-                            sx={{color:"#fff"}}>
-                            <FontAwesomeIcon icon={faGlobe} />
+                            style={{color:"#fff"}}>
+                            <TranslateIcon />
                         </IconButton>
                     </Tooltip>
-                    <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                    <Box style={{ display: { xs: 'none', md: 'flex' } }}>
                         {/*<IconButton size="middle" aria-label="show 4 new mails" color="inherit">*/}
                         {/*    <FontAwesomeIcon icon={faDiscord} />*/}
                         {/*</IconButton>*/}
@@ -275,7 +276,7 @@ export default function HeaderMenu({props}){
                         {/*</IconButton>*/}
                         <CustomMenu series={10}/>
                     </Box>
-                    <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
+                    <Box style={{ display: { xs: 'flex', md: 'none' } }}>
                         <IconButton
                             size="large"
                             aria-label="show more"

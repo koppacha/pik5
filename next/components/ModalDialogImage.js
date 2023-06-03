@@ -16,7 +16,7 @@ export default function ModalDialogImage({imgOpen, imgHandleClose, url}) {
     return (
         <>
             <Dialog open={imgOpen} onClose={imgHandleClose}>
-                <Box sx={{width:1200,height:600,backgroundColor:'#000'}}>
+                <Box style={{width:1200,height:600,backgroundColor:'#000'}}>
                     <Image
                         src={"http://laravel:8000/api/img/"+url}
                         fill={true}

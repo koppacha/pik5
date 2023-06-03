@@ -7,7 +7,7 @@ export default function KeywordPost(props) {
         <>
             <Typography variant="" className="mini-title">{props.data.keyword}</Typography><br/>
             <Button variant="outlined">{props.data.tag}</Button>
-            <Box sx={{
+            <Box style={{
                 borderTop:"1px solid #fff",
                 marginBottom:"40px",
                 padding:"8px",

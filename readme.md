@@ -161,3 +161,9 @@ $ export DOCKER_HOST=unix:///var/run/docker.sock
 
 ### ver.3.00 (2023/01/01)
 * Gitリポジトリへの登録
+
+### LICENCE
+This project is compliant with the MIT License.
+Please refer to the "./licence.txt" for license information.
+
+Copyright (c) 2006 - 2023 koppacha

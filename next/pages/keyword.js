@@ -5,6 +5,7 @@ import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR from "swr";
 import {fetcher} from "../plugin/pik5";
+import {InfoBox} from "../styles/pik5.css";
 
 export default function Keyword(){
 
@@ -63,14 +64,9 @@ export default function Keyword(){
             <Typography variant="">その他コンテンツ</Typography><br/>
             <Typography variant="" className="title">ピクミンキーワード</Typography><br/>
             <Typography variant="" className="subtitle">Pikmin Keywords</Typography><br/>
-            <Box sx={{
-                border:'1px solid #fff',
-                padding: '2em',
-                margin: '2em',
-                borderRadius: '8px',
-            }}>
+            <InfoBox>
             ピクミンシリーズ、ピクチャレ大会、ピクミン界隈にまつわる専門用語や流行語などをなんでも保存しておくためのページです。基本的にどなたでも編集できます。
-                <Box sx={{ margin: '1em'}}>
+                <Box style={{ margin: '1em'}}>
                     <ul>
                         <li>登録できるのはピクミン界隈にある程度受け入れられている言葉に限ります。作成者以外に認知されていない造語等は削除対象です。</li>
                         <li>キーワード名及び本文は簡潔でわかりやすい表現を心がけてください。</li>
@@ -80,7 +76,7 @@ export default function Keyword(){
                         <li>利用規約やレギュレーションなど一部のキーワードには編集権限が必要になります。</li>
                     </ul>
                 </Box>
-            </Box>
+            </InfoBox>
             <Button variant="outlined" onClick={handleClickOpen}>
                 キーワードを新規作成
             </Button>

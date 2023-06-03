@@ -22,7 +22,7 @@ export default function Totals(props){
 
     const totals = []
 
-    switch(props.info.series) {
+    switch(info.series) {
         case 1:
             totals.push(10, 11)
             break
@@ -43,15 +43,15 @@ export default function Totals(props){
         <>
         {
             totals.map(val =>
-                <Grid item sx={{
+                <Grid item style={{
                     marginBottom:"30px"
                 }}>
-                    <TotalBox sx={{
-                        backgroundColor:(Number(props.series) === val) ? "#fff" : "",
-                        color:(Number(props.series) === val) ? "#000" : "#fff",
+                    <TotalBox style={{
+                        backgroundColor:(Number(series) === val) ? "#fff" : "",
+                        color:(Number(series) === val) ? "#000" : "#fff",
                     }}
                          component={Link}
-                         href={'/total/'+val+'/'+props.console+'/'+val+'/'+props.year}>
+                         href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
                         {t.rule[val]}
                     </TotalBox>
                 </Grid>

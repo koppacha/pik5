@@ -76,7 +76,7 @@ export default function ModalFormKeyword(props) {
     return (
         <>
             <Dialog open={props.open} onClose={props.handleClose}>
-                <Box sx={{width:'600px'}}>
+                <Box style={{width:'600px'}}>
                 <DialogTitle>キーワードを作成・編集する</DialogTitle>
                 <DialogContent>
                     <TextField
