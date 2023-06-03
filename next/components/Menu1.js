@@ -35,7 +35,7 @@ export default function Menu1(props){
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    sx={{
+                    style={{
                     }}
                 >
                     <StyledMenuItem component={Link} href="/total/10" onClick={props.handleClose}>
@@ -43,44 +43,44 @@ export default function Menu1(props){
                     </StyledMenuItem>
                     <Grid container spacing={2}>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem sx={{
+                            <StyledMenuItem style={{
                                 borderBottom:"solid 1px "+s101Color,
                                 borderLeft:"solid 10px "+s101Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                            }} component={Link} href="/stage/101">#101 {t.stage[101]}</StyledMenuItem>
+                            }} onClick={props.handleClose} component={Link} href="/stage/101">#101 {t.stage[101]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem sx={{
+                            <StyledMenuItem style={{
                                 borderBottom:"solid 1px "+s102Color,
                                 borderLeft:"solid 10px "+s102Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                            }} component={Link} href="/stage/102">#102 {t.stage[102]}</StyledMenuItem>
+                            }} onClick={props.handleClose} component={Link} href="/stage/102">#102 {t.stage[102]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem sx={{
+                            <StyledMenuItem style={{
                                 borderBottom:"solid 1px "+s103Color,
                                 borderLeft:"solid 10px "+s103Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                            }} component={Link} href="/stage/103">#103 {t.stage[103]}</StyledMenuItem>
+                            }} onClick={props.handleClose} component={Link} href="/stage/103">#103 {t.stage[103]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem sx={{
+                            <StyledMenuItem style={{
                                 borderBottom:"solid 1px "+s104Color,
                                 borderLeft:"solid 10px "+s104Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                            }} component={Link} href="/stage/104">#104 {t.stage[104]}</StyledMenuItem>
+                            }} onClick={props.handleClose} component={Link} href="/stage/104">#104 {t.stage[104]}</StyledMenuItem>
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem sx={{
+                            <StyledMenuItem style={{
                                 borderBottom:"solid 1px "+s105Color,
                                 borderLeft:"solid 10px "+s105Color,
                                 margin:"6px 4px 0px 4px",
                                 height:"12em",
-                            }} component={Link} href="/stage/105">#105 {t.stage[105]}</StyledMenuItem>
+                            }} onClick={props.handleClose} component={Link} href="/stage/105">#105 {t.stage[105]}</StyledMenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>

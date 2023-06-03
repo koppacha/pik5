@@ -23,8 +23,8 @@ export default function PullDownYear(props){
     }
 
     return (
-        <FormControl sx={{ marginLeft: 3}}>
-            <FormHelperText sx={{color:"#fff"}}>集計年</FormHelperText>
+        <FormControl style={{ marginLeft: 3}}>
+            <FormHelperText style={{color:"#fff"}}>集計年</FormHelperText>
             <StyledSelect
                 defaultValue={year}
                 id="select-year"

@@ -54,7 +54,7 @@ export default function PullDownConsole(props){
 
     return (
         <FormControl>
-            <FormHelperText sx={{color:"#fff"}}>操作方法</FormHelperText>
+            <FormHelperText style={{color:"#fff"}}>操作方法</FormHelperText>
             <StyledSelect
                 defaultValue={console}
                 id="select-console"

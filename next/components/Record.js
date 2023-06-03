@@ -98,65 +98,65 @@ export default function Record(props) {
     }
 
     return (
-        <Grid container sx={{
+        <Grid container style={{
             borderLeft:'10px solid ' + rankColor[0],
             borderBottom:'1px solid ' + rankColor[0],
             backgroundColor: rankColor[1],
             borderRadius: '8px',
             padding: '4px',
-            marginY: '10px',
+            marginBottom: '10px',
             textAlign: 'center',
             boxShadow: '-3px 1px 4px ' + rankColor[0]
         }}>
-            <Grid xs={1} sx={{
+            <Grid xs={1} style={{
                 borderRight: '1px solid #fff'
             }}>
-                <Typography variant="" sx={{color:'#999'}}>{t.g.rankHead}</Typography>
-                <Typography component="span" sx={{
+                <Typography variant="" style={{color:'#999'}}>{t.g.rankHead}</Typography>
+                <Typography component="span" style={{
                     fontSize:'2em',
                     fontWeight: '200',
                     fontFamily:['"Kulim Park"',"cursive"].join(","),
                     textShadow: shadow,
                 }}>{data.post_rank}</Typography>
-                <Typography variant="" sx={{
+                <Typography variant="" style={{
                     color:'#999',
                     textShadow: shadow,
                 }}> {t.g.rankTail}</Typography>
-                <Typography sx={{fontSize:'0.7em',color:'#999'}}>[{data.rps} rps]</Typography>
+                <Typography style={{fontSize:'0.7em',color:'#999'}}>[{data.rps} rps]</Typography>
             </Grid>
-            <Grid xs={3} sx={{
+            <Grid xs={3} style={{
                 borderRight: '1px solid #777',
-            }}><Typography variant="" sx={{
+            }}><Typography variant="" style={{
                 lineHeight: data.user.user_name.length > 12 ? '3.4em' : '3em',
                 fontSize: data.user.user_name.length > 12 ? '1.1em' : '1.25em',
                 textShadow: shadow,
             }}><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></Typography>
             </Grid>
-            <Grid xs={3} sx={{
+            <Grid xs={3} style={{
                 borderRight: '1px solid #777',
-            }}><Typography component="span" sx={{
+            }}><Typography component="span" style={{
                 lineHeight: '3em',
                 fontSize: '1.3em',
                 fontFamily:['"Proza Libre"',"cursive"].join(","),
                 textShadow: shadow,
             }}>
                 {data.score.toLocaleString()}</Typography>
-                <Typography component="span" sx={{
+                <Typography component="span" style={{
                     color:'#999',
                     textShadow: shadow,
                     fontFamily:['"Proza Libre"',"cursive"].join(","),
                 }}> pts.</Typography>
-                <Typography component="span" sx={{
+                <Typography component="span" style={{
                     color:'#4ce600',
                     fontSize: '0.8em',
                     fontFamily:['"Proza Libre"',"cursive"].join(","),
                     textShadow: shadow,
                 }}> {compare}</Typography>
             </Grid>
-            <Grid xs={5} sx={{
+            <Grid xs={5} style={{
                 textAlign: 'left',
             }}>
-                <Grid container sx={{
+                <Grid container style={{
                     margin: '8px',
                     fontSize: '0.8em',
                     width: '95%'
@@ -164,12 +164,12 @@ export default function Record(props) {
                     <Grid xs={6}>
                         <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                     </Grid>
-                    <Grid xs={6} sx={{
+                    <Grid xs={6} style={{
                         textAlign:'right'
                     }}>
                         {data.stage_id ? <><Link href={'/stage/'+data.stage_id}>{data.stage_id + '#' + t.stage[data.stage_id]}</Link></>:undefined}
                     </Grid>
-                    <Grid xs={12} sx={{
+                    <Grid xs={12} style={{
                         borderTop:'1px solid #777',
                         paddingTop:'8px'
                     }}>

@@ -90,7 +90,7 @@ export default function CustomMenu(props){
     return (
         <>
             <Button
-                sx={{
+                style={{
                     color:'#fff',
                     backgroundColor:'transparent',
                     fontSize: '0.9em'
@@ -112,7 +112,7 @@ export default function CustomMenu(props){
                 placement="bottom-end"
                 transition
                 disablePortal
-                sx={{
+                style={{
                     width:"100%",
                 }}
             >

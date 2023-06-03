@@ -20,7 +20,7 @@ export default function RecordPost(props){
             <Grid item>
                 <Box
                     className={"pikmin"+props.info.series}
-                    sx={{
+                    style={{
                         border: "1px solid #fff",
                         borderRadius: "4px",
                         padding: "12px",

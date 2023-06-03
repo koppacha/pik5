@@ -7,6 +7,7 @@ import RecordPost from "../../components/RecordPost";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";
 import Rules from "../../components/Rules";
+import BreadCrumb from "../../components/BreadCrumb";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -33,7 +34,6 @@ export async function getServerSideProps(context){
         }
     }
 }
-
 export default function Stage(param){
 
     const {t, r} = useLocale()
@@ -42,19 +42,10 @@ export default function Stage(param){
     let i = 0
     const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
 
-    // サブカテゴリが存在する場合は総合ランキングへのリンクを出力する
-    const subCategory = () => {
-        if(param.info.parent){
-            return (
-                <Link sx={{textDecoration:"underline"}} href={"/total/"+param.info.parent}>（{t.rule[param.info.parent]}）</Link>
-            )
-        }
-    }
     return (
         <>
             #{param.stage}<br/>
-            <Link sx={{textDecoration:"underline"}} href={"/total/"+param.info.series+"0"}>{t.title[param.info.series]} {(param.info.series === 3) ? t.g.mission : t.g.challenge}</Link>
-            　{subCategory()}<br/>
+            <BreadCrumb info={param.info} rule={param.rule}/>
             <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
             <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
 
@@ -64,8 +55,8 @@ export default function Stage(param){
                     <PullDownYear props={param}/>
                 </Grid>
             </Grid>
-            <Box sx={{margin:"20px 0"}}>
-                <Grid container sx={{
+            <Box style={{margin:"20px 0"}}>
+                <Grid container style={{
                     marginTop:"30px"
                 }}>
                     <Rules props={param}/>
@@ -82,7 +73,7 @@ export default function Stage(param){
                                 i++;
                                 return (
                                     <>
-                                        <Box sx={{
+                                        <Box style={{
                                             color:"#e81fc1",
                                             borderBottom:"2px dotted #e81fc1",
                                             textAlign:"center",
