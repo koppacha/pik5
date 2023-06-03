@@ -10,7 +10,7 @@ export default function MenuLm(props){
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    sx={{
+                    style={{
                         backgroundColor:"#79a3ff",
                     }}
                 >

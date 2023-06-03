@@ -42,7 +42,7 @@ export default function Menu3(props){
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    sx={{
+                    style={{
                     }}
                 >
                     <StyledMenuItem component={Link} href="/total/30" onClick={props.handleClose}>
@@ -54,7 +54,7 @@ export default function Menu3(props){
 
                             {
                                 ce.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+ceColor,
                                         borderLeft:"solid 10px "+ceColor,
                                         margin:"6px 4px 0px 4px",
@@ -67,7 +67,7 @@ export default function Menu3(props){
                             <StyledMenuItem component={Link} href="/total/32" onClick={props.handleClose}>原生生物をたおせ！</StyledMenuItem>
                             {
                                 be.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+beColor,
                                         borderLeft:"solid 10px "+beColor,
                                         margin:"6px 4px 0px 4px",
@@ -80,7 +80,7 @@ export default function Menu3(props){
                             <StyledMenuItem component={Link} href="/total/33" onClick={props.handleClose}>巨大生物をたおせ！</StyledMenuItem>
                             {
                                 db.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+dbColor,
                                         borderLeft:"solid 10px "+dbColor,
                                         margin:"6px 4px 0px 4px",
@@ -93,7 +93,7 @@ export default function Menu3(props){
                             <StyledMenuItem component={Link} href="/total/34" onClick={props.handleClose}>サイドストーリー</StyledMenuItem>
                             {
                                 ss.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+ssColor,
                                         borderLeft:"solid 10px "+ssColor,
                                         margin:"6px 4px 0px 4px",
@@ -106,7 +106,7 @@ export default function Menu3(props){
                             <StyledMenuItem component={Link} href="/total/35" onClick={props.handleClose}>ソロビンゴ</StyledMenuItem>
                             {
                                 sb.map(n=>
-                                    <StyledMenuItem sx={{
+                                    <StyledMenuItem style={{
                                         borderBottom:"solid 1px "+sbColor,
                                         borderLeft:"solid 10px "+sbColor,
                                         margin:"6px 4px 0px 4px",

@@ -11,7 +11,7 @@ export default function MenuOt(props){
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    sx={{
+                    style={{
                     }}
                 >
                     <Grid container spacing={2}>

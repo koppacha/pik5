@@ -27,7 +27,7 @@ export default function UserScoreTable(props){
 
     return (
         <>
-            <Grid container justifyContent="space-between" sx={{
+            <Grid container justifyContent="space-between" style={{
                 marginTop:"20px"
             }}>
                 <StyledGrid item xs={2}>
@@ -43,7 +43,7 @@ export default function UserScoreTable(props){
                     )
                 }
             </Grid>
-            <Grid container justifyContent="space-between" sx={{
+            <Grid container justifyContent="space-between" style={{
                 margin:"0"
             }}>
                 <StyledGrid item xs={2}>

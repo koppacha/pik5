@@ -1,18 +1,8 @@
 import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
-import {useRouter} from "next/router";
-import {en} from "../locale/en";
-import {ja} from "../locale/ja";
-import {styled} from "@mui/material/styles";
 import {useLocale} from "../plugin/pik5";
-
-const RuleBox = styled(Box)`
-  border :1px solid #fff;
-  border-radius :4px;
-  padding :12px;
-  margin-right :6px;
-`
+import {RuleBox} from "../styles/pik5.css"
 
 export default function Rules(props){
 
@@ -31,28 +21,28 @@ export default function Rules(props){
     }
     if(parent === 21){
         // ピクミン２：タマゴムシ縛り
-        rules.push(20, 23, 26, 27, 28)
+        rules.push(23, 26, 27, 28)
     }
     if(parent === 22){
         if(info.stage_id !== 216 && info.stage_id !== 223){
             // スプレー縛り（食神のかまど、ひみつの花園は除外）
-            rules.push(20, 24, 26, 27, 28)
+            rules.push(24, 26, 27, 28)
         } else {
             // 食神のかまど、ひみつの花園
-            rules.push(20, 26, 27, 28)
+            rules.push(26, 27, 28)
         }
     }
     if(info.series === 3 && parent !== 35){
-        rules.push(30, 34)
+        rules.push(34)
     }
     return (
         <>
         {
             rules.map(val =>
-                <Grid item sx={{
-                    marginBottom:"30px",
+                <Grid item style={{
+                    marginBottom:"20px",
                 }}>
-                    <RuleBox sx={{
+                    <RuleBox style={{
                         backgroundColor:(Number(rule) === val)? "#fff" : "",
                         color:(Number(rule) === val)? "#000" : "",
                     }}
