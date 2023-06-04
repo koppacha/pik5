@@ -17,8 +17,8 @@ class UserNameController extends Controller
         );
     }
     // その他のコントローラーからIDを取得して名前に変換
-    public function getName($request)
+    public static function getName($request)
     {
-        return User::select('user_name')->where('user_id', $request)->get();
+        return User::select('user_name')->where('user_id', $request)->first(["user_name"]);
     }
 }
