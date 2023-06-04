@@ -43,7 +43,8 @@ Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 
 // 記録数カウントAPI
 Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'count' , [ PostCountController ::class, 'get' ]);
+    Route :: get ( 'count' , [ PostCountController ::class, 'getUserPostCount']);
+    Route :: get ( 'trend' , [ PostCountController ::class, 'getTrendPostCount']);
 });
 
 // 通常総合ランキング取得API
