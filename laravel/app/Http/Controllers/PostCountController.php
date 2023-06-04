@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 class PostCountController extends Controller
 {
     // ユーザーごとの年初来の投稿数をカウントする
-    public function get(): JsonResponse
+    public function getUserPostCount(): JsonResponse
     {
         $datetime = new DateTime(date('Y')."-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
@@ -22,9 +22,31 @@ class PostCountController extends Controller
             ->select('user_id')
             ->selectRaw('COUNT(user_id) as cnt')
             ->where('created_at', '>', $date)
+            ->where('flg','<', 2)
             ->groupBy('user_id')
             ->orderBy('cnt', "DESC")
             ->limit(12)
+            ->get()
+            ->toArray();
+
+        return response()->json(
+            $dataset
+        );
+    }
+    public function getTrendPostCount(): JsonResponse
+    {
+        $datetime = new DateTime();
+        $date = $datetime->modify('-2 month')->format("Y-m-d H:i:s");
+
+        // 記録をリクエスト
+        $dataset = Record::select('stage_id')
+            ->selectRaw('COUNT(stage_id) as cnt')
+            ->where('created_at', '>', $date)
+            ->where('stage_id', "<", 1000)
+            ->where('flg','<', 2)
+            ->groupBy('stage_id')
+            ->orderBy('cnt', "DESC")
+            ->limit(6)
             ->get()
             ->toArray();
 
