@@ -9,6 +9,17 @@ import React from "react";
 import styled from "styled-components";
 import {InfoBox, RuleBox} from "../styles/pik5.css";
 import {useLocale} from "../plugin/pik5";
+import {
+    faArrowTrendUp,
+    faBullhorn,
+    faCertificate,
+    faChartColumn,
+    faFlag,
+    faTrophy
+} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import NewRecords from "../components/NewRecords";
+import PostCountRanking from "../components/PostCountRanking";
 
 const WrapTopBox = styled(Grid)`
   padding :10px;
@@ -27,6 +38,11 @@ const TopBoxHeader = styled(Box)`
 const TopBoxContent = styled(Box)`
   padding :8px;
 `
+const QuickLink = styled(Link)`
+  width :100%;
+  padding: 10px 0;
+  line-height: 2em;
+`
 
 export default function Home() {
 
@@ -43,93 +59,92 @@ export default function Home() {
             腕前関係なくどなたでも参加することができます。
         </InfoBox>
         <Grid container>
-            <WrapTopBox item xs={12}>
+            <WrapTopBox item xs={2}>
                 <TopBox>
                     <TopBoxHeader>
-                        お知らせ
+                        <FontAwesomeIcon icon={faBullhorn} /> クイックアクセス
                     </TopBoxHeader>
                     <TopBoxContent>
-                        あ<br/>
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
-            <WrapTopBox item xs={12}>
-                <TopBox style={{border:"none"}}>
-                    <TopBoxHeader>
-                        クイックアクセス
-                    </TopBoxHeader>
-                    <TopBoxContent>
-                        <Grid container style={{margin:"20px 0"}}>
-                            {
-                                totals.map(n =>
-                                    (
-                                        <Grid item>
-                                            <RuleBox
-                                                component={Link}
-                                                href={"/total/"+n}
-                                            >{t.rule[n]}</RuleBox>
-                                        </Grid>
-                                    )
+                        {
+                            totals.map(n =>
+                                (
+                                    <>
+                                        <QuickLink
+                                            href={"/total/"+n}
+                                        >{t.rule[n]}</QuickLink><br/>
+                                    </>
                                 )
-                            }
-                        </Grid>
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
-            <WrapTopBox item xs={12}>
-                <TopBox style={{border:"none"}}>
-                    <TopBoxHeader>
-                        ピクチャレ大会へようこそ
-                    </TopBoxHeader>
-                    <TopBoxContent>
-                        <Grid container style={{margin:"20px 0"}}>
-                            <Grid item>
-                                <RuleBox component={Link} href={"/"}>ピクチャレ大会とは</RuleBox>
-                            </Grid>
-                            <Grid item>
-                                <RuleBox component={Link} href={"/"}>アカウント作成</RuleBox>
-                            </Grid>
-                            <Grid item>
-                                <RuleBox component={Link} href={"/"}>ログイン</RuleBox>
-                            </Grid>
-                            <Grid item>
-                                <RuleBox component={Link} href={"/"}>ルール集・利用規約</RuleBox>
-                            </Grid>
-                        </Grid>
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
-            <WrapTopBox item xs={12}>
-                <TopBox>
-                    <TopBoxHeader>
-                        今月のトレンド
-                    </TopBoxHeader>
-                    <TopBoxContent>
-                        あ<br/>
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
-            <WrapTopBox item xs={12}>
-                <TopBox>
-                    <TopBoxHeader>
-                        ポストレース
-                    </TopBoxHeader>
-                    <TopBoxContent>
-                        あ
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
-            <WrapTopBox item xs={12}>
-                <TopBox>
-                    <TopBoxHeader>
-                        新着記録
-                    </TopBoxHeader>
-                    <TopBoxContent>
-                        あ
-                    </TopBoxContent>
-                </TopBox>
-            </WrapTopBox>
+                            )
+                        }
 
+                    </TopBoxContent>
+                </TopBox>
+            </WrapTopBox>
+            <Grid item xs={10}>
+                <Grid container>
+                    <WrapTopBox item xs={6}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faBullhorn} /> お知らせ
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                あ<br/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+                    <WrapTopBox item xs={6}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faTrophy} /> イベント開催情報
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                あ<br/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+
+                    <WrapTopBox item xs={12}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faChartColumn} /> 各種統計
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                あ<br/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+                    <WrapTopBox item xs={12}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faArrowTrendUp} /> 今月のトレンド
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                あ<br/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+                    <WrapTopBox item xs={12}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faFlag} /> 2023年投稿数ランキング
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                <PostCountRanking/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+                    <WrapTopBox item xs={12}>
+                        <TopBox>
+                            <TopBoxHeader>
+                                <FontAwesomeIcon icon={faCertificate} /> 新着記録
+                            </TopBoxHeader>
+                            <TopBoxContent>
+                                <NewRecords/>
+                            </TopBoxContent>
+                        </TopBox>
+                    </WrapTopBox>
+                </Grid>
+            </Grid>
         </Grid>
     </>
   )

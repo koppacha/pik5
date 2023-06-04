@@ -69,3 +69,10 @@ export const RuleBox = styled(Box)`
   padding :12px;
   margin-right :6px;
 `
+export const CellBox = styled(Box)`
+  margin :4px;
+  padding :2px;
+  background-color :#333;
+  border-radius :8px;
+  text-align :center;
+`

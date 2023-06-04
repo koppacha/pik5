@@ -6,6 +6,7 @@ import Styled from "styled-components";
 import {fetcher, useLocale} from "../plugin/pik5";
 import useSWR from "swr";
 import {Typography} from "@mui/material";
+import NowLoading from "./NowLoading";
 
 const StairIcon = Styled(FontAwesomeIcon)`
     font-size :0.8em;
@@ -21,7 +22,7 @@ export default function BreadCrumb({info, rule}){
 
     if(!superParent){
         return (
-            <Typography><FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faCircleNotch} spin />Loading...</Typography>
+            <NowLoading/>
         )
     }
 
