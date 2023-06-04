@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\NewRecordController;
+use App\Http\Controllers\PostCountController;
 use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\RecordController;
 use App\Http\Controllers\StageController;
@@ -26,7 +28,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 // 記録取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
     Route :: get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController ::class, 'show' ]);
     Route :: post ( 'record' , [ RecordController ::class, 'create' ]);
@@ -34,29 +36,39 @@ Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
     Route :: delete ( 'record/{id}' , [ RecordController ::class, 'destroy' ]);
 });
 
+// 新着記録取得API
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route :: get ( 'new' , [ NewRecordController ::class, 'get' ]);
+});
+
+// 記録数カウントAPI
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route :: get ( 'count' , [ PostCountController ::class, 'get' ]);
+});
+
 // 通常総合ランキング取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route :: get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController ::class, 'show' ]);
     Route :: post ( 'total' , [ TotalController ::class, 'create' ]);
 });
 
 // ステージ情報取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route :: get ( 'stage/{id}' , [ StageController ::class, 'show' ]);
 });
 
 // ユーザーIDからユーザー名を取得する
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route:: get('user/name/{id}', [UserNameController ::class, 'requestName']);
 });
 
 // ユーザーIDから全順位を取得する
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route:: get('user/total/{id}', [UserTotalController ::class, 'show']);
 });
 
 // キーワード関連Wiki
-Route :: group ([ 'middleware' => [ 'api', 'cors']], static  function () {
+Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route :: get ( 'keyword' , [ KeywordController ::class, 'index' ]);
     Route :: get ( 'keyword/{id}' , [ KeywordController ::class, 'show' ]);
     Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
@@ -65,6 +77,6 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static  function () {
 });
 
 // 証拠画像取得API
-Route :: group ([ 'middleware' => [ 'api' ]], static  function () {
+Route :: group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('img/{file}', [GetImageController ::class, 'show']);
 });
