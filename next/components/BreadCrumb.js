@@ -7,12 +7,8 @@ import {fetcher, useLocale} from "../plugin/pik5";
 import useSWR from "swr";
 import {Typography} from "@mui/material";
 import NowLoading from "./NowLoading";
+import {StairIcon} from "../styles/pik5.css";
 
-const StairIcon = Styled(FontAwesomeIcon)`
-    font-size :0.8em;
-    color :#777;
-    margin :0 0.5em;
-`
 export default function BreadCrumb({info, rule}){
 
     const {t} = useLocale()
