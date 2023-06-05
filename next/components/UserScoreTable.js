@@ -8,15 +8,7 @@ import {styled} from "@mui/material/styles";
 import {range, useLocale} from "../plugin/pik5";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMinus} from "@fortawesome/free-solid-svg-icons";
-
-const StyledGrid = styled(Grid)`
-  border-bottom: 1px solid #fff;
-  border-right: 1px solid #fff;
-  padding :8px;
-  margin :0;
-  font-size: 0.7em;
-  text-align: center;
-`
+import {StyledGrid} from "../styles/pik5.css";
 
 export default function UserScoreTable(props){
 
