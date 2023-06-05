@@ -2,7 +2,7 @@ import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
 import {useLocale} from "../plugin/pik5";
-import {RuleBox} from "../styles/pik5.css"
+import {b, RuleBox} from "../styles/pik5.css"
 
 export default function Rules(props){
 
@@ -42,10 +42,7 @@ export default function Rules(props){
                 <Grid item style={{
                     marginBottom:"20px",
                 }}>
-                    <RuleBox style={{
-                        backgroundColor:(Number(rule) === val)? "#fff" : "",
-                        color:(Number(rule) === val)? "#000" : "",
-                    }}
+                    <RuleBox className={(Number(rule) === val)&&"active"}
                          component={Link}
                          href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
                         {t.rule[val]}
