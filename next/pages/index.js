@@ -7,7 +7,7 @@ import Navigation from "../components/Layouts/Navigation";
 import {Box, Grid, Typography} from "@mui/material";
 import React from "react";
 import styled from "styled-components";
-import {CellBox, InfoBox, RuleBox} from "../styles/pik5.css";
+import {CellBox, InfoBox, RuleBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../plugin/pik5";
 import {
     faArrowTrendUp,
@@ -22,35 +22,9 @@ import NewRecords from "../components/NewRecords";
 import PostCountRanking from "../components/PostCountRanking";
 import TrendRanking from "../components/TrendRanking";
 
-const WrapTopBox = styled(Grid)`
-  padding :10px;
-`
-const TopBox = styled(Box)`
-  border: 1px solid #777;
-  border-radius: 4px;
-  height: 100%;
-`
-const TopBoxHeader = styled(Box)`
-  background-color :#fff;
-  color :#000;
-  padding :4px;
-  border-radius: 4px;
-`
-const TopBoxContent = styled(Box)`
-  padding :8px;
-`
-const QuickLink = styled(Link)`
-  width :100%;
-  padding: 10px 0;
-  line-height: 2em;
-`
-
 export default function Home() {
 
     const {t} = useLocale()
-
-    // 総合ランキングへのクイックアクセス
-    const totals = [1, 2, 3, 10, 20, 30, 40]
 
     // クイックアクセス
     const quickLinks = [

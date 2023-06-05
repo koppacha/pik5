@@ -6,13 +6,7 @@ import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
 import {useLocale} from "../plugin/pik5";
-
-const TotalBox = styled(Box)`
-  border :1px solid #fff;
-  border-radius :4px;
-  padding :12px;
-  margin :6px;
-`
+import {TotalBox} from "../styles/pik5.css";
 
 export default function Totals(props){
 
