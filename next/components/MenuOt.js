@@ -25,6 +25,7 @@ export default function MenuOt(props){
                             <MenuItem onClick={props.handleClose}>Pikmin wiki (English)</MenuItem>
                             <MenuItem onClick={props.handleClose}>SpeedRun.com</MenuItem>
                             <MenuItem onClick={props.handleClose}>Pikmin SpeedRunner Discord (English)</MenuItem>
+                            <MenuItem component={Link} href="/speedrun" onClick={props.handleClose}>本編RTA</MenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>
