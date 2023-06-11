@@ -127,8 +127,8 @@ export default function Record(props) {
             <Grid xs={3} style={{
                 borderRight: '1px solid #777',
             }}><Typography variant="" style={{
-                lineHeight: data.user.user_name.length > 12 ? '3.4em' : '3em',
-                fontSize: data.user.user_name.length > 12 ? '1.1em' : '1.25em',
+                lineHeight: '3em',
+                fontSize: '1.25em',
                 textShadow: shadow,
             }}><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></Typography>
             </Grid>
