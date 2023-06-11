@@ -49,10 +49,12 @@ export default function ModalFormKeyword(props) {
                 },
                 body: JSON.stringify({
                     'keyword': props.keyword,
-                    'unique_id': props.unique_id || 0,
+                    'unique_id': props.uniqueId || 0,
                     'tag': props.tag,
                     'yomi': props.yomi,
                     'content': props.content,
+                    'first_editor':props.firstEditor || 'guest',
+                    'last_editor':'guest', // ←常にログインID
                     'created_at': now
                 })
             })
@@ -68,7 +70,7 @@ export default function ModalFormKeyword(props) {
                 tag: props.editTag,
                 keyword: props.editKeyword,
                 yomi: props.editYomi,
-                content: props.editContent
+                content: props.editContent,
             }
         })
     }, [props])

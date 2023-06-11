@@ -5,11 +5,14 @@ import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR from "swr";
 import {fetcher} from "../plugin/pik5";
-import {InfoBox} from "../styles/pik5.css";
+import {InfoBox, StairIcon} from "../styles/pik5.css";
+import Link from "next/link";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 
 export default function Keyword(){
 
-    const {data} = useSWR(`http://localhost:8000/api/keyword`, fetcher, { refreshInterval: 2000 })
+    const {data} = useSWR(`http://localhost:8000/api/keyword`, fetcher)
 
     // 送信ボタン押下時にデータをポストする
     const [tag, setTag] = useState("")
@@ -17,6 +20,7 @@ export default function Keyword(){
     const [yomi, setYomi] = useState("")
     const [content, setContent] = useState("")
     const [uniqueId, setUniqueId] = useState("")
+    const [firstEditor, setFirstEditor] = useState("")
 
     // 編集ボタン押下時にデータをリクエストして渡す
     const [editTag, setEditTag] = useState("")
@@ -24,6 +28,7 @@ export default function Keyword(){
     const [editYomi, setEditYomi] = useState("")
     const [editContent, setEditContent] = useState("")
     const [editUniqueId, setEditUniqueId] = useState("")
+    const [editFirstEditor, setEditFirstEditor] = useState("")
 
     const [open, setOpen] = useState(false)
 
@@ -36,6 +41,7 @@ export default function Keyword(){
         setYomi("")
         setContent("")
         setUniqueId("")
+        setFirstEditor("")
         setOpen(true)
     }
     const handleClose = () => {
@@ -51,16 +57,20 @@ export default function Keyword(){
         setYomi(data.yomi)
         setContent(data.content)
         setUniqueId(data.unique_id)
+        setFirstEditor(data.first_editor)
         setEditTag(data.tag)
         setEditKeyword(data.keyword)
         setEditYomi(data.yomi)
         setEditContent(data.content)
         setEditUniqueId(data.unique_id)
+        setEditFirstEditor(data.first_editor)
         setOpen(true)
     }
 
     return (
         <>
+            <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+            <StairIcon icon={faStairs}/>
             <Typography variant="">その他コンテンツ</Typography><br/>
             <Typography variant="" className="title">ピクミンキーワード</Typography><br/>
             <Typography variant="" className="subtitle">Pikmin Keywords</Typography><br/>
@@ -87,16 +97,20 @@ export default function Keyword(){
                 editKeyword={editKeyword}
                 editYomi={editYomi}
                 editContent={editContent}
+                editUniqueId={editUniqueId}
+                editFirstEditor={editFirstEditor}
                 tag={tag}
                 keyword={keyword}
                 yomi={yomi}
                 content={content}
                 uniqueId={uniqueId}
+                firstEditor={firstEditor}
                 setTag={setTag}
                 setKeyword={setKeyword}
                 setYomi={setYomi}
                 setContent={setContent}
                 setUniqueId={setUniqueId}
+                setFirstEditor={setFirstEditor}
                 open={open}
                 setOpen={setOpen}/>
             {
