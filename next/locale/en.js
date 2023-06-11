@@ -167,5 +167,27 @@ export const en = {
             2: "700,500 pts Border",
             3: "700,000 pts Border"
         }
-    }
+    },
+    speedrun: {
+        101: "Pikmin 1 All Parts RTA",
+        102: "Pikmin 1 Low-Pikmin RTA",
+        201: "Pikmin 2 Pay Off Debt RTA",
+        202: "Pikmin 2 All Treasures RTA",
+        203: "Pikmin 2 Pay Off Debt RTA (No Major Exploits)",
+        204: "Pikmin 2 All Treasures RTA (No Major Exploits)",
+        301: "Pikmin 3 Any% RTA",
+        302: "Pikmin 3 Good Ending RTA",
+        303: "Pikmin 3 All Fruits RTA",
+        311: "Hey! Pikmin Any% RTA",
+        312: "Hey! Pikmin All Levels (NG+) RTA",
+        313: "Hey! Pikmin All Treasures RTA",
+        console: {
+            1: "NGC",
+            2: "Wii",
+            3: "Wii U",
+            4: "Switch",
+            5: "NTSC-U/PAL",
+            6: "NTSC-J",
+        },
+    },
 }
