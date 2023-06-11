@@ -68,13 +68,18 @@ Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route:: get('user/total/{id}', [UserTotalController ::class, 'show']);
 });
 
-// キーワード関連Wiki
+// キーワード関連API
 Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route :: get ( 'keyword' , [ KeywordController ::class, 'index' ]);
     Route :: get ( 'keyword/{id}' , [ KeywordController ::class, 'show' ]);
     Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
     Route :: patch ( 'keyword/{id}' , [ KeywordController ::class, 'update' ]);
     Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
+    Route :: get ('keywords', function(){
+        return response()->json([
+            random_int(100000, 999999)
+        ]);
+    });
 });
 
 // 証拠画像取得API
