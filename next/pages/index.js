@@ -48,7 +48,7 @@ export default function Home() {
         <Typography variant="" className="title">新ピクチャレ大会</Typography><br/>
         <Typography variant="" className="subtitle">Pikmin Series Leaderboards</Typography><br/>
         <InfoBox>
-            ピクチャレ大会へようこそ。このサイトは、任天堂のゲームソフト『ピクミン』シリーズをやり込む人のための、ハイスコアを競い合うランキングサイトです。
+            ピクチャレ大会へようこそ。このサイトは、任天堂のゲームソフト『ピクミン』シリーズをやり込む人のためのハイスコアを競い合うランキングサイトです。
             腕前関係なくどなたでも参加することができます。
         </InfoBox>
         <Grid container>

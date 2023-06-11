@@ -34,20 +34,20 @@ export async function getServerSideProps(context){
         }
     }
 }
-export default function Stage(param){
+export default function Stage({data, stage, rule, console, year, info}){
 
     const {t, r} = useLocale()
 
     // ボーダーライン出力用変数
     let i = 0
-    const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
+    const borders = [info.border1, info.border2, info.border3, info.border4]
 
     return (
         <>
-            #{param.stage}<br/>
-            <BreadCrumb info={param.info} rule={param.rule}/>
-            <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
-            <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
+            #{stage}<br/>
+            <BreadCrumb info={info} rule={rule}/>
+            <Typography variant="" className="title">{ t.stage[stage] }</Typography><br/>
+            <Typography variant="" className="subtitle">{r.stage[stage]}</Typography>
 
             <Grid container>
                 <Grid item xs={12}>
@@ -61,12 +61,12 @@ export default function Stage(param){
                 }}>
                     <Rules props={param}/>
                     <RecordPost
-                        info={param.info}/>
+                        info={info}/>
                 </Grid>
             </Box>
                 {
                     // 記録を出力（ボーダー設定がある通常ランキング）
-                    Object.values(param.data).map(function (post){
+                    Object.values(data).map(function (post){
                             const border = borders[i]
                             const star = "★"
                             if(post.score < border){

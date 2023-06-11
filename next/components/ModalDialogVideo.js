@@ -33,6 +33,13 @@ const ag2getParameterByName = function(name, url){
 
 export default function ModalDialogVideo({videoOpen, videoHandleClose, url}) {
 
+    if(typeof url !== "string"){
+        return (
+            <>
+            </>
+        )
+    }
+
     let id
 
     if(url.match(/\?/) != null){

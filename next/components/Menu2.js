@@ -93,7 +93,7 @@ export default function Menu2(props){
                                         borderBottom:"solid 1px "+btColor,
                                         borderLeft:"solid 10px "+btColor,
                                         margin:"18px 4px",
-                                        height:"37px",
+                                        height:"34px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
