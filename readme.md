@@ -3,13 +3,12 @@
 **author:@koppachappy**
 
 ## このプロジェクトについて
-* 「ピクミンシリーズチャレンジモード大会（ver.2）」のフルリプレイスプロジェクトです。
-2023年07月01日公開予定です。
+* 「ピクミンシリーズチャレンジモード大会」のフルリプレイスプロジェクトです。
+2023年07月公開予定です。
 
-## このソースコードの権利について
-当プロジェクトはオープンソースでありソースコードの改変や二次配布などについて制限はありませんが、
-本家と同じピクミンシリーズのコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
-ピクミン以外のゲームのランキングサイトとして公開することに関しては制限はありません。
+## このソースコードについて
+当プロジェクトはMITライセンスのオープンソースであり、権利表記を削除しなければソースコードの改変や二次配布は自由にできますが、
+当プロジェクトと同じピクミン関連のコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
 
 ## おすすめ開発環境
 * OS：macOS https://www.apple.com/jp/macos/ventura/
@@ -32,6 +31,8 @@
     * Material UI：https://mui.com/material-ui/getting-started/overview/ (UI framework)
 * Docker：https://docs.docker.jp/index.html (Infra)
 
+＊インフラ基盤は基本的にUbuntuかAlpine Linuxを使用。
+
 ## その他プラグイン
 * Font Awesome：https://fontawesome.com/ (Icons)
 * Styled-Components：https://styled-components.com/ (CSS in JS)
@@ -40,7 +41,7 @@
 ## 環境構築手順
 ```shell
 # ソースコードをダウンロード
-$ git clone https://github.com/koppacha/pik5.git
+$ git clone git@github.com:koppacha/pik5.git
 $ cd pik5
 
 # 定数ファイルをコピー
@@ -61,7 +62,7 @@ $ php artisan migrate:fresh
 $ php artisan db:seed
 $ php artisan serve --host 0.0.0.0 # 終了するときはCtrl+C
 
-# 開発を終了する際は以下でコンテナを廃棄する（再開するたびにコンテナ構築からやり直す）
+# 開発を終了する際は以下でコンテナを廃棄する
 $ docker compose down
 ```
 
@@ -77,7 +78,7 @@ $ cat id_rsa.pub
 # プロジェクトフォルダに戻って以下のコマンドで接続確認
 $ ssh -T git@github.com
 
-# HTTPSでクローンした場合はリモートURLを修正する
+# HTTPSでクローンしていた場合はリモートURLを修正する
 $ git remote set-url origin git@github.com:koppacha/pik5.git
 
 # 本プロジェクトに使う名前とメールアドレスを設定する
@@ -110,7 +111,13 @@ $ git checkout your_branch
 # 他の人があなたのブランチを編集した場合、その差分を取り込む
 $ git fetch
 $ git pull origin your_branch
+```
 
+## 編集時のルール
+- CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの「xs」と似ていて紛らわしいため）
+```jsx
+<Grid style={{width:"100%"}} xs={12}> ←これはOK
+<Grid sx={{width:"100%"}} xs={12}> ←これはダメ
 ```
 
 ## AWS Cloud9で動かす際のメモ
@@ -137,9 +144,6 @@ $ sudo xfs_growfs -d /
 
 ## その他のメモ
 ```shell
-# Laravelで新規データベースを作成する場合は以下のコマンドで作ること
-$ php artisan make:model Sample -a
-
 # limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド
 $ export DOCKER_HOST=unix:///var/run/docker.sock
 ```
@@ -150,20 +154,10 @@ $ export DOCKER_HOST=unix:///var/run/docker.sock
 * ver.2：ピクミンシリーズチャレンジモード大会（2015/09/01〜）  
 詳しくは　https://github.com/koppacha/pik4 を参照
 
-### ver.3.00pre (2022/09/13〜2022/12/31)
-* ピクミン4正式発表を受けてプロジェクトの本格始動
-* Docker環境構築
-* フロントエンド開発環境構築（Nuxt.js）
-* バックエンド開発環境構築（Laravel）
-* 簡易CRUDシステムの構築とテスト
-* DB基礎構築（MySQL）
-* CSSフレームワーク導入（Quasar）
-
 ### ver.3.00 (2023/01/01)
-* Gitリポジトリへの登録
+* 多すぎて省略
 
 ### LICENCE
 This project is compliant with the MIT License.
 Please refer to the "./licence.txt" for license information.
-
 Copyright (c) 2006 - 2023 koppacha
