@@ -75,10 +75,13 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
     Route :: patch ( 'keyword/{id}' , [ KeywordController ::class, 'update' ]);
     Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
-    Route :: get ('keywords', function(){
-        return response()->json([
-            random_int(100000, 999999)
-        ]);
+    Route :: get ('keywords', function () {
+        $str = "";
+        for($i=1; $i<=6; $i++) {
+            $str .= rands();
+            $str .= "\n";
+        }
+        return $str;
     });
 });
 
@@ -86,3 +89,15 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
 Route :: group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('img/{file}', [GetImageController ::class, 'show']);
 });
+
+function rands(): string
+{
+    if (function_exists("random_bytes")) {
+        $bytes = random_bytes(ceil(13 / 2));
+    } elseif (function_exists("openssl_random_pseudo_bytes")) {
+        $bytes = openssl_random_pseudo_bytes(ceil(13 / 2));
+    } else {
+        throw new Exception("no cryptographically secure random function available");
+    }
+    return substr(bin2hex($bytes), 0, 13);
+}

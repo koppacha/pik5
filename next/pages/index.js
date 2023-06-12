@@ -5,7 +5,7 @@ import Link from "next/link";
 import Stage_id from "./stage/[...stage]";
 import Navigation from "../components/Layouts/Navigation";
 import {Box, Grid, Typography} from "@mui/material";
-import React from "react";
+import React, {useState} from "react";
 import styled from "styled-components";
 import {CellBox, InfoBox, RuleBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../plugin/pik5";
@@ -21,10 +21,20 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewRecords from "../components/NewRecords";
 import PostCountRanking from "../components/PostCountRanking";
 import TrendRanking from "../components/TrendRanking";
+import ModalDialogImage from "../components/ModalDialogImage";
+import ModalLogin from "../components/ModalLogin";
 
 export default function Home() {
 
     const {t} = useLocale()
+    const [loginOpen, setLoginOpen] = useState(false)
+
+    const loginHandleClose = () => {
+        setLoginOpen(false)
+    }
+    const loginHandleOpen = () => {
+        setLoginOpen(true)
+    }
 
     // クイックアクセス
     const quickLinks = [
@@ -75,7 +85,7 @@ export default function Home() {
                                 <FontAwesomeIcon icon={faCheckToSlot} /> 日替わり投票
                             </TopBoxHeader>
                             <TopBoxContent>
-                                あ<br/>
+                                <Box onClick={loginHandleOpen}>Login</Box><br/>
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
@@ -133,6 +143,7 @@ export default function Home() {
                 </Grid>
             </Grid>
         </Grid>
+        <ModalLogin open={loginOpen} handleClose={loginHandleClose}/>
     </>
   )
 }
