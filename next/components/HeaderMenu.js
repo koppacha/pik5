@@ -24,12 +24,11 @@ import {alpha} from "@mui/material/styles";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faDiscord} from '@fortawesome/free-brands-svg-icons'
 import CustomMenu from "@/components/CustomMenu";
-import {faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
+import {faCloudMoon, faCloudSun, faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import styled from "styled-components"
 import {useLocale} from "../plugin/pik5";
 import {useRouter} from "next/router";
-import TranslateIcon from '@mui/icons-material/Translate';
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -253,7 +252,7 @@ export default function HeaderMenu({props}){
                             id="translate-button"
                             ref={anchorEl}
                             style={{color:"#fff"}}>
-                            <TranslateIcon />
+                            <FontAwesomeIcon icon={faGlobe} />
                         </IconButton>
                     </Tooltip>
                     <Box style={{ display: { xs: 'none', md: 'flex' } }}>
