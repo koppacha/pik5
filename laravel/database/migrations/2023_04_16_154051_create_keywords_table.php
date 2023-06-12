@@ -16,6 +16,8 @@ return new class extends Migration
         Schema::create('keywords', static function (Blueprint $table) {
             $table->id();
             $table->string('unique_id');
+            $table->integer('flag');
+            $table->string('category');
             $table->string('keyword');
             $table->string('tag');
             $table->string('yomi');
