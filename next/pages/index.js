@@ -23,11 +23,13 @@ import PostCountRanking from "../components/PostCountRanking";
 import TrendRanking from "../components/TrendRanking";
 import ModalDialogImage from "../components/ModalDialogImage";
 import ModalLogin from "../components/ModalLogin";
+import {useAuth} from "../hooks/auth";
 
 export default function Home() {
 
     const {t} = useLocale()
     const [loginOpen, setLoginOpen] = useState(false)
+    const { user } = useAuth({ middleware: 'guest' })
 
     const loginHandleClose = () => {
         setLoginOpen(false)
