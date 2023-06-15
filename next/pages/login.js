@@ -1,13 +1,13 @@
-import ApplicationLogo from '@/components/ApplicationLogo'
-import AuthCard from '@/components/AuthCard'
-import AuthSessionStatus from '@/components/AuthSessionStatus'
-import Button from '@/components/Button'
-import GuestLayout from '@/components/Layouts/GuestLayout'
-import Input from '@/components/Input'
-import InputError from '@/components/InputError'
-import Label from '@/components/Label'
+import ApplicationLogo from '../components/ApplicationLogo'
+import AuthCard from '../components/AuthCard'
+import AuthSessionStatus from '../components/AuthSessionStatus'
+import Button from '../components/Button'
+import GuestLayout from '../components/Layouts/GuestLayout'
+import Input from '../components/Input'
+import InputError from '../components/InputError'
+import Label from '../components/Label'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/auth'
+import { useAuth } from '../hooks/auth'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
 
@@ -16,7 +16,7 @@ const Login = () => {
 
     const { login } = useAuth({
         middleware: 'guest',
-        redirectIfAuthenticated: '/dashboard',
+        redirectIfAuthenticated: '/',
     })
 
     const [email, setEmail] = useState('')
@@ -36,7 +36,7 @@ const Login = () => {
     const submitForm = async event => {
         event.preventDefault()
 
-        login({
+        await login({
             email,
             password,
             remember: shouldRemember,

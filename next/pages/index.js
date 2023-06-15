@@ -29,7 +29,9 @@ export default function Home() {
 
     const {t} = useLocale()
     const [loginOpen, setLoginOpen] = useState(false)
-    const { user } = useAuth({ middleware: 'guest' })
+    const { user } = useAuth({ middleware: 'auth' })
+
+    console.log(user)
 
     const loginHandleClose = () => {
         setLoginOpen(false)
