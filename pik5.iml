@@ -72,7 +72,6 @@
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php73" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/phpunit/php-invoker" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/phpunit/php-file-iterator" />
-      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php81" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php72" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php80" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-ctype" />
@@ -133,6 +132,10 @@
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/nette/utils" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/laravel/ui" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/laravel/breeze" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/guzzlehttp/uri-template" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/league/flysystem-local" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php83" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/yaml" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>

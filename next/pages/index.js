@@ -21,24 +21,12 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewRecords from "../components/NewRecords";
 import PostCountRanking from "../components/PostCountRanking";
 import TrendRanking from "../components/TrendRanking";
-import ModalDialogImage from "../components/ModalDialogImage";
-import ModalLogin from "../components/ModalLogin";
-import {useAuth} from "../hooks/auth";
+import { useSession, signIn, signOut } from "next-auth/react"
 
 export default function Home() {
 
     const {t} = useLocale()
-    const [loginOpen, setLoginOpen] = useState(false)
-    const { user } = useAuth({ middleware: 'auth' })
-
-    console.log(user)
-
-    const loginHandleClose = () => {
-        setLoginOpen(false)
-    }
-    const loginHandleOpen = () => {
-        setLoginOpen(true)
-    }
+    const {data: session } = useSession()
 
     // クイックアクセス
     const quickLinks = [
@@ -89,7 +77,19 @@ export default function Home() {
                                 <FontAwesomeIcon icon={faCheckToSlot} /> 日替わり投票
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <Box onClick={loginHandleOpen}>Login</Box><br/>
+                                {
+                                    (session)
+                                        ?
+                                        <>
+                                            Signed in as {session.user.email} <br/>
+                                            <button onClick={()=>signOut()}>Sign out</button>
+                                        </>
+                                        :
+                                        <>
+                                            Not signed in <br/>
+                                            <button onClick={()=>signIn()}>Sign in</button>
+                                        </>
+                                }
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
@@ -147,7 +147,6 @@ export default function Home() {
                 </Grid>
             </Grid>
         </Grid>
-        <ModalLogin open={loginOpen} handleClose={loginHandleClose}/>
     </>
   )
 }
