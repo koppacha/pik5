@@ -17,13 +17,13 @@ return [
 
     'paths' => ['*'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['POST', 'GET', 'OPTIONS'],
 
-    'allowed_origins' => ['http://localhost:8080'],
+    'allowed_origins' => ['*'],
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Origin', 'Content-Type', 'Accept', 'Authorization', 'x-requested-with','x-xsrf-token'],
 
     'exposed_headers' => [],
 

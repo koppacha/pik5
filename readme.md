@@ -142,10 +142,18 @@ $ sudo xfs_growfs -d /
 # プレビューにはサードパーティーCookie（サイト越えトラッキング）を許可する必要があります
 ```
 
-## その他のメモ
+## 備忘録
 ```shell
 # limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド
 $ export DOCKER_HOST=unix:///var/run/docker.sock
+
+# Windows (WSL) では、システムが作成したファイルはrootが権限を持ち編集できない。
+# これを解決するためには該当するコンテナ内部から以下コマンドで所有権を変更する
+$ ls -l # まずは所有権がrootにあることを確認しよう
+$ chown -R 1000:1000 /Folder # Folderは対象フォルダの相対パス、1000は所有者名（nextの場合はnode）
+
+# Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
+$ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 ```
 
 ## バージョン履歴
