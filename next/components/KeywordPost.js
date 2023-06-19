@@ -2,13 +2,13 @@ import {Box, Typography} from "@mui/material";
 import Button from "@mui/material/Button";
 import ReactMarkdown from "react-markdown";
 
-export default function KeywordPost(props) {
+export default function KeywordPost({data, handleEdit}) {
 
     return (
         <>
-            <Button variant="outlined">{props.data.tag}</Button><br/>
-            #{props.data.unique_id}<br/>
-            <Typography variant="" className="mini-title">{props.data.keyword}</Typography><br/>
+            <Button variant="outlined">{data.tag}</Button><br/>
+            #{data.unique_id}<br/>
+            <Typography variant="" className="mini-title">{data.keyword}</Typography><br/>
             <Box style={{
                 borderTop:"1px solid #fff",
                 marginBottom:"40px",
@@ -18,13 +18,13 @@ export default function KeywordPost(props) {
                 <ReactMarkdown>
                 {
                     // キーワード本文は改行コードをbrタグに変換する
-                    props.data.content
+                    data.content
                 }
                 </ReactMarkdown>
                 <Button
                     variant="outlined"
-                    value={props.data.id}
-                    onClick={props.handleEdit()}
+                    value={data.id}
+                    onClick={handleEdit()}
                 >
                     編集
                 </Button>
