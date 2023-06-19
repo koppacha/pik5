@@ -1,16 +1,16 @@
 import {Box, Typography} from "@mui/material";
-import ModalFormKeyword from "../components/ModalFormKeyword";
-import KeywordPost from "../components/KeywordPost";
+import ModalFormKeyword from "../../components/ModalFormKeyword";
+import KeywordPost from "../../components/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
-import useSWR from "swr";
-import {fetcher} from "../plugin/pik5";
-import {InfoBox, StairIcon} from "../styles/pik5.css";
+import useSWR, {mutate} from "swr";
+import {fetcher} from "../../plugin/pik5";
+import {InfoBox, StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 
-export default function Keyword(){
+export default function KeywordIndex(){
 
     const {data} = useSWR(`http://localhost:8000/api/keyword`, fetcher)
 
@@ -46,6 +46,7 @@ export default function Keyword(){
     }
     const handleClose = () => {
         setOpen(false)
+        mutate()
     }
 
     // 既存のキーワードを編集する
@@ -115,7 +116,12 @@ export default function Keyword(){
                 setOpen={setOpen}/>
             {
                 data?.map(post =>
-                    <KeywordPost data={post} handleEdit={() => handleEdit}/>
+                    <>
+                        <Link href={"/keyword/"+post.unique_id}>{post.keyword}</Link>
+                        <br/>
+                    </>
+
+                    // <KeywordPost data={post} handleEdit={() => handleEdit}/>
                 )
             }
         </>
