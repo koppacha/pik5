@@ -99,9 +99,9 @@ class KeywordController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        $data = Keyword::where('id', $request['id'])->get();
+        $data = Keyword::where('unique_id', $request['id'])->first();
         return response()->json(
-            $data[0]
+            $data
         );
     }
 
