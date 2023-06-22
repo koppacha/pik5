@@ -10,7 +10,7 @@ import * as React from "react";
 import Totals from "../../components/Totals";
 import {createContext} from "react";
 import Rules from "../../components/Rules";
-import {useLocale} from "../../plugin/pik5";
+import {useLocale} from "../../lib/pik5";
 
 export async function getServerSideProps(context){
     const query = context.query.series

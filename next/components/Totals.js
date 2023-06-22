@@ -5,7 +5,7 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import {TotalBox} from "../styles/pik5.css";
 
 export default function Totals(props){

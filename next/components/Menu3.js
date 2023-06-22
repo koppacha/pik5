@@ -10,13 +10,12 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/pik5";
 import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {StyledMenuItem} from "../styles/pik5.css";
-import {useLocale} from "../plugin/pik5";
+import {range, useLocale} from "../lib/pik5";
 
 const ce = range(301, 315)
 const be = range(316, 330)

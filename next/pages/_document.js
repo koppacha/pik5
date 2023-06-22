@@ -1,5 +1,5 @@
 import { Html, Head, Main, NextScript } from 'next/document'
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 
 export default function Document() {
 

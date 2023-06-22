@@ -1,4 +1,4 @@
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import {FormControl, FormHelperText, MenuItem} from "@mui/material";
 import {StyledSelect} from "../styles/pik5.css";
 import Link from "next/link";
