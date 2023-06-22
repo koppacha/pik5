@@ -223,6 +223,7 @@ export const ja = {
         312: "Hey!ピクミン ステージクリアRTA",
         313: "Hey!ピクミン お宝全回収RTA",
         console: {
+            0: "すべて",
             1: "NGC",
             2: "Wii",
             3: "Wii U",

@@ -1,8 +1,7 @@
 import * as React from "react";
 import Record from "../../components/Record";
 import {Box, Grid, Typography} from "@mui/material";
-import Link from "next/link";
-import {useLocale} from "../../plugin/pik5";
+import {useLocale} from "../../lib/pik5";
 import RecordPost from "../../components/RecordPost";
 import PullDownConsole from "../../components/PullDownConsole";
 import PullDownYear from "../../components/PullDownYear";

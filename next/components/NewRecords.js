@@ -1,5 +1,5 @@
 import useSWR from "swr";
-import {fetcher} from "../plugin/pik5";
+import {fetcher} from "../lib/pik5";
 import NowLoading from "./NowLoading";
 import Record from "./Record";
 import * as React from "react";

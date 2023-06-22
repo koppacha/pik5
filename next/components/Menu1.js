@@ -10,12 +10,9 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {useRouter} from "next/router";
-import {en} from "@/locale/en";
-import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {StyledMenuItem} from "../styles/pik5.css";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 
 const s101Color = "#ffa35b"
 const s102Color = "#dc6b24"

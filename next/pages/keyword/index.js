@@ -4,7 +4,7 @@ import KeywordPost from "../../components/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR, {mutate} from "swr";
-import {fetcher} from "../../plugin/pik5";
+import {fetcher} from "../../lib/pik5";
 import {InfoBox, StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
