@@ -3,7 +3,7 @@ import Link from "next/link";
 import {faCircleNotch, faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
 import Styled from "styled-components";
-import {fetcher, useLocale} from "../plugin/pik5";
+import {fetcher, useLocale} from "../lib/pik5";
 import useSWR from "swr";
 import {Typography} from "@mui/material";
 import NowLoading from "./NowLoading";

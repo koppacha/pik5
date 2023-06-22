@@ -5,7 +5,7 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {styled} from "@mui/material/styles";
-import {range, useLocale} from "../plugin/pik5";
+import {range, useLocale} from "../lib/pik5";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faMinus} from "@fortawesome/free-solid-svg-icons";
 import {StyledGrid} from "../styles/pik5.css";

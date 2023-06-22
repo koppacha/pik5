@@ -27,7 +27,7 @@ import CustomMenu from "@/components/CustomMenu";
 import {faCloudMoon, faCloudSun, faGlobe, faLanguage} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import styled from "styled-components"
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import {useRouter} from "next/router";
 
 function HideOnScroll(props) {

@@ -1,12 +1,21 @@
-import {Grid, Typography} from "@mui/material";
+import {Grid} from "@mui/material";
 import Link from "next/link";
 import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import ModalDialogImage from "./ModalDialogImage";
+import Score from "./Score";
 import {useEffect, useState} from "react";
 import ModalDialogVideo from "./ModalDialogVideo";
+import {
+    CompareType,
+    RankEdge,
+    RankPointType,
+    RankType,
+    RecordContainer,
+    UserType
+} from "../styles/pik5.css";
 
 // 日付をフォーマットする関数
 function dateFormat(date){
@@ -18,17 +27,9 @@ function dateFormat(date){
     const s  = ('0' + date.getSeconds()).slice(-2)
     return y + '/' + mo + '/' + d + ' ' + h + ':' + mi + ':' + s
 }
-
-export default function Record(props) {
+export default function Record({data}) {
 
     const {t} = useLocale()
-
-    const shadow =  '2px 2px 2px #000, -2px 2px 2px #000,' +
-                    ' 2px -2px 2px #000, -2px -2px 2px #000,' +
-                    ' 2px 0 2px #000, 0 2px 2px #000,' +
-                    ' -2px 0 2px #000, 0 -2px 2px #000';
-
-    const data = props.data
     const date = new Date(data.created_at)
 
     const [imgOpen, setImgOpen] = useState(false)
@@ -50,108 +51,34 @@ export default function Record(props) {
         setVideoOpen(true)
     }
 
-    // 順位によってテーマカラーを決定する [0]文字色 [1]背景
-    function rank2color(rank){
-        rank = Number(rank)
-        if(rank === 1){
-            return [
-                '#f6f24e',
-                '#656565'
-                ]
-        } else if(rank === 2){
-            return [
-                '#42f35d',
-                '#4b4b4b'
-                ]
-        } else if(rank === 3){
-            return [
-                '#23abf1',
-                '#2a2a2a'
-                ]
-        } else if(rank < 11){
-            return [
-                '#eae4e4',
-                '#181818'
-                ]
-        } else if(rank < 21){
-            return [
-                '#a8a2a2',
-                '#181818'
-                ]
-        } else {
-            return [
-                '#777171',
-                '#181818'
-                ]
-        }
-    }
-
-    const rankColor = rank2color(data.post_rank)
-
     // 比較値を整形する
     let compare;
     if(!Number.isNaN(data.compare)){
         if(data.compare > 0) compare = `(+${data.compare})`
-        if(data.compare < 0) compare = `(-${data.compare})`
+        if(data.compare < 0) compare = `(${data.compare})`
     } else {
         compare = ""
     }
-
     return (
-        <Grid container style={{
-            borderLeft:'10px solid ' + rankColor[0],
-            borderBottom:'1px solid ' + rankColor[0],
-            backgroundColor: rankColor[1],
-            borderRadius: '8px',
-            padding: '4px',
-            marginBottom: '10px',
-            textAlign: 'center',
-            boxShadow: '-3px 1px 4px ' + rankColor[0]
-        }}>
+        <RecordContainer container rank={data.post_rank}>
             <Grid xs={1} style={{
                 borderRight: '1px solid #fff'
             }}>
-                <Typography variant="" style={{color:'#999'}}>{t.g.rankHead}</Typography>
-                <Typography component="span" style={{
-                    fontSize:'2em',
-                    fontWeight: '200',
-                    fontFamily:['"Kulim Park"',"cursive"].join(","),
-                    textShadow: shadow,
-                }}>{data.post_rank}</Typography>
-                <Typography variant="" style={{
-                    color:'#999',
-                    textShadow: shadow,
-                }}> {t.g.rankTail}</Typography>
-                <Typography style={{fontSize:'0.7em',color:'#999'}}>[{data.rps} rps]</Typography>
+                <RankEdge as="span">{t.g.rankHead} </RankEdge>
+                <RankType as="span">{data.post_rank}</RankType>
+                <RankEdge as="span"> {t.g.rankTail}</RankEdge>
+                <RankPointType>[{data.rps} rps]</RankPointType>
             </Grid>
             <Grid xs={3} style={{
                 borderRight: '1px solid #777',
-            }}><Typography variant="" style={{
-                lineHeight: '3em',
-                fontSize: '1.25em',
-                textShadow: shadow,
-            }}><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></Typography>
-            </Grid>
-            <Grid xs={3} style={{
-                borderRight: '1px solid #777',
-            }}><Typography component="span" style={{
-                lineHeight: '3em',
-                fontSize: '1.3em',
-                fontFamily:['"Proza Libre"',"cursive"].join(","),
-                textShadow: shadow,
             }}>
-                {data.score.toLocaleString()}</Typography>
-                <Typography component="span" style={{
-                    color:'#999',
-                    textShadow: shadow,
-                    fontFamily:['"Proza Libre"',"cursive"].join(","),
-                }}> pts.</Typography>
-                <Typography component="span" style={{
-                    color:'#4ce600',
-                    fontSize: '0.8em',
-                    fontFamily:['"Proza Libre"',"cursive"].join(","),
-                    textShadow: shadow,
-                }}> {compare}</Typography>
+                <UserType><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></UserType>
+            </Grid>
+            <Grid xs={3} style={{
+                borderRight: '1px solid #777',
+            }}>
+                <Score score={data.score} stage={data.stage_id} category={data.category} />
+                <CompareType as="span"> {compare}</CompareType>
             </Grid>
             <Grid xs={5} style={{
                 textAlign: 'left',
@@ -188,6 +115,6 @@ export default function Record(props) {
                     </Grid>
                 </Grid>
             </Grid>
-        </Grid>
+        </RecordContainer>
     )
 }

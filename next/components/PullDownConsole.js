@@ -5,13 +5,13 @@ import {useRouter} from "next/router";
 import {en} from "../locale/en";
 import {ja} from "../locale/ja";
 import {StyledSelect} from "../styles/pik5.css";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 
 export default function PullDownConsole(props){
 
     const {info, console, rule, year, user} = props.props
-    
-    const {t, r} = useLocale()
+
+    const {t, } = useLocale()
     
     const consoles = [0]
     let type = ""
