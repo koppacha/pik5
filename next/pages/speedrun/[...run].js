@@ -1,7 +1,7 @@
 import Record from "../../components/Record";
 import useSWR from "swr";
 import NowLoading from "../../components/NowLoading";
-import {fetcher, useLocale} from "../../plugin/pik5";
+import {fetcher, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import * as React from "react";
 import {FormControl, FormHelperText, Grid, MenuItem, Typography} from "@mui/material";
@@ -20,7 +20,7 @@ export async function getServerSideProps(context){
     const console = query[1] || 0
 
     let q = ""
-    const consoles = []
+    const consoles = [0]
 
     switch(Number(stage)){
         case 101:

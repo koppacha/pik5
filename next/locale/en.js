@@ -182,6 +182,7 @@ export const en = {
         312: "Hey! Pikmin All Levels (NG+) RTA",
         313: "Hey! Pikmin All Treasures RTA",
         console: {
+            0: "All",
             1: "NGC",
             2: "Wii",
             3: "Wii U",

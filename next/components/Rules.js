@@ -1,7 +1,7 @@
 import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import {b, RuleBox} from "../styles/pik5.css"
 
 export default function Rules(props){

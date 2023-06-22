@@ -1,7 +1,7 @@
 import {FormControl, FormHelperText, MenuItem, Select} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
-import {range} from "../plugin/pik5";
+import {range} from "../lib/pik5";
 import {StyledSelect} from "../styles/pik5.css";
 
 export default function PullDownYear(props){

@@ -1,6 +1,7 @@
-import {Box, Grid, MenuItem, Select} from "@mui/material";
+import {Box, Grid, MenuItem, Select, Typography} from "@mui/material";
 import styled, {createGlobalStyle} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {useTheme} from "next-themes";
 
 export const GlobalStyle = createGlobalStyle`
 
@@ -11,7 +12,7 @@ export const GlobalStyle = createGlobalStyle`
 
     [data-theme="dark"] & {
       color: #e1e1e1;
-      background-color: #111111;
+      background-color: #212121;
     }
   }
 
@@ -53,6 +54,7 @@ export const GlobalStyle = createGlobalStyle`
     margin: 2em;
     border-radius: 8px;
   }
+
   .form-helper-text {
     color: #1a202c;
 
@@ -60,6 +62,7 @@ export const GlobalStyle = createGlobalStyle`
       color: #e2e8f0;
     }
   }
+
   .active {
     color: #cecece;
     background-color: #383838;
@@ -69,7 +72,50 @@ export const GlobalStyle = createGlobalStyle`
       background-color: #e3e3e3;
     }
   }
+  .markdown-content {
+      font-size: 1.0em;
+      code {
+        font-family: "M PLUS 1 CODE", sans-serif;
+      }
+      li {
+        margin: 0 3em;
+      }
+    　ul, ol {
+        padding: 0.75em 0;
+    }
+  }
 `
+// 文字影
+const shadow = () => {
+    const {theme} = useTheme()
+    const shadowColor = theme === "dark" ? "#000" : "#dadada"
+    return `2px  2px 2px ${shadowColor}, -2px  2px 2px ${shadowColor},
+            2px -2px 2px ${shadowColor}, -2px -2px 2px ${shadowColor},
+            2px    0 2px ${shadowColor},    0  2px 2px ${shadowColor},
+            -2px   0 2px ${shadowColor},    0 -2px 2px ${shadowColor}
+            `
+}
+
+// ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
+const rankColor = (rank, target = 0) => {
+    const {theme} = useTheme()
+    const r = Number(rank)
+    switch (true) {
+        case r === 1: // 1位
+            return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
+        case r === 2: // 2位
+            return target ? '#42f35d' : theme === "dark" ? '#4b4b4b' : '#dedede'
+        case r === 3: // 3位
+            return target ? '#23abf1' : theme === "dark" ? '#2a2a2a' : '#d5d5d5'
+        case r < 11: // 4～10位
+            return target ? '#c7c7c7' : theme === "dark" ? '#181818' : '#b7b7b7'
+        case r < 21: // 11～20位
+            return target ? '#9a9a9a' : theme === "dark" ? '#181818' : '#b7b7b7'
+        default: // 21位～
+            return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
+    }
+}
+
 export const StyledSelect = styled(Select)`
     border: 1px solid #181818;
     svg {
@@ -134,7 +180,7 @@ export const TopBoxHeader = styled(Box)`
   color :#f1f1f1;
   padding :4px;
   border-radius: 4px;
-
+  
   [data-theme="dark"] & {
     background-color: #f1f1f1;
     color :#181818;
@@ -150,4 +196,50 @@ export const StyledGrid = styled(Grid)`
   margin :0;
   font-size: 0.7em;
   text-align: center;
+`
+export const ScoreType = styled(Typography)`
+  line-height: 3em;
+  font-size: 1.3em;
+  font-family:"Proza Libre","cursive";
+  text-shadow: ${shadow};
+`
+export const ScoreTail = styled(Typography)`
+  color: #999;
+  font-family:"Proza Libre","cursive";
+  text-shadow: ${shadow};
+`
+export const CompareType = styled(Typography)`
+  color :#4ce600;
+  font-size :0.8em;
+  font-family:"Proza Libre","cursive";
+  text-shadow: ${shadow};
+`
+export const UserType = styled(Typography)`
+    line-height :3em;
+    font-size :1.25em;
+    text-shadow: ${shadow};
+`
+export const RankType = styled(Typography)`
+    font-size: 2em;
+    font-weight: 200;
+    font-family: "Kulim Park","cursive";
+    text-shadow: ${shadow};
+`
+export const RankEdge = styled(Typography)`
+    color: #999;
+    text-shadow: ${shadow};
+`
+export const RankPointType = styled(Typography)`
+    color: #555;
+    font-size: 0.7em;
+`
+export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank}))`
+    border-left: 10px solid ${props => rankColor(props.$rank, 1)};
+    border-bottom: 1px solid ${props => rankColor(props.$rank, 1)};
+    background-color: ${props => rankColor(props.$rank, 0)};
+    border-radius: 8px;
+    padding: 4px;
+    margin-bottom: 10px;
+    text-align: center;
+    box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, 1)};
 `

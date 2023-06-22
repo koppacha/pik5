@@ -9,14 +9,10 @@ import {
     Paper,
 } from "@mui/material";
 import * as React from "react";
-import {range} from "@/plugin/pik5"
-import {useRouter} from "next/router";
-import {en} from "@/locale/en";
-import {ja} from "@/locale/ja";
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import {StyledMenuItem} from "../styles/pik5.css"
-import {useLocale} from "../plugin/pik5";
+import {range, useLocale} from "../lib/pik5";
 
 const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
 const eg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
