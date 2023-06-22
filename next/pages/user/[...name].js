@@ -10,7 +10,7 @@ import * as React from "react";
 import Rules from "../../components/Rules";
 import RecordPost from "../../components/RecordPost";
 import UserScoreTable from "../../components/UserScoreTable";
-import {useLocale} from "../../plugin/pik5";
+import {useLocale} from "../../lib/pik5";
 
 export async function getServerSideProps(context){
 

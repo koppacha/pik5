@@ -8,7 +8,7 @@ import {Box, Grid, Typography} from "@mui/material";
 import React, {useState} from "react";
 import styled from "styled-components";
 import {CellBox, InfoBox, RuleBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
-import {useLocale} from "../plugin/pik5";
+import {useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp,
     faBullhorn,
