@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Dialog from '@mui/material/Dialog';
@@ -9,6 +9,9 @@ import {Box} from "@mui/material";
 import {useForm} from "react-hook-form";
 import * as yup from 'yup'
 import {yupResolver} from "@hookform/resolvers/yup";
+import useSWR from "swr";
+import {fetcher} from "../lib/pik5";
+import NowLoading from "./NowLoading";
 
 // バリデーションルール
 const schema = yup.object({
@@ -30,7 +33,13 @@ const schema = yup.object({
         .required('この項目は必須です。')
 })
 
-export default function ModalFormKeyword(props) {
+export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) {
+
+    // 送信ボタン押下時にデータをポストする
+    const [tag, setTag] = useState("")
+    const [keyword, setKeyword] = useState("")
+    const [yomi, setYomi] = useState("")
+    const [content, setContent] = useState("")
 
     const now = new Date().toLocaleString()
     const {register,
@@ -48,36 +57,54 @@ export default function ModalFormKeyword(props) {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    'keyword': props.keyword,
-                    'unique_id': props.uniqueId || 0,
-                    'tag': props.tag,
-                    'yomi': props.yomi,
-                    'content': props.content,
-                    'first_editor':props.firstEditor || 'guest',
+                    'keyword': keyword,
+                    'unique_id': uniqueId || 0,
+                    'tag': tag,
+                    'yomi': yomi,
+                    'content': content,
+                    'first_editor':data.first_editor || 'guest',
                     'last_editor':'guest', // ←常にログインID
                     'created_at': now
                 })
             })
             if(res.status < 300){
-                props.setOpen(false)
+                handleEditClose()
             }
     }
 
-    // フォームのリセット
+    const {data} = useSWR(`http://localhost:8000/api/keyword/${uniqueId}`, fetcher)
+
+    console.log(data)
+
     useEffect(() => {
         reset({
             defaultValue: {
-                tag: props.editTag,
-                keyword: props.editKeyword,
-                yomi: props.editYomi,
-                content: props.editContent,
+                tag: data?.tag,
+                keyword: data?.keyword,
+                yomi: data?.yomi,
+                content: data?.content,
             }
         })
-    }, [props])
+    }, [data])
+
+    if(!data){
+        return (
+            <>
+                <Dialog open={editOpen} onClose={handleEditClose}>
+                    <Box style={{width:'600px'}}>
+                        <DialogTitle>キーワードを作成・編集する</DialogTitle>
+                        <DialogContent>
+                            <NowLoading/>
+                        </DialogContent>
+                    </Box>
+                </Dialog>
+            </>
+        )
+    }
 
     return (
         <>
-            <Dialog open={props.open} onClose={props.handleClose}>
+            <Dialog open={editOpen} onClose={handleEditClose}>
                 <Box style={{width:'600px'}}>
                 <DialogTitle>キーワードを作成・編集する</DialogTitle>
                 <DialogContent>
@@ -86,12 +113,12 @@ export default function ModalFormKeyword(props) {
                         id="tag"
                         label="タグ"
                         type="text"
-                        onChange={(e) => props.setTag(e.target.value)}
+                        onChange={(e) => setTag(e.target.value)}
                         fullWidth
                         variant="standard"
                         error={'tag' in errors}
                         helperText={errors.tag?.message}
-                        defaultValue={props.editTag}
+                        defaultValue={data?.tag}
                     />
                 </DialogContent>
                 <DialogContent>
@@ -100,12 +127,12 @@ export default function ModalFormKeyword(props) {
                         id="keyword"
                         label="キーワード名"
                         type="text"
-                        onChange={(e) => props.setKeyword(e.target.value)}
+                        onChange={(e) => setKeyword(e.target.value)}
                         fullWidth
                         variant="standard"
                         error={'keyword' in errors}
                         helperText={errors.keyword?.message}
-                        defaultValue={props.editKeyword}
+                        defaultValue={data?.keyword}
                     />
                 </DialogContent>
                 <DialogContent>
@@ -114,12 +141,12 @@ export default function ModalFormKeyword(props) {
                         id="yomi"
                         label="よみがな"
                         type="text"
-                        onChange={(e) => props.setYomi(e.target.value)}
+                        onChange={(e) => setYomi(e.target.value)}
                         fullWidth
                         variant="standard"
                         error={'yomi' in errors}
                         helperText={errors.yomi?.message}
-                        defaultValue={props.editYomi}
+                        defaultValue={data?.yomi}
                     />
                 </DialogContent>
                 <DialogContent>
@@ -128,19 +155,19 @@ export default function ModalFormKeyword(props) {
                         id="content"
                         label="本文"
                         type="text"
-                        onChange={(e) => props.setContent(e.target.value)}
+                        onChange={(e) => setContent(e.target.value)}
                         fullWidth
                         multiline
                         rows={5}
                         variant="standard"
                         error={'content' in errors}
                         helperText={errors.content?.message}
-                        defaultValue={props.editContent}
+                        defaultValue={data?.content}
                     />
                 </DialogContent>
 
                 <DialogActions>
-                    <Button onClick={props.handleClose}>閉じる</Button>
+                    <Button onClick={handleEditClose}>閉じる</Button>
                     <Button onClick={handleSubmit(onSubmit)}>送信</Button>
                 </DialogActions>
                 </Box>
