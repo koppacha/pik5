@@ -125,26 +125,26 @@ export default function HeaderMenu({props}){
 
     const menuId = 'primary-search-account-menu';
 
-    const renderMenu = (
-        <Menu
-            anchorEl={anchorEl}
-            anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            id={menuId}
-            keepMounted
-            transformOrigin={{
-                vertical: 'top',
-                horizontal: 'right',
-            }}
-            // open={open}
-            onClose={handleMenuClose}
-        >
-            <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-            <MenuItem onClick={handleMenuClose}>My account</MenuItem>
-        </Menu>
-    );
+    // const renderMenu = (
+    //     <Menu
+    //         anchorEl={anchorEl}
+    //         anchorOrigin={{
+    //             vertical: 'top',
+    //             horizontal: 'right',
+    //         }}
+    //         id={menuId}
+    //         keepMounted
+    //         transformOrigin={{
+    //             vertical: 'top',
+    //             horizontal: 'right',
+    //         }}
+    //         open={open}
+    //         onClose={handleMenuClose}
+    //     >
+    //         <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
+    //         <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+    //     </Menu>
+    // );
 
     const mobileMenuId = 'primary-search-account-menu-mobile';
 
@@ -290,7 +290,7 @@ export default function HeaderMenu({props}){
                 </Toolbar>
             </ThinAppBar>
             {renderMobileMenu}
-            {renderMenu}
+            {/*{renderMenu}*/}
         </>
     )
 }
