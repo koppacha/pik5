@@ -15,21 +15,35 @@ class KeywordController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param Request $request
      * @return JsonResponse
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         $dataset = Keyword::latest()->get();
-
         $unique_ids = [];
         $filtered_dataset = [];
         foreach($dataset as $data){
             if(in_array($data["unique_id"], $unique_ids, true)){
                 continue;
             }
+            if(isset($request->c) && $request->c !== "" && $request->c !== "all"){
+                if($data["category"] !== $request->c){
+                    continue;
+                }
+            }
+            if(isset($request->t) && $request->t !== "") {
+                if ($data["tag"] !== $request->t) {
+                    continue;
+                }
+            }
             $filtered_dataset[] = $data;
             $unique_ids[] = $data["unique_id"];
         }
+
+        // 並び変えの基準
+        $sort_key = array_column($filtered_dataset, 'yomi');
+        array_multisort($sort_key, SORT_STRING, $filtered_dataset);
 
         return response()->json(
             $filtered_dataset
@@ -99,7 +113,7 @@ class KeywordController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        $data = Keyword::where('unique_id', $request['id'])->first();
+        $data = Keyword::where('unique_id', $request['id'])->latest()->first();
         return response()->json(
             $data
         );
