@@ -234,6 +234,7 @@ export const ja = {
     },
     keyword: {
         category: {
+            "all":"すべて",
             "game":"ゲーム",
             "pikmin":"ピクミン",
             "collect":"回収物",
