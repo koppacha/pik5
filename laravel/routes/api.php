@@ -77,7 +77,7 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
     Route :: get ('keywords', function () {
         $str = "";
-        for($i=1; $i<=6; $i++) {
+        for($i=1; $i<=13; $i++) {
             $str .= rands();
             $str .= "\n";
         }
