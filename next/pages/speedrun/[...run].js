@@ -1,4 +1,4 @@
-import Record from "../../components/Record";
+import Record from "../../components/record/Record";
 import useSWR from "swr";
 import NowLoading from "../../components/NowLoading";
 import {fetcher, useLocale} from "../../lib/pik5";
@@ -7,9 +7,9 @@ import * as React from "react";
 import {FormControl, FormHelperText, Grid, MenuItem, Typography} from "@mui/material";
 import {RuleBox, StairIcon, StyledSelect} from "../../styles/pik5.css";
 import Link from "next/link";
-import SpeedRunWrapper from "../../components/SpeedRunWrapper";
-import SpeedRunRules from "../../components/SpeedRunRules";
-import SpeedRunConsole from "../../components/SpeedRunConsole";
+import SpeedRunWrapper from "../../components/record/SpeedRunWrapper";
+import SpeedRunRules from "../../components/form/SpeedRunRules";
+import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 
@@ -154,7 +154,7 @@ export default function Run({data, stage, console, consoles}){
         <>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>
-            <Link href="/speedrun">本編RTA</Link>
+            <Link href="/speedrun">{t.speedrun.title}</Link>
             <StairIcon icon={faStairs}/>
             {t.title[stage.slice(0,2) === "31"?31:stage.slice(0,1)]}<br/>
             #S{stage}<br/>

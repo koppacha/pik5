@@ -3,14 +3,15 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import {AppBar, Box, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
-import Record from "../../components/Record";
-import PullDownConsole from "../../components/PullDownConsole";
-import PullDownYear from "../../components/PullDownYear";
+import Record from "../../components/record/Record";
+import PullDownConsole from "../../components/form/PullDownConsole";
+import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
-import Totals from "../../components/Totals";
+import Totals from "../../components/rule/Totals";
 import {createContext} from "react";
-import Rules from "../../components/Rules";
+import Rules from "../../components/rule/Rules";
 import {useLocale} from "../../lib/pik5";
+import BreadCrumb from "../../components/BreadCrumb";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -63,19 +64,19 @@ export default function Series(param){
 
     return (
         <>
-            総合ランキング<br/>
             #{param.series}<br/>
+            <BreadCrumb info={param.info} rule={param.rule}/>
             <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
             <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
-            <Grid container>
+            <Grid container style={{margin:"2em 0"}}>
                 {
                     stages.map(stage =>
-                    <Grid xs={1.5}>
+                    <Grid xs={1.2}>
                         <Link href={'/stage/'+stage}><Box style={{
-                            border: 'solid 1px #fff',
+                            backgroundColor: "#444444",
                             borderRadius: '6px',
-                            padding: '8px',
-                            margin: '4px',
+                            padding: '6px',
+                            margin: '2px',
                             minHeight: '6em',
                             fontSize: '0.8em'}}>
                             <span>#{stage}</span><br/>

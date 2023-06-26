@@ -16,6 +16,7 @@ export const en = {
     },
     stage: {
         20 : "Pikmin2 Overall Ranking",
+        30 : "Pikmin3 Overall Ranking",
         101: "The Impact Site",
         102: "The Forest of Hope",
         103: "The Forest Navel",
@@ -146,6 +147,7 @@ export const en = {
         4: "Gyro",
         5: "Wii U GamePad",
         6: "Joy-Con Single",
+        7: "Nintendo Switch"
     },
     rule: {
         0: "Normal Rule",

@@ -1,12 +1,16 @@
 import * as React from "react";
-import Record from "../../components/Record";
+import Record from "../../components/record/Record";
 import {Box, Grid, Typography} from "@mui/material";
 import {useLocale} from "../../lib/pik5";
-import RecordPost from "../../components/RecordPost";
-import PullDownConsole from "../../components/PullDownConsole";
-import PullDownYear from "../../components/PullDownYear";
-import Rules from "../../components/Rules";
+import RecordPost from "../../components/modal/RecordPost";
+import PullDownConsole from "../../components/form/PullDownConsole";
+import PullDownYear from "../../components/form/PullDownYear";
+import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
+import ModalKeyword from "../../components/modal/ModalKeyword";
+import {useState} from "react";
+import {RuleBox} from "../../styles/pik5.css";
+import Link from "next/link";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -38,8 +42,18 @@ export default function Stage(param){
     const {t, r} = useLocale()
 
     // ボーダーライン出力用変数
-    let i = 0
     const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
+    let i = borders.length - 1
+    const [open, setOpen] = useState(false)
+    const [editOpen, setEditOpen] = useState(false)
+    const uniqueId = "418748af467cb"
+
+    const handleClose = () => setOpen(false)
+    const handleEditOpen = () => {
+        setOpen(false)
+        setEditOpen(true)
+    }
+    const handleOpen = () => setOpen(true)
 
     return (
         <>
@@ -61,15 +75,26 @@ export default function Stage(param){
                     <Rules props={param}/>
                     <RecordPost
                         info={param.info}/>
+                    <Grid item style={{
+                        marginBottom:"20px",
+                    }}>
+                        <RuleBox className={"active"}
+                                 onClick={handleOpen}
+                                 component={Link}
+                                 href="#">
+                            {t.g.rule}
+                        </RuleBox>
+                    </Grid>
                 </Grid>
             </Box>
+            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
                 {
                     // 記録を出力（ボーダー設定がある通常ランキング）
                     Object.values(param.data).map(function (post){
                             const border = borders[i]
                             const star = "★"
                             if(post.score < border){
-                                i++;
+                                i--;
                                 return (
                                     <>
                                         <Box style={{
@@ -77,7 +102,7 @@ export default function Stage(param){
                                             borderBottom:"2px dotted #e81fc1",
                                             textAlign:"center",
                                         }}>
-                                            {star.repeat(4-i)} {t.border[2][i]} {border}点
+                                            {star.repeat(i + 2)} {t.border[2][i + 1]} {border}点
                                         </Box>
                                         <Record data={post}/>
                                     </>
