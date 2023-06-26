@@ -18,14 +18,14 @@ import {
     faTrophy
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import NewRecords from "../components/NewRecords";
-import PostCountRanking from "../components/PostCountRanking";
-import TrendRanking from "../components/TrendRanking";
+import NewRecords from "../components/top/NewRecords";
+import PostCountRanking from "../components/top/PostCountRanking";
+import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
 
 export default function Home() {
 
-    const {t} = useLocale()
+    const {t,r} = useLocale()
     const {data: session } = useSession()
 
     // クイックアクセス
@@ -47,8 +47,8 @@ export default function Home() {
   return (
     <>
         ver.3.00<br/>
-        <Typography variant="" className="title">新ピクチャレ大会</Typography><br/>
-        <Typography variant="" className="subtitle">Pikmin Series Leaderboards</Typography><br/>
+        <Typography variant="" className="title">{t.title[0]}</Typography><br/>
+        <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
         <InfoBox>
             ピクチャレ大会へようこそ。このサイトは、任天堂のゲームソフト『ピクミン』シリーズをやり込む人のためのハイスコアを競い合うランキングサイトです。
             腕前関係なくどなたでも参加することができます。

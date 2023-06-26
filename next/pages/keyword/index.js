@@ -1,19 +1,21 @@
 import {Box, Grid, Typography} from "@mui/material";
-import ModalKeywordEdit from "../../components/ModalKeywordEdit";
-import KeywordPost from "../../components/KeywordPost";
+import ModalKeywordEdit from "../../components/modal/ModalKeywordEdit";
+import KeywordPost from "../../components/modal/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR, {mutate} from "swr";
-import {fetcher} from "../../lib/pik5";
+import {fetcher, useLocale} from "../../lib/pik5";
 import {InfoBox, StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
-import PullDownKeywordCategory from "../../components/PullDownKeywordCategory";
+import PullDownKeywordCategory from "../../components/form/PullDownKeywordCategory";
 import {useSearchParams} from "next/navigation";
-import ModalKeyword from "../../components/ModalKeyword";
+import ModalKeyword from "../../components/modal/ModalKeyword";
 
 export default function KeywordIndex(){
+
+    const {t:tl,r} = useLocale()
 
     const params = useSearchParams()
     const c = params.get("c")
@@ -45,9 +47,9 @@ export default function KeywordIndex(){
         <>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>
-            <Link href="/keyword">ピクミンキーワード</Link><br/>
-            <Typography variant="" className="title">ピクミンキーワード</Typography><br/>
-            <Typography variant="" className="subtitle">Pikmin Keywords</Typography><br/>
+            <Link href="/keyword">{tl.g.keyword}</Link><br/>
+            <Typography variant="" className="title">{tl.g.keyword}</Typography><br/>
+            <Typography variant="" className="subtitle">{r.g.keyword}</Typography><br/>
             <InfoBox>
             ピクミンシリーズ、ピクチャレ大会、ピクミン界隈にまつわる専門用語や流行語などをなんでも保存しておくためのページです。基本的にどなたでも編集できます。
                 <Box style={{ margin: '1em'}}>
@@ -63,7 +65,7 @@ export default function KeywordIndex(){
                 </Box>
             </InfoBox>
             <Button variant="outlined" onClick={handleEditOpen}>
-                キーワードを新規作成
+                {tl.keyword.g.newTitle}
             </Button>
             <PullDownKeywordCategory category={c}/>
             <Grid container>

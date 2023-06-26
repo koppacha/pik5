@@ -1,4 +1,4 @@
-import {KeywordContent} from "../../components/KeywordContent";
+import {KeywordContent} from "../../components/modal/KeywordContent";
 
 const content = `
 ### 第１条（目的）

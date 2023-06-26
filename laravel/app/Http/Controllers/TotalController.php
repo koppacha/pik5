@@ -139,10 +139,13 @@ class TotalController extends Controller
         // ここからランキング出力本体
         $ranking = [];
 
+        // 名前取得インスタンスを初期化
+        $getUser = new UserNameController();
+
         // 対象の記録群からユーザー配列を作成し、値を初期化
         foreach($users = array_unique( array_column($dataset, 'user_id') ) as $user){
             $ranking[$user]["user"]["user_id"] = $user;
-            $ranking[$user]["user"]["user_name"] = (new UserNameController)->getName($user)[0]['user_name'];
+            $ranking[$user]["user"]["user_name"] = $getUser->getName($user)['user_name'];
             $ranking[$user]["score"] = 0;
             $ranking[$user]["rps"]   = 0;
             $ranking[$user]["count"] = 0;
