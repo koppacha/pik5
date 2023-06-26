@@ -1,4 +1,4 @@
-import {Box, Grid, MenuItem, Select, Typography} from "@mui/material";
+import {Box, Grid, MenuItem, Select, Typography, Button} from "@mui/material";
 import styled, {createGlobalStyle} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
@@ -28,24 +28,14 @@ export const GlobalStyle = createGlobalStyle`
     color: #777;
   }
 
-  .pikmin1 {
-    color: #000;
-    background-color: #ec9d6e;
-  }
+  .active {
+    background-color: #212121 !important;
+    color: #eaeaea !important;
 
-  .pikmin2 {
-    color: #000;
-    background-color: #e86363;
-  }
-
-  .pikmin3 {
-    color: #000;
-    background-color: #39d961;
-  }
-
-  .pikmin4 {
-    color: #000;
-    background-color: #e3cf37;
+    [data-theme="dark"] & {
+      background-color: #eaeaea !important;
+      color: #212121 !important;
+    }
   }
 
   .info-box {
@@ -63,28 +53,42 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
-  .active {
-    color: #cecece;
-    background-color: #383838;
-
-    [data-theme="dark"] & {
-      color: #000;
-      background-color: #e3e3e3;
-    }
-  }
   .markdown-content {
-      font-size: 1.0em;
-      code {
-        font-family: "M PLUS 1 CODE", sans-serif;
-      }
-      li {
-        margin: 0 3em;
-      }
+    font-size: 1.0em;
+
+    code {
+      font-family: "M PLUS 1 CODE", sans-serif;
+    }
+
+    li {
+      margin: 0 3em;
+    }
+
     　ul, ol {
-        padding: 0.75em 0;
+      padding: 0.75em 0;
     }
   }
 `
+// シリーズ別テーマカラー
+const theme = (series) => {
+    switch (series) {
+        case 1:
+            return '#6eb8ec'
+        case 2:
+            return '#e86363'
+        case 3:
+            return '#39d961'
+        case 4:
+            return '#e3cf37'
+        case 7: // 期間限定
+            return '#7c37e3'
+        case 9: // その他
+            return '#e1e1e1'
+        default:
+            return '#333333'
+    }
+}
+
 // 文字影
 const shadow = () => {
     const {theme} = useTheme()
@@ -116,6 +120,28 @@ const rankColor = (rank, target = 0) => {
     }
 }
 
+export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
+  color: #fff;
+  background-color:transparent;
+  font-size :0.9em;
+  border-radius:0;
+  height: 64px;
+  padding: 0 18px;
+  border-bottom :4px solid #000;
+  &:hover {
+    border-bottom :4px solid ${props => theme(props.$series)};
+    background-color: #2d3748;
+  }
+`
+export const RecordPostButton = styled(Box).attrs(props => ({$series: props.series}))`
+  border-radius: 4px;
+  padding: 12px;
+  margin: 6px;
+  svg {
+    color: ${props => theme(props.$series)};
+  }
+`
+
 export const StyledSelect = styled(Select)`
     border: 1px solid #181818;
     svg {
@@ -140,10 +166,14 @@ export const InfoBox = styled(Box)`
   border-radius :8px;
 `
 export const RuleBox = styled(Box)`
-  border :1px solid #777;
-  border-radius :4px;
-  padding :12px;
-  margin-right :6px;
+  border-radius: 4px;
+  padding: 12px;
+  margin-right: 6px;
+  background-color: #a1a1a1;
+
+  [data-theme="dark"] & {
+    background-color: #3d3d3d;
+  }
 `
 export const CellBox = styled(Box)`
   margin :4px;
