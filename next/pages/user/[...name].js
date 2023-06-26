@@ -3,13 +3,13 @@ import {useRouter} from "next/router";
 import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import {Box, Grid, Typography} from "@mui/material";
-import Record from "../../components/Record";
-import PullDownConsole from "../../components/PullDownConsole";
-import PullDownYear from "../../components/PullDownYear";
+import Record from "../../components/record/Record";
+import PullDownConsole from "../../components/form/PullDownConsole";
+import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
-import Rules from "../../components/Rules";
-import RecordPost from "../../components/RecordPost";
-import UserScoreTable from "../../components/UserScoreTable";
+import Rules from "../../components/rule/Rules";
+import RecordPost from "../../components/modal/RecordPost";
+import UserScoreTable from "../../components/record/UserScoreTable";
 import {useLocale} from "../../lib/pik5";
 
 export async function getServerSideProps(context){
@@ -42,7 +42,7 @@ export default function Stage(param){
 
     return (
         <>
-            ユーザー別ランキング<br/>
+            {t.stage.user}<br/>
             <Typography variant="" className="title">{ param.userName[0].user_name }</Typography><br/>
             <Typography variant="" className="subtitle">@{param.userId}</Typography>
             <Grid container>
