@@ -6,7 +6,7 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import {styled} from "@mui/material/styles";
 import {useLocale} from "../../lib/pik5";
-import {TotalBox} from "../../styles/pik5.css";
+import {RuleBox} from "../../styles/pik5.css";
 
 export default function Totals(props){
 
@@ -24,7 +24,7 @@ export default function Totals(props){
             totals.push(20, 21, 22, 23, 24, 25, 26, 27, 28, 29)
             break
         case 3:
-            totals.push(30, 31, 32, 33, 34, 35)
+            totals.push(30, 31, 32, 33, 36, 34, 35)
             break
         case 4:
             totals.push(40)
@@ -37,17 +37,17 @@ export default function Totals(props){
         <>
         {
             totals.map(val =>
-                <Grid item style={{
+                <Grid item key={val} style={{
                     marginBottom:"30px"
                 }}>
-                    <TotalBox style={{
+                    <RuleBox style={{
                         backgroundColor:(Number(series) === val) ? "#fff" : "",
                         color:(Number(series) === val) ? "#000" : "#fff",
                     }}
                          component={Link}
                          href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
                         {t.rule[val]}
-                    </TotalBox>
+                    </RuleBox>
                 </Grid>
             )
         }

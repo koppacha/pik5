@@ -23,7 +23,7 @@ export default function PullDownKeywordCategory({category}){
                 {
                     // 操作方法プルダウンを出力
                     categoryArray.map(val =>
-                        <MenuItem value={val} component={Link} href={'/keyword?c='+val}>{t.keyword.category[val]}</MenuItem>
+                        <MenuItem key={val} value={val} component={Link} href={'/keyword?c='+val}>{t.keyword.category[val]}</MenuItem>
                     )
                 }
             </StyledSelect>

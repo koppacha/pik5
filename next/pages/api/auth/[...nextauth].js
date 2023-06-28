@@ -8,8 +8,8 @@ export const authOptions = {
     adapter: PrismaAdapter(prisma),
     secret: process.env.NEXTAUTH_SECRET,
     pages: {
-        signIn: "/auth/signin",
-        signOut: "/auth/signout",
+        signIn: "/auth/login",
+        signOut: "/auth/logout",
     },
     logger: {
         error: (code, metadata) => {
@@ -33,9 +33,9 @@ export const authOptions = {
             // e.g. domain, username, password, 2FA token, etc.
             // You can pass any HTML attribute to the <input> tag through the object.
             credentials: {
-                name: { label: "Screen Name", type: "text", placeholder: "jsmith" },
-                email: { label: "Email", type: "email"},
-                password: { label: "Password", type: "password" }
+                name: {label: "Screen Name", type: "text"},
+                userId: {label: "User Id", type: "text"},
+                password: {label: "Password", type: "password"}
             },
             authorize: async (credentials, req) => {
                 const user = await fetch(

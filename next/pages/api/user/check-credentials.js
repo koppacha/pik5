@@ -20,11 +20,11 @@ const hashPassword = (password) => {
 async function handlePOST(res, req) {
 
     const user = await prisma.user.findUnique({
-        where: { email: req.body.email },
+        where: { userId: req.body.userId },
         select: {
             id: true,
             name: true,
-            email: true,
+            userId: true,
             password: true,
         },
     });

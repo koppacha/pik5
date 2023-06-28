@@ -58,7 +58,7 @@ export default function PullDownConsole(props){
                 {
                     // 操作方法プルダウンを出力
                     consoles.map(val =>
-                        <MenuItem value={val} component={Link} href={'/'+type+'/'+id+'/'+
+                        <MenuItem key={val} value={val} component={Link} href={'/'+type+'/'+id+'/'+
                             val+'/'+rule+'/'+year}>{t.console[val]}</MenuItem>
                     )
                 }

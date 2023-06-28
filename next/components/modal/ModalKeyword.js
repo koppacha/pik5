@@ -19,13 +19,6 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
     if(!data){
         return (
             <>
-                <Dialog open={open} onClose={handleClose}>
-                    <Box style={{width:'600px'}}>
-                        <DialogContent>
-                            <NowLoading/>
-                        </DialogContent>
-                    </Box>
-                </Dialog>
             </>
         )
     }
@@ -38,6 +31,7 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
                         <KeywordContent data={data}/>
                     </DialogContent>
                     <DialogActions>
+                        <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
                         <Button onClick={handleClose}>{t.g.close}</Button>
                         <Button onClick={handleEditOpen}>{t.g.edit}</Button>
                     </DialogActions>
