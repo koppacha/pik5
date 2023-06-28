@@ -46,9 +46,16 @@ export default function Stage(param){
     let i = borders.length - 1
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
-    const uniqueId = "418748af467cb"
 
-    const handleClose = () => setOpen(false)
+    // 呼び出すレギュレーション本文
+    let uniqueId = param.rule
+
+    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールを表示する
+    if(param.rule === 21 || param.rule === 22){
+        uniqueId = 20
+    }
+
+        const handleClose = () => setOpen(false)
     const handleEditOpen = () => {
         setOpen(false)
         setEditOpen(true)
@@ -101,8 +108,9 @@ export default function Stage(param){
                                             color:"#e81fc1",
                                             borderBottom:"2px dotted #e81fc1",
                                             textAlign:"center",
+                                            margin:"8px 0"
                                         }}>
-                                            {star.repeat(i + 2)} {t.border[2][i + 1]} {border}点
+                                            {star.repeat(i + 2)} {t.border[2][i + 1]} {border.toLocaleString()} pts.
                                         </Box>
                                         <Record data={post}/>
                                     </>

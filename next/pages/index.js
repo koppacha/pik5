@@ -1,17 +1,10 @@
-import Head from 'next/head'
-import { Inter } from '@next/font/google'
-import styles from '@/styles/Home.module.css'
 import Link from "next/link";
-import Stage_id from "./stage/[...stage]";
-import Navigation from "../components/Layouts/Navigation";
-import {Box, Grid, Typography} from "@mui/material";
-import React, {useState} from "react";
-import styled from "styled-components";
-import {CellBox, InfoBox, RuleBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
+import {Grid, Typography} from "@mui/material";
+import React from "react";
+import {CellBox, InfoBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp,
-    faBullhorn,
     faCertificate,
     faChartColumn, faCheckToSlot,
     faFlag,
@@ -27,11 +20,12 @@ export default function Home() {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
+    console.log(session)
 
     // クイックアクセス
     const quickLinks = [
-        ["ログイン", "/login"],
-        ["アカウント作成", "/register"],
+        ["ログイン", "/auth/login"],
+        ["アカウント作成", "/auth/register"],
         ["ピクミン1", "/total/10"],
         ["ピクミン2", "/total/20"],
         ["ピクミン3", "/total/30"],
@@ -81,7 +75,7 @@ export default function Home() {
                                     (session)
                                         ?
                                         <>
-                                            Signed in as {session.user.email} <br/>
+                                            Signed in as {session.user.name} <br/>
                                             <button onClick={()=>signOut()}>Sign out</button>
                                         </>
                                         :

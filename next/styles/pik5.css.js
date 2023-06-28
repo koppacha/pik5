@@ -141,7 +141,6 @@ export const RecordPostButton = styled(Box).attrs(props => ({$series: props.seri
     color: ${props => theme(props.$series)};
   }
 `
-
 export const StyledSelect = styled(Select)`
     border: 1px solid #181818;
     svg {
@@ -158,7 +157,6 @@ export const StyledSelect = styled(Select)`
 export const StyledMenuItem = styled(MenuItem)`
   font-family: "M PLUS 1 CODE", sans-serif;
 `
-
 export const InfoBox = styled(Box)`
   border :1px solid #181818;
   padding :2em;
@@ -185,12 +183,6 @@ export const CellBox = styled(Box)`
   [data-theme="dark"] & {
     background-color: #333;
   }
-`
-export const TotalBox = styled(Box)`
-  border :1px solid #181818;
-  border-radius :4px;
-  padding :12px;
-  margin :6px;
 `
 export const StairIcon = styled(FontAwesomeIcon)`
     font-size :0.8em;
@@ -248,6 +240,7 @@ export const UserType = styled(Typography)`
     line-height :3em;
     font-size :1.25em;
     text-shadow: ${shadow};
+    font-family: "M PLUS 1 CODE", sans-serif;
 `
 export const RankType = styled(Typography)`
     font-size: 2em;
@@ -260,8 +253,12 @@ export const RankEdge = styled(Typography)`
     text-shadow: ${shadow};
 `
 export const RankPointType = styled(Typography)`
-    color: #555;
-    font-size: 0.7em;
+  color: #464646;
+  font-size: 0.7em;
+
+  [data-theme="dark"] & {
+    color: #b6b6b6;
+  }
 `
 export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank}))`
     border-left: 10px solid ${props => rankColor(props.$rank, 1)};
