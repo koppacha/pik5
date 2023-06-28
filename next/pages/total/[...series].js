@@ -48,20 +48,6 @@ export default function Series(param){
     const stages = param.data['stage_list'];
     const records = param.data.data;
 
-    function ruleOutput(){
-        if(param.rule){
-            // １レイヤーの総合ランキングは通常ランキングのルールコンポーネントを流用
-            return (
-                <Rules props={param}/>
-            )
-        } else {
-            // ２レイヤーの総合ランキングは専用コンポーネントに分岐する
-            return (
-                <Totals props={param}/>
-            )
-        }
-    }
-
     return (
         <>
             #{param.series}<br/>
@@ -71,7 +57,7 @@ export default function Series(param){
             <Grid container style={{margin:"2em 0"}}>
                 {
                     stages.map(stage =>
-                    <Grid xs={1.2}>
+                    <Grid item xs={1.2}>
                         <Link href={'/stage/'+stage}><Box style={{
                             backgroundColor: "#444444",
                             borderRadius: '6px',
@@ -96,9 +82,7 @@ export default function Series(param){
             <Grid container style={{
                 marginTop:"30px"
             }}>
-                {
-                    ruleOutput()
-                }
+            <Totals props={param}/>
             </Grid>
 
             <ul>

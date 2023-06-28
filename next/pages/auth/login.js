@@ -47,7 +47,7 @@ export default function SimpleCard() {
     } = useForm();
 
     let defaultBody = {
-        email: "",
+        userId: "",
         password: "",
     };
 
@@ -108,12 +108,12 @@ export default function SimpleCard() {
                         <form onSubmit={handleSubmit(onSubmit)}>
                             <Stack spacing={4} pt={10}>
                                 <FormControl
-                                    id="email"
+                                    id="user_id"
                                     isInvalid={Boolean(router.query.error)}
                                     isRequired
                                 >
-                                    <FormLabel>Email</FormLabel>
-                                    <Input type="email" {...register("email")} />
+                                    <FormLabel>User ID</FormLabel>
+                                    <Input type="text" {...register("userId")} />
                                 </FormControl>
                                 <FormControl
                                     id="password"
@@ -179,7 +179,7 @@ export default function SimpleCard() {
                                         Not a user yet?{" "}
                                         <Link
                                             color={"blue.400"}
-                                            href={`signup${
+                                            href={`register${
                                                 router.query.callbackUrl
                                                     ? `?callbackUrl=${router.query.callbackUrl}`
                                                     : ""

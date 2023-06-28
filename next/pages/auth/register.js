@@ -42,7 +42,7 @@ export default function SignupCard() {
             logger.debug(`res`, res);
             reset();
             router.push(
-                `signin${
+                `login${
                     router.query.callbackUrl
                         ? `?callbackUrl=${router.query.callbackUrl}`
                         : ""
@@ -86,13 +86,13 @@ export default function SignupCard() {
                         <Stack spacing={4}>
                             <Box>
                                 <FormControl id="fullName" isRequired>
-                                    <FormLabel>Full name</FormLabel>
+                                    <FormLabel>Screen Name</FormLabel>
                                     <Input type="text" {...register("name")} />
                                 </FormControl>
                             </Box>
                             <FormControl id="email" isRequired>
-                                <FormLabel>Email address</FormLabel>
-                                <Input type="email" {...register("email")} />
+                                <FormLabel>User ID</FormLabel>
+                                <Input type="text" {...register("userId")} />
                             </FormControl>
                             <FormControl id="password" isRequired>
                                 <FormLabel>Password</FormLabel>
@@ -135,7 +135,7 @@ export default function SignupCard() {
                             <Stack pt={6}>
                                 <Text align={"center"}>
                                     Already a user?{" "}
-                                    <Link color={"blue.400"} href="/auth/signin">
+                                    <Link color={"blue.400"} href="/auth/login">
                                         Sign in
                                     </Link>
                                 </Text>
