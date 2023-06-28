@@ -21,20 +21,22 @@ export function KeywordContent({data}){
 
     return (
         <>
-            <Button variant="outlined">{data.tag}</Button><br/>
-            #{data.unique_id}<br/>
+            <Typography variant="" style={{fontSize:"0.8em",color:"#777"}}>{data.yomi}</Typography><br/>
             <Typography variant="" className="mini-title">{data.keyword}</Typography><br/>
             <Box style={{
-                borderTop: "1px solid #fff",
-                marginBottom: "40px",
-                padding: "30px",
-                lineHeight: "1.6em",
+                borderTop: "1px solid #555",
             }}>
-                <ReactMarkdown
-                    className="markdown-content"
-                    remarkPlugins={[remarkGfm]}>
-                    {data.content}
-                </ReactMarkdown>
+                <Button variant="outlined" style={{margin:"8px",padding:"2px"}}>{data.tag}</Button>
+                <Box style={{
+                    padding: "20px",
+                    lineHeight: "1.6em",
+                }}>
+                    <ReactMarkdown
+                        className="markdown-content"
+                        remarkPlugins={[remarkGfm]}>
+                        {data.content}
+                    </ReactMarkdown>
+                </Box>
             </Box>
             <ModalKeywordEdit uniqueId={data.unique_id} open={open} handleClose={handleClose}/>
         </>

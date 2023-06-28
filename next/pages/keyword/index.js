@@ -1,6 +1,5 @@
 import {Box, Grid, Typography} from "@mui/material";
 import ModalKeywordEdit from "../../components/modal/ModalKeywordEdit";
-import KeywordPost from "../../components/modal/KeywordPost";
 import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR, {mutate} from "swr";
@@ -33,9 +32,15 @@ export default function KeywordIndex(){
     const handleOpen = (id) => {
         setUniqueId(id)
         setOpen(true)
+        mutate()
     }
     const handleEditOpen = () => {
         setOpen(false)
+        setEditOpen(true)
+        mutate()
+    }
+    const handleNewEditOpen = () => {
+        setUniqueId(0)
         setEditOpen(true)
     }
     const handleClose = () => setOpen(false)
@@ -64,7 +69,7 @@ export default function KeywordIndex(){
                     </ul>
                 </Box>
             </InfoBox>
-            <Button variant="outlined" onClick={handleEditOpen}>
+            <Button variant="outlined" onClick={handleNewEditOpen}>
                 {tl.keyword.g.newTitle}
             </Button>
             <PullDownKeywordCategory category={c}/>

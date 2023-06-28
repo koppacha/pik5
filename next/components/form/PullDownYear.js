@@ -34,7 +34,7 @@ export default function PullDownYear(props){
                 {
                     // 集計年プルダウンを出力
                     years.map(val =>
-                        <MenuItem value={val} component={Link} href={'/'+type+'/'+id+'/'+
+                        <MenuItem key={val} value={val} component={Link} href={'/'+type+'/'+id+'/'+
                             console+'/'+rule+'/'+val}>{val}</MenuItem>
                     )
                 }
