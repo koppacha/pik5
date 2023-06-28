@@ -63,12 +63,14 @@ class KeywordController extends Controller
             $keywords->fill([
                     'unique_id' => $request['unique_id'] ?: $this->uniqueIdReal(),
                     'keyword' => $request['keyword'],
+                    'category' => $request['category'],
                     'tag' => $request['tag'] ?: "その他",
                     'yomi' => $request['yomi'],
                     'content' => $request['content'],
                     'first_editor' => $request['first_editor'],
                     'last_editor' => $request['last_editor'],
-                    'created_at' => $request['created_at']
+                    'created_at' => $request['created_at'],
+                    'flag' => $request['flag'] ?: 1,
                 ]);
             $keywords->save();
 
