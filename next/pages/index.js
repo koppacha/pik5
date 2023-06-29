@@ -20,7 +20,6 @@ export default function Home() {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
-    console.log(session)
 
     // クイックアクセス
     const quickLinks = [
