@@ -81,7 +81,7 @@ export default function Stage(param){
                 }}>
                     <Rules props={param}/>
                     <RecordPost
-                        info={param.info}/>
+                        info={param.info} rule={param.rule} console={param.console}/>
                     <Grid item style={{
                         marginBottom:"20px",
                     }}>

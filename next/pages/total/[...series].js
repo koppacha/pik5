@@ -58,7 +58,7 @@ export default function Series(param){
                 {
                     stages.map(stage =>
                     <Grid item xs={1.2}>
-                        <Link href={'/stage/'+stage}><Box style={{
+                        <Link key={stage} href={'/stage/'+stage}><Box style={{
                             backgroundColor: "#444444",
                             borderRadius: '6px',
                             padding: '6px',
@@ -88,7 +88,7 @@ export default function Series(param){
             <ul>
                 {
                     Object.keys(records).map(e =>
-                        <Record data={records[e]} />
+                        <Record key={e} data={records[e]} />
                     )
                 }
             </ul>
