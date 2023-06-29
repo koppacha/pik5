@@ -8,7 +8,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPaperPlane} from "@fortawesome/free-solid-svg-icons";
 import {useLocale} from "../../lib/pik5";
 
-export default function RecordPost(props){
+export default function RecordPost({info, rule, console}){
 
     const {t, } = useLocale()
 
@@ -26,7 +26,7 @@ export default function RecordPost(props){
             <Grid item>
                 <RecordPostButton
                     className="active"
-                    series={props.info.series}
+                    series={info.series}
                     component={Link}
                     href="#"
                     onClick={handleClickOpen}>
@@ -34,6 +34,9 @@ export default function RecordPost(props){
                 </RecordPostButton>
             </Grid>
             <RecordForm
+                info={info}
+                rule={rule}
+                currentConsole={console}
                 open={open}
                 setOpen={setOpen}
                 handleClose={handleClose}

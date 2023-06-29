@@ -8,6 +8,7 @@ use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class RecordController extends Controller
 {
@@ -29,6 +30,21 @@ class RecordController extends Controller
         );
     }
 
+    // 暫定順位を取得する関数
+    public function getRank(Request $request): JsonResponse
+    {
+        $data = Record::where('stage_id', $request['stage'])
+            ->where('rule', $request['rule'])
+            ->where('score', '>', (int)$request['score'])
+            ->where('flg','<', 1)
+            ->count();
+
+        $data++;
+
+        return response()->json(
+            $data
+        );
+    }
     /**
      * Show the form for creating a new resource.
      *
@@ -37,18 +53,19 @@ class RecordController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        $data = new Record;
+//        $data = new Record;
+//
+//        $data->fill([
+//            'user_name' => $request['user_name'],
+//            'score' => $request['score']
+//        ]);
+//
+//        $data->save();
 
-        $data->fill([
-            'user_name' => $request['user_name'],
-            'score' => $request['score']
-        ]);
-
-        $data->save();
+        Log::debug($request);
 
         return response()->json([
             "message" => "created",
-            "data" => $data
         ], 201);
     }
 
