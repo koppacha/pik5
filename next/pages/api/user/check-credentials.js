@@ -29,9 +29,6 @@ async function handlePOST(res, req) {
         },
     });
 
-    console.log(user)
-    logger.debug(user)
-
     if (user && user.password === hashPassword(req.body.password)) {
         logger.debug("password correct")
         res.json(omit(user, "password"))

@@ -56,7 +56,6 @@ export const authOptions = {
                         logger.debug(err)
                         return null;
                     });
-
                 if (user) {
                     return user;
                 } else {
@@ -65,6 +64,20 @@ export const authOptions = {
             },
         })
     ],
+    callbacks: {
+        async session({session, token}){
+            if(token){
+                session.user.id = token.id
+            }
+            return session
+        },
+        async jwt({token, user}){
+            if(user){
+                token.id = user.userId
+            }
+            return token
+        },
+    },
 }
 
 const authHandler = (req, res) => NextAuth(req, res, authOptions);
