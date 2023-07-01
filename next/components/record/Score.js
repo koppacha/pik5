@@ -13,8 +13,9 @@ export default function Score({score, stage, category}){
         {stage:343, time:780}, {stage:345, time:420}, {stage:346, time:420}, {stage:347, time:900},
         {stage:348, time:780}, {stage:349, time:600}, {stage:350, time:900}]
 
-    const countUpStageList = range(245, 254) // ソロバトル
-    countUpStageList.push(range(351, 362)) // ソロビンゴ
+    const soloBattleList = range(245, 254) // ソロバトル
+    const bingoBattleList = range(351, 362) // ソロビンゴ
+    const countUpStageList = soloBattleList.concat(bingoBattleList)
 
     if(category === "speedrun" || countUpStageList.includes(stage)){
         // RTAの場合

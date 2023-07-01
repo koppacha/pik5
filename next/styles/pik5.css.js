@@ -270,3 +270,9 @@ export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank})
     text-align: center;
     box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, 1)};
 `
+export const AuthWindow = styled(Grid)`
+  background-color: rgba(224, 222, 203, 0.85);
+  color: #1a202c;
+  padding: 60px;
+  border-radius: 8px;
+`

@@ -11,6 +11,8 @@ import ModalKeyword from "../../components/modal/ModalKeyword";
 import {useState} from "react";
 import {RuleBox} from "../../styles/pik5.css";
 import Link from "next/link";
+import RankingStandard from "../../components/record/RankingStandard";
+import Head from "next/head";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -26,14 +28,9 @@ export async function getServerSideProps(context){
     const console = query[1] || 0
     const year  = query[3] || 2023
 
-    // 記録をリクエスト
-    const res = await fetch(`http://laravel:8000/api/record/${stage}/${console}/${rule}/${year}`)
-
-    const data = await res.json()
-
     return {
         props: {
-            data, stage, rule, console, year, info
+            stage, rule, console, year, info
         }
     }
 }
@@ -43,7 +40,6 @@ export default function Stage(param){
 
     // ボーダーライン出力用変数
     const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
-    let i = borders.length - 1
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
 
@@ -54,8 +50,8 @@ export default function Stage(param){
     if(param.rule === 21 || param.rule === 22){
         uniqueId = 20
     }
+    const handleClose = () => setOpen(false)
 
-        const handleClose = () => setOpen(false)
     const handleEditOpen = () => {
         setOpen(false)
         setEditOpen(true)
@@ -64,6 +60,9 @@ export default function Stage(param){
 
     return (
         <>
+            <Head>
+                <title>{ t.stage[param.stage] } ({t.title[param.info.series]}) - {t.title[0]}</title>
+            </Head>
             #{param.stage}<br/>
             <BreadCrumb info={param.info} rule={param.rule}/>
             <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
@@ -95,34 +94,7 @@ export default function Stage(param){
                 </Grid>
             </Box>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
-                {
-                    // 記録を出力（ボーダー設定がある通常ランキング）
-                    Object.values(param.data).map(function (post){
-                            const border = borders[i]
-                            const star = "★"
-                            if(post.score < border){
-                                i--;
-                                return (
-                                    <>
-                                        <Box style={{
-                                            color:"#e81fc1",
-                                            borderBottom:"2px dotted #e81fc1",
-                                            textAlign:"center",
-                                            margin:"8px 0"
-                                        }}>
-                                            {star.repeat(i + 2)} {t.border[2][i + 1]} {border.toLocaleString()} pts.
-                                        </Box>
-                                        <Record data={post}/>
-                                    </>
-                                )
-                            } else {
-                                return (
-                                    <Record data={post}/>
-                                )
-                            }
-                        }
-                    )
-                }
+            <RankingStandard data={param.data} borders={borders} stage={param.stage} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
 }
