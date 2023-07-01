@@ -1,6 +1,3 @@
-import {useRouter} from "next/router";
-import {en} from "../../locale/en";
-import {ja} from "../../locale/ja";
 import {AppBar, Box, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 import Record from "../../components/record/Record";
@@ -12,6 +9,8 @@ import {createContext} from "react";
 import Rules from "../../components/rule/Rules";
 import {useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
+import RankingTotal from "../../components/record/RankingTotal";
+import Head from "next/head";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -46,10 +45,12 @@ export default function Series(param){
     const {t, r} = useLocale()
 
     const stages = param.data['stage_list'];
-    const records = param.data.data;
 
     return (
         <>
+            <Head>
+                <title>{ t.stage[param.series] } - {t.title[0]}</title>
+            </Head>
             #{param.series}<br/>
             <BreadCrumb info={param.info} rule={param.rule}/>
             <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
@@ -84,14 +85,7 @@ export default function Series(param){
             }}>
             <Totals props={param}/>
             </Grid>
-
-            <ul>
-                {
-                    Object.keys(records).map(e =>
-                        <Record key={e} data={records[e]} />
-                    )
-                }
-            </ul>
+            <RankingTotal series={param.series} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
 }

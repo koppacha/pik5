@@ -1,20 +1,23 @@
 export const ja = {
     g: {
-        'rankTail': "位",
-        'rankHead': "",
-        'countTail': "回",
-        'challenge': "チャレンジモード",
-        'mission': "ミッションモード",
-        'sidestory': "サイドストーリーモード",
-        'keyword': "ピクミンキーワード",
-        'edit': "編集",
-        'submit': "送信",
-        'close': "閉じる",
-        'rule': "ルールを確認する",
-        'rules': "利用規約・ルール集",
-        'year': "集計年",
-        'noComment': "コメントなし",
-        'console': "操作方法"
+        rankTail: "位",
+        rankHead: "",
+        countTail: "回",
+        challenge: "チャレンジモード",
+        mission: "ミッションモード",
+        sidestory: "サイドストーリーモード",
+        keyword: "ピクミンキーワード",
+        edit: "編集",
+        submit: "送信",
+        close: "閉じる",
+        rule: "ルールを確認する",
+        rules: "利用規約・ルール集",
+        year: "集計年",
+        noComment: "コメントなし",
+        console: "操作方法"
+    },
+    t: {
+        description: "ピクチャレ大会は、ピクミンシリーズの各種ランキングで競い合う非公式コミュニティサイトです。",
     },
     title: {
       0: "新ピクチャレ大会",

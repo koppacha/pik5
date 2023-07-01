@@ -1,67 +1,54 @@
-import React, { useState } from "react";
-import {
-    Flex,
-    Box,
-    FormControl,
-    FormLabel,
-    Input,
-    Checkbox,
-    Stack,
-    Link,
-    Button,
-    Heading,
-    Text,
-    useColorModeValue,
-    InputGroup,
-    InputRightElement,
-    VStack,
-    FormErrorMessage,
-    Divider,
-    Collapse,
-    useDisclosure,
-} from "@chakra-ui/react";
-import { useForm } from "react-hook-form";
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
-import { signIn, useSession } from "next-auth/react";
-import { each, forOwn, join } from "lodash";
-import { logger } from "../../lib/logger"
-import { useRouter } from "next/router";
+import React, {useState} from "react";
+import {signIn, useSession} from "next-auth/react";
+import {useRouter} from "next/router";
+import {useForm} from "react-hook-form";
+import {logger} from "../../lib/logger";
+import {Box, FormControl, Grid, Typography} from "@mui/material";
+import Button from "@mui/material/Button";
+import {useLocale} from "../../lib/pik5";
+import TextField from "@mui/material/TextField";
+import {yupResolver} from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import {AuthWindow} from "../../styles/pik5.css";
+import Image from "next/image";
 
-//icons
-import { AiFillGithub, AiFillGoogleCircle } from "react-icons/ai";
-import { MdOutlineEmail } from "react-icons/md";
-import { BiLockAlt } from "react-icons/bi";
+export default function Login(){
 
-export default function SimpleCard() {
-    const [showPassword, setShowPassword] = useState(false);
-    const { isOpen: isOpenCollapse, onToggle: onToggleCollapse } =
-        useDisclosure();
+    const {t} = useLocale()
+
     const { data: session, status } = useSession();
     const router = useRouter();
+
+    const schema = yup.object({
+        userId: yup
+            .string()
+            .required(t.yup.required),
+        password: yup
+            .string()
+            .required(t.yup.required),
+    })
 
     const {
         handleSubmit,
         register,
         watch,
         formState: { errors, isSubmitting },
-    } = useForm();
+    } = useForm({
+        resolver: yupResolver(schema),
+    });
 
     let defaultBody = {
         userId: "",
         password: "",
     };
-
     async function onSubmit(values) {
-        logger.debug(router.query)
         try {
             const body = { ...defaultBody, ...values };
-            console.log(`POSTing ${JSON.stringify(body, null, 2)}`);
 
             let res = await signIn("credentials", {
                 ...body,
                 callbackUrl: router.query.callbackUrl,
             });
-            logger.debug(`signing:onsubmit:res`, res);
         } catch (error) {
             logger.error(error);
         }
@@ -75,125 +62,38 @@ export default function SimpleCard() {
     }
 
     return (
-        <Flex
-            minH={"100vh"}
-            align={"center"}
-            justify={"center"}
-            bg={useColorModeValue("gray.50", "gray.800")}
-        >
-            <Stack spacing={8} mx={"auto"} maxW={"lg"} py={12} px={6}>
-                <Stack align={"center"}>
-                    <Heading fontSize={"4xl"}>Sign in to your account</Heading>
-                    <Text fontSize={"lg"} color={"gray.600"}>
-                        to enjoy all of our cool{" "}
-                        <Link color={"blue.400"}>features</Link> ✌️
-                    </Text>
-                </Stack>
-                <Box
-                    rounded={"lg"}
-                    bg={useColorModeValue("white", "gray.700")}
-                    boxShadow={"lg"}
-                    p={8}
-                >
-                    <VStack>
-                        <Button
-                            w="full"
-                            leftIcon={<BiLockAlt />}
-                            onClick={onToggleCollapse}
-                        >
-                            User & password
-                        </Button>
-                    </VStack>
-                    <Collapse in={isOpenCollapse}>
-                        <form onSubmit={handleSubmit(onSubmit)}>
-                            <Stack spacing={4} pt={10}>
-                                <FormControl
-                                    id="user_id"
-                                    isInvalid={Boolean(router.query.error)}
-                                    isRequired
-                                >
-                                    <FormLabel>User ID</FormLabel>
-                                    <Input type="text" {...register("userId")} />
-                                </FormControl>
-                                <FormControl
-                                    id="password"
-                                    isRequired
-                                    isInvalid={Boolean(router.query.error)}
-                                >
-                                    <FormLabel>Password</FormLabel>
-                                    <InputGroup>
-                                        <Input
-                                            type={showPassword ? "text" : "password"}
-                                            {...register("password")}
-                                        />
-                                        <InputRightElement h={"full"}>
-                                            <Button
-                                                variant={"ghost"}
-                                                _hover={{ bg: "transparent" }}
-                                                _active={{ bg: "transparent" }}
-                                                onClick={() =>
-                                                    setShowPassword(
-                                                        (showPassword) => !showPassword,
-                                                    )
-                                                }
-                                            >
-                                                {showPassword ? (
-                                                    <ViewIcon />
-                                                ) : (
-                                                    <ViewOffIcon />
-                                                )}
-                                            </Button>
-                                        </InputRightElement>
-                                    </InputGroup>
-                                    {router.query.error &&
-                                        router.query.error === "CredentialsSignin" && (
-                                            <FormErrorMessage>
-                                                Invalid credentials
-                                            </FormErrorMessage>
-                                        )}
-                                </FormControl>
-                                <Stack spacing={10}>
-                                    <Stack
-                                        direction={{ base: "column", sm: "row" }}
-                                        align={"start"}
-                                        justify={"space-between"}
-                                    >
-                                        <Checkbox>Remember me</Checkbox>
-                                        <Link color={"blue.400"}>Forgot password?</Link>
-                                    </Stack>
-                                    <Button
-                                        isLoading={isSubmitting}
-                                        loadingText="Signing in..."
-                                        bg={"blue.400"}
-                                        color={"white"}
-                                        type="submit"
-                                        _hover={{
-                                            bg: "blue.500",
-                                        }}
-                                    >
-                                        Sign in
-                                    </Button>
-                                </Stack>
-                                <Stack pt={6}>
-                                    <Text align={"center"}>
-                                        Not a user yet?{" "}
-                                        <Link
-                                            color={"blue.400"}
-                                            href={`register${
-                                                router.query.callbackUrl
-                                                    ? `?callbackUrl=${router.query.callbackUrl}`
-                                                    : ""
-                                            }`}
-                                        >
-                                            Register
-                                        </Link>
-                                    </Text>
-                                </Stack>
-                            </Stack>
-                        </form>
-                    </Collapse>
-                </Box>
-            </Stack>
-        </Flex>
-    );
+        <Box>
+            <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
+                <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
+            </Box>
+            <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
+                <AuthWindow item>
+                    <Typography variant="strong">ログイン</Typography><br/>
+                    <FormControl>
+                        <TextField
+                            {...register('userId')}
+                            id="userId"
+                            label="ユーザー名"
+                            type="text"
+                            variant="standard"
+                            error={'userId' in errors}
+                            helperText={errors.userId?.message}
+                        />
+                        <TextField
+                            {...register('password')}
+                            id="password"
+                            label="パスワード"
+                            type="password"
+                            variant="standard"
+                            error={'password' in errors}
+                            helperText={errors.password?.message}
+                        />
+                        <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button><br/>
+                        <Button href="/">トップページへ</Button>
+                        <Button href="/auth/register">はじめての方はこちら</Button>
+                    </FormControl>
+                </AuthWindow>
+            </Grid>
+        </Box>
+    )
 }

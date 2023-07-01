@@ -1,34 +1,39 @@
-import {
-    Flex,
-    Box,
-    FormControl,
-    FormLabel,
-    Input,
-    InputGroup,
-    HStack,
-    InputRightElement,
-    Stack,
-    Button,
-    Heading,
-    Text,
-    useColorModeValue,
-    Link,
-} from "@chakra-ui/react"
-import { useState } from "react"
-import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons"
+import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter } from "next/router"
-import { logger } from "../../lib/logger"
+import {Box, FormControl, Grid, Typography} from "@mui/material";
+import {AuthWindow} from "../../styles/pik5.css";
+import TextField from "@mui/material/TextField";
+import {useLocale} from "../../lib/pik5";
+import * as yup from "yup";
+import {yupResolver} from "@hookform/resolvers/yup";
+import Button from "@mui/material/Button";
 
-export default function SignupCard() {
+export default function Register() {
+
+    const {t} = useLocale()
     const router = useRouter();
-    const [showPassword, setShowPassword] = useState(false);
+
+    const schema = yup.object({
+        name: yup
+            .string()
+            .required(t.yup.required),
+        userId: yup
+            .string()
+            .required(t.yup.required),
+        password: yup
+            .string()
+            .required(t.yup.required),
+    })
+
     const {
         handleSubmit,
         register,
         reset,
         formState: { errors, isSubmitting },
-    } = useForm();
+    } = useForm({
+        resolver: yupResolver(schema),
+    });
 
     async function onSubmit(values) {
         try {
@@ -39,7 +44,6 @@ export default function SignupCard() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
-            logger.debug(`res`, res);
             reset();
             router.push(
                 `login${
@@ -54,96 +58,44 @@ export default function SignupCard() {
     }
 
     return (
-        <Flex
-            minH={"100vh"}
-            align={"center"}
-            justify={"center"}
-            bg={useColorModeValue("gray.50", "gray.800")}
-        >
-            <Stack
-                spacing={8}
-                mx={"auto"}
-                w={{ md: "md" }}
-                maxW={"lg"}
-                py={12}
-                px={6}
-            >
-                <Stack align={"center"}>
-                    <Heading fontSize={"4xl"} textAlign={"center"}>
-                        Sign up
-                    </Heading>
-                    <Text fontSize={"lg"} color={"gray.600"}>
-                        to enjoy all of our cool features ✌️
-                    </Text>
-                </Stack>
-                <Box
-                    rounded={"lg"}
-                    bg={useColorModeValue("white", "gray.700")}
-                    boxShadow={"lg"}
-                    p={8}
-                >
-                    <form onSubmit={handleSubmit(onSubmit)}>
-                        <Stack spacing={4}>
-                            <Box>
-                                <FormControl id="fullName" isRequired>
-                                    <FormLabel>Screen Name</FormLabel>
-                                    <Input type="text" {...register("name")} />
-                                </FormControl>
-                            </Box>
-                            <FormControl id="email" isRequired>
-                                <FormLabel>User ID</FormLabel>
-                                <Input type="text" {...register("userId")} />
-                            </FormControl>
-                            <FormControl id="password" isRequired>
-                                <FormLabel>Password</FormLabel>
-                                <InputGroup>
-                                    <Input
-                                        type={showPassword ? "text" : "password"}
-                                        {...register("password")}
-                                    />
-                                    <InputRightElement h={"full"}>
-                                        <Button
-                                            variant={"ghost"}
-                                            _hover={{ bg: "transparent" }}
-                                            _active={{ bg: "transparent" }}
-                                            onClick={() =>
-                                                setShowPassword(
-                                                    (showPassword) => !showPassword,
-                                                )
-                                            }
-                                        >
-                                            {showPassword ? <ViewIcon /> : <ViewOffIcon />}
-                                        </Button>
-                                    </InputRightElement>
-                                </InputGroup>
-                            </FormControl>
-                            <Stack spacing={10} pt={2}>
-                                <Button
-                                    loadingText="Submitting"
-                                    size="lg"
-                                    type="submit"
-                                    isLoading={isSubmitting}
-                                    bg={"blue.400"}
-                                    color={"white"}
-                                    _hover={{
-                                        bg: "blue.500",
-                                    }}
-                                >
-                                    Sign up
-                                </Button>
-                            </Stack>
-                            <Stack pt={6}>
-                                <Text align={"center"}>
-                                    Already a user?{" "}
-                                    <Link color={"blue.400"} href="/auth/login">
-                                        Sign in
-                                    </Link>
-                                </Text>
-                            </Stack>
-                        </Stack>
-                    </form>
-                </Box>
-            </Stack>
-        </Flex>
+        <Box>
+            <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
+                <AuthWindow item>
+                    <Typography variant="strong">ピクチャレ大会へようこそ</Typography><br/>
+                    <FormControl>
+                        <TextField
+                            {...register('name')}
+                            id="name"
+                            label="ユーザー名"
+                            type="text"
+                            variant="standard"
+                            error={'name' in errors}
+                            helperText={errors.userId?.message}
+                        />
+                        <TextField
+                            {...register('userId')}
+                            id="userId"
+                            label="ユーザーID"
+                            type="text"
+                            variant="standard"
+                            error={'userId' in errors}
+                            helperText={errors.userId?.message}
+                        />
+                        <TextField
+                            {...register('password')}
+                            id="password"
+                            label="パスワード"
+                            type="password"
+                            variant="standard"
+                            error={'password' in errors}
+                            helperText={errors.password?.message}
+                        />
+                        <Button href="/">トップページに戻る</Button>
+                        <Button href="/auth/login">ログイン</Button>
+                        <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button>
+                    </FormControl>
+                </AuthWindow>
+            </Grid>
+        </Box>
     );
 }
