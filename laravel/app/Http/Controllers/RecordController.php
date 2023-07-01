@@ -98,8 +98,21 @@ class RecordController extends Controller
 
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
-        $orderBy = is_numeric($request['id'])? ['score','DESC'] : ['stage_id','ASC'];
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
+
+        // カウントアップRTAのステージリスト
+        $rta_stages = array_merge(range(245, 254), range(351, 362));
+
+        // 並び変え条件
+        if(is_numeric($request['id'])){
+            if(in_array($request['id'], $rta_stages) or $request['rule'] === "11"){
+                $orderBy = ['score', 'ASC'];
+            } else {
+                $orderBy = ['score', 'DESC'];
+            }
+        } else {
+            $orderBy = ['stage_id','ASC'];
+        }
 
         // オプション引数
         $console = $request['console'] ?: 0;
@@ -129,6 +142,7 @@ class RecordController extends Controller
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
                 ->orderBy($orderBy[0],$orderBy[1])
+                ->orderBy('created_at')
             ->get();
 
         // 配列型に変換
@@ -148,9 +162,11 @@ class RecordController extends Controller
         }
 
         if($where === "stage_id") {
+            // 順位を付与
             $new_data = Func::rank_calc($new_data);
         }
-         $dataset = Func::compare_calc($new_data, $compare);
+        // 比較値を付与
+        $dataset = Func::compare_calc($new_data, $compare);
 
         return response()->json(
             $dataset
