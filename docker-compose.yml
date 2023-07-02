@@ -2,24 +2,6 @@
 version: "3"
 
 services:
-  nginx:
-    build:
-      context: .
-      dockerfile: ./nginx/Dockerfile
-    container_name: nginx
-    ports:
-      - ${WEB_PORT}:80
-      - "9900:9900"
-#    volumes:
-#      - type: volume
-#        source: php-fpm-socket
-#        target: /var/run/php-fpm
-#        volume:
-#          nocopy: true
-#      - type: bind
-#        source: ./laravel
-#        target: /var/www/laravel
-
   laravel:
     build:
       context: .
@@ -47,15 +29,15 @@ services:
   mail:
     container_name: mail
     image: mailhog/mailhog
-    platform: linux/amd64
+      #    platform: linux/amd64
     ports:
       - "1025:1025"
       - "8045:8025"
 
   mysql:
     container_name: mysql
-    image: mysql:5.7
-    platform: linux/x86_64
+    image: mysql:8.0
+#    platform: linux/x86_64
     user: mysql
     environment:
       - MYSQL_DATABASE=${DB_NAME}
@@ -63,6 +45,7 @@ services:
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
       - TZ=${TZ}
+    user: root:root
     ports:
       - ${DB_PORT}:3306
 
@@ -77,15 +60,11 @@ services:
     volumes:
       - ./next:/var/www/next
     ports:
-      - "8080:3000"
-    links:
-      - nginx
-    depends_on:
-      - nginx
+      - "3005:3000"
 
   pma:
     image: phpmyadmin/phpmyadmin
-    platform: linux/amd64
+      # platform: linux/amd64
     container_name: pma
     depends_on:
       - mysql
