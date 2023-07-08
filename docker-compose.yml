@@ -15,6 +15,8 @@ services:
       - mysql
     ports:
       - "8000:8000"
+    restart:
+      always
     environment:
       - FRONTEND_URL=next
       - DB_CONNECTION=${DB_CONNECTION}
@@ -26,19 +28,10 @@ services:
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
 
-  mail:
-    container_name: mail
-    image: mailhog/mailhog
-      #    platform: linux/amd64
-    ports:
-      - "1025:1025"
-      - "8045:8025"
-
   mysql:
     container_name: mysql
     image: mysql:8.0
-#    platform: linux/x86_64
-    user: mysql
+    platform: ${PLATFORM}
     environment:
       - MYSQL_DATABASE=${DB_NAME}
       - MYSQL_USER=${DB_USER}
@@ -48,6 +41,8 @@ services:
     user: root:root
     ports:
       - ${DB_PORT}:3306
+    restart:
+      always
 
   next:
     build:
@@ -61,17 +56,5 @@ services:
       - ./next:/var/www/next
     ports:
       - "3005:3000"
-
-  pma:
-    image: phpmyadmin/phpmyadmin
-      # platform: linux/amd64
-    container_name: pma
-    depends_on:
-      - mysql
-    environment:
-      PMA_ARBITRARY: 1
-      PMA_HOSTS: mysql
-      PMA_USER: root
-      PMA_PASSWORD: root
-    ports:
-      - "6000:80"
+    restart:
+      always

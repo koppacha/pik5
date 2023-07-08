@@ -4,7 +4,7 @@ import NowLoading from "../NowLoading";
 import Record from "./Record";
 import * as React from "react";
 
-export default function SpeedRunWrapper({post}){
+export default function SpeedRunWrapper({post, index}){
 
     const {t} = useLocale()
 
@@ -28,7 +28,7 @@ export default function SpeedRunWrapper({post}){
     }
     const data = {
         category: "speedrun",
-        post_rank: post.place || null,
+        post_rank: index + 1 || null,
         video_url: video,
         post_comment: post.run.comment || t.g.noComment,
         user: {

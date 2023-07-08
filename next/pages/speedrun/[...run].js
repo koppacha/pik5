@@ -154,7 +154,7 @@ export default function Run({data, stage, console, consoles}){
         <>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>
-            <Link href="/speedrun">{t.speedrun.title}</Link>
+            <Link href="https://www.speedrun.com/pikmin">{t.speedrun.title}</Link>
             <StairIcon icon={faStairs}/>
             {t.title[stage.slice(0,2) === "31"?31:stage.slice(0,1)]}<br/>
             #S{stage}<br/>
@@ -167,10 +167,11 @@ export default function Run({data, stage, console, consoles}){
                 <SpeedRunRules stage={stage} console={console}/>
             </Grid>
             {
-                dates.map(post =>
-                    (
-                        <SpeedRunWrapper post={post}/>
-                    )
+                dates.map(function (post, index){
+                        return (
+                            <SpeedRunWrapper post={post} index={index} />
+                        )
+                    }
                 )
             }
         </>

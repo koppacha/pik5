@@ -51,6 +51,9 @@ export default function Record({data}) {
         setVideoOpen(true)
     }
 
+    // カテゴリによってユーザーページリンクを置き換える
+    const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user.user_name : "/user/"+data.user.user_id
+
     // 比較値を整形する
     let compare;
     if(!Number.isNaN(data.compare)){
@@ -67,12 +70,15 @@ export default function Record({data}) {
                 <RankEdge as="span">{t.g.rankHead} </RankEdge>
                 <RankType as="span">{data.post_rank}</RankType>
                 <RankEdge as="span"> {t.g.rankTail}</RankEdge>
-                <RankPointType>[{data.rps} rps]</RankPointType>
+                {
+                    data.rps &&
+                    <RankPointType>[{data.rps} rps]</RankPointType>
+                }
             </Grid>
             <Grid xs={3} style={{
                 borderRight: '1px solid #777',
             }}>
-                <UserType><Link href={"/user/"+data.user.user_id}>{data.user.user_name}</Link></UserType>
+                <UserType><Link href={userPageUrl}>{data.user.user_name}</Link></UserType>
             </Grid>
             <Grid xs={3} style={{
                 borderRight: '1px solid #777',
