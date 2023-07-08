@@ -9,7 +9,7 @@ import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import {useState} from "react";
-import {RuleBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
@@ -63,11 +63,12 @@ export default function Stage(param){
             <Head>
                 <title>{ t.stage[param.stage] } ({t.title[param.info.series]}) - {t.title[0]}</title>
             </Head>
-            #{param.stage}<br/>
-            <BreadCrumb info={param.info} rule={param.rule}/>
-            <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
-            <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
-
+            <PageHeader>
+                #{param.stage}<br/>
+                <BreadCrumb info={param.info} rule={param.rule}/>
+                <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
+                <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
+            </PageHeader>
             <Grid container>
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>
