@@ -3,10 +3,10 @@ import {range} from "../../lib/pik5";
 
 export default function Score({score, stage, category}){
     function sec2time(sec){
-        const hh = ("00"+ ~~(sec / 3600)).slice(-2)
+        const hh = ~~(sec / 3600)
         const mm = ("00"+ ~~(~~(sec / 60) % 60)).slice(-2)
         const ss = ("00"+ ~~(sec % 60)).slice(-2)
-        return (hh !== "00" ? hh +":" :"")+mm+":"+ss
+        return (hh ? hh + ":" : "") + mm + ":" + ss
     }
     // 巨大生物をたおせと一部のサイドストーリーの初期残時間を定義
     const timeStageList = [{stage:338, time:720}, {stage:341, time:840},

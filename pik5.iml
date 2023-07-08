@@ -7,8 +7,6 @@
       <sourceFolder url="file://$MODULE_DIR$/laravel/tests" isTestSource="true" packagePrefix="Tests\" />
       <sourceFolder url="file://$MODULE_DIR$/laravel/database/factories" isTestSource="false" packagePrefix="Database\Factories\" />
       <sourceFolder url="file://$MODULE_DIR$/laravel/database/seeders" isTestSource="false" packagePrefix="Database\Seeders\" />
-      <sourceFolder url="file://$MODULE_DIR$/laravel/tests/Feature" isTestSource="true" />
-      <sourceFolder url="file://$MODULE_DIR$/laravel/tests/Unit" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/composer" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/dragonmantank/cron-expression" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/phpdocumentor/reflection-common" />

@@ -35,20 +35,28 @@ export default function Rules(props){
     if(info.series === 3 && parent !== 35){
         rules.push(34)
     }
+    // 通常ルールの場合とそれ以外とで表示名を分岐する
+    const normalRankings = [10, 21, 22, 31, 32, 33, 36]
+
     return (
         <>
         {
-            rules.map(val =>
-                <Grid item style={{
-                    marginBottom:"20px",
-                }}>
-                    <RuleBox className={(Number(rule) === val)&&"active"}
-                         component={Link}
-                         href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
-                        {t.rule[val]}
-                    </RuleBox>
-                </Grid>
-            )
+            rules.map(function(val){
+
+                const screenName = (normalRankings.includes(val)) ? t.rule[0] : t.rule[val]
+
+                return (
+                    <Grid item style={{
+                        marginBottom:"20px",
+                    }}>
+                        <RuleBox className={(Number(rule) === val)&&"active"}
+                                 component={Link}
+                                 href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
+                            {screenName}
+                        </RuleBox>
+                    </Grid>
+                )
+            })
         }
         </>
     )
