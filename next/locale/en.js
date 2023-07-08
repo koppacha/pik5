@@ -139,6 +139,9 @@ export const en = {
         361: "Corroded Maze",
         362: "Jigsaw Closseum",
     },
+    post: {
+        title: "Submit Score",
+    },
     console: {
         0: "All",
         1: "NGC",
@@ -164,10 +167,10 @@ export const en = {
     },
     border: {
         2: {
-            0: "701,500 pts Border",
-            1: "701,000 pts Border",
-            2: "700,500 pts Border",
-            3: "700,000 pts Border"
+            0: "700,000 pts Border",
+            1: "700,500 pts Border",
+            2: "701,000 pts Border",
+            3: "702,000 pts Border"
         }
     },
     speedrun: {

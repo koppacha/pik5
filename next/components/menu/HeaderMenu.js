@@ -29,6 +29,7 @@ import {useTheme} from "next-themes";
 import styled from "styled-components"
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
+import {CustomMenuButton} from "../../styles/pik5.css";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -218,22 +219,17 @@ export default function HeaderMenu({props}){
                     <CustomMenu series={2}/>
                     <CustomMenu series={3}/>
                     <CustomMenu series={4}/>
-                    <CustomMenu series={7}/>
+                    {/*<CustomMenu series={7}/>*/}
+                    <CustomMenu series={8}/>
                     <CustomMenu series={9}/>
-                    <Button
-                        style={{
-                            color:'#fff',
-                            backgroundColor:'transparent',
-                            fontSize: '0.9em'
-                        }}
-                        id="discord-button"
-                        component={Link}
-                        href="https://discord.gg/rQEBJQa"
-                        target="_blank"
+                    <CustomMenuButton
+                        series="Discord"
                         ref={anchorEl}
-                        variant="contained">
-                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />Discordはこちら！
-                    </Button>
+                        component={Link}
+                        href="https://discord.gg/rQEBJQa">
+                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
+                        {t.g.discord}
+                    </CustomMenuButton>
 
                     {/*ここから右よせ*/}
                     <Box style={{ flexGrow: 1 }} />
@@ -246,7 +242,7 @@ export default function HeaderMenu({props}){
                             <FontAwesomeIcon  icon={faTwitter}/>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="テーマを変更する" arrow>
+                    <Tooltip title={t.g.theme} arrow>
                         <IconButton
                             id="theme-button"
                             style={{color:"#fff"}}
@@ -254,7 +250,7 @@ export default function HeaderMenu({props}){
                             <FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/>
                         </IconButton>
                     </Tooltip>
-                    <Tooltip title="Switching Launguages（English - Japanese)" arrow>
+                    <Tooltip title={t.g.language} arrow>
                         <IconButton
                             component={Link}
                             href={router.asPath}
