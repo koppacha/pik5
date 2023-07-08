@@ -14,7 +14,10 @@ export const ja = {
         rules: "利用規約・ルール集",
         year: "集計年",
         noComment: "コメントなし",
-        console: "操作方法"
+        console: "操作方法",
+        discord: "Discordはこちら！",
+        theme: "テーマを変更する",
+        language: "English",
     },
     t: {
         description: "ピクチャレ大会は、ピクミンシリーズの各種ランキングで競い合う非公式コミュニティサイトです。",
@@ -27,7 +30,7 @@ export const ja = {
       4: "ピクミン4",
       6: "総合ランキング",
       7: "期間限定",
-      8: "日替わり",
+      8: "本編RTA",
       9: "その他",
       31: "Hey!ピクミン",
     },
@@ -208,7 +211,7 @@ export const ja = {
         7: "Nintendo Switch",
     },
     rule: {
-        0: "ルール未指定",
+        0: "通常ルール",
         1: "全総合",
         2: "通常総合",
         3: "特殊総合",

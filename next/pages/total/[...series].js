@@ -11,6 +11,7 @@ import {useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
+import {PageHeader, StageListBox} from "../../styles/pik5.css";
 
 export async function getServerSideProps(context){
     const query = context.query.series
@@ -51,23 +52,19 @@ export default function Series(param){
             <Head>
                 <title>{ t.stage[param.series] } - {t.title[0]}</title>
             </Head>
-            #{param.series}<br/>
-            <BreadCrumb info={param.info} rule={param.rule}/>
-            <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
-            <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
+            <PageHeader>
+                #{param.series}<br/>
+                <BreadCrumb info={param.info} rule={param.rule}/>
+                <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
+                <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
+            </PageHeader>
             <Grid container style={{margin:"2em 0"}}>
                 {
                     stages.map(stage =>
                     <Grid item xs={1.2}>
-                        <Link key={stage} href={'/stage/'+stage}><Box style={{
-                            backgroundColor: "#444444",
-                            borderRadius: '6px',
-                            padding: '6px',
-                            margin: '2px',
-                            minHeight: '6em',
-                            fontSize: '0.8em'}}>
+                        <Link key={stage} href={'/stage/'+stage}><StageListBox>
                             <span>#{stage}</span><br/>
-                            {t.stage[stage]}</Box>
+                            {t.stage[stage]}</StageListBox>
                         </Link>
                     </Grid>
                     )

@@ -142,6 +142,56 @@ $ sudo xfs_growfs -d /
 # プレビューにはサードパーティーCookie（サイト越えトラッキング）を許可する必要があります
 ```
 
+## 基盤・ネットワーク関連のメモ
+```shell
+# ファイアウォールのステータスチェック
+sudo ufw status
+
+# nginxのエラーログ確認
+sudo less /var/log/nginx/error.log
+
+# ネットワーク設定の実体ファイル
+/etc/nginx/sites-available/pik5.conf
+
+# 初期セットアップ (Ubuntu)
+# まずはパッケージの更新
+$ sudo apt update
+$ sudo apt upgrade
+
+# ① root以外のユーザーを作ってsudo権限を付与
+$ adduser koppacha
+$ gpasswf -a koppacha sudo # TODO:rootグループでいいかも（sudo入れるの面倒）
+
+# sudoグループはsudo実行時にいちいちパスワードを聞かれないようにする
+$ sudo visudo
+$ %sudo ALL=(ALL:ALL) NOPASSWD: ALL
+
+# ②SSH設定のバックアップを作成
+$ sudo cp -p /etc/ssh/sshd_config{,.backup}
+
+# ③②が完了したら次の項目をチェックして変更する
+# Port →(22以外のユニークなポート番号)
+# PermitRootLogin → no に変更
+# 変更が終わったら以下を実行
+$ sudo systemctl restart sshd
+
+# ④ファイアウォールの設定
+$ sudo ufw enable
+$ sudo ufw allow 00000/tcp # 番号は③で設定したポート番号、Dockerで通信するポート番号を指定
+$ sudo ufw reload
+
+# ⑤必要なアプリを入れる
+$ sudo apt install vim git nginx
+$ sudo mkdir -p /etc/apt/keyrings
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+$ echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+$ sudo apt install docker-ce docker-ce-cli
+```
+
 ## 備忘録
 ```shell
 # limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド

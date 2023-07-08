@@ -5,6 +5,7 @@ import '@fortawesome/fontawesome-svg-core/styles.css'
 import {ThemeProvider} from "next-themes"
 import { SessionProvider } from "next-auth/react"
 import {GlobalStyle} from "../styles/pik5.css";
+import {useEffect} from "react";
 config.autoAddCss = false
 
 export default function App({ Component, pageProps: { session, ...pageProps }, router }) {

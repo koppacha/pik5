@@ -8,6 +8,9 @@ export default function SpeedRunConsole({stage, console, consoles}){
 
     const {t} = useLocale()
 
+    // 存在しない操作方法がセットされていたら「すべて」に強制変更
+    const defaultValue = (consoles.includes(console)) ? console : 0
+
     if(!consoles){
         return (
             <></>
@@ -17,7 +20,7 @@ export default function SpeedRunConsole({stage, console, consoles}){
         <FormControl>
             <FormHelperText className="form-helper-text">{t.speedrun.console.title}</FormHelperText>
             <StyledSelect
-                defaultValue={console}
+                defaultValue={defaultValue}
                 id="select-console"
             >
                 {

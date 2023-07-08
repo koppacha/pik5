@@ -9,6 +9,7 @@ import MenuLm from "./MenuLm";
 import MenuOt from "./MenuOt";
 import {useLocale} from "../../lib/pik5";
 import {CustomMenuButton} from "../../styles/pik5.css";
+import MenuSpeedrun from "./MenuSpeedrun";
 
 export default function CustomMenu(props){
 
@@ -70,6 +71,13 @@ export default function CustomMenu(props){
         else if(s === 7){
             return (
                 <MenuLm
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 8){
+            return (
+                <MenuSpeedrun
                     handleListKeyDown={handleListKeyDown}
                     handleClose={handleClose}/>
             )
