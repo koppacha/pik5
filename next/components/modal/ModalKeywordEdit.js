@@ -13,7 +13,7 @@ import useSWR from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 
-export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) {
+export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEditClose}) {
 
     const {t} = useLocale()
 

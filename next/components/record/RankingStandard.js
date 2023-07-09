@@ -3,10 +3,11 @@ import {fetcher, useLocale} from "../../lib/pik5";
 import Record from "./Record";
 import useSWR from "swr";
 import NowLoading from "../NowLoading";
-import {logger} from "../../lib/logger";
+import React from 'react'
 
 export default function RankingStandard({borders, stage, console:consoles, rule, year}){
 
+    const {t} = useLocale()
     const { data } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
 
     if(!data){
@@ -14,7 +15,6 @@ export default function RankingStandard({borders, stage, console:consoles, rule,
             <NowLoading/>
         )
     }
-    const {t} = useLocale()
     let i = borders.length - 1
 
     // 参考スコアを表示するルール
@@ -26,7 +26,7 @@ export default function RankingStandard({borders, stage, console:consoles, rule,
                     if(post.score < border && borderShowRules.includes(Number(rule))){
                         i--;
                         return (
-                            <>
+                            <React.Fragment key={post.unique_id}>
                                 <Box style={{
                                     color:"#e81fc1",
                                     borderBottom:"2px dotted #e81fc1",
@@ -36,11 +36,13 @@ export default function RankingStandard({borders, stage, console:consoles, rule,
                                     {star.repeat(i + 2)} {t.border[2][i + 1]} {border.toLocaleString()} pts.
                                 </Box>
                                 <Record data={post}/>
-                            </>
+                            </React.Fragment>
                         )
                     } else {
                         return (
-                            <Record data={post}/>
+                            <React.Fragment key={post.unique_id}>
+                                <Record key={post.unique_id} data={post}/>
+                            </React.Fragment>
                         )
                     }
                 }
