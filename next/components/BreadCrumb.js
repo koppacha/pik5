@@ -14,7 +14,7 @@ export default function BreadCrumb({info, rule}){
     const {t} = useLocale()
 
     // 親の親番号を取得する
-    const {data:superParent} = useSWR(`http://localhost:8000/api/stage/${rule}`, fetcher)
+    const {data:superParent} = useSWR(`/api/server/stage/${rule}`, fetcher)
 
     if(!superParent){
         return (
@@ -29,7 +29,7 @@ export default function BreadCrumb({info, rule}){
                 (info.parent > 10) ?
                 <>
                     <StairIcon icon={faStairs}/>
-                    <Link href={"/total/"+superParent.parent}>{t.stage[superParent.parent]}</Link>
+                    <Link href={"/total/"+superParent.data.parent}>{t.stage[superParent.data.parent]}</Link>
                 </> :
                 <>
                     <StairIcon icon={faStairs}/>

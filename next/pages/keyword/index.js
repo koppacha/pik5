@@ -22,7 +22,7 @@ export default function KeywordIndex(){
 
     const p = c ? `?c=${c}` : t ? `?t=${t}` : ""
 
-    const {data} = useSWR(`http://localhost:8000/api/keyword?${p}`, fetcher)
+    const {data} = useSWR(`/api/server/keyword?${p}`, fetcher)
 
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
@@ -75,7 +75,7 @@ export default function KeywordIndex(){
             <PullDownKeywordCategory category={c}/>
             <Grid container>
             {
-                data?.map(function (post){
+                data?.data.map(function (post){
                     mae = hi || "わ"
                     hi = post.yomi
                     if(hi.slice(0, 1).normalize('NFD')[0] !== mae.slice(0, 1).normalize('NFD')[0]) {

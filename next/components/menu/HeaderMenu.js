@@ -29,7 +29,7 @@ import {useTheme} from "next-themes";
 import styled from "styled-components"
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
-import {CustomMenuButton} from "../../styles/pik5.css";
+import {CustomMenuButton, ThinAppBar} from "../../styles/pik5.css";
 
 function HideOnScroll(props) {
     const { children, window } = props;
@@ -43,10 +43,6 @@ function HideOnScroll(props) {
         </Slide>
     );
 }
-const ThinAppBar = styled(AppBar)(() => ({
-    backgroundColor: `#111`,
-}));
-
 HideOnScroll.propTypes = {
     children: PropTypes.element.isRequired,
     /**

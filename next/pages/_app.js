@@ -14,7 +14,7 @@ export default function App({ Component, pageProps: { session, ...pageProps }, r
       <>
           <GlobalStyle/>
           <SessionProvider session={session}>
-              <ThemeProvider>
+              <ThemeProvider defaultTheme="dark">
                   <Layout>
                       <Component {...pageProps} />
                   </Layout>

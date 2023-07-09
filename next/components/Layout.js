@@ -1,14 +1,8 @@
 import * as React from 'react';
-import Link from "next/link";
-import {Box, Button, Container} from "@mui/material";
 import HeaderMenu from "./menu/HeaderMenu";
-import styled from "styled-components";
 import Footer from "./Footer";
-import Image from "next/image";
+import {OffsetContainer} from "../styles/pik5.css";
 
-const OffsetContainer = styled(Container)(() => ({
-    marginTop: `80px`,
-}));
 export default function Layout({children}) {
     return (
         <>
