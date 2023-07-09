@@ -342,11 +342,12 @@ export const UserType = styled(Typography)`
     text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
 
-    ${sp`font-size: 1.1em;`}
+    ${sp`font-size: 1em;`}
 
 `
 export const RankType = styled(Typography)`
     font-size: 2em;
+    line-height :2em;
     font-weight: 200;
     font-family: "Kulim Park","cursive";
     text-shadow: ${shadow};
@@ -409,4 +410,32 @@ export const StageListBox = styled(Box)`
 `
 export const PageHeader = styled(Box)`
   margin-bottom: 20px;
+`
+export const MobileMenuButton = styled(Button)`
+  ${pc`display: none;`}
+  
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  width: 80px;
+  border-radius: 6px;
+  background-color: #fff;
+  color: #000;
+  height: 60px;
+  opacity: 0.9;
+  
+  &:hover {
+    background-color: #fff;
+    color: #000;
+  }
+`
+export const MobileMenuBox = styled(Box)`
+  width: 60vw;
+  color: ${colors.light.front};
+  background-color: ${colors.light.back};
+
+  [data-theme='dark'] & {
+    color: ${colors.dark.front};
+    background-color: ${colors.dark.back};
+  }
 `
