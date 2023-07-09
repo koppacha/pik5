@@ -12,12 +12,8 @@ import * as React from "react";
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import {StyledMenuItem} from "../../styles/pik5.css"
-import {range, useLocale} from "../../lib/pik5";
-
-const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
-const eg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
-const du = range(231, 244)
-const bt = range(245, 254)
+import {useLocale} from "../../lib/pik5";
+import {eg, ne, du, bt} from "../../lib/const";
 
 export default function Menu2(props){
 
