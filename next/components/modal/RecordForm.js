@@ -32,7 +32,8 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         score: yup
             .number()
             .min(1, '０点以下は登録できません。')
-            .max(999999, 'スコアの最大値は999,999です'),
+            .max(999999, 'スコアの最大値は999,999です')
+            .required(t.yup.required),
         videoUrl: yup
             .string()
             // .matches("/^https?://(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)/[\w/\?=]*$/",
