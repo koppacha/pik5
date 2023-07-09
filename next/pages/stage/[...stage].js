@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Box, Grid, Typography} from "@mui/material";
+import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
 import {useLocale} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
@@ -12,6 +12,7 @@ import {PageHeader, RuleBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
+import MobileMenu from "../../components/menu/MobileMenu";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -39,6 +40,8 @@ export default function Stage(param){
 
     // ボーダーライン出力用変数
     const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
+
+    // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
 

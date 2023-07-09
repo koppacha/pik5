@@ -15,13 +15,8 @@ import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {StyledMenuItem} from "../../styles/pik5.css";
-import {range, useLocale} from "../../lib/pik5";
-
-const ce = range(301, 315)
-const be = range(316, 330)
-const ss = range(331, 344)
-const db = range(345, 350)
-const sb = range(351, 362)
+import {useLocale} from "../../lib/pik5";
+import {be, ce, ss, db, sb} from "../../lib/const";
 
 const ceColor = "#bdf13a"
 const beColor = "#59e1a8"

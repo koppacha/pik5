@@ -18,6 +18,7 @@ export const ja = {
         discord: "Discordはこちら！",
         theme: "テーマを変更する",
         language: "English",
+        top: "トップページ",
     },
     t: {
         description: "ピクチャレ大会は、ピクミンシリーズの各種ランキングで競い合う非公式コミュニティサイトです。",
@@ -298,7 +299,7 @@ export const ja = {
             "all":"すべて",
             "game":"ゲーム",
             "pikmin":"ピクミン",
-            "collect":"回収物",
+            "collection":"回収物",
             "field":"ステージ",
             "object":"設置物・アイテム",
             "creature":"原生生物",

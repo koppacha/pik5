@@ -15,7 +15,9 @@ import ModalKeyword from "../../components/modal/ModalKeyword";
 export default function KeywordIndex(){
 
     const {t:tl,r} = useLocale()
-
+    const [open, setOpen] = useState(false)
+    const [editOpen, setEditOpen] = useState(false)
+    const [uniqueId, setUniqueId] = useState("")
     const params = useSearchParams()
     const c = params.get("c")
     const t = params.get("t")
@@ -23,10 +25,6 @@ export default function KeywordIndex(){
     const p = c ? `?c=${c}` : t ? `?t=${t}` : ""
 
     const {data} = useSWR(`/api/server/keyword?${p}`, fetcher)
-
-    const [open, setOpen] = useState(false)
-    const [editOpen, setEditOpen] = useState(false)
-    const [uniqueId, setUniqueId] = useState("")
 
     // モーダル制御
     const handleOpen = (id) => {
@@ -80,22 +78,22 @@ export default function KeywordIndex(){
                     hi = post.yomi
                     if(hi.slice(0, 1).normalize('NFD')[0] !== mae.slice(0, 1).normalize('NFD')[0]) {
                         return (
-                            <>
+                            <React.Fragment key={post.unique_id}>
                                 <Grid item xs={12} style={{marginTop:"2em"}}><Typography variant="h3">{hi.slice(0, 1).normalize('NFD')[0]}</Typography></Grid>
                                 <Grid item xs={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
                                     <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
                                     <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
                                 </Grid>
-                            </>
+                            </React.Fragment>
                         )
                     } else {
                         return (
-                            <>
+                            <React.Fragment key={post.unique_id}>
                                 <Grid item xs={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
                                     <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
                                     <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
                                 </Grid>
-                            </>
+                            </React.Fragment>
                         )
                     }
                 })

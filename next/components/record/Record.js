@@ -18,19 +18,27 @@ import {
 } from "../../styles/pik5.css";
 
 // 日付をフォーマットする関数
-function dateFormat(date){
-    const y  = date.getFullYear()
-    const mo = ('0' + (date.getMonth() + 1)).slice(-2)
-    const d  = ('0' + date.getDate()).slice(-2)
-    const h  = ('0' + date.getHours()).slice(-2)
-    const mi = ('0' + date.getMinutes()).slice(-2)
-    const s  = ('0' + date.getSeconds()).slice(-2)
-    return y + '/' + mo + '/' + d + ' ' + h + ':' + mi + ':' + s
+function dateFormat(date, now){
+    const diff = now.getTime() - date.getTime()
+    if(diff > (1000 * 60 * 60 * 12)) {
+        // 12時間以上前なら日付で表示
+        const y = date.getFullYear()
+        const mo = ('0' + (date.getMonth() + 1)).slice(-2)
+        const d = ('0' + date.getDate()).slice(-2)
+        return y + '/' + mo + '/' + d
+    } else {
+        // 12時間以内なら時間で表示
+        const h = ('0' + date.getHours()).slice(-2)
+        const mi = ('0' + date.getMinutes()).slice(-2)
+        const s = ('0' + date.getSeconds()).slice(-2)
+        return h + ':' + mi + ':' + s
+    }
 }
 export default function Record({data}) {
 
     const {t} = useLocale()
     const date = new Date(data.created_at)
+    const now = new Date()
 
     const [imgOpen, setImgOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
@@ -64,7 +72,7 @@ export default function Record({data}) {
     }
     return (
         <RecordContainer container rank={data.post_rank}>
-            <Grid xs={1} style={{
+            <Grid item xs={1.5} sm={1} style={{
                 borderRight: '1px solid #fff'
             }}>
                 <RankEdge as="span">{t.g.rankHead} </RankEdge>
@@ -75,18 +83,18 @@ export default function Record({data}) {
                     <RankPointType>[{data.rps} rps]</RankPointType>
                 }
             </Grid>
-            <Grid xs={3} style={{
+            <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
                 <UserType><Link href={userPageUrl}>{data.user.user_name}</Link></UserType>
             </Grid>
-            <Grid xs={3} style={{
+            <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
                 <Score score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType as="span"> {compare}</CompareType>
             </Grid>
-            <Grid xs={5} style={{
+            <Grid item xs={5.5} sm={5} style={{
                 textAlign: 'left',
             }}>
                 <Grid container style={{
@@ -94,15 +102,15 @@ export default function Record({data}) {
                     fontSize: '0.8em',
                     width: '95%'
                 }}>
-                    <Grid xs={6}>
-                        <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
+                    <Grid item xs={5} sm={6}>
+                        <time dateTime={date.toISOString()}>{isClient ? dateFormat(date, now) : ''}</time>
                     </Grid>
-                    <Grid xs={6} style={{
+                    <Grid item xs={7} sm={6} style={{
                         textAlign:'right'
                     }}>
                         {data.stage_id ? <><Link href={'/stage/'+data.stage_id}>{data.stage_id + '#' + t.stage[data.stage_id]}</Link></>:undefined}
                     </Grid>
-                    <Grid xs={12} style={{
+                    <Grid item xs={12} sm={12} style={{
                         borderTop:'1px solid #777',
                         paddingTop:'8px'
                     }}>

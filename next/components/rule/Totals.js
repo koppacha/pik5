@@ -40,10 +40,7 @@ export default function Totals(props){
                 <Grid item key={val} style={{
                     marginBottom:"30px"
                 }}>
-                    <RuleBox style={{
-                        backgroundColor:(Number(series) === val) ? "#fff" : "",
-                        color:(Number(series) === val) ? "#000" : "#fff",
-                    }}
+                    <RuleBox className={(Number(series) === val)&&"active"}
                          component={Link}
                          href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
                         {t.rule[val]}
