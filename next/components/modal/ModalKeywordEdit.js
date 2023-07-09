@@ -40,7 +40,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
             .required(t.yup.required)
     })
 
-    const {data} = useSWR(`http://localhost:8000/api/keyword/${uniqueId}`, fetcher)
+    const {data} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
 
     const [tag, setTag] = useState("")
     const [keyword, setKeyword] = useState("")
@@ -58,7 +58,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
 
     // キーワードをバックエンドに送信する
     const onSubmit = async () => {
-            const res = await fetch('http://localhost:8000/api/keyword', {
+            const res = await fetch('/api/server/keyword', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                     'tag': tag,
                     'yomi': yomi,
                     'content': content,
-                    'first_editor':data.first_editor || 'guest',
+                    'first_editor':data?.first_editor || 'guest',
                     'last_editor':'guest', // ←常にログインID
                     'created_at': now,
                     'flag': 1,
@@ -126,7 +126,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                             onChange={(e) => setCategory(e.target.value)}
                             fullWidth
                             variant="standard"
-                            defaultValue={(data?.category) || "other"}
+                            defaultValue={(data?.data?.category) || "other"}
                         >
                             {
                                 Object.keys(t.keyword.category).map((key) =>
@@ -144,7 +144,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                             variant="standard"
                             error={'tag' in errors}
                             helperText={errors.tag?.message}
-                            defaultValue={data?.tag}
+                            defaultValue={data?.data?.tag}
                         />
                         <TextField
                             {...register('keyword')}
@@ -156,7 +156,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                             variant="standard"
                             error={'keyword' in errors}
                             helperText={errors.keyword?.message}
-                            defaultValue={data?.keyword}
+                            defaultValue={data?.data?.keyword}
                         />
                         <TextField
                             {...register('yomi')}
@@ -168,7 +168,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                             variant="standard"
                             error={'yomi' in errors}
                             helperText={errors.yomi?.message}
-                            defaultValue={data?.yomi}
+                            defaultValue={data?.data?.yomi}
                         />
                         <TextField
                             {...register('content')}
@@ -182,7 +182,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen, handleEditClose}) 
                             variant="standard"
                             error={'content' in errors}
                             helperText={errors.content?.message}
-                            defaultValue={data?.content}
+                            defaultValue={data?.data?.content}
                         />
                     </DialogContent>
 

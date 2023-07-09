@@ -28,3 +28,5 @@ COPY ./laravel/php/zzz-www.conf /usr/local/etc/php-fpm.d/zzz-www.conf
 COPY ./laravel/php/php.ini /usr/local/etc/php/php.ini
 
 WORKDIR /var/www/laravel/
+
+CMD ["php","artisan","serve","--host","0.0.0.0"]
