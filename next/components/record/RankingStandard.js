@@ -3,10 +3,12 @@ import {fetcher, useLocale} from "../../lib/pik5";
 import Record from "./Record";
 import useSWR from "swr";
 import NowLoading from "../NowLoading";
+import {logger} from "../../lib/logger";
 
 export default function RankingStandard({borders, stage, console:consoles, rule, year}){
 
-    const {data} = useSWR(`http://localhost:8000/api/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
+    const { data } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
+
     if(!data){
         return (
             <NowLoading/>
@@ -15,10 +17,13 @@ export default function RankingStandard({borders, stage, console:consoles, rule,
     const {t} = useLocale()
     let i = borders.length - 1
 
-    return Object.values(data).map(function (post){
+    // 参考スコアを表示するルール
+    const borderShowRules = [20, 21, 22]
+
+    return Object.values(data.data).map(function (post){
                     const border = borders[i]
                     const star = "★"
-                    if(post.score < border){
+                    if(post.score < border && borderShowRules.includes(Number(rule))){
                         i--;
                         return (
                             <>

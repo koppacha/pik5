@@ -13,4 +13,4 @@ ENV HOST 0.0.0.0
 
 EXPOSE 3000
 
-#ENTRYPOINT ["yarn", "run", "dev"]
+CMD ["yarn", "dev"]

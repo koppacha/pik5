@@ -78,7 +78,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         // })
         // console.log(await res.json())
 
-        const res = await fetch('http://localhost:8000/api/record', {
+        const res = await fetch('/api/server/record', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

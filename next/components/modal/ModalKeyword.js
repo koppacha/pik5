@@ -14,7 +14,7 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
 
     const {t} = useLocale()
 
-    const {data} = useSWR(`http://localhost:8000/api/keyword/${uniqueId}`, fetcher)
+    const {data} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
 
     if(!data){
         return (
@@ -28,7 +28,7 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
             <Dialog open={open} onClose={handleClose}>
                 <Box style={{width:'600px'}}>
                     <DialogContent>
-                        <KeywordContent data={data}/>
+                        <KeywordContent data={data.data}/>
                     </DialogContent>
                     <DialogActions>
                         <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
