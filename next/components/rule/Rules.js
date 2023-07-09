@@ -2,7 +2,7 @@ import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
 import {useLocale} from "../../lib/pik5";
-import {b, RuleBox} from "../../styles/pik5.css"
+import {b, RuleBox, RuleWrapper} from "../../styles/pik5.css"
 
 export default function Rules(props){
 
@@ -46,15 +46,13 @@ export default function Rules(props){
                 const screenName = (normalRankings.includes(val)) ? t.rule[0] : t.rule[val]
 
                 return (
-                    <Grid item style={{
-                        marginBottom:"20px",
-                    }}>
+                    <RuleWrapper item>
                         <RuleBox className={(Number(rule) === val)&&"active"}
                                  component={Link}
                                  href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
                             {screenName}
                         </RuleBox>
-                    </Grid>
+                    </RuleWrapper>
                 )
             })
         }

@@ -1,5 +1,5 @@
-import {Box, Grid, MenuItem, Select, Typography, Button} from "@mui/material";
-import styled, {createGlobalStyle} from "styled-components";
+import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container} from "@mui/material";
+import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
 
@@ -73,6 +73,19 @@ const rankColor = (rank, target = 0) => {
             return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
     }
 }
+
+// スマホとPCのブレイクポイントを定義
+const sp = (first, ...interpolations) => css`
+  @media (max-width: 600px) {
+    ${css(first, ...interpolations)}
+  }
+`
+const pc = (first, ...interpolations) => css`
+  @media (min-width: 601px) {
+    ${css(first, ...interpolations)}
+  }
+`
+
 export const GlobalStyle = createGlobalStyle`
 
   body {
@@ -80,17 +93,26 @@ export const GlobalStyle = createGlobalStyle`
     background-color: ${colors.light.back};
     font-family: "M PLUS 1 CODE", sans-serif;
 
+    ${sp`font-size: 0.8em`}
+    
     [data-theme='dark'] & {
       color: ${colors.dark.front};
       background-color: ${colors.dark.back};
     }
   }
+
   .title {
     font-size: 3.5em;
+    
+    ${sp`font-size: 2em`}
   }
+
   .mini-title {
     font-size: 2.5em;
+
+    ${sp`font-size: 1.3em`}
   }
+
   .subtitle {
     color: ${colors.light.subTitle};
 
@@ -98,6 +120,7 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.subTitle};
     }
   }
+
   .active {
     background-color: ${colors.light.front} !important;
     color: ${colors.light.back} !important;
@@ -107,6 +130,7 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.back} !important;
     }
   }
+
   .info-box {
     border: 1px solid ${colors.light.back};
     padding: 2em;
@@ -117,27 +141,46 @@ export const GlobalStyle = createGlobalStyle`
       border: 1px solid ${colors.dark.back};
     }
   }
+
   .form-helper-text {
     color: ${colors.light.front};
-    
+
     [data-theme='dark'] & {
       color: ${colors.dark.front};
     }
   }
+
   .markdown-content {
     font-size: 1.0em;
+    color: #9fb5bd;
 
     /* ユーザー作成のMarkdownをオーバライドするスタイル */
+
     code {
       font-family: "M PLUS 1 CODE", sans-serif;
     }
+
     li {
       margin: 0 3em;
     }
+
     ul, ol {
       padding: 0.75em 0;
     }
+
+    strong {
+      font-size: 1.1em;
+      color: #f7fafc;
+    }
   }
+`
+export const OffsetContainer = styled(Container)`
+    ${pc`margin-top: 80px;`}
+`
+export const ThinAppBar = styled(AppBar)`
+    background-color: #111;
+
+    ${sp`display: none;`}
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
   color: #d2d8e0;
@@ -147,6 +190,8 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
   height: 64px;
   padding: 0 18px;
   border-bottom: 4px solid #000;
+  
+  ${sp`font-size: 0.7em;`}
 
   &:hover {
     border-bottom: 4px solid ${props => SeriesTheme(props.$series)};
@@ -166,6 +211,8 @@ export const StyledSelect = styled(Select)`
     svg {
       color: ${colors.light.front};
     }
+    ${sp`font-size: 1em;`}
+  
     [data-theme="dark"] & {
       border: 1px solid ${colors.dark.front};
       color: ${colors.dark.front};
@@ -187,6 +234,12 @@ export const InfoBox = styled(Box)`
     border :1px solid ${colors.dark.border};
   }
 `
+export const RuleWrapper = styled(Grid)`
+  margin-bottom: 20px;
+  
+  ${sp`margin-bottom: 30px;`}
+`
+
 export const RuleBox = styled(Box)`
   border-radius: 4px;
   padding: 12px;
@@ -211,6 +264,8 @@ export const CellBox = styled(Box)`
 export const StairIcon = styled(FontAwesomeIcon)`
   font-size :0.8em;
   margin :0 0.5em;
+  
+  ${sp`font-size: 0.7em;`}
 `
 export const WrapTopBox = styled(Grid)`
   padding :10px;
@@ -256,6 +311,11 @@ export const ScoreType = styled(Typography)`
   font-size: 1.3em;
   font-family:"Proza Libre","cursive";
   text-shadow: ${shadow};
+
+  ${sp`
+    font-size: 1.1em;
+    line-height: 2.5em;
+  `}
 `
 export const ScoreTail = styled(Typography)`
   color: ${colors.light.subTitle};
@@ -281,12 +341,18 @@ export const UserType = styled(Typography)`
     font-size :1.25em;
     text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
+
+    ${sp`font-size: 1.1em;`}
+
 `
 export const RankType = styled(Typography)`
     font-size: 2em;
     font-weight: 200;
     font-family: "Kulim Park","cursive";
     text-shadow: ${shadow};
+
+    ${sp`font-size: 1.2em;`}
+
 `
 export const RankEdge = styled(Typography)`
   color: ${colors.light.subTitle};
@@ -298,6 +364,8 @@ export const RankEdge = styled(Typography)`
 export const RankPointType = styled(Typography)`
   color: ${colors.light.subTitle};
   font-size: 0.7em;
+  
+  ${sp`font-size: 0.5em;`}
 
   [data-theme="dark"] & {
     color: ${colors.dark.subTitle};
@@ -332,6 +400,8 @@ export const StageListBox = styled(Box)`
   margin: 2px;
   min-height: 6em;
   font-size: 0.8em;
+  
+  ${sp`font-size: 0.7em;`}
 
   [data-theme='dark'] & {
     background-color: ${colors.dark.subBack};

@@ -1,5 +1,4 @@
 import * as React from "react";
-import Record from "../../components/record/Record";
 import {Box, Grid, Typography} from "@mui/material";
 import {useLocale} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
@@ -61,7 +60,7 @@ export default function Stage(param){
     return (
         <>
             <Head>
-                <title>{ t.stage[param.stage] } ({t.title[param.info.series]}) - {t.title[0]}</title>
+                <title>{`${t.stage[param.stage]} (${t.title[param.info.series]}) - ${t.title[0]}`}</title>
             </Head>
             <PageHeader>
                 #{param.stage}<br/>
