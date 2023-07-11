@@ -10,7 +10,7 @@ import * as React from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faDiscord, faTwitter} from '@fortawesome/free-brands-svg-icons'
 import CustomMenu from "./CustomMenu";
-import {faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
+import {faBook, faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
@@ -42,11 +42,17 @@ export default function HeaderMenu(){
                     <CustomMenu series={2}/>
                     <CustomMenu series={3}/>
                     <CustomMenu series={4}/>
-                    {/*<CustomMenu series={7}/> 期間限定ランキングを設立したら復活*/}
-                    <CustomMenu series={8}/>
-                    <CustomMenu series={9}/>
+                    {/*<CustomMenu series={5}/> 期間限定ランキングを設立したら復活*/}
+                    <CustomMenu series={6}/>
                     <CustomMenuButton
-                        series="Discord"
+                        series={7}
+                        component={Link}
+                        href="/keyword">
+                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faBook} />
+                        {t.g.key}
+                    </CustomMenuButton>
+                    <CustomMenuButton
+                        series={8}
                         component={Link}
                         href="https://discord.gg/rQEBJQa">
                         <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
@@ -74,6 +80,7 @@ export default function HeaderMenu(){
                     </Tooltip>
                     <Tooltip title={t.g.language} arrow>
                         <IconButton
+                            component={Link}
                             href={router.asPath}
                             locale={r}
                             id="translate-button"

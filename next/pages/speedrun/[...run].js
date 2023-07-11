@@ -137,6 +137,12 @@ export async function getServerSideProps(context){
     const res = await fetch(`https://www.speedrun.com/api/v1/leaderboards/${q}`)
     const data = await res.json()
 
+    if(!data){
+        return {
+            notFound: true,
+        }
+    }
+
     return {
         props: {
             data, stage, console, consoles

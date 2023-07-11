@@ -13,20 +13,44 @@ import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
 import MobileMenu from "../../components/menu/MobileMenu";
+import {available} from "../../lib/const";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
 
-    const query = context.query.stage
-    const stage = query[0]
+    const query   = context.query.stage
+    const stage   = query[0]
+    const console = query[1] || 0
+    let   rule    = query[2] || 0
+    const year    = query[3] || 2023
+
+    if(
+        stage < 100 ||
+        stage > 999 ||
+        !available.includes(Number(rule)) ||
+        !available.includes(Number(console)) ||
+        year < 2014 ||
+        year > 2023 ||
+        query[4]
+    ){
+        return {
+            notFound: true,
+        }
+    }
 
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
     const info = await stage_res.json()
 
-    const rule  = query[2] || info.parent
-    const console = query[1] || 0
-    const year  = query[3] || 2023
+    if(!info){
+        return {
+            notFound: true,
+        }
+    }
+
+    if(info.parent && !rule){
+        rule = info.parent
+    }
 
     return {
         props: {

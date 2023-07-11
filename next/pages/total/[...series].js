@@ -12,18 +12,39 @@ import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
 import {PageHeader, StageListBox} from "../../styles/pik5.css";
+import {logger} from "../../lib/logger";
+import {available} from "../../lib/const";
 
 export async function getServerSideProps(context){
-    const query = context.query.series
-    const series = query[0]
+
+    const query   = context.query.series
+    const series  = query[0]
+    const console = query[1] || 0
+    let   rule    = query[2] || series
+    const year    = query[3] || 2023
+
+    if(
+        !available.includes(Number(series)) ||
+        !available.includes(Number(rule)) ||
+        !available.includes(Number(console)) ||
+        year < 2014 ||
+        year > 2023 ||
+        query[4]
+    ){
+        return {
+            notFound: true,
+        }
+    }
 
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
     const info = await stage_res.json()
 
-    const console = query[1] || 0
-    let rule  = query[2] || series
-    const year  = query[3] || 2023
+    if(!info){
+        return {
+            notFound: true,
+        }
+    }
 
     // 総合ランキングの総合ランキングにアクセスする場合はルールフィルターを無効にする
     if(series % 10 === 0 || series < 10){

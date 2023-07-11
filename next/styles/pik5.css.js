@@ -2,6 +2,7 @@ import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container} from
 import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
+import DialogContent from "@mui/material/DialogContent";
 
 // 汎用のカラースキーム
 const colors = {
@@ -36,12 +37,16 @@ const SeriesTheme = (series) => {
             return '#39d961'
         case 4: // ピクミン4
             return '#e3cf37'
-        case 7: // 期間限定
+        case 5: // 期間限定
             return '#7c37e3'
-        case 9: // その他
-            return '#e1e1e1'
+        case 6: // 本編RTA
+            return '#e337ad'
+        case 7: // ピクミンキーワード
+            return '#37cfe3'
+        case 8: // Discord
+            return '#3796e3'
         default:
-            return '#8546b7'
+            return '#ffffff'
     }
 }
 // 文字影
@@ -103,6 +108,7 @@ export const GlobalStyle = createGlobalStyle`
 
   .title {
     font-size: 3.5em;
+    font-family: "M PLUS 1 CODE", sans-serif;
     
     ${sp`font-size: 2em`}
   }
@@ -307,7 +313,7 @@ export const StyledGrid = styled(Grid)`
   }
 `
 export const ScoreType = styled(Typography)`
-  line-height: 3em;
+  line-height: 80px;
   font-size: 1.3em;
   font-family:"Proza Libre","cursive";
   text-shadow: ${shadow};
@@ -337,7 +343,7 @@ export const CompareType = styled(Typography)`
   }
 `
 export const UserType = styled(Typography)`
-    line-height :3em;
+    line-height :80px;
     font-size :1.25em;
     text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
@@ -438,4 +444,34 @@ export const MobileMenuBox = styled(Box)`
     color: ${colors.dark.front};
     background-color: ${colors.dark.back};
   }
+`
+export const StyledDialogContent = styled(DialogContent)`
+  color: ${colors.light.front};
+  background-color: ${colors.light.back};
+  
+  [data-theme='dark'] & {
+    color: ${colors.dark.front};
+    background-color: ${colors.dark.back};
+  }
+  div:before {
+    color: ${colors.light.front};
+    border-bottom: solid 1px ${colors.light.front};
+
+    [data-theme='dark'] & {
+      color: ${colors.dark.front};
+      border-bottom: solid 1px ${colors.dark.front};
+    }
+  }
+  div {
+    margin-bottom: 10px;
+  }
+  
+  div, input, svg, label {
+    color: ${colors.light.front};
+
+    [data-theme='dark'] & {
+      color: ${colors.dark.front};
+    }
+  }
+  
 `

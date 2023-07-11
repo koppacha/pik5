@@ -9,6 +9,7 @@ import useSWR, {mutate} from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import {KeywordContent} from "./KeywordContent";
+import {StyledDialogContent} from "../../styles/pik5.css";
 
 export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpen}) {
 
@@ -26,16 +27,14 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
     return (
         <>
             <Dialog open={open} onClose={handleClose}>
-                <Box style={{width:'600px'}}>
-                    <DialogContent>
-                        <KeywordContent data={data.data}/>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
-                        <Button onClick={handleClose}>{t.g.close}</Button>
-                        <Button onClick={handleEditOpen}>{t.g.edit}</Button>
-                    </DialogActions>
-                </Box>
+                <StyledDialogContent>
+                    <KeywordContent data={data.data}/>
+                <DialogActions>
+                    <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
+                    <Button onClick={handleClose}>{t.g.close}</Button>
+                    <Button onClick={handleEditOpen}>{t.g.edit}</Button>
+                </DialogActions>
+                </StyledDialogContent>
             </Dialog>
         </>
     );
