@@ -3,7 +3,7 @@ import Link from "next/link";
 import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {useLocale} from "../../lib/pik5";
+import {dateFormat, useLocale} from "../../lib/pik5";
 import ModalDialogImage from "../modal/ModalDialogImage";
 import Score from "./Score";
 import {useEffect, useState} from "react";
@@ -17,28 +17,10 @@ import {
     UserType
 } from "../../styles/pik5.css";
 
-// 日付をフォーマットする関数
-function dateFormat(date, now){
-    const diff = now.getTime() - date.getTime()
-    if(diff > (1000 * 60 * 60 * 12)) {
-        // 12時間以上前なら日付で表示
-        const y = date.getFullYear()
-        const mo = ('0' + (date.getMonth() + 1)).slice(-2)
-        const d = ('0' + date.getDate()).slice(-2)
-        return y + '/' + mo + '/' + d
-    } else {
-        // 12時間以内なら時間で表示
-        const h = ('0' + date.getHours()).slice(-2)
-        const mi = ('0' + date.getMinutes()).slice(-2)
-        const s = ('0' + date.getSeconds()).slice(-2)
-        return h + ':' + mi + ':' + s
-    }
-}
 export default function Record({data}) {
 
     const {t} = useLocale()
     const date = new Date(data.created_at)
-    const now = new Date()
 
     const [imgOpen, setImgOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
@@ -103,7 +85,7 @@ export default function Record({data}) {
                     width: '95%'
                 }}>
                     <Grid item xs={5} sm={6}>
-                        <time dateTime={date.toISOString()}>{isClient ? dateFormat(date, now) : ''}</time>
+                        <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                     </Grid>
                     <Grid item xs={7} sm={6} style={{
                         textAlign:'right'

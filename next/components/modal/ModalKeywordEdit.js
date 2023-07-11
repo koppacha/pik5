@@ -12,6 +12,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import useSWR from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
+import {StyledDialogContent} from "../../styles/pik5.css";
 
 export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEditClose}) {
 
@@ -115,82 +116,79 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
     return (
         <>
             <Dialog open={editOpen} onClose={handleEditClose}>
-                <Box style={{width:'600px'}}>
-                <DialogTitle>{t.keyword.g.editTitle}</DialogTitle>
-                    <DialogContent>
-                        <TextField
-                            {...register('category')}
-                            select
-                            id="tag"
-                            label={t.keyword.g.category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            fullWidth
-                            variant="standard"
-                            defaultValue={(data?.data?.category) || "other"}
-                        >
-                            {
-                                Object.keys(t.keyword.category).map((key) =>
-                                    <MenuItem key={key} value={key}>{t.keyword.category[key]}</MenuItem>
-                                )
-                            }
-                        </TextField>
-                        <TextField
-                            {...register('tag')}
-                            id="tag"
-                            label={t.keyword.g.tag}
-                            type="text"
-                            onChange={(e) => setTag(e.target.value)}
-                            fullWidth
-                            variant="standard"
-                            error={'tag' in errors}
-                            helperText={errors.tag?.message}
-                            defaultValue={data?.data?.tag}
-                        />
-                        <TextField
-                            {...register('keyword')}
-                            id="keyword"
-                            label={t.keyword.g.keyword}
-                            type="text"
-                            onChange={(e) => setKeyword(e.target.value)}
-                            fullWidth
-                            variant="standard"
-                            error={'keyword' in errors}
-                            helperText={errors.keyword?.message}
-                            defaultValue={data?.data?.keyword}
-                        />
-                        <TextField
-                            {...register('yomi')}
-                            id="yomi"
-                            label={t.keyword.g.yomi}
-                            type="text"
-                            onChange={(e) => setYomi(e.target.value)}
-                            fullWidth
-                            variant="standard"
-                            error={'yomi' in errors}
-                            helperText={errors.yomi?.message}
-                            defaultValue={data?.data?.yomi}
-                        />
-                        <TextField
-                            {...register('content')}
-                            id="content"
-                            label={t.keyword.g.content}
-                            type="text"
-                            onChange={(e) => setContent(e.target.value)}
-                            fullWidth
-                            multiline
-                            rows={5}
-                            variant="standard"
-                            error={'content' in errors}
-                            helperText={errors.content?.message}
-                            defaultValue={data?.data?.content}
-                        />
-                    </DialogContent>
-
-                    <DialogActions>
-                        <Button onClick={handleEditClose}>{t.g.close}</Button>
-                        <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button>
-                    </DialogActions>
-                </Box>
+                <StyledDialogContent>
+                    <DialogTitle>{t.keyword.g.editTitle}</DialogTitle>
+                    <TextField
+                        {...register('category')}
+                        select
+                        id="tag"
+                        label={t.keyword.g.category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        defaultValue={(data?.data?.category) || "other"}
+                    >
+                        {
+                            Object.keys(t.keyword.category).map((key) =>
+                                <MenuItem key={key} value={key}>{t.keyword.category[key]}</MenuItem>
+                            )
+                        }
+                    </TextField>
+                    <TextField
+                        {...register('tag')}
+                        id="tag"
+                        label={t.keyword.g.tag}
+                        type="text"
+                        onChange={(e) => setTag(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'tag' in errors}
+                        helperText={errors.tag?.message}
+                        defaultValue={data?.data?.tag}
+                    />
+                    <TextField
+                        {...register('keyword')}
+                        id="keyword"
+                        label={t.keyword.g.keyword}
+                        type="text"
+                        onChange={(e) => setKeyword(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'keyword' in errors}
+                        helperText={errors.keyword?.message}
+                        defaultValue={data?.data?.keyword}
+                    />
+                    <TextField
+                        {...register('yomi')}
+                        id="yomi"
+                        label={t.keyword.g.yomi}
+                        type="text"
+                        onChange={(e) => setYomi(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'yomi' in errors}
+                        helperText={errors.yomi?.message}
+                        defaultValue={data?.data?.yomi}
+                    />
+                    <TextField
+                        {...register('content')}
+                        id="content"
+                        label={t.keyword.g.content}
+                        type="text"
+                        onChange={(e) => setContent(e.target.value)}
+                        fullWidth
+                        multiline
+                        rows={5}
+                        variant="standard"
+                        error={'content' in errors}
+                        helperText={errors.content?.message}
+                        defaultValue={data?.data?.content}
+                    />
+                <DialogActions>
+                    <Button onClick={handleEditClose}>{t.g.close}</Button>
+                    <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button>
+                </DialogActions>
+                </StyledDialogContent>
             </Dialog>
         </>
     );
