@@ -1,7 +1,28 @@
 export const en = {
     g: {
-        'rankTail': "",
-        'rankHead': "#",
+        rankTail: "",
+        rankHead: "#",
+        countTail: "回",
+        challenge: "チャレンジモード",
+        mission: "ミッションモード",
+        sidestory: "サイドストーリーモード",
+        keyword: "ピクミンキーワード",
+        edit: "編集",
+        submit: "送信",
+        close: "閉じる",
+        rule: "ルールを確認する",
+        rules: "利用規約・ルール集",
+        year: "集計年",
+        noComment: "コメントなし",
+        console: "操作方法",
+        discord: "Discordはこちら！",
+        theme: "テーマを変更する",
+        language: "English",
+        top: "トップページ",
+    },
+    t: {
+        notFound: "ここは例の惑星ではありません。",
+        description: "ピクチャレ大会は、ピクミンシリーズの各種ランキングで競い合う非公式コミュニティサイトです。",
     },
     title: {
         0: "Pikmin Series Leaderboards",
@@ -13,6 +34,17 @@ export const en = {
         7: "Limited Ranking",
         8: "Diary Challenge",
         9: "Others",
+    },
+    subtitle: {
+        21: "Egg",
+        22: "No Egg",
+        23: "Story Mode Dungeon Challenge",
+        24: "Solo Battle",
+        31: "Collect Treasure!",
+        32: "Battle Enemy!",
+        33: "Defeat Bosses!",
+        34: "Side Story Mode",
+        35: "Solo Bingo",
     },
     stage: {
         20 : "Pikmin2 Overall Ranking",
@@ -162,8 +194,13 @@ export const en = {
         25: "No Rules",
         26: "TAS",
         27: "Solo Battle Mode",
-        31: "2P Mission",
-        32: "Solo Bingo Battle Mode"
+        30: "Pikmin 3 Overall",
+        31: "Collect Treasure!",
+        32: "Battle Enemies!",
+        33: "Defeat Bosses!",
+        34: "2P Mission",
+        35: "Solo Bingo Battle Mode",
+        36: "Side Story"
     },
     border: {
         2: {
@@ -196,4 +233,10 @@ export const en = {
             6: "NTSC-J",
         },
     },
+    yup: {
+        'required':"この項目は必須です。",
+        'over':"最大文字数を超えています。最大文字数＝",
+        'moji':"文字",
+        'hiragana':"すべてひらがなで入力してください。"
+    }
 }
