@@ -13,10 +13,15 @@ export async function getServerSideProps(context){
 
     const id = context.query.keyword
 
-    // ステージ情報をリクエスト
+    // キーワード情報をリクエスト
     const res = await fetch(`http://laravel:8000/api/keyword/${id}`)
     const data = await res.json()
 
+    if(!data){
+        return {
+            notFound: true,
+        }
+    }
     return {
         props: {
             data: data
