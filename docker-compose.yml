@@ -46,6 +46,8 @@ services:
     user: root:root
     ports:
       - ${DB_PORT}:3306
+    volumes:
+      - ./mysql:/var/lib/mysql
     restart:
       always
     logging:
