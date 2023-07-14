@@ -12,6 +12,7 @@ import SpeedRunRules from "../../components/form/SpeedRunRules";
 import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
+import Head from "next/head";
 
 export async function getServerSideProps(context){
 
@@ -158,6 +159,9 @@ export default function Run({data, stage, console, consoles}){
 
     return (
         <>
+            <Head>
+                <title>{`${t.speedrun[stage]} - ${t.title[0]}`}</title>
+            </Head>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>
             <Link href="https://www.speedrun.com/pikmin">{t.speedrun.title}</Link>

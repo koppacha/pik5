@@ -8,6 +8,7 @@ import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import {StairIcon} from "../../styles/pik5.css";
 import React from "react";
 import {useLocale} from "../../lib/pik5";
+import Head from "next/head";
 
 export async function getServerSideProps(context){
 
@@ -35,10 +36,15 @@ export default function Keyword({data}) {
 
     return (
         <>
-            <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
-            <StairIcon icon={faStairs}/>
-            <Link href="/keyword">{t.g.keyword}</Link><br/>
-            <KeywordContent data={data}/>
+            <Head>
+                <title>{`${data.keyword} - ${t.title[0]}`}</title>
+            </Head>
+            <Box style={{height:"100vh"}}>
+                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                <StairIcon icon={faStairs}/>
+                <Link href="/keyword">{t.g.keyword}</Link><br/>
+                <KeywordContent data={data}/>
+            </Box>
         </>
     )
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
+use App\Library\Func;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,11 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
 // 証拠画像取得API
 Route :: group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('img/{file}', [GetImageController ::class, 'show']);
+});
+
+// テスト用
+Route :: group ([ 'middleware' => [ 'api' ]], static function () {
+    Route:: get('max', [Func ::class, 'max_count']);
 });
 
 /**

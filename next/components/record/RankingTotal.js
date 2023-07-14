@@ -7,12 +7,11 @@ import * as React from "react";
 export default function RankingTotal({series, console:consoles, rule, year}){
 
     const {data} = useSWR(`/api/server/total/${series}/${consoles}/${rule}/${year}`, fetcher)
-    if(!data){
+    if(!data?.data?.data){
         return (
             <NowLoading/>
         )
     }
-
     return Object.values(data.data.data).map(post =>
         <Record key={post.user.user_id} data={post} />
     )
