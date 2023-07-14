@@ -107,8 +107,11 @@ class TotalController extends Controller
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
-        $rule    = $request['rule']    ?: 0;
+        $rule    = $request['rule']    ?: $request['id'];
         $year    = $request['year']    ?: date("Y");
+
+        // データの格納先
+        $ranking = [];
 
         // オプション引数を加工する
         $year = (int)$year + 1;
@@ -120,68 +123,141 @@ class TotalController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
         // 共通処理ここまで
 
-        $model = Record::with(['user' => function($q){
-            $q->select('user_name','user_id');
-         }])->whereIn('stage_id',$stage_list[$request['id']])
-            ->where('console', $console_operation, $console)
-            ->where('rule',$rule_operation ,$rule)
-            ->where('created_at','<', $date)
-            ->groupBy('user_id', 'stage_id')
-            ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
-            ->orderBy('score','DESC')
-            ->get();
-        $dataset = $model->toArray();
-        $res   = [
-            // メタ情報をあらかじめ配列に投入しておく
-            "stage_list" => $stage_list[$request['id']]
-        ];
+        // 全ステージのいずれかに１つ以上投稿しているユーザーのリスト
+        $users = [];
 
-        // ここからランキング出力本体
-        $ranking = [];
+        // 対象ステージの数だけループ処理
+        foreach($stage_list[$request['id']] as $stage) {
+
+            // 各ループごとに初期化する値
+            $temp = [];
+
+            // 有効データのみ抽出する最小限のクエリ
+            $testModel[(int)$stage] = Record::where('stage_id', $stage)
+                ->where('console', $console_operation, $console)
+                ->where('rule', $rule_operation, $rule)
+                ->where('created_at', '<', $date)
+                ->where('flg', '<', 2)
+                ->orderBy('score','DESC')
+                ->orderBy('created_at')
+                ->get()
+                ->toArray();
+
+            // ステージごとにユーザーごとのフィルタ条件別の自己ベストを抽出してステージごとに順位・ランクポイントを計算
+            $filter = [];
+            foreach($testModel[$stage] as $value){
+                if(in_array($value['user_id'], $filter, true)){
+                    continue;
+                }
+                $filter[] = $value['user_id'];
+                $users[] = $value['user_id'];
+                $temp[$value['user_id']] = $value;
+            }
+
+            // 順位とランクポイント計算に渡す値
+            $ranking[$stage] = Func::rank_calc($temp, [$console, $rule, $date]);
+        }
 
         // 名前取得インスタンスを初期化
         $getUser = new UserNameController();
 
+        $totals = [];
         // 対象の記録群からユーザー配列を作成し、値を初期化
-        foreach($users = array_unique( array_column($dataset, 'user_id') ) as $user){
-            $ranking[$user]["user"]["user_id"] = $user;
-            $ranking[$user]["user"]["user_name"] = $getUser->getName($user)['user_name'];
-            $ranking[$user]["score"] = 0;
-            $ranking[$user]["rps"]   = 0;
-            $ranking[$user]["count"] = 0;
-            $ranking[$user]["created_at"] = "2006/09/01 00:00:00";
-            $ranking[$user]["ranks"] = array();
+        foreach($users = array_unique($users) as $user){
+            $totals[$user]["user"]["user_id"] = $user;
+            $totals[$user]["user"]["user_name"] = $getUser::getName($user)['user_name'];
+            $totals[$user]["score"] = 0;
+            $totals[$user]["rps"]   = 0;
+            $totals[$user]["count"] = 0;
+            $totals[$user]["created_at"] = "2006/09/01 00:00:00";
+            $totals[$user]["ranks"] = array();
         }
-        // ユーザー配列に各種データを入れ込む
+        // 各ステージからユーザー情報を抽出する
         foreach($users as $user){
-            foreach($dataset as $data){
-                if($user !== $data["user_id"]) {
-                    continue;
+            foreach($ranking as $stage){
+                $totals[$user]["score"] += $stage[$user]["score"] ?? 0;
+                $totals[$user]["rps"] += $stage[$user]["rps"] ?? 0;
+                $totals[$user]["ranks"][] = $stage[$user]["post_rank"] ?? null;
+                if($totals[$user]["created_at"] < ($stage[$user]["created_at"] ?? 0)){
+                    $totals[$user]["created_at"] = $stage[$user]["created_at"];
                 }
-                // 最終更新日を取得
-                if($ranking[$user]["created_at"] < $data["created_at"]){
-                    $ranking[$user]["created_at"] = $data["created_at"];
-                }
-                $ranking[$user]["score"] += $data["score"];
-                $ranking[$user]["rps"]   += $data["rps"];
-                $ranking[$user]["count"] ++;
-                $ranking[$user]["ranks"][] = $data["post_rank"];
             }
         }
         // 集計対象に基づいて降順に並び替え
         $target = ($request['id'] < 10) ? "rps" : "score";
-        $target_column = array_column($ranking, $target);
-        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $ranking);
+        $target_column = array_column($totals, $target);
+        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $totals);
 
         // 順位を再計算
-        $ranking = Func::rank_calc($ranking);
-
-        // 出力用配列に入れる
-        $res["data"] = $ranking;
+        $totals = Func::rank_calc($totals, [$console, $rule, $date]);
 
         return response()->json(
-            $res
+            $totals
         );
+
+//        $model = Record::with(['user' => function($q){
+//            $q->select('user_name','user_id');
+//         }])->whereIn('stage_id',$stage_list[$request['id']])
+//            ->where('console', $console_operation, $console)
+//            ->where('rule',$rule_operation ,$rule)
+//            ->where('created_at','<', $date)
+//            ->where('flg' < 2)
+//            ->groupBy('user_id', 'stage_id')
+//            ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
+//            ->orderBy('score','DESC')
+//            ->get();
+//        $dataset = $model->toArray();
+//        $res   = [
+//            // メタ情報をあらかじめ配列に投入しておく
+//            "stage_list" => $stage_list[$request['id']]
+//        ];
+//
+//        // ここからランキング出力本体
+//        $ranking = [];
+//
+//        // 名前取得インスタンスを初期化
+//        $getUser = new UserNameController();
+//
+//        // 対象の記録群からユーザー配列を作成し、値を初期化
+//        foreach($users = array_unique( array_column($dataset, 'user_id') ) as $user){
+//            $ranking[$user]["user"]["user_id"] = $user;
+//            $ranking[$user]["user"]["user_name"] = $getUser::getName($user)['user_name'];
+//            $ranking[$user]["score"] = 0;
+//            $ranking[$user]["rps"]   = 0;
+//            $ranking[$user]["count"] = 0;
+//            $ranking[$user]["created_at"] = "2006/09/01 00:00:00";
+//            $ranking[$user]["ranks"] = array();
+//        }
+//        // ユーザー配列に各種データを入れ込む
+//        foreach($users as $user){
+//            foreach($dataset as $data){
+//                if($user !== $data["user_id"]) {
+//                    continue;
+//                }
+//                // 最終更新日を取得
+//                if($ranking[$user]["created_at"] < $data["created_at"]){
+//                    $ranking[$user]["created_at"] = $data["created_at"];
+//                }
+//                $ranking[$user]["score"] += $data["score"];
+//                $ranking[$user]["rps"]   += $data["rps"];
+//                $ranking[$user]["count"] ++;
+//                $ranking[$user]["ranks"][] = $data["post_rank"];
+//            }
+//        }
+//        // 集計対象に基づいて降順に並び替え
+//        $target = ($request['id'] < 10) ? "rps" : "score";
+//        $target_column = array_column($ranking, $target);
+//        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $ranking);
+//
+//        // 順位を再計算
+//        $ranking = Func::rank_calc($ranking);
+//
+//        // 出力用配列に入れる
+//        $res["data"] = $ranking;
+//
+//        return response()->json(
+//            $res
+//        );
     }
 
     /**

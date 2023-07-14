@@ -2,18 +2,54 @@
 
 namespace App\Library;
 
+use App\Models\Record;
 use App\Models\Stage;
+use DateTime;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
 
 class Func extends Facade
 {
-    public static function rank_calc (array $data): array
+    // 通常ランキング全ステージのうち最大参加者数を求める
+    public static function max_count ($option = [0, 0, 0]): int
     {
+        [$console, $rule, $date] = $option;
+
+        if(!$date) {
+            $datetime = new DateTime("2024-01-01 00:00:00");
+            $date = $datetime->format("Y-m-d H:i:s");
+        }
+        $console_operation = $console ? "=" : ">";
+        $rule_operation = $rule ? "=" : ">";
+
+        // TODO: 一部の特殊ランキングが混じってるけど通常ランキングの参加者数を超えることはまずないので無視で
+        return Record::whereIn('stage_id', range(101, 405))
+            ->where('console', $console_operation, $console)
+            ->where('rule', $rule_operation, $rule)
+            ->where('created_at', '<', $date)
+            ->where('flg', '<', 2)
+            ->get()
+            ->groupBy(['stage_id', 'user_id'])
+            ->map(function($g){
+                return $g->count();
+            })->max();
+    }
+    // 順位とランクポイントを入力された配列内で再計算する（スコア降順であることが前提）
+    public static function rank_calc (array $data,array $option): array
+    {
+        // 順位の初期値
         $rank = 1;
         $count = 1;
         $before = 0;
+
+        // 対象のランキングの参加者数
+        $total = count($data);
+
+        // 通常ランキングの最大参加者数
+        $max = self::max_count($option);
+
         foreach($data as $key => $value){
             if($before !== $value["score"]){
                 $rank = $count;
@@ -21,7 +57,13 @@ class Func extends Facade
             $data[$key]["post_rank"] = $rank;
             $before = $value["score"];
             $count++;
+
+            // ランクポイントを計算
+            $m = (log($total) - log($max) + 10) * (0.009 * $total + 0.1);
+            $r = (($max - $rank + 11) ** 2) * (-0.9 / 99 * ($rank - 1) + 1) / 6.05;
+            $data[$key]["rps"] = floor($m * $r);
         }
+
         return $data;
     }
     public static function compare_calc (array $data, $compare = 'timebonus') : array
