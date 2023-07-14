@@ -81,7 +81,7 @@ export default function Series(param){
             </PageHeader>
             <Grid container style={{margin:"2em 0"}}>
                 {
-                    stages.map(stage =>
+                    stages?.map(stage =>
                     <Grid key={stage} item xs={2.4} lg={1.2}>
                         <Link key={stage} href={'/stage/'+stage}><StageListBox>
                             <span>#{stage}</span><br/>

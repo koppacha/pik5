@@ -4,7 +4,7 @@ import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR, {mutate} from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
-import {InfoBox, StairIcon} from "../../styles/pik5.css";
+import {InfoBox, RuleBox, StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
@@ -67,10 +67,12 @@ export default function KeywordIndex(){
                     </ul>
                 </Box>
             </InfoBox>
-            <Button variant="outlined" onClick={handleNewEditOpen}>
-                {tl.keyword.g.newTitle}
-            </Button>
             <PullDownKeywordCategory category={c}/>
+            <Grid container style={{marginTop:"20px"}}>
+                <RuleBox item xs={3} onClick={handleNewEditOpen}>
+                    {tl.keyword.g.newTitle}
+                </RuleBox>
+            </Grid>
             <Grid container>
             {
                 data?.data.map(function (post){
