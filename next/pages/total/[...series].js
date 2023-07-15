@@ -19,14 +19,14 @@ export async function getServerSideProps(context){
 
     const query   = context.query.series
     const series  = query[0]
-    const console = query[1] || 0
+    const consoles = query[1] || 0
     let   rule    = query[2] || series
     const year    = query[3] || 2023
 
     if(
         !available.includes(Number(series)) ||
         !available.includes(Number(rule)) ||
-        !available.includes(Number(console)) ||
+        !available.includes(Number(consoles)) ||
         year < 2014 ||
         year > 2023 ||
         query[4]
@@ -36,10 +36,12 @@ export async function getServerSideProps(context){
         }
     }
 
+    let info
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
-    const info = await stage_res.json()
-
+    if(stage_res.status < 300) {
+        info = await stage_res.json()
+    }
     if(!info){
         return {
             notFound: true,
@@ -51,13 +53,15 @@ export async function getServerSideProps(context){
         rule = 0
     }
 
-    // シリーズ番号に基づいて集計対象ステージをバックエンドで選別して持ってくる
-    const res = await fetch(`http://laravel:8000/api/total/${series}/${console}/${rule}/${year}`)
-    const data = await res.json()
-
+    let stages = []
+    // シリーズ番号に基づくステージ群の配列をリクエスト
+    const res = await fetch(`http://laravel:8000/api/stages/${series}`)
+    if(res.status < 300) {
+        stages = await res.json()
+    }
     return {
         props: {
-            data, series, rule, console, year, info
+            stages, series, rule, console: consoles, year, info
         }
     }
 }
@@ -66,7 +70,7 @@ export default function Series(param){
 
     const {t, r} = useLocale()
 
-    const stages = param.data['stage_list'];
+    const stages = param.stages
 
     return (
         <>
