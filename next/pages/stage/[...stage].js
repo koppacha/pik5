@@ -8,7 +8,7 @@ import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import {useState} from "react";
-import {PageHeader, RuleBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, StageListBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
@@ -38,14 +38,23 @@ export async function getServerSideProps(context){
         }
     }
 
+    let info
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
-    const info = await stage_res.json()
-
+    if(stage_res.status < 300) {
+        info = await stage_res.json()
+    }
     if(!info){
         return {
             notFound: true,
         }
+    }
+
+    let stages = []
+    // シリーズ番号に基づくステージ群の配列をリクエスト
+    const res = await fetch(`http://laravel:8000/api/stages/${info.parent}`)
+    if(res.status < 300) {
+        stages = await res.json()
     }
 
     if(info.parent && !rule){
@@ -54,7 +63,7 @@ export async function getServerSideProps(context){
 
     return {
         props: {
-            stage, rule, console, year, info
+            stages, stage, rule, console, year, info
         }
     }
 }
@@ -95,6 +104,18 @@ export default function Stage(param){
                 <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
                 <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
             </PageHeader>
+            <Grid container style={{margin:"2em 0"}}>
+                {
+                    param.stages?.map(stage =>
+                        <Grid key={stage} item xs={2.4} lg={1.2}>
+                            <Link key={stage} href={'/stage/'+stage}><StageListBox>
+                                <span>#{stage}</span><br/>
+                                {t.stage[stage]}</StageListBox>
+                            </Link>
+                        </Grid>
+                    )
+                }
+            </Grid>
             <Grid container>
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>

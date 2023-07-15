@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Library\Func;
 use App\Models\Record;
 use DateTime;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -25,6 +26,20 @@ class RecordController extends Controller
     public function index(): JsonResponse
     {
         $data = Record::all();
+        return response()->json(
+            $data
+        );
+    }
+
+    // 単独記録を取得する関数
+    public function getRecord(Request $request): JsonResponse
+    {
+        $data = Record::where('unique_id', $request['id'])->first();
+
+        if(!$data){
+            $data = collect(['message' => "Record Not Found"]);
+        }
+
         return response()->json(
             $data
         );
@@ -163,7 +178,7 @@ class RecordController extends Controller
 
         if($where === "stage_id") {
             // 順位を付与
-            $new_data = Func::rank_calc($new_data, [$console, $rule, $date]);
+            $new_data = Func::rank_calc("stage", $new_data, [$console, $rule, $date]);
         }
         // 比較値を付与
         $dataset = Func::compare_calc($new_data, $compare);
