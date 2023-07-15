@@ -18,6 +18,44 @@ class TotalController extends Controller
         // TODO: Implement __invoke() method.
         return "invoke";
     }
+    public function stage_list(Request|string $request): array
+    {
+        // 総合ランキングの集計対象ステージ一覧
+        $stage_list = [
+            7 => range(101, 405),  // 通常総合
+            8 => range(1001, 9999),// 特殊総合
+            9 => range(101, 9999), // 全総合
+            10 => [101, 102, 103, 104, 105],
+            20 => range(201, 230),
+            21 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],
+            22 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],
+            23 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],  // タマゴムシ縛り
+            24 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],  // スプレー縛り
+            25 => range(231, 244),  // 本編地下
+            26 => range(201, 230),  // 2Pチャレンジ
+            27 => range(201, 230),  // TAS
+            28 => range(201, 230),  // 実機無差別
+            29 => range(245, 254),  // ソロバトル
+            30 => range(301, 350),
+            31 => range(301, 315), // お宝をあつめろ！
+            32 => range(316, 330), // 原生生物をたおせ！
+            33 => range(345, 350), // 巨大生物をたおせ！
+            34 => range(301, 350),// 2Pミッション
+            35 => range(351, 362), // ソロビンゴ
+            36 => range(331, 344), // サイドストーリー
+            40 => range(401, 405),
+            91 => range(1001, 1030), // 旧日替わりチャレンジ
+            92 => range(1031, 1103), // 旧参加者企画
+            93 => range(1104, 1105), // 本編クリアタイム
+            94 => range(1106, 1109), // チャレンジモード全クリアRTA
+            95 => 1110, // 本編カスタムRTA
+            81 => range(2001, 9999) // 期間限定ランキング（スタンダード、チーム対抗戦）
+        ];
+        if(!isset($request)){
+            return [];
+        }
+        return $stage_list[$request];
+    }
     /**
      * Display a listing of the resource.
      *
@@ -73,37 +111,7 @@ class TotalController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        // 総合ランキングの集計対象ステージ一覧
-        $stage_list = [
-            7   => range(101, 405),  // 通常総合
-            8   => range(1001, 9999),// 特殊総合
-            9   => range(101, 9999), // 全総合
-            10 => [101, 102, 103, 104, 105],
-            20 => range(201, 230),
-            21 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],
-            22 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],
-            23 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],  // タマゴムシ縛り
-            24 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],  // スプレー縛り
-            25 => range(231,244),  // 本編地下
-            26 => range(201,230),  // 2Pチャレンジ
-            27 => range(201,230),  // TAS
-            28 => range(201,230),  // 実機無差別
-            29 => range(245,254),  // ソロバトル
-            30 => range(301, 350),
-            31 => range(301, 315), // お宝をあつめろ！
-            32 => range(316, 330), // 原生生物をたおせ！
-            33 => range(345, 350), // 巨大生物をたおせ！
-            34 => range(301, 350),// 2Pミッション
-            35 => range(351, 362), // ソロビンゴ
-            36 => range(331, 344), // サイドストーリー
-            40 => range(401, 405),
-            91 => range(1001, 1030), // 旧日替わりチャレンジ
-            92 => range(1031, 1103), // 旧参加者企画
-            93 => range(1104, 1105), // 本編クリアタイム
-            94 => range(1106, 1109), // チャレンジモード全クリアRTA
-            95 => 1110, // 本編カスタムRTA
-            81 => range(2001, 9999) // 期間限定ランキング（スタンダード、チーム対抗戦）
-            ];
+
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
@@ -127,12 +135,12 @@ class TotalController extends Controller
         $users = [];
 
         // 対象ステージの数だけループ処理
-        foreach($stage_list[$request['id']] as $stage) {
+        foreach($this->stage_list($request['id']) as $stage) {
 
             // 各ループごとに初期化する値
             $temp = [];
 
-            // 有効データのみ抽出する最小限のクエリ
+            // 有効データのみ抽出するクエリ
             $testModel[(int)$stage] = Record::where('stage_id', $stage)
                 ->where('console', $console_operation, $console)
                 ->where('rule', $rule_operation, $rule)
@@ -155,7 +163,7 @@ class TotalController extends Controller
             }
 
             // 順位とランクポイント計算に渡す値
-            $ranking[$stage] = Func::rank_calc($temp, [$console, $rule, $date]);
+            $ranking[$stage] = Func::rank_calc("total", $temp, [$console, $rule, $date]);
         }
 
         // 名前取得インスタンスを初期化
@@ -189,75 +197,11 @@ class TotalController extends Controller
         array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $totals);
 
         // 順位を再計算
-        $totals = Func::rank_calc($totals, [$console, $rule, $date]);
+        $totals = Func::rank_calc("total", $totals, [$console, $rule, $date]);
 
         return response()->json(
             $totals
         );
-
-//        $model = Record::with(['user' => function($q){
-//            $q->select('user_name','user_id');
-//         }])->whereIn('stage_id',$stage_list[$request['id']])
-//            ->where('console', $console_operation, $console)
-//            ->where('rule',$rule_operation ,$rule)
-//            ->where('created_at','<', $date)
-//            ->where('flg' < 2)
-//            ->groupBy('user_id', 'stage_id')
-//            ->selectRaw('MAX(score) as score, post_id, user_id, stage_id, rule, console, unique_id, post_rank, rps, hash, post_comment, img_url, video_url, created_at')
-//            ->orderBy('score','DESC')
-//            ->get();
-//        $dataset = $model->toArray();
-//        $res   = [
-//            // メタ情報をあらかじめ配列に投入しておく
-//            "stage_list" => $stage_list[$request['id']]
-//        ];
-//
-//        // ここからランキング出力本体
-//        $ranking = [];
-//
-//        // 名前取得インスタンスを初期化
-//        $getUser = new UserNameController();
-//
-//        // 対象の記録群からユーザー配列を作成し、値を初期化
-//        foreach($users = array_unique( array_column($dataset, 'user_id') ) as $user){
-//            $ranking[$user]["user"]["user_id"] = $user;
-//            $ranking[$user]["user"]["user_name"] = $getUser::getName($user)['user_name'];
-//            $ranking[$user]["score"] = 0;
-//            $ranking[$user]["rps"]   = 0;
-//            $ranking[$user]["count"] = 0;
-//            $ranking[$user]["created_at"] = "2006/09/01 00:00:00";
-//            $ranking[$user]["ranks"] = array();
-//        }
-//        // ユーザー配列に各種データを入れ込む
-//        foreach($users as $user){
-//            foreach($dataset as $data){
-//                if($user !== $data["user_id"]) {
-//                    continue;
-//                }
-//                // 最終更新日を取得
-//                if($ranking[$user]["created_at"] < $data["created_at"]){
-//                    $ranking[$user]["created_at"] = $data["created_at"];
-//                }
-//                $ranking[$user]["score"] += $data["score"];
-//                $ranking[$user]["rps"]   += $data["rps"];
-//                $ranking[$user]["count"] ++;
-//                $ranking[$user]["ranks"][] = $data["post_rank"];
-//            }
-//        }
-//        // 集計対象に基づいて降順に並び替え
-//        $target = ($request['id'] < 10) ? "rps" : "score";
-//        $target_column = array_column($ranking, $target);
-//        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $ranking);
-//
-//        // 順位を再計算
-//        $ranking = Func::rank_calc($ranking);
-//
-//        // 出力用配列に入れる
-//        $res["data"] = $ranking;
-//
-//        return response()->json(
-//            $res
-//        );
     }
 
     /**
