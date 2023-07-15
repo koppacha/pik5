@@ -32,6 +32,7 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
     Route :: get ( 'record/rank/{stage}/{rule}/{score?}' , [ RecordController ::class, 'getRank' ]);
+    Route :: get ('record/id/{id}', [RecordController::class, 'getRecord']);
     Route :: get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController ::class, 'show' ]);
     Route :: post ( 'record' , [ RecordController ::class, 'create' ]);
     Route :: patch ( 'record/{id}' , [ RecordController ::class, 'update' ]);
@@ -52,7 +53,7 @@ Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 // 通常総合ランキング取得API
 Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route :: get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController ::class, 'show' ]);
-    Route :: post ( 'total' , [ TotalController ::class, 'create' ]);
+    Route :: get ( 'stages/{series}' , [ TotalController ::class, 'stage_list' ]);
 });
 
 // ステージ情報取得API
