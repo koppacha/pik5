@@ -1,23 +1,27 @@
-import {PrismaClient} from '@prisma/client'
-import bcrypt from 'bcrypt'
+// このスクリプトではimport構文は使えないっぽい
+const {PrismaClient} = require('@prisma/client')
+const bcrypt = require('bcrypt')
+const {data} = require('./data/data')
 
 const prisma = new PrismaClient()
 
+// 旧ピクチャレ大会からユーザー情報をインポート
+const exitUsers = data
+
 async function main() {
     const saltRounds = 10;
-    const password = "test"
-    const hashedPassword = await bcrypt.hash(password, saltRounds)
-    const testUser = await prisma.user.upsert({
-        where: { userId: 'test' },
-        update: {},
-        create: {
-            userId: 'test',
-            name: 'テスト',
-            crypted_password: hashedPassword
-        },
+    const users = exitUsers.map((user) => {
+        const hashedPassword = bcrypt.hashSync(user.password, saltRounds)
+        return {
+            userId: user.user_id,
+            name: user.user_name,
+            password: hashedPassword
+        }
     })
-
-    console.log({ testUser })
+    await prisma.user.createMany({
+        data: users,
+        skipDuplicates: true
+    })
 }
 
 main()

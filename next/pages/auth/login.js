@@ -69,7 +69,7 @@ export default function Login(){
             <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
                 <AuthWindow item>
                     <Typography variant="strong">ログイン</Typography><br/>
-                    <FormControl>
+                    <Box className="form-helper-text">
                         <TextField
                             {...register('userId')}
                             id="userId"
@@ -91,7 +91,7 @@ export default function Login(){
                         <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button><br/>
                         <Button href="/">トップページへ</Button>
                         <Button href="/auth/register">はじめての方はこちら</Button>
-                    </FormControl>
+                    </Box>
                 </AuthWindow>
             </Grid>
         </Box>

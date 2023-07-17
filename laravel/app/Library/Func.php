@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Log;
 class Func extends Facade
 {
     // 通常ランキング全ステージのうち最大参加者数を求める
-    public static function max_count ($option = [0, 0, 0]): int
+    public static function memberCount ($option = [0, 0, 0]): array
     {
         [$console, ,$date] = $option;
 
@@ -25,9 +25,7 @@ class Func extends Facade
             $date = $datetime->format("Y-m-d H:i:s");
         }
         $console_operation = $console ? "=" : ">";
-        $rule_operation = ">";
-
-        Log::debug("maxCount", [$console, $rule, $date]);
+//        $rule_operation = ">";
 
         // TODO: 一部の特殊ランキングが混じってるけど通常ランキングの参加者数を超えることはまずないので無視で
         $Model = Record::whereIn('stage_id', range(101, 405))
@@ -40,9 +38,7 @@ class Func extends Facade
             ->map(function($g){
                 return $g->count();
             });
-//        Log::debug("model", $Model->toArray());
-
-        return $Model->max();
+        return $Model->toArray();
     }
     // 順位とランクポイントを入力された配列内で再計算する（スコア降順であることが前提）
     public static function rank_calc (string $mode, array $data, array $option): array
@@ -55,29 +51,31 @@ class Func extends Facade
         // 対象のランキングの参加者数
         $member = count($data);
 
-        // 通常ランキングの最大参加者数
-        if($mode !== "total") {
-            $max = self::max_count($option);
-        } else {
-            $max = 0;
-        }
-
         foreach($data as $key => $value){
-            if($before !== $value["score"]){
-                $rank = $count;
+            if($mode !== "user") {
+                // 順位を一括計算
+                if ($before !== $value["score"]) {
+                    $rank = $count;
+                }
+                $data[$key]["post_rank"] = $rank;
+                $before = $value["score"];
+                $count++;
             }
-            $data[$key]["post_rank"] = $rank;
-            $before = $value["score"];
-            $count++;
-
             if($mode !== "total") {
-                // ランクポイントを計算
-                $m = (10 - log($max / $member)) * ((0.9 * ($member / $max)) + 0.1);
-                $r = ($max / $rank ** 1.12) * ($rank ** (0.9 * ($max - $rank + 1) ** 2 / $max ** 2 + 0.1) / $max * 10);
-                $data[$key]["rps"] = floor($m * $r * 200);
+                $data[$key]["rps"] = self::rankPoint_calc($rank, $member, $option);
             }
         }
         return $data;
+    }
+    public static function rankPoint_calc($rank, $member, $option): float
+    {
+        // 最大の参加者数データを取得
+        $max = max(self::memberCount($option));
+
+        $m = (10 - log($max / $member)) * ((0.9 * ($member / $max)) + 0.1);
+        $r = ($max / $rank ** 1.12) * ($rank ** (0.9 * ($max - $rank + 1) ** 2 / $max ** 2 + 0.1) / $max * 10);
+
+        return floor($m * $r * 200);
     }
     public static function compare_calc (array $data, $compare = 'timebonus') : array
     {

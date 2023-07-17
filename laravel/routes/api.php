@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\GetImageController;
+use App\Http\Controllers\GetPasswordController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\NewRecordController;
 use App\Http\Controllers\PostCountController;
@@ -78,7 +79,7 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
     Route :: patch ( 'keyword/{id}' , [ KeywordController ::class, 'update' ]);
     Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
-    Route :: get ('keywords', function () {
+    Route :: get ('keywords', static function () {
         $str = "";
         for($i=1; $i<=13; $i++) {
             $str .= rands();
@@ -95,7 +96,8 @@ Route :: group ([ 'middleware' => [ 'api' ]], static function () {
 
 // テスト用
 Route :: group ([ 'middleware' => [ 'api' ]], static function () {
-    Route:: get('max', [Func ::class, 'max_count']);
+    Route:: get('max', [Func ::class, 'memberCount']);
+    Route::get('password', [GetPasswordController::class, 'show']);
 });
 
 /**

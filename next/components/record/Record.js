@@ -1,4 +1,4 @@
-import {Grid} from "@mui/material";
+import {Grid, Tooltip} from "@mui/material";
 import Link from "next/link";
 import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -16,11 +16,14 @@ import {
     RecordContainer,
     UserType
 } from "../../styles/pik5.css";
+import Lightbox from "yet-another-react-lightbox";
+import LightBoxImage from "../modal/LightBoxImage";
+import "yet-another-react-lightbox/styles.css";
 
 export default function Record({data}) {
 
     const {t} = useLocale()
-    const date = new Date(data.created_at)
+    const date = new Date(data.created_at ?? "2006-09-01 00:00:00")
 
     const [imgOpen, setImgOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
@@ -42,7 +45,7 @@ export default function Record({data}) {
     }
 
     // カテゴリによってユーザーページリンクを置き換える
-    const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user.user_name : "/user/"+data.user.user_id
+    const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user?.user_name : "/user/"+data.user?.user_id
 
     // 比較値を整形する
     let compare;
@@ -68,7 +71,7 @@ export default function Record({data}) {
             <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
-                <UserType><Link href={userPageUrl}>{data.user.user_name}</Link></UserType>
+                <UserType length={data.user?.user_name.length}><Link href={userPageUrl}>{data.user?.user_name}</Link></UserType>
             </Grid>
             <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
@@ -98,15 +101,22 @@ export default function Record({data}) {
                     }}>
                         {data.img_url ?
                             <>
-                                <FontAwesomeIcon icon={faImage}  onClick={imgHandleOpen} />
-                                <ModalDialogImage url={data.img_url} imgOpen={imgOpen} imgHandleClose={imgHandleClose}/>
+                                <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
+                                <Lightbox open={imgOpen} close={() => setImgOpen(false)}
+                                          slides={[{src:"http://localhost:8000/api/img/"+data.img_url}]}
+                                          rendar={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
+                                          controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
                             </>: undefined}
                         {data.video_url ?
                             <>
-                                <FontAwesomeIcon icon={faYoutube} onClick={videoHandleOpen}/>
-                                <ModalDialogVideo url={data.video_url} videoOpen={videoOpen} videoHandleClose={videoHandleClose}/>
+                                <Link href={data.video_url} target="_blank">
+                                    <FontAwesomeIcon icon={faYoutube} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
+                                </Link>
                             </>: undefined}
-                        {data.unique_id ? <Link href={'/record/'+data.unique_id}><FontAwesomeIcon icon={faTag}/></Link>: undefined}
+                        {data.unique_id ?
+                            <Tooltip title={"ID: " + data.unique_id} arrow>
+                                <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
+                            </Tooltip>: undefined}
                         {data.post_comment ? data.post_comment : undefined}
                     </Grid>
                 </Grid>

@@ -19,25 +19,15 @@ export default function PullDownConsole(props){
         const parent = (info.parent < 10) ? info.stage_id : info.parent
 
         // ステージによって操作方法配列を操作
-        if (info.series === 1) {
-            // ピクミン１＝Wii・NGC
+        if (info.series === 1 || info.series === 2) {
+            // ピクミン１・２＝Wii・NGC・Switch
             consoles.push(1, 2, 7)
         }
-        if (parent === 21) {
-            // ピクミン２：タマゴムシ縛り
-            consoles.push(1, 2, 7)
+        if (info.series === 3 && parent !== 36) {
+            consoles.push(2, 3, 4, 5)
         }
-        if (parent === 22) {
-            if (info.stage_id !== 216 && info.stage_id !== 223) {
-                // スプレー縛り（食神のかまど、ひみつの花園は除外）
-                consoles.push(1, 2, 7)
-            } else {
-                // 食神のかまど、ひみつの花園
-                consoles.push(1, 2, 7)
-            }
-        }
-        if (info.series === 3 && parent !== 35) {
-            consoles.push(2, 3, 4, 5, 6)
+        if (parent === 36){
+            console.push(3, 4, 5, 6)
         }
         type = info.type
         id   = info.stage_id
