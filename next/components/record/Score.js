@@ -17,6 +17,12 @@ export default function Score({score, stage, category}){
     const bingoBattleList = range(351, 362) // ソロビンゴ
     const countUpStageList = soloBattleList.concat(bingoBattleList)
 
+    if(!score){
+        return (
+            <></>
+        )
+    }
+
     if(category === "speedrun" || countUpStageList.includes(stage)){
         // RTAの場合
         return (
