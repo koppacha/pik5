@@ -8,6 +8,7 @@ import {useLocale} from "../../lib/pik5";
 import * as yup from "yup";
 import {yupResolver} from "@hookform/resolvers/yup";
 import Button from "@mui/material/Button";
+import Image from "next/image";
 
 export default function Register() {
 
@@ -59,10 +60,13 @@ export default function Register() {
 
     return (
         <Box>
+            <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
+                <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
+            </Box>
             <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
                 <AuthWindow item>
                     <Typography variant="strong">ピクチャレ大会へようこそ</Typography><br/>
-                    <FormControl>
+                    <Box className="form-helper-text">
                         <TextField
                             {...register('name')}
                             id="name"
@@ -93,7 +97,7 @@ export default function Register() {
                         <Button href="/">トップページに戻る</Button>
                         <Button href="/auth/login">ログイン</Button>
                         <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button>
-                    </FormControl>
+                    </Box>
                 </AuthWindow>
             </Grid>
         </Box>

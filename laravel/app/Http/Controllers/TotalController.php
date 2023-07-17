@@ -118,13 +118,22 @@ class TotalController extends Controller
         $rule    = $request['rule']    ?: $request['id'];
         $year    = $request['year']    ?: date("Y");
 
+        // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
+        if($rule === "20"){
+            $rule = [20, 21, 22];
+        } elseif($rule === "30"){
+            $rule = [30, 31, 32, 33, 36];
+        } else {
+            $rule = [$rule];
+        }
+
         // データの格納先
         $ranking = [];
 
         // オプション引数を加工する
         $year = (int)$year + 1;
         $console_operation = $console ? "=" : ">";
-        $rule_operation = $rule ? "=" : ">";
+//        $rule_operation = $rule ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -143,7 +152,7 @@ class TotalController extends Controller
             // 有効データのみ抽出するクエリ
             $testModel[(int)$stage] = Record::where('stage_id', $stage)
                 ->where('console', $console_operation, $console)
-                ->where('rule', $rule_operation, $rule)
+                ->whereIn('rule', $rule)
                 ->where('created_at', '<', $date)
                 ->where('flg', '<', 2)
                 ->orderBy('score','DESC')

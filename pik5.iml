@@ -134,6 +134,27 @@
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/league/flysystem-local" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/polyfill-php83" />
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor/symfony/yaml" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/dataSources" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/app/public/img" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/10" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/24" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/2c" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/36" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/41" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/4c" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/76" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/7c" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/84" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/9a" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/ae" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/bd" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/cc" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/d3" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/ec" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/ed" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/vendor" />
+      <excludeFolder url="file://$MODULE_DIR$/mysql" />
+      <excludeFolder url="file://$MODULE_DIR$/next/prisma/data" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
