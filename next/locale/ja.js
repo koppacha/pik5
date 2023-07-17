@@ -20,6 +20,7 @@ export const ja = {
         theme: "テーマを変更する",
         language: "English",
         top: "トップページ",
+        category: "カテゴリ",
     },
     t: {
         notFound: "ここは例の惑星ではありません。",

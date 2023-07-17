@@ -13,10 +13,12 @@ import useSWR from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import {StyledDialogContent} from "../../styles/pik5.css";
+import {useSession} from "next-auth/react";
 
 export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEditClose}) {
 
     const {t} = useLocale()
+    const {data: session } = useSession()
 
     // バリデーションルール
     const schema = yup.object({
@@ -72,7 +74,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                     'yomi': yomi,
                     'content': content,
                     'first_editor':data?.first_editor || 'guest',
-                    'last_editor':'guest', // ←常にログインID
+                    'last_editor':session.user.id,
                     'created_at': now,
                     'flag': 1,
                 })
@@ -85,18 +87,18 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
     useEffect(() => {
         reset({
             defaultValue: {
-                category: data?.category,
-                tag: data?.tag,
-                keyword: data?.keyword,
-                yomi: data?.yomi,
-                content: data?.content,
+                category: data?.data?.category,
+                tag: data?.data?.tag,
+                keyword: data?.data?.keyword,
+                yomi: data?.data?.yomi,
+                content: data?.data?.content,
             }
         })
-        setCategory(data?.category)
-        setTag(data?.tag)
-        setKeyword(data?.keyword)
-        setYomi(data?.yomi)
-        setContent(data?.content)
+        setCategory(data?.data?.category)
+        setTag(data?.data?.tag)
+        setKeyword(data?.data?.keyword)
+        setYomi(data?.data?.yomi)
+        setContent(data?.data?.content)
     }, [data])
 
     if(!data){
@@ -112,7 +114,19 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
             </>
         )
     }
-
+    if(!session){
+        return (
+            <>
+                <Dialog open={editOpen} onClose={handleEditClose}>
+                    <Box style={{width:'600px'}}>
+                        <DialogContent>
+                            編集にはログインが必要です。
+                        </DialogContent>
+                    </Box>
+                </Dialog>
+            </>
+        )
+    }
     return (
         <>
             <Dialog open={editOpen} onClose={handleEditClose}>

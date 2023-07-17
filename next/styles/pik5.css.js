@@ -136,7 +136,6 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.back} !important;
     }
   }
-
   .info-box {
     border: 1px solid ${colors.light.back};
     padding: 2em;
@@ -150,12 +149,18 @@ export const GlobalStyle = createGlobalStyle`
 
   .form-helper-text {
     color: ${colors.light.front};
-
+    div, input, label {
+      color: ${colors.light.front};
+    }
+    
     [data-theme='dark'] & {
       color: ${colors.dark.front};
+      div, input, label {
+        color: ${colors.dark.front};
+      }
+
     }
   }
-
   .markdown-content {
     font-size: 1.0em;
     color: #9fb5bd;
@@ -342,14 +347,22 @@ export const CompareType = styled(Typography)`
     color: ${colors.dark.compare};
   }
 `
-export const UserType = styled(Typography)`
+export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
     line-height :80px;
     font-size :1.25em;
     text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
 
-    ${sp`font-size: 1em;`}
+    ${sp`
+        font-size: 1em;
+        line-height :40px;
+    `}
 
+    ${function (props) {
+        if (props.$length > 12) {
+            return css`font-size: 1em;`
+        }
+    }}
 `
 export const RankType = styled(Typography)`
     font-size: 2em;
@@ -435,6 +448,7 @@ export const MobileMenuButton = styled(Button)`
     color: #000;
   }
 `
+
 export const MobileMenuBox = styled(Box)`
   width: 60vw;
   color: ${colors.light.front};

@@ -13,6 +13,12 @@ import {fetcher, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import useSWR from "swr";
 import NowLoading from "../../components/NowLoading";
+import {logger} from "../../lib/logger";
+import RankingStandard from "../../components/record/RankingStandard";
+import RankingUser from "../../components/record/RankingUser";
+import {RuleBox} from "../../styles/pik5.css";
+import Link from "next/link";
+import PullDownRule from "../../components/form/PullDownRule";
 
 export async function getServerSideProps(context){
 
@@ -24,8 +30,8 @@ export async function getServerSideProps(context){
     const userName = await userNameRes.json()
 
     const console = query[1] || 0
-    const rule  = query[2] || 0
-    const year  = query[3] || 2023
+    const rule    = query[2] || 0
+    const year    = query[3] || 2023
 
     return {
         props: {
@@ -37,13 +43,6 @@ export async function getServerSideProps(context){
 export default function Stage(param){
 
     const {t} = useLocale()
-    const { data } = useSWR(`/api/server/record/${param.userId}/${param.console}/${param.rule}/${param.year}`, fetcher)
-
-    if(!data){
-        return (
-            <NowLoading/>
-        )
-    }
 
     return (
         <>
@@ -57,14 +56,11 @@ export default function Stage(param){
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
+                    <PullDownRule props={param}/>
                 </Grid>
             </Grid>
-            <UserScoreTable/>
-            {
-                Object.values(data).map(post =>
-                    <Record data={post} />
-                )
-            }
+            {/*<UserScoreTable/>*/}
+            <RankingUser data={param.data} userId={param.user} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
 }
