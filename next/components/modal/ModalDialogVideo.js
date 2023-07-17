@@ -55,6 +55,7 @@ export default function ModalDialogVideo({videoOpen, videoHandleClose, url}) {
     const opts = {
         playerVars: {
             autoplay: 1,
+            mute: 1,
         }
     }
     

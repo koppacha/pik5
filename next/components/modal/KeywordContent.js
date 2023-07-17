@@ -19,7 +19,7 @@ export function KeywordContent({data}){
     const handleClose = () => {
         setOpen(false)
     }
-    const date = new Date(data.updated_at)
+    const date = new Date(data.updated_at ?? "2006-09-01 00:00:00")
     const [isClient, setIsClient] = useState(false)
     useEffect(() => setIsClient(true), [])
 

@@ -117,19 +117,21 @@ class RecordController extends Controller
         // 重複削除対象
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
-        // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362));
+        // 順位づけのための並び変え条件
+        function orderByRule($id, $rule): array
+        {
+            // カウントアップRTAのステージリスト
+            $rta_stages = array_merge(range(245, 254), range(351, 362));
 
-        // 並び変え条件
-        if(is_numeric($request['id'])){
-            if($request['rule'] === "11" || in_array($request['id'], $rta_stages, true)){
-                $orderBy = ['score', 'ASC'];
-            } else {
-                $orderBy = ['score', 'DESC'];
+            if(is_numeric($id)){
+                if($rule === "11" || in_array($id, $rta_stages, true)){
+                    return ['score', 'ASC'];
+                }
+                return ['score', 'DESC'];
             }
-        } else {
-            $orderBy = ['score','DESC'];
+            return ['score','DESC'];
         }
+        $orderBy = orderByRule($request["id"], $request["rule"]);
 
         // オプション引数
         $console = $request['console'] ?: 0;
@@ -137,10 +139,19 @@ class RecordController extends Controller
         $year    = $request['year']    ?: date("Y");
         $compare = $request['compare'] ?: 'timebonus';
 
+        // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
+        if($rule === "20"){
+            $rule = [20, 21, 22];
+        } elseif($rule === "30"){
+            $rule = [30, 31, 32, 33, 36];
+        } else {
+            $rule = [$rule];
+        }
+
         // オプション引数を加工する
         $year = (int)$year + 1;
         $console_operation = $console ? "=" : ">";
-        $rule_operation = $rule ? "=" : ">";
+//        $rule_operation = $rule ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -155,7 +166,7 @@ class RecordController extends Controller
                 // 絞り込み条件
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
-                ->where('rule', $rule_operation ,$rule)
+                ->whereIn('rule', $rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
                 ->orderBy($orderBy[0],$orderBy[1])
@@ -177,8 +188,32 @@ class RecordController extends Controller
         }
 
         if($where === "stage_id") {
-            // 順位を付与
+            // ステージごとのセットなら順位とランクポイントをセット単位で計算する
             $new_data = Func::rank_calc("stage", $new_data, [$console, $rule, $date]);
+        } else {
+            // セット単位ではない場合は個別に計算する
+            foreach($new_data as $key => $value){
+
+                $orderBy = orderByRule($value["stage_id"], $value["rule"]);
+
+                // 絞り込み条件を再定義
+                $score_operation = ($orderBy[1] === "ASC") ? "<" : ">";
+
+                $temp = Record::selectRaw('COUNT(DISTINCT user_id) as user_rank')
+                    ->where('stage_id', $value["stage_id"])
+                    ->where('console', $console_operation, $console)
+                    ->whereIn('rule', $rule)
+                    ->where('created_at','<', $date)
+                    ->where('flg','<', 2)
+                    ->where('score', $score_operation, $value["score"])
+                    ->first();
+
+                $rank = $temp->user_rank + 1;
+                $new_data[$key]["post_rank"] = $rank;
+                $option = [$console, $rule, $date];
+                $member_count = Func::memberCount($option);
+                $new_data[$key]["rps"] = Func::rankPoint_calc($rank, $member_count[$value["stage_id"]], $option);
+            }
         }
         // 比較値を付与
         $dataset = Func::compare_calc($new_data, $compare);

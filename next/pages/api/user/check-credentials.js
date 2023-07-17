@@ -1,7 +1,7 @@
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
-import sha256 from "crypto-js/sha256"
 import { omit } from "lodash"
+import bcrypt from "bcrypt";
 
 export default async function handle(req, res) {
     if (req.method === "POST") {
@@ -12,28 +12,32 @@ export default async function handle(req, res) {
         );
     }
 }
-const hashPassword = (password) => {
-    return sha256(password).toString();
-};
+function hashPassword(password){
+    const saltRounds = 10
+    if(password) {
+        return bcrypt.hashSync(password, saltRounds)
+    } else {
+        return null
+    }
+}
 
-// POST /api/user
 async function handlePOST(res, req) {
 
-    const user = await prisma.user.findUnique({
-        where: { userId: req.body.userId },
-        select: {
-            id: true,
-            name: true,
-            userId: true,
-            password: true,
-        },
-    });
-
-    if (user && user.password === hashPassword(req.body.password)) {
-        logger.debug("password correct")
-        res.json(omit(user, "password"))
-    } else {
-        logger.debug("incorrect credentials")
-        res.status(400).end("Invalid credentials")
+    try{
+        // Postmanで送信する際はbodyではなくqueryを参照するっぽい
+        const {userId, password} = req.body
+        const user = await prisma.user.findFirst({
+            where: {
+                userId: userId
+            },
+        });
+        if (user && bcrypt.compareSync(password, user.password)) {
+            res.json(omit(user, "password"))
+        } else {
+            res.status(400).end("Incorrect password")
+        }
+    } catch (e){
+        logger.debug(e)
+        res.status(400).end("DB ERROR")
     }
 }
