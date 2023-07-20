@@ -1,10 +1,6 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import prisma from "../../../lib/prisma";
 
-export default async function handle(
-    req: NextApiRequest,
-    res: NextApiResponse,
-) {
+export default async function handle(req, res) {
     const userId = req.query.id;
 
     if (req.method === "GET") {

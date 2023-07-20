@@ -28,7 +28,7 @@ export default function UserScoreTable(props){
                 {
                     ruleList.map(rule =>
                         (
-                            <StyledGrid item xs={1}>
+                            <StyledGrid key={rule} item xs={1}>
                                 {t.rule[rule]}
                             </StyledGrid>
                         )
@@ -44,7 +44,7 @@ export default function UserScoreTable(props){
                 {
                     ruleList.map(rule =>
                         (
-                            <StyledGrid item xs={1}>
+                            <StyledGrid key={rule} item xs={1}>
                                 700,245pts.<br/>
                                 1位 /112
                             </StyledGrid>

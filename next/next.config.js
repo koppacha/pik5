@@ -3,6 +3,7 @@
  */
 
 module.exports = {
+  staticPageGenerationTimeout: 180,
   reactStrictMode: true,
   i18n: {
     locales: ["en", "ja"],

@@ -99,6 +99,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
         setKeyword(data?.data?.keyword)
         setYomi(data?.data?.yomi)
         setContent(data?.data?.content)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
     if(!data){
