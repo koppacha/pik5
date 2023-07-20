@@ -13,7 +13,7 @@ import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
 import {available} from "../../lib/const";
-
+import prisma from "../../lib/prisma";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){

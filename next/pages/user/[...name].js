@@ -7,6 +7,7 @@ import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
+import prisma from "../../lib/prisma";
 
 export async function getServerSideProps(context){
 
