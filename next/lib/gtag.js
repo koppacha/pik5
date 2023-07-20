@@ -5,7 +5,7 @@ export const ga = process.env.NEXT_PUBLIC_GAID
 
 // ページカウンター
 export const pageView = (url) =>
-    <Script strategy="afterInteractive"
+    <Script id="gtag" strategy="afterInteractive"
             dangerouslySetInnerHTML={{
                 __html:`
                         window.gtag("config", '${ga}', {

@@ -4,7 +4,7 @@ import {Typography} from "@mui/material";
 import Head from "next/head";
 import * as React from "react";
 
-export default function notFound(){
+export default function NotFound(){
 
     const {t} = useLocale()
 
