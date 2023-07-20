@@ -9,6 +9,7 @@ import {CellBox} from "../../styles/pik5.css";
 
 export default function TrendRanking(){
 
+    const {t} = useLocale()
     const {data:trends} = useSWR(`http://localhost:8000/api/trend`, fetcher)
 
     if(!trends){
@@ -16,9 +17,6 @@ export default function TrendRanking(){
             <NowLoading/>
         )
     }
-
-    const {t} = useLocale()
-
     return (
         <>
             <Grid container>
@@ -26,7 +24,7 @@ export default function TrendRanking(){
                 trends.map(function(post, i){
 
                     return (
-                        <Grid item xs={2} component={Link} href={"/stage/"+post.stage_id}>
+                        <Grid item key={i} xs={2} component={Link} href={"/stage/"+post.stage_id}>
                             <CellBox>
                                 {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
                                 {t.stage[post.stage_id]}<br/>
