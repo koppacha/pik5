@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Library\Func;
+use App\Models\Keyword;
 use App\Models\Record;
+use App\Models\Stage;
 use DateTime;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,28 +63,55 @@ class RecordController extends Controller
             $data
         );
     }
+
     /**
      * Show the form for creating a new resource.
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     public function create(Request $request): JsonResponse
     {
-//        $data = new Record;
-//
-//        $data->fill([
-//            'user_name' => $request['user_name'],
-//            'score' => $request['score']
-//        ]);
-//
-//        $data->save();
-
+        // 疎通確認
         Log::debug($request);
 
-        return response()->json([
-            "message" => "created",
-        ], 201);
+        // 受信した画像の処理
+        $fileName = "";
+        $img = $request->file('file');
+        if($img) {
+            $extension = $img->getClientOriginalExtension();
+            $fileName = date("Ymd-His").'-'.random_int(1000000000, 9999999999).'.'.$extension;
+            $img->storeAs('public/img', $fileName);
+        }
+        try {
+            $posts = new Record();
+            $posts->fill([
+                'user_id' => $request['user_id'],
+                'score' => $request['score'],
+                'stage_id' => $request['stage_id'],
+                'rule' => $request['rule'],
+                'console' => $request['console'] ?: 0,
+                'region' => 0,
+                'unique_id' => "300".sprintf('%06d',random_int(0, 999999)),
+                'post_comment' => $request['post_comment'] ?: "コメントなし",
+                'user_ip' => $request->ip(),
+                'user_host' => $request->host(),
+                'user_agent' => $request->header('User-Agent'),
+                'img_url' => $fileName,
+                'video_url' => $request['video_url'] ?: "",
+                'post_memo' => "",
+                'flg' => 0
+            ]);
+            $posts->save();
+
+        } catch (Exception $e) {
+            Log::debug($e);
+            return \response()->json(["ERROR:$e", 500]);
+        }
+        return response()->json(
+            ["OK", 200]
+        );
     }
 
     /**
@@ -110,6 +140,8 @@ class RecordController extends Controller
          * console: 操作方法（任意）
          * year: 集計年（任意）
         */
+        // パフォーマンス計測
+        $startTime = microtime(true);
 
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
@@ -117,20 +149,6 @@ class RecordController extends Controller
         // 重複削除対象
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
-        // 順位づけのための並び変え条件
-        function orderByRule($id, $rule): array
-        {
-            // カウントアップRTAのステージリスト
-            $rta_stages = array_merge(range(245, 254), range(351, 362));
-
-            if(is_numeric($id)){
-                if($rule === "11" || in_array($id, $rta_stages, true)){
-                    return ['score', 'ASC'];
-                }
-                return ['score', 'DESC'];
-            }
-            return ['score','DESC'];
-        }
         $orderBy = orderByRule($request["id"], $request["rule"]);
 
         // オプション引数
@@ -142,9 +160,19 @@ class RecordController extends Controller
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
         if($rule === "20"){
             $rule = [20, 21, 22];
+
         } elseif($rule === "30"){
             $rule = [30, 31, 32, 33, 36];
+
+        } elseif(!$rule && $where === "stage_id") {
+            $rule = Stage::where('stage_id', $request['id'])->first()->parent;
+
+        } elseif(!$rule && $where === "user_id") {
+            // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40];
+
         } else {
+            // 上記すべてに当てはまらない場合
             $rule = [$rule];
         }
 
@@ -158,13 +186,7 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $dataset = Record::with(['user' => function($q){
-                // user_idに基づいてUserテーブルからユーザー名を取得する
-                $q->select('user_name','user_id');
-                }])
-
-                // 絞り込み条件
-                ->where($where, $request['id'])
+        $dataset = Record::where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->whereIn('rule', $rule)
                 ->where('created_at','<', $date)
@@ -190,11 +212,15 @@ class RecordController extends Controller
         if($where === "stage_id") {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する
             $new_data = Func::rank_calc("stage", $new_data, [$console, $rule, $date]);
+
         } else {
-            // セット単位ではない場合は個別に計算する
+
+            // セット単位ではない場合は個別に計算する（ユーザー別、総合ランキング）
+            $max = max(Func::memberCount([$console, $rule, $date]));
+
             foreach($new_data as $key => $value){
 
-                $orderBy = orderByRule($value["stage_id"], $value["rule"]);
+                $orderBy = Func::orderByRule($value["stage_id"], $value["rule"]);
 
                 // 絞り込み条件を再定義
                 $score_operation = ($orderBy[1] === "ASC") ? "<" : ">";
@@ -212,7 +238,7 @@ class RecordController extends Controller
                 $new_data[$key]["post_rank"] = $rank;
                 $option = [$console, $rule, $date];
                 $member_count = Func::memberCount($option);
-                $new_data[$key]["rps"] = Func::rankPoint_calc($rank, $member_count[$value["stage_id"]], $option);
+                $new_data[$key]["rps"] = Func::rankPoint_calc($rank, $member_count[$value["stage_id"]], $max);
             }
         }
         // 比較値を付与

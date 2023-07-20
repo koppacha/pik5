@@ -59,9 +59,13 @@ export async function getServerSideProps(context){
     if(res.status < 300) {
         stages = await res.json()
     }
+
+    // スクリーンネームをリクエスト
+    const users = await prisma.user.findMany()
+
     return {
         props: {
-            stages, series, rule, console: consoles, year, info
+            stages, series, rule, console: consoles, year, info, users
         }
     }
 }
@@ -83,19 +87,21 @@ export default function Series(param){
                 <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
                 <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
             </PageHeader>
-            <Grid container style={{margin:"2em 0"}}>
-                {
-                    stages?.map(stage =>
-                    <Grid key={stage} item xs={2.4} lg={1.2}>
-                        <Link key={stage} href={'/stage/'+stage}><StageListBox>
-                            <span>#{stage}</span><br/>
-                            {t.stage[stage]}</StageListBox>
-                        </Link>
-                    </Grid>
-                    )
-                }
-            </Grid>
-
+            {
+                param.series > 9 &&
+                <Grid container style={{margin:"2em 0"}}>
+                    {
+                        stages?.map(stage =>
+                            <Grid key={stage} item xs={2.4} lg={1.2}>
+                                <Link key={stage} href={'/stage/'+stage}><StageListBox>
+                                    <span>#{stage}</span><br/>
+                                    {t.stage[stage]}</StageListBox>
+                                </Link>
+                            </Grid>
+                        )
+                    }
+                </Grid>
+            }
             <Grid container>
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>
@@ -107,7 +113,7 @@ export default function Series(param){
             }}>
             <Totals props={param}/>
             </Grid>
-            <RankingTotal series={param.series} console={param.console} rule={param.rule} year={param.year}/>
+            <RankingTotal users={param.users} series={param.series} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
 }

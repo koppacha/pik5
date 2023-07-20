@@ -30,56 +30,56 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 });
 
 // 記録取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'record' , [ RecordController ::class, 'index' ]);
-    Route :: get ( 'record/rank/{stage}/{rule}/{score?}' , [ RecordController ::class, 'getRank' ]);
-    Route :: get ('record/id/{id}', [RecordController::class, 'getRecord']);
-    Route :: get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController ::class, 'show' ]);
-    Route :: post ( 'record' , [ RecordController ::class, 'create' ]);
-    Route :: patch ( 'record/{id}' , [ RecordController ::class, 'update' ]);
-    Route :: delete ( 'record/{id}' , [ RecordController ::class, 'destroy' ]);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get ( 'record' , [ RecordController::class, 'index' ]);
+    Route::get ( 'record/rank/{stage}/{rule}/{score?}' , [ RecordController::class, 'getRank' ]);
+    Route::get ('record/id/{id}', [RecordController::class, 'getRecord']);
+    Route::get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController::class, 'show' ]);
+    Route::post ( 'record' , [ RecordController::class, 'create' ]);
+    Route::patch ( 'record/{id}' , [ RecordController::class, 'update' ]);
+    Route::delete ( 'record/{id}' , [ RecordController::class, 'destroy' ]);
 });
 
 // 新着記録取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'new' , [ NewRecordController ::class, 'get' ]);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get ( 'new' , [ NewRecordController::class, 'get' ]);
 });
 
 // 記録数カウントAPI
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'count' , [ PostCountController ::class, 'getUserPostCount']);
-    Route :: get ( 'trend' , [ PostCountController ::class, 'getTrendPostCount']);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get ( 'count' , [ PostCountController::class, 'getUserPostCount']);
+    Route::get ( 'trend' , [ PostCountController::class, 'getTrendPostCount']);
 });
 
 // 通常総合ランキング取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController ::class, 'show' ]);
-    Route :: get ( 'stages/{series}' , [ TotalController ::class, 'stage_list' ]);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController::class, 'show' ]);
+    Route::get ( 'stages/{series}' , [ TotalController::class, 'stage_list' ]);
 });
 
 // ステージ情報取得API
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route :: get ( 'stage/{id}' , [ StageController ::class, 'show' ]);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get ( 'stage/{id}' , [ StageController::class, 'show' ]);
 });
 
 // ユーザーIDからユーザー名を取得する
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route:: get('user/name/{id}', [UserNameController ::class, 'requestName']);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route:: get('user/name/{id}', [UserNameController::class, 'requestName']);
 });
 
 // ユーザーIDから全順位を取得する
-Route :: group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route:: get('user/total/{id}', [UserTotalController ::class, 'show']);
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route:: get('user/total/{id}', [UserTotalController::class, 'show']);
 });
 
 // キーワード関連API
-Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
-    Route :: get ( 'keyword' , [ KeywordController ::class, 'index' ]);
-    Route :: get ( 'keyword/{id}' , [ KeywordController ::class, 'show' ]);
-    Route :: post ( 'keyword' , [ KeywordController ::class, 'create' ]);
-    Route :: patch ( 'keyword/{id}' , [ KeywordController ::class, 'update' ]);
-    Route :: delete ( 'keyword/{id}' , [ KeywordController ::class, 'destroy' ]);
-    Route :: get ('keywords', static function () {
+Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
+    Route::get ( 'keyword' , [ KeywordController::class, 'index' ]);
+    Route::get ( 'keyword/{id}' , [ KeywordController::class, 'show' ]);
+    Route::post ( 'keyword' , [ KeywordController::class, 'create' ]);
+    Route::patch ( 'keyword/{id}' , [ KeywordController::class, 'update' ]);
+    Route::delete ( 'keyword/{id}' , [ KeywordController::class, 'destroy' ]);
+    Route::get ('keywords', static function () {
         $str = "";
         for($i=1; $i<=13; $i++) {
             $str .= rands();
@@ -90,13 +90,13 @@ Route :: group ([ 'middleware' => [ 'api', 'cors']], static function () {
 });
 
 // 証拠画像取得API
-Route :: group ([ 'middleware' => [ 'api' ]], static function () {
-    Route:: get('img/{file}', [GetImageController ::class, 'show']);
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route:: get('img/{file}', [GetImageController::class, 'show']);
 });
 
 // テスト用
-Route :: group ([ 'middleware' => [ 'api' ]], static function () {
-    Route:: get('max', [Func ::class, 'memberCount']);
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route:: get('max', [Func::class, 'memberCount']);
     Route::get('password', [GetPasswordController::class, 'show']);
 });
 

@@ -27,7 +27,7 @@ export default function PullDownConsole(props){
             consoles.push(2, 3, 4, 5)
         }
         if (parent === 36){
-            console.push(3, 4, 5, 6)
+            consoles.push(3, 4, 5, 6)
         }
         type = info.type
         id   = info.stage_id

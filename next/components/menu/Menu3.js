@@ -14,7 +14,7 @@ import {useRouter} from "next/router";
 import {en} from "@/locale/en";
 import {ja} from "@/locale/ja";
 import Link from "next/link";
-import {StyledMenuItem} from "../../styles/pik5.css";
+import {HeaderPopMenu, StyledMenuItem} from "../../styles/pik5.css";
 import {useLocale} from "../../lib/pik5";
 import {be, ce, ss, db, sb} from "../../lib/const";
 
@@ -29,82 +29,73 @@ export default function Menu3(props){
     const {t} = useLocale()
 
     return (
-        <Paper>
+        <HeaderPopMenu>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
                     autoFocusItem={open}
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    style={{
-                    }}
+                    disablePadding
                 >
-                    <StyledMenuItem component={Link} href="/total/30" onClick={props.handleClose}>
-                        {t.title[3]}
-                    </StyledMenuItem>
-                    <Grid container spacing={2}>
+                    <Grid container spacing={0} onClick={props.handleClose}>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem component={Link} href="/total/31" onClick={props.handleClose}>お宝をあつめろ！</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+ceColor,
+                            }} component={Link} href="/total/31" onClick={props.handleClose}>お宝をあつめろ！総合</StyledMenuItem>
 
                             {
                                 ce.map(n=>
-                                    <StyledMenuItem key={ce} style={{
-                                        borderBottom:"solid 1px "+ceColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+ceColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"34px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem component={Link} href="/total/32" onClick={props.handleClose}>原生生物をたおせ！</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+beColor,
+                            }}  component={Link} href="/total/32" onClick={props.handleClose}>原生生物をたおせ！総合</StyledMenuItem>
                             {
                                 be.map(n=>
-                                    <StyledMenuItem key={be} style={{
-                                        borderBottom:"solid 1px "+beColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+beColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"34px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem component={Link} href="/total/33" onClick={props.handleClose}>巨大生物をたおせ！</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+dbColor,
+                            }}  component={Link} href="/total/33" onClick={props.handleClose}>巨大生物をたおせ！総合</StyledMenuItem>
                             {
                                 db.map(n=>
-                                    <StyledMenuItem key={db} style={{
-                                        borderBottom:"solid 1px "+dbColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+dbColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"37px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem component={Link} href="/total/34" onClick={props.handleClose}>サイドストーリー</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+ssColor,
+                            }}  component={Link} href="/total/34" onClick={props.handleClose}>サイドストーリー総合</StyledMenuItem>
                             {
                                 ss.map(n=>
-                                    <StyledMenuItem key={ss} style={{
-                                        borderBottom:"solid 1px "+ssColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+ssColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"37px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={2.4}>
-                            <StyledMenuItem component={Link} href="/total/35" onClick={props.handleClose}>ソロビンゴ</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+sbColor,
+                            }}  component={Link} href="/total/35" onClick={props.handleClose}>ソロビンゴ総合</StyledMenuItem>
                             {
                                 sb.map(n=>
-                                    <StyledMenuItem key={sb} style={{
-                                        borderBottom:"solid 1px "+sbColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+sbColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"37px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
@@ -112,6 +103,6 @@ export default function Menu3(props){
                     </Grid>
                 </MenuList>
             </ClickAwayListener>
-        </Paper>
+        </HeaderPopMenu>
     )
 }
