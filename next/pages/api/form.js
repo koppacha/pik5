@@ -6,8 +6,8 @@ export const config = {
     },
 }
 
-export default async (req, res) => {
-    if(req.method !== "POST") return
+const forms = async (req, res) => {
+    if (req.method !== "POST") return
 
     const form = formidable({multiples: true, uploadDir: 'http://laravel:8000/api/record'})
 
@@ -25,3 +25,4 @@ export default async (req, res) => {
 
     })
 }
+export default forms
