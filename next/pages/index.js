@@ -6,7 +6,7 @@ import {useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp,
     faCertificate,
-    faChartColumn, faCheckToSlot,
+    faChartColumn, faCheckToSlot, faCircleInfo,
     faFlag,
     faTrophy
 } from "@fortawesome/free-solid-svg-icons";
@@ -16,7 +16,17 @@ import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
 
-export default function Home() {
+export async function getServerSideProps(context) {
+    // スクリーンネームをリクエスト
+    const users = await prisma.user.findMany()
+    return {
+        props: {
+            users
+        }
+    }
+}
+
+export default function Home({users}) {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
@@ -30,11 +40,13 @@ export default function Home() {
         ["ピクミン3", "/total/30"],
         ["ピクミン4", "/total/40"],
         ["キーワード", "/keyword"],
-        ["本編RTA", "/speedrun"],
-        ["期間限定", "/limited"],
+        // ["本編RTA", "/speedrun"],
+        // ["期間限定", "/limited"],
         ["全総合", "/total/1"],
         ["通常総合", "/total/2"],
         ["特殊総合", "/total/3"],
+        ["利用規約", "/keyword/rules"],
+        ["Discord", "https://discord.gg/rQEBJQa"]
     ]
 
   return (
@@ -67,20 +79,15 @@ export default function Home() {
                     <WrapTopBox item xs={6}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faCheckToSlot} /> 日替わり投票
+                                <FontAwesomeIcon icon={faCheckToSlot} /> ログイン情報
                             </TopBoxHeader>
                             <TopBoxContent>
                                 {
                                     (session)
-                                        ?
+                                        &&
                                         <>
-                                            Signed in as {session.user.name} <br/>
-                                            <button onClick={()=>signOut()}>Sign out</button>
-                                        </>
-                                        :
-                                        <>
-                                            Not signed in <br/>
-                                            <button onClick={()=>signIn()}>Sign in</button>
+                                            ようこそ、 <Link href={"/user/"+session.user.id}>{session.user.name} さん！</Link><br/>
+                                            <button onClick={()=>signOut()}>サインアウト</button>
                                         </>
                                 }
                             </TopBoxContent>
@@ -89,24 +96,14 @@ export default function Home() {
                     <WrapTopBox item xs={6}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faTrophy} /> イベント開催情報
+                                <FontAwesomeIcon icon={faCircleInfo} /> お知らせ
                             </TopBoxHeader>
                             <TopBoxContent>
-                                あ<br/>
+                                2023/07/21：リニューアルオープンしました！<br/>
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
 
-                    <WrapTopBox item xs={12}>
-                        <TopBox>
-                            <TopBoxHeader>
-                                <FontAwesomeIcon icon={faChartColumn} /> 各種統計
-                            </TopBoxHeader>
-                            <TopBoxContent>
-                                あ<br/>
-                            </TopBoxContent>
-                        </TopBox>
-                    </WrapTopBox>
                     <WrapTopBox item xs={12}>
                         <TopBox>
                             <TopBoxHeader>
@@ -123,7 +120,7 @@ export default function Home() {
                                 <FontAwesomeIcon icon={faFlag} /> 2023年投稿数ランキング
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <PostCountRanking/>
+                                <PostCountRanking users={users}/>
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
@@ -133,7 +130,7 @@ export default function Home() {
                                 <FontAwesomeIcon icon={faCertificate} /> 新着記録
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <NewRecords/>
+                                <NewRecords users={users}/>
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>

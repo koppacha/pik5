@@ -8,12 +8,29 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {fetcher, useLocale} from "../../lib/pik5";
-import {MenuItem, Typography} from "@mui/material";
+import {useLocale} from "../../lib/pik5";
+import {MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
+import FormData from "form-data"
+import Link from "next/link";
 
-export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}){
+export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}) {
+
+    const consoleList = []
+
+    if (info.series < 3) {
+        consoleList.push(1, 2, 7)
+
+    } else if (info.series === 3 && rule !== 36){
+        consoleList.push(2, 3, 4, 5)
+
+    } else if (rule === 35) {
+        consoleList.push(2, 3, 4, 5, 6)
+
+    } else if (info.series === 4){
+        consoleList.push(3, 4)
+    }
 
     const {t} = useLocale()
     const {data:session} = useSession()
@@ -27,24 +44,34 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
     const [comment, setComment] = useState("")
     const [img, setImg] = useState()
 
+    const videoRegex = videoUrl ?
+        // 証拠動画URLが入力された場合の正規表現
+        "/^https?://(www\\.)?(nicovideo\\.jp|youtube\\.com|youtu\\.be|twitch\\.tv|twitter\\.com)/[\\w/\\?=]*$/"
+        :
+        // 空欄の場合はスルー
+        ""
+
     // バリデーションルール
     const schema = yup.object({
         score: yup
             .number()
             .min(1, '０点以下は登録できません。')
-            .max(999999, 'スコアの最大値は999,999です')
+            .max(99999, 'スコアの最大値は99,999です')
             .required(t.yup.required),
         videoUrl: yup
             .string()
-            // .matches("/^https?://(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)/[\w/\?=]*$/",
-            //     {message:'有効なURLではありません。有効な動画サイトは「YouTube」「ニコニコ動画」「Twitch」「Twitter」です。'})
-            .max(128, 'キーワードの最大文字数は128文字です。'),
+            .matches(videoRegex,
+            {message:'有効なURLではありません。有効な動画サイトは「YouTube」「ニコニコ動画」「Twitch」「Twitter」です。'})
+            .max(128, 'URLの最大文字数は128文字です。'),
         comment: yup
-            .string(),
+            .string()
+            .max(128, 'コメントの最大文字数は128文字です。'),
         rule: yup
-            .number(),
+            .number()
+            .min(1, 'ルールの選択は必須です。'),
         console: yup
-            .number(),
+            .number()
+            .min(1, '操作方法の選択は必須です。'),
     })
 
     const {register,
@@ -54,55 +81,45 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         resolver: yupResolver(schema),
     })
 
-    // const formData = new FormData()
+    // フォームデータ格納先
+    const formData = new FormData()
 
     // キーワードをバックエンドに送信する
     const onSubmit = async () => {
 
-        // // 送信するデータをオブジェクトに追加
-        // formData.append('stage_id', info.stage_id)
-        // formData.append('rule', rule)
-        // formData.append('region', region)
-        // formData.append('score', score)
-        // formData.append('user_id', "guest")
-        // formData.append('console', consoles)
-        // formData.append('img', img)
-        // formData.append('video_url', videoUrl)
-        // formData.append('post_comment', comment)
-        // formData.append('created_at', now)
-        //
-        // console.log("POSTing", formData)
+        // 送信するデータをオブジェクトに追加
+        formData.append('stage_id', info.stage_id)
+        formData.append('rule', rule)
+        formData.append('region', region)
+        formData.append('score', score)
+        formData.append('user_id', session.user.id)
+        formData.append('console', consoles)
+        formData.append('video_url', videoUrl)
+        formData.append('post_comment', comment)
+        formData.append('created_at', now)
 
-        // const res = await fetch('http://localhost:8000/api/record', {
-        //     method: 'POST',
-        //     body: formData,
-        // })
-        // console.log(await res.json())
-
-        const res = await fetch('/api/server/record', {
+        const res = await fetch('http://localhost:8000/api/record', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                'stage_id': info.stage_id,
-                'rule': rule,
-                'region': region,
-                'score': score,
-                'user_id': "guest",
-                'console': consoles,
-                'img': img,
-                'video_url': videoUrl,
-                'post_comment': comment,
-                'created_at': now
-            })
+            body: formData,
         })
-
-        console.log("Res", res)
 
         if(res.status < 300){
             setOpen(false)
         }
+    }
+    // 画像をアップロード
+    const handleFileClick = async (e) => {
+        const file = e.target.files[0]
+        formData.append('file', file)
+    }
+    if(!session){
+        return (
+            <>
+                <Dialog open={open} onClose={handleClose}>
+                    <Link href="/auth/login">投稿にはログインが必要です。</Link>
+                </Dialog>
+            </>
+        )
     }
 
     return (
@@ -137,7 +154,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         fullWidth
                         disabled
                         variant="standard"
-                        defaultValue={session?.user.name}
+                        defaultValue={session.user.name ?? ""}
                         margin="normal"
                     />
                     <TextField
@@ -162,11 +179,11 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         onChange={(e) => setConsole(e.target.value)}
                         fullWidth
                         variant="standard"
-                        defaultValue={currentConsole}
+                        defaultValue={consoleList[0]}
                         margin="normal"
                     >
                         {
-                            Object.keys(t.console).map((key) =>
+                            consoleList.map((key) =>
                                 <MenuItem key={key} value={key}>{t.console[key]}</MenuItem>
                             )
                         }
@@ -176,7 +193,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         id="img"
                         label="証拠画像"
                         type="file"
-                        onChange={(e) => console.log(e)}
+                        onChange={e => handleFileClick(e)}
                         fullWidth
                         variant="standard"
                         error={'img' in errors}

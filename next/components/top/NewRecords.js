@@ -4,7 +4,7 @@ import NowLoading from "../NowLoading";
 import Record from "../record/Record";
 import * as React from "react";
 
-export default function NewRecords(){
+export default function NewRecords({users}){
 
     const {data:newRecords} = useSWR(`http://localhost:8000/api/new`, fetcher)
 
@@ -14,10 +14,18 @@ export default function NewRecords(){
         )
     }
 
+    const data = newRecords ? newRecords.map(function(post){
+        const user = users.find(user => user.userId === post.user_id)
+        return {
+            ...post,
+            user_name: user ? user.name : ""
+        }
+    }) : []
+
     return (
         <>
             {
-                newRecords.map(function(post){
+                data.map(function(post){
                     return (
                         <Record data={post}/>
                     )

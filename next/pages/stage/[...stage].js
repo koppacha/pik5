@@ -12,8 +12,8 @@ import {PageHeader, RuleBox, StageListBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
-import MobileMenu from "../../components/menu/MobileMenu";
 import {available} from "../../lib/const";
+
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -61,9 +61,12 @@ export async function getServerSideProps(context){
         rule = info.parent
     }
 
+    // スクリーンネームをリクエスト
+    const users = await prisma.user.findMany()
+
     return {
         props: {
-            stages, stage, rule, console, year, info
+            stages, stage, rule, console, year, info, users
         }
     }
 }
@@ -142,7 +145,7 @@ export default function Stage(param){
                 </Grid>
             </Box>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
-            <RankingStandard data={param.data} borders={borders} stage={param.stage} console={param.console} rule={param.rule} year={param.year}/>
+            <RankingStandard users={param.users} borders={borders} stage={param.stage} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
 }

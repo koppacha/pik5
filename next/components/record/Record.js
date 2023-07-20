@@ -3,11 +3,9 @@ import Link from "next/link";
 import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {dateFormat, useLocale} from "../../lib/pik5";
-import ModalDialogImage from "../modal/ModalDialogImage";
+import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import {useEffect, useState} from "react";
-import ModalDialogVideo from "../modal/ModalDialogVideo";
 import {
     CompareType,
     RankEdge,
@@ -45,7 +43,7 @@ export default function Record({data}) {
     }
 
     // カテゴリによってユーザーページリンクを置き換える
-    const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user?.user_name : "/user/"+data.user?.user_id
+    const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user_name : "/user/"+data.user_id
 
     // 比較値を整形する
     let compare;
@@ -61,22 +59,19 @@ export default function Record({data}) {
                 borderRight: '1px solid #fff'
             }}>
                 <RankEdge as="span">{t.g.rankHead} </RankEdge>
-                <RankType as="span">{data.post_rank}</RankType>
+                <RankType as="span">{data.post_rank ?? "?"}</RankType>
                 <RankEdge as="span"> {t.g.rankTail}</RankEdge>
-                {
-                    data.rps &&
-                    <RankPointType>[{data.rps} rps]</RankPointType>
-                }
+                <RankPointType>[{data.rps ?? "?"} rps]</RankPointType>
             </Grid>
             <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
-                <UserType length={data.user?.user_name.length}><Link href={userPageUrl}>{data.user?.user_name}</Link></UserType>
+                <UserType length={data.user_name.length}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
             </Grid>
             <Grid item xs={2.5} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
-                <Score score={data.score} stage={data.stage_id} category={data.category} />
+                <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType as="span"> {compare}</CompareType>
             </Grid>
             <Grid item xs={5.5} sm={5} style={{

@@ -68,16 +68,16 @@ export default function CustomMenu(props){
                     handleClose={handleClose}/>
             )
         }
-        else if(s === 7){
+        else if(s === 6){
             return (
-                <MenuLm
+                <MenuSpeedrun
                     handleListKeyDown={handleListKeyDown}
                     handleClose={handleClose}/>
             )
         }
-        else if(s === 8){
+        else if(s === 7){
             return (
-                <MenuSpeedrun
+                <MenuLm
                     handleListKeyDown={handleListKeyDown}
                     handleClose={handleClose}/>
             )
