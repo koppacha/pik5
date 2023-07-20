@@ -31,10 +31,8 @@ export default function SpeedRunWrapper({post, index}){
         post_rank: index + 1 || null,
         video_url: video,
         post_comment: post.run.comment || t.g.noComment,
-        user: {
-            user_id: post.run.players[0].id || null,
-            user_name: name || null,
-        },
+        user_id: post.run.players[0].id || null,
+        user_name: name || null,
         score: post.run.times.realtime_t || 0,
         console: (post.run.system.platform === "v06dk3e4") ? 2 : 1,
         created_at: post.run.submitted || "2023-06-10 23:00:00",

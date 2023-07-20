@@ -8,42 +8,49 @@ import useSWR from "swr";
 import {Typography} from "@mui/material";
 import NowLoading from "./NowLoading";
 import {StairIcon} from "../styles/pik5.css";
+import {logger} from "../lib/logger";
 
 export default function BreadCrumb({info, rule}){
 
     const {t} = useLocale()
-
-    // 親の親番号を取得する
-    const {data:superParent} = useSWR(`/api/server/stage/${rule}`, fetcher)
-
-    if(!superParent){
-        return (
-            <NowLoading/>
-        )
-    }
+    const superParent = ([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40].includes(Number(rule))) ? 2 : 3
+    logger.debug(info.parent)
 
     return (
         <>
+            {
+                // 第０階層（ホームページ）
+            }
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             {
-                (info.parent > 10) ?
+                // 第１階層（通常総合 or 特殊総合）
+                (info.parent > 1) ?
                 <>
                     <StairIcon icon={faStairs}/>
-                    <Link href={"/total/"+superParent.data.parent}>{t.stage[superParent.data.parent]}</Link>
-                </> :
+                    <Link href={"/total/"+superParent}>{t.stage[superParent]}</Link>
+                </>
+                :
+                // 全総合
                 <>
                     <StairIcon icon={faStairs}/>
-                    <Link href={"/total/"+info.parent}>{t.stage[info.parent]}</Link>
+                    <Link href={"/total/1"}>{t.stage[1]}</Link>
                 </>
             }
-            <StairIcon icon={faStairs}/>
-            <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
             {
-                (info.parent > 10) &&
-                    <>
-                        <StairIcon icon={faStairs}/>
-                        <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>
-                    </>
+                // 第２階層（シリーズ別総合）
+                (info.parent > 9) &&
+                <>
+                    <StairIcon icon={faStairs}/>
+                    <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
+                </>
+            }
+            {
+                // 第３階層（サブカテゴリ）
+                (info.parent > 20) &&
+                <>
+                    <StairIcon icon={faStairs}/>
+                    <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>
+                </>
             }
             <br/>
         </>

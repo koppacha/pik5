@@ -11,6 +11,7 @@ import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import PullDownKeywordCategory from "../../components/form/PullDownKeywordCategory";
 import {useSearchParams} from "next/navigation";
 import ModalKeyword from "../../components/modal/ModalKeyword";
+import Head from "next/head";
 
 export default function KeywordIndex(){
 
@@ -24,30 +25,34 @@ export default function KeywordIndex(){
 
     const p = c ? `?c=${c}` : t ? `?t=${t}` : ""
 
-    const {data} = useSWR(`/api/server/keyword?${p}`, fetcher)
+    const {data} = useSWR(`/api/server/keyword${p}`, fetcher)
 
     // モーダル制御
     const handleOpen = (id) => {
         setUniqueId(id)
         setOpen(true)
-        mutate()
     }
     const handleEditOpen = () => {
         setOpen(false)
         setEditOpen(true)
-        mutate()
     }
     const handleNewEditOpen = () => {
         setUniqueId(0)
         setEditOpen(true)
     }
     const handleClose = () => setOpen(false)
-    const handleEditClose = () => setEditOpen(false)
+    const handleEditClose = () => {
+        setEditOpen(false)
+        mutate()
+    }
 
     let hi, mae
 
     return (
         <>
+            <Head>
+                <title>{`${tl.g.keyword} - ${tl.title[0]}`}</title>
+            </Head>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>
             <Link href="/keyword">{tl.g.keyword}</Link><br/>

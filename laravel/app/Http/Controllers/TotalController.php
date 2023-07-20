@@ -9,6 +9,7 @@ use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Log;
 
 class TotalController extends Controller
 {
@@ -22,10 +23,11 @@ class TotalController extends Controller
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
-            7 => range(101, 405),  // 通常総合
-            8 => range(1001, 9999),// 特殊総合
-            9 => range(101, 9999), // 全総合
+            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)),
+            2 => array_merge(range(101, 105), range(201, 230), range(301, 350)),
+            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)),
             10 => [101, 102, 103, 104, 105],
+            11 => [101, 102, 103, 104, 105],
             20 => range(201, 230),
             21 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],
             22 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],
@@ -115,14 +117,31 @@ class TotalController extends Controller
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
-        $rule    = $request['rule']    ?: $request['id'];
-        $year    = $request['year']    ?: date("Y");
+        $rule = $request['rule'] ?: $request['id'];
+        $year = $request['year'] ?: date("Y");
 
-        // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
-        if($rule === "20"){
+        // ルールの強制置換
+        // 全総合ランキング
+        if ($request['id'] === "1") {
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 11, 23, 24, 22, 25, 29, 35];
+
+            // 通常総合ランキング
+        } elseif ($request['id'] === "2") {
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40];
+
+        // 特殊総合ランキング（2Pランキング、TAS、実機無差別は対象外）
+        } elseif($request['id'] === "3"){
+            $rule = [11, 23, 24, 22, 25, 29, 35];
+
+        // ピクミン２総合
+        } elseif ($rule === "20") {
             $rule = [20, 21, 22];
-        } elseif($rule === "30"){
+
+        // ピクミン３総合
+        } elseif ($rule === "30") {
             $rule = [30, 31, 32, 33, 36];
+
+        // それ以外
         } else {
             $rule = [$rule];
         }
@@ -172,17 +191,12 @@ class TotalController extends Controller
             }
 
             // 順位とランクポイント計算に渡す値
-            $ranking[$stage] = Func::rank_calc("total", $temp, [$console, $rule, $date]);
+            $ranking[$stage] = Func::rank_calc("stage", $temp, [$console, $rule, $date]);
         }
-
-        // 名前取得インスタンスを初期化
-        $getUser = new UserNameController();
-
         $totals = [];
         // 対象の記録群からユーザー配列を作成し、値を初期化
         foreach($users = array_unique($users) as $user){
-            $totals[$user]["user"]["user_id"] = $user;
-            $totals[$user]["user"]["user_name"] = $getUser::getName($user)['user_name'];
+            $totals[$user]["user_id"] = $user;
             $totals[$user]["score"] = 0;
             $totals[$user]["rps"]   = 0;
             $totals[$user]["count"] = 0;
@@ -201,7 +215,7 @@ class TotalController extends Controller
             }
         }
         // 集計対象に基づいて降順に並び替え
-        $target = ($request['id'] < 10) ? "rps" : "score";
+        $target = "score"; // TODO: 並び替えフィルターを実装したらここでスイッチできる
         $target_column = array_column($totals, $target);
         array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $totals);
 
