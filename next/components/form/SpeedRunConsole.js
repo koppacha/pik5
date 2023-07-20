@@ -26,7 +26,7 @@ export default function SpeedRunConsole({stage, console, consoles}){
                 {
                     consoles.map(val =>
                         (
-                            <MenuItem value={val} component={Link} href={'/speedrun/'+stage+'/'+val}>{t.speedrun.console[val]}</MenuItem>
+                            <MenuItem key={val} value={val} component={Link} href={'/speedrun/'+stage+'/'+val}>{t.speedrun.console[val]}</MenuItem>
                         )
                     )
                 }

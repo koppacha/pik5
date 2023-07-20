@@ -31,7 +31,7 @@ const parseForm = (req) => {
         })
     })
 }
-export default async (req, res) => {
+const formPost = async (req, res) => {
     const aw = axiosWrapper()
     const {files, fields} = await parseForm(req)
     const formData = new FormData()
@@ -47,3 +47,4 @@ export default async (req, res) => {
     await aw.postFormData(formData)
     res.status(200).json(null)
 }
+export default formPost

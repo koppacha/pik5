@@ -25,9 +25,9 @@ export default function NewRecords({users}){
     return (
         <>
             {
-                data.map(function(post){
+                data.map(function(post, index){
                     return (
-                        <Record data={post}/>
+                        <Record key={index} data={post}/>
                     )
                 })
             }

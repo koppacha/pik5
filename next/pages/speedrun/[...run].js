@@ -179,7 +179,7 @@ export default function Run({data, stage, console, consoles}){
             {
                 dates.map(function (post, index){
                         return (
-                            <SpeedRunWrapper post={post} index={index} />
+                            <SpeedRunWrapper key={index} post={post} index={index} />
                         )
                     }
                 )

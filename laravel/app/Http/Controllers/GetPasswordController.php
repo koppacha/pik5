@@ -11,11 +11,11 @@ class GetPasswordController extends Controller
 {
     public function show(): JsonResponse
     {
-        $passes = ['U2xaBJdsFtC3ZD1GJTmlfg=='];
+        $passes = [];
         $password = [];
         foreach($passes as $pass) {
             $method = "aes-256-ecb";
-            $rand = "reuhg9regehrougherupgherpugherpguhp";
+            $rand = "";
             $password[] = openssl_decrypt($pass, $method, $rand);
         }
         return response()->json(

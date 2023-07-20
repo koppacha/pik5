@@ -24,7 +24,7 @@ export default function MenuSpeedrun(props){
                         <Grid item xs={3} style={{position:"relative",left:"529px"}}>
                             {
                                 speedruns.map(n=>
-                                    <StyledMenuItem style={{
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+SeriesTheme(6),
                                     }} component={Link} href={"/speedrun/"+n} onClick={props.handleClose}>#S{n} {t.speedrun[n]}</StyledMenuItem>
                                 )
