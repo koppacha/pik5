@@ -15,6 +15,7 @@ import NewRecords from "../components/top/NewRecords";
 import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
+import prisma from "../lib/prisma"
 
 export async function getServerSideProps(context) {
     // スクリーンネームをリクエスト

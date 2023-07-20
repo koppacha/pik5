@@ -14,6 +14,7 @@ import Head from "next/head";
 import {PageHeader, StageListBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
+import prisma from "../../lib/prisma";
 
 export async function getServerSideProps(context){
 
