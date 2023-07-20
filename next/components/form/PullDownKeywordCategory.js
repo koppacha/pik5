@@ -11,7 +11,7 @@ export default function PullDownKeywordCategory({category}){
 
     const {t, } = useLocale()
     
-    const categoryArray = ["all", "game", "pikmin", "collect", "field", "object", "creature", "character", "world", "term", "term2", "psl", "technical", "glitch", "rule", "qa", "other"]
+    const categoryArray = ["all", "game", "pikmin", "field", "object", "creature", "character", "world", "term", "term2", "psl", "technical", "glitch", "rule", "other"]
 
     return (
         <FormControl>
@@ -21,7 +21,6 @@ export default function PullDownKeywordCategory({category}){
                 id="select-category"
             >
                 {
-                    // 操作方法プルダウンを出力
                     categoryArray.map(val =>
                         <MenuItem key={val} value={val} component={Link} href={'/keyword?c='+val}>{t.keyword.category[val]}</MenuItem>
                     )

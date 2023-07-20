@@ -1,4 +1,4 @@
-import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container} from "@mui/material";
+import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container, Paper} from "@mui/material";
 import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
@@ -27,7 +27,7 @@ const colors = {
 }
 
 // シリーズ別テーマカラー（フロント用）
-const SeriesTheme = (series) => {
+export const SeriesTheme = (series) => {
     switch (series) {
         case 1: // ピクミン1
             return '#6eb8ec'
@@ -146,7 +146,6 @@ export const GlobalStyle = createGlobalStyle`
       border: 1px solid ${colors.dark.back};
     }
   }
-
   .form-helper-text {
     color: ${colors.light.front};
     div, input, label {
@@ -186,12 +185,10 @@ export const GlobalStyle = createGlobalStyle`
   }
 `
 export const OffsetContainer = styled(Container)`
-    ${pc`margin-top: 80px;`}
-`
-export const ThinAppBar = styled(AppBar)`
-    background-color: #111;
-
-    ${sp`display: none;`}
+  
+  min-height: 100vh;
+  
+  ${pc`margin-top: 80px;`}
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
   color: #d2d8e0;
@@ -232,8 +229,27 @@ export const StyledSelect = styled(Select)`
       }
     }
 `
+export const ThinAppBar = styled(AppBar)`
+    background-color: #111;
+
+    ${sp`display: none;`}
+`
+export const HeaderPopMenu = styled(Paper)`
+  color: ${colors.dark.front};
+  margin: 0 auto;
+  width: 90vw;
+  box-shadow: none;
+  background-color: transparent;
+`
 export const StyledMenuItem = styled(MenuItem)`
   font-family: "M PLUS 1 CODE", sans-serif;
+  border-left: 10px solid #f7fafc;
+  background-color: #3a3a3a;
+  
+  &:hover {
+    color: #111;
+    background-color: #fff;
+  }
 `
 export const InfoBox = styled(Box)`
   border :1px solid ${colors.light.border};
@@ -487,5 +503,4 @@ export const StyledDialogContent = styled(DialogContent)`
       color: ${colors.dark.front};
     }
   }
-  
 `

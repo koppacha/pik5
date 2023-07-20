@@ -20,10 +20,8 @@ return new class extends Migration
             $table->bigInteger('stage_id');
             $table->bigInteger('rule');
             $table->smallInteger('console');
+            $table->string('region');
             $table->bigInteger('unique_id');
-            $table->bigInteger('post_rank');
-            $table->bigInteger('rps');
-            $table->string('hash');
             $table->string('post_comment');
             $table->string('user_ip');
             $table->string('user_host');

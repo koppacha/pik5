@@ -16,8 +16,8 @@ class Record extends Model
      *
      * @var array
      */
-    protected $fillable = [
-      'score',
+    protected $guarded = [
+      'created_at',
     ];
     public function user(): HasOne
     {

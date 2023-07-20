@@ -15,7 +15,8 @@ async function main() {
         return {
             userId: user.user_id,
             name: user.user_name,
-            password: hashedPassword
+            password: hashedPassword,
+            role: user.role
         }
     })
     await prisma.user.createMany({

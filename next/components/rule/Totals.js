@@ -30,7 +30,7 @@ export default function Totals(props){
             totals.push(40)
             break
         default:
-            totals.push(1, 2, 3, 4)
+            totals.push(1, 2, 3) // TODO: 期間限定を解禁したら4以降を追加する
     }
 
     return (

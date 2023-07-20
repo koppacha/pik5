@@ -2,42 +2,37 @@ import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material"
 import * as React from "react";
 import Link from "next/link";
 import {useLocale} from "../../lib/pik5";
-import {StyledMenuItem} from "../../styles/pik5.css";
+import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
+import {p4} from "../../lib/const";
 
 export default function MenuSpeedrun(props){
 
     const {t} = useLocale()
-    const color = "#777777"
     const speedruns = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313]
 
     return (
-        <Paper>
+        <HeaderPopMenu>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
                     autoFocusItem={open}
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    style={{
-                    }}
+                    disablePadding
                 >
-                    <Grid container spacing={2}>
-                    {
-                        speedruns.map(stageId =>
-                            <Grid item xs={2}>
-                                <StyledMenuItem style={{
-                                    borderBottom:"solid 1px "+color,
-                                    borderLeft:"solid 10px "+color,
-                                    margin:"6px 4px 0px 4px",
-                                    height:"12em",
-                                }}
-                                                component={Link} href={"/speedrun/"+stageId} onClick={props.handleClose}>{t.speedrun[stageId]}</StyledMenuItem>
-                            </Grid>
-                        )
-                    }
+                    <Grid container onClick={props.handleClose}>
+                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                            {
+                                speedruns.map(n=>
+                                    <StyledMenuItem style={{
+                                        borderLeft:"solid 10px "+SeriesTheme(6),
+                                    }} component={Link} href={"/speedrun/"+n} onClick={props.handleClose}>#S{n} {t.speedrun[n]}</StyledMenuItem>
+                                )
+                            }
+                        </Grid>
                     </Grid>
                 </MenuList>
             </ClickAwayListener>
-        </Paper>
+        </HeaderPopMenu>
     )
 }

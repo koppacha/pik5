@@ -4,23 +4,34 @@ import Record from "./Record";
 import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
+import {logger} from "../../lib/logger";
 
-export default function RankingStandard({borders, stage, console:consoles, rule, year}){
+export default function RankingStandard({borders, stage, console:consoles, rule, year, users}){
 
     const {t} = useLocale()
-    const { data } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
+    const { data:posts } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
 
-    if(!data){
+    if(!posts){
         return (
             <NowLoading/>
         )
     }
+
+    // 取得したデータにPrismaから取ってきたスクリーンネームを入れる TODO: あとで共通化
+    const data = posts.data ? Object.values(posts.data).map(function(post){
+        const user = users.find(user => user.userId === post.user_id)
+        return {
+            ...post,
+            user_name: user ? user.name : ""
+        }
+    }) : []
+
     let i = borders.length - 1
 
     // 参考スコアを表示するルール
     const borderShowRules = [20, 21, 22]
 
-    return Object.values(data.data).map(function (post){
+    return data.map(function (post){
                     const border = borders[i]
                     const star = "★"
                     if(post.score < border && borderShowRules.includes(Number(rule))){
