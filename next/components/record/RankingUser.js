@@ -5,17 +5,24 @@ import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
 
-export default function RankingUser({userId, console:consoles, rule, year}){
+export default function RankingUser({userId, console:consoles, rule, year, userName}){
 
-    const { data } = useSWR(`/api/server/record/${userId}/${consoles}/${rule}/${year}`, fetcher)
-
-    if(!data){
+    const { data:posts } = useSWR(`/api/server/record/${userId}/${consoles}/${rule}/${year}`, fetcher)
+    if(!posts){
         return (
             <NowLoading/>
         )
     }
 
-    return Object.values(data.data).map(function (post){
+    // 取得したデータにPrismaから取ってきたスクリーンネームを入れる
+    const data = posts.data ? Object.values(posts.data).map(function(post){
+        return {
+            ...post,
+            user_name: userName
+        }
+    }) : []
+
+    return data.map(function (post){
                 return (
                     <React.Fragment key={post.unique_id}>
                         <Record key={post.unique_id} data={post}/>

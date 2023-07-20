@@ -1,8 +1,8 @@
 // This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+// learn more about it in the docs: https://pris.ly/d/users-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "users-client-js"
 }
 
 datasource db {

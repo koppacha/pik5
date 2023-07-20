@@ -11,7 +11,7 @@ import {
 import * as React from "react";
 import Link from "next/link";
 import Button from "@mui/material/Button";
-import {StyledMenuItem} from "../../styles/pik5.css"
+import {HeaderPopMenu, StyledMenuItem} from "../../styles/pik5.css"
 import {useLocale} from "../../lib/pik5";
 import {eg, ne, du, bt} from "../../lib/const";
 
@@ -25,67 +25,60 @@ export default function Menu2(props){
     const btColor = "#e87058"
 
     return (
-        <Paper style={{
-        }}>
+        <HeaderPopMenu>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
                     autoFocusItem={open}
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
+                    disablePadding
                 >
-                    <StyledMenuItem component={Link} href="/total/20" onClick={props.handleClose}>
-                        {t.title[2]}
-                    </StyledMenuItem>
-                    <Grid container>
+                    <Grid container spacing={0} onClick={props.handleClose}>
                         <Grid item xs={3}>
-                            <StyledMenuItem component={Link} href="/total/21" onClick={props.handleClose}>タマゴあり</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+egColor,
+                            }} component={Link} href="/total/21" onClick={props.handleClose}>タマゴあり総合</StyledMenuItem>
                             {
                                 eg.map(n=>
-                                    <StyledMenuItem style={{
-                                        borderBottom:"solid 1px "+egColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+egColor,
-                                        margin:"6px 4px 0px 4px",
-                                        height:"37px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={3}>
-                            <StyledMenuItem component={Link} href="/total/22" onClick={props.handleClose}>タマゴなし</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+neColor,
+                            }} component={Link} href="/total/22" onClick={props.handleClose}>タマゴなし総合</StyledMenuItem>
                             {
                                 ne.map(n=>
-                                    <StyledMenuItem style={{
-                                        borderBottom:"solid 1px "+neColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+neColor,
-                                        margin:"4px 4px",
-                                        height:"29px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={3}>
-                            <StyledMenuItem component={Link} href="/total/23" onClick={props.handleClose}>本編地下</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+duColor,
+                            }}  component={Link} href="/total/23" onClick={props.handleClose}>本編地下総合</StyledMenuItem>
                             {
                                 du.map(n=>
-                                    <StyledMenuItem style={{
-                                        borderBottom:"solid 1px "+duColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+duColor,
-                                        margin:"6px 4px",
-                                        height:"34px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>
                         <Grid item xs={3}>
-                            <StyledMenuItem component={Link} href="/total/24" onClick={props.handleClose}>ソロバトル</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+btColor,
+                            }}  component={Link} href="/total/24" onClick={props.handleClose}>ソロバトル総合</StyledMenuItem>
                             {
                                 bt.map(n=>
-                                    <StyledMenuItem style={{
-                                        borderBottom:"solid 1px "+btColor,
+                                    <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+btColor,
-                                        margin:"18px 4px",
-                                        height:"34px",
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
@@ -93,6 +86,6 @@ export default function Menu2(props){
                     </Grid>
                 </MenuList>
             </ClickAwayListener>
-        </Paper>
+        </HeaderPopMenu>
     )
 }

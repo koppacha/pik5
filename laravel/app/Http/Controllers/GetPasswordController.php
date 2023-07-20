@@ -11,7 +11,7 @@ class GetPasswordController extends Controller
 {
     public function show(): JsonResponse
     {
-        $passes = [];
+        $passes = ['U2xaBJdsFtC3ZD1GJTmlfg=='];
         $password = [];
         foreach($passes as $pass) {
             $method = "aes-256-ecb";
