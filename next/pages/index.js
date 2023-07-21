@@ -16,6 +16,7 @@ import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
 import prisma from "../lib/prisma"
+import Head from "next/head";
 
 export async function getServerSideProps(context) {
     // スクリーンネームをリクエスト
@@ -52,6 +53,9 @@ export default function Home({users}) {
 
   return (
     <>
+        <Head>
+            <title>{t.title[0]}</title>
+        </Head>
         ver.3.00<br/>
         <Typography variant="" className="title">{t.title[0]}</Typography><br/>
         <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
@@ -65,7 +69,7 @@ export default function Home({users}) {
                     {
                         quickLinks.map(i =>
                             (
-                                <Grid item key={i} xs={2} component={Link} href={i[1]}>
+                                <Grid item key={i} xs={6} sm={3} lg={2} component={Link} href={i[1]}>
                                     <CellBox style={{padding:"10px 0"}}>
                                         {i[0]}
                                     </CellBox>
