@@ -31,7 +31,7 @@ export default function Layout({children}) {
     return (
         <>
             <HeaderMenu/>
-                    <OffsetContainer maxWidth="lg">
+                    <OffsetContainer>
                         <main>{children}</main>
                     </OffsetContainer>
             <Footer/>
