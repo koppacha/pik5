@@ -87,6 +87,7 @@ export default function Home({users}) {
                                 <FontAwesomeIcon icon={faCheckToSlot} /> ログイン情報
                             </TopBoxHeader>
                             <TopBoxContent>
+                                <Link href="/keyword/moving">旧ピクチャレ大会からの引き継ぎはこちら</Link><br/>
                                 {
                                     (session)
                                         &&

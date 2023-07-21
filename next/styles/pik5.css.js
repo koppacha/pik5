@@ -185,9 +185,10 @@ export const GlobalStyle = createGlobalStyle`
   }
 `
 export const OffsetContainer = styled(Container)`
-  
+
   max-width: 1200px;
   min-height: 100vh;
+  margin: 0 auto;
   
   ${pc`margin-top: 80px;`}
 `
