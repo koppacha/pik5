@@ -161,7 +161,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         {...register('score')}
                         id="score"
                         label="スコア"
-                        type="number"
+                        type={(rule === 33 || rule === 11 || [338, 341, 343].includes(info.stage_id)) ? "time" : "number"}
                         onChange={(e) => setScore(e.target.value)}
                         fullWidth
                         variant="standard"
@@ -170,6 +170,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         defaultValue={0}
                         margin="normal"
                     />
+                    現在、スコアアタック系はまだ投稿できません。対応をお待ちください。
                     <GetRank stage={info.stage_id} rule={rule} score={score}/>
                     <TextField
                         {...register('console')}

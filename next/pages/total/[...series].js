@@ -90,10 +90,10 @@ export default function Series(param){
             </PageHeader>
             {
                 param.series > 9 &&
-                <Grid container style={{margin:"2em 0"}}>
+                <Grid container style={{margin:"2em 0"}} columns={{xs: 4, sm: 4, md: 6, lg: 10, xl: 12}}>
                     {
                         stages?.map(stage =>
-                            <Grid key={stage} item xs={2.4} lg={1.2}>
+                            <Grid key={stage} item xs={1}>
                                 <Link key={stage} href={'/stage/'+stage}><StageListBox>
                                     <span>#{stage}</span><br/>
                                     {t.stage[stage]}</StageListBox>
@@ -104,7 +104,7 @@ export default function Series(param){
                 </Grid>
             }
             <Grid container>
-                <Grid item xs={12}>
+                <Grid item>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>

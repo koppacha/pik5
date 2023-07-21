@@ -10,9 +10,9 @@ const colors = {
         front: "#e1e1e1",
         back: "#212121",
         subTitle: "#b6b6b6",
-        subBack: "#3f4b54",
+        subBack: "#3f454b",
         hoverBack: "#2d3748",
-        border: "#a7d1d5",
+        border: "#c7d8da",
         compare: "#4ce600",
     },
     light: {
@@ -186,6 +186,7 @@ export const GlobalStyle = createGlobalStyle`
 `
 export const OffsetContainer = styled(Container)`
   
+  max-width: 1200px;
   min-height: 100vh;
   
   ${pc`margin-top: 80px;`}
@@ -215,9 +216,11 @@ export const RecordPostButton = styled(Box).attrs(props => ({$series: props.seri
   }
 `
 export const StyledSelect = styled(Select)`
+    max-width: 200px;
     border: 1px solid ${colors.light.front};
     svg {
       color: ${colors.light.front};
+      font-size: 14px;
     }
     ${sp`font-size: 1em;`}
   
