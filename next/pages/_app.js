@@ -39,6 +39,8 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
                       `,
                   }}
           />
+          <Script id="juicer" strategy="afterInteractive"
+                  src="//kitchen.juicer.cc/?color=YICiPNPXjTM=" async/>
           <GlobalStyle/>
           <SessionProvider session={session}>
               <ThemeProvider defaultTheme="dark">

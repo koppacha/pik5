@@ -149,7 +149,7 @@ class RecordController extends Controller
         // 重複削除対象
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
-        $orderBy = orderByRule($request["id"], $request["rule"]);
+        $orderBy = Func::orderByRule($request["id"], $request["rule"]);
 
         // オプション引数
         $console = $request['console'] ?: 0;
