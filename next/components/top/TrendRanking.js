@@ -21,7 +21,7 @@ export default function TrendRanking(){
         <>
             <Grid container>
             {
-                trends.map(function(post, i){
+                trends.data.map(function(post, i){
 
                     return (
                         <Grid item key={i} xs={2} component={Link} href={"/stage/"+post.stage_id}>

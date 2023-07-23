@@ -18,7 +18,7 @@ export default function PostCountRanking({users}){
         )
     }
 
-    const data = counter ? counter.map(function(post){
+    const data = counter ? counter.data.map(function(post){
         const user = users.find(user => user.userId === post.user_id)
         return {
             ...post,
