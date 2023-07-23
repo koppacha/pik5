@@ -14,7 +14,7 @@ export default function NewRecords({users}){
         )
     }
 
-    const data = newRecords ? newRecords.map(function(post){
+    const data = newRecords ? newRecords.data.map(function(post){
         const user = users.find(user => user.userId === post.user_id)
         return {
             ...post,
