@@ -10,7 +10,7 @@ import {CellBox} from "../../styles/pik5.css";
 export default function TrendRanking(){
 
     const {t} = useLocale()
-    const {data:trends} = useSWR(`http://localhost:8000/api/trend`, fetcher)
+    const {data:trends} = useSWR(`api/server/trend`, fetcher)
 
     if(!trends){
         return (
