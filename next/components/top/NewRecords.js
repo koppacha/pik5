@@ -6,7 +6,7 @@ import * as React from "react";
 
 export default function NewRecords({users}){
 
-    const {data:newRecords} = useSWR(`http://localhost:8000/api/new`, fetcher)
+    const {data:newRecords} = useSWR(`/api/server/new`, fetcher)
 
     if(!newRecords){
         return (
