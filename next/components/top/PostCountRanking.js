@@ -10,7 +10,7 @@ export default function PostCountRanking({users}){
 
     const {t} = useLocale()
 
-    const {data:counter} = useSWR(`http://localhost:8000/api/count`, fetcher)
+    const {data:counter} = useSWR(`/api/server/count`, fetcher)
 
     if(!counter){
         return (
