@@ -3,14 +3,13 @@
 **author:@koppachappy**
 
 ## このプロジェクトについて
-* 「ピクミンシリーズチャレンジモード大会」のフルリプレイスプロジェクトです。
-2023年07月公開予定です。
+* 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキングどcけ投稿サイトです。
 
 ## このソースコードについて
 当プロジェクトはMITライセンスのオープンソースであり、権利表記を削除しなければソースコードの改変や二次配布は自由にできますが、
 当プロジェクトと同じピクミン関連のコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
 
-## おすすめ開発環境
+## 開発環境
 * OS：macOS https://www.apple.com/jp/macos/ventura/
 * Infra：Docker Desktop https://www.docker.com/products/docker-desktop/
 * IDE：Intellij IDEA https://www.jetbrains.com/ja-jp/idea/
@@ -21,6 +20,16 @@
 ＊Windows環境はDockerの動作が重いので推奨しませんが、もし開発する場合はWSL2(Ubuntu)をインストールし、
 その中にデータを入れるとある程度軽快に動きます。  
 ＊現在、lima VMでクロスプラットフォームでも軽快に動く環境を模索中……
+
+## 動作確認環境
+* PC/OS：Windows 11 (Parallel Desktop for M1 Mac)
+* PC/Browser：Google Chrome
+* SP/OS：iPhone
+* SP/Browser：Safari
+
+＊原則としてOS、ブラウザともに最新版を利用  
+＊上記以外（タブレット全般、Android端末、その他のブラウザ）は原則サポート外となります。  
+＊上記に加えて開発環境でも動作確認しています。
 
 ## 主な使用技術
 * PHP：https://www.php.net/manual/ja/index.php (backend)
@@ -87,10 +96,8 @@ $ git config user.email "(公開しても構わないメールアドレス)"
 ```
 
 ## 開発環境のURL一覧
-* フロントエンド画面 http://localhost:8080
+* フロントエンド画面 http://localhost:3005
 * バックエンド（API） http://localhost:8000
-* phpmyadmin（DB） http://localhost:6000
-* mail-hog http://localhost:8045
 
 ## バージョン管理のルール
 ```shell
@@ -114,10 +121,17 @@ $ git pull origin your_branch
 ```
 
 ## 編集時のルール
-- CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの「xs」と似ていて紛らわしいため）
+- CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの属性のひとつ「xs」と似ていて紛らわしいため）
 ```jsx
-<Grid style={{width:"100%"}} xs={12}> ←これはOK
-<Grid sx={{width:"100%"}} xs={12}> ←これはダメ
+<Grid style={{width:"100%"}} xs={12}> {/* ←これはOK */}
+<Grid sx={{width:"100%"}} xs={12}> {/* ←これはダメ */}
+```
+
+- フロントサイドレンダリングから直接APIを叩くのはNG。面倒でもNext.jsのAPIサーバーを経由する
+- APIサーバーはNode.jsで記述する（import記法などは使えない）
+```js
+fetch('http://localhost/api/request') // ←これはダメ
+fetch('/api/request') // ←これはOK。ただし経由APIで加工が必要な場合がある
 ```
 
 ## AWS Cloud9で動かす際のメモ
