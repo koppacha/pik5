@@ -138,6 +138,7 @@
       <path value="$PROJECT_DIR$/laravel/vendor/symfony/polyfill-php83" />
       <path value="$PROJECT_DIR$/laravel/vendor/laravel/breeze" />
       <path value="$PROJECT_DIR$/laravel/vendor/laravel/sanctum" />
+      <path value="$PROJECT_DIR$/laravel/vendor/predis/predis" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.0">

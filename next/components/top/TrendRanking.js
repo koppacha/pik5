@@ -24,7 +24,7 @@ export default function TrendRanking(){
                 trends.data.map(function(post, i){
 
                     return (
-                        <Grid item key={i} xs={2} component={Link} href={"/stage/"+post.stage_id}>
+                        <Grid item key={i} xs={4} sm={3} component={Link} href={"/stage/"+post.stage_id}>
                             <CellBox>
                                 {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
                                 {t.stage[post.stage_id]}<br/>

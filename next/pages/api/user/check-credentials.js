@@ -12,15 +12,6 @@ export default async function handle(req, res) {
         );
     }
 }
-function hashPassword(password){
-    const saltRounds = 10
-    if(password) {
-        return bcrypt.hashSync(password, saltRounds)
-    } else {
-        return null
-    }
-}
-
 async function handlePOST(res, req) {
 
     try{

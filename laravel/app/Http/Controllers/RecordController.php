@@ -51,10 +51,12 @@ class RecordController extends Controller
     // 暫定順位を取得する関数
     public function getRank(Request $request): JsonResponse
     {
-        $data = Record::where('stage_id', $request['stage'])
+        $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
             ->where('score', '>', (int)$request['score'])
-            ->where('flg','<', 1)
+            ->where('flg','<', 2)
+            ->get()
+            ->unique('user_id')
             ->count();
 
         $data++;
@@ -73,17 +75,28 @@ class RecordController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        // 疎通確認
-        Log::debug($request);
+        // 簡易バリデーション
+        if((int)$request['score'] < 1 || (int)$request['rule'] < 1 || (int)$request['console'] < 1){
+            return response()->json(
+                ["ERROR", 500]
+            );
+        }
+        // カウントダウン系の場合は経過時間に変換する
 
         // 受信した画像の処理
         $fileName = "";
         $img = $request->file('file');
         if($img) {
-            $extension = $img->getClientOriginalExtension();
-            $fileName = date("Ymd-His").'-'.random_int(1000000000, 9999999999).'.'.$extension;
-            $img->storeAs('public/img', $fileName);
+            try {
+                $extension = $img->getClientOriginalExtension();
+                $fileName = date("Ymd-His") . '-' . random_int(1000000000, 9999999999) . '.' . $extension;
+                $img->storeAs('public/img', $fileName);
+            } catch (Exception $e){
+                Log::debug($e);
+                return response()->json(["ERROR:$e", 500]);
+            }
         }
+        // 画像以外の処理
         try {
             $posts = new Record();
             $posts->fill([
@@ -93,7 +106,7 @@ class RecordController extends Controller
                 'rule' => $request['rule'],
                 'console' => $request['console'] ?: 0,
                 'region' => 0,
-                'unique_id' => "300".sprintf('%06d',random_int(0, 999999)),
+                'unique_id' => "301".sprintf('%06d',random_int(0, 999999)),
                 'post_comment' => $request['post_comment'] ?: "コメントなし",
                 'user_ip' => $request->ip(),
                 'user_host' => $request->host(),
@@ -107,7 +120,7 @@ class RecordController extends Controller
 
         } catch (Exception $e) {
             Log::debug($e);
-            return \response()->json(["ERROR:$e", 500]);
+            return response()->json(["ERROR:$e", 500]);
         }
         return response()->json(
             ["OK", 200]
@@ -165,7 +178,7 @@ class RecordController extends Controller
             $rule = [30, 31, 32, 33, 36];
 
         } elseif(!$rule && $where === "stage_id") {
-            $rule = Stage::where('stage_id', $request['id'])->first()->parent;
+            $rule = [Stage::where('stage_id', $request['id'])->first()->parent];
 
         } elseif(!$rule && $where === "user_id") {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする

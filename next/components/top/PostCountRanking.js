@@ -33,7 +33,7 @@ export default function PostCountRanking({users}){
                 data.map(function(post, i){
 
                     return (
-                        <Grid item key={i} xs={2} component={Link} href={"/user/"+post.user_id}>
+                        <Grid item key={i} xs={3} sm={2} component={Link} href={"/user/"+post.user_id}>
                             <CellBox>
                                 {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
                                 {post.user_name}<br/>
