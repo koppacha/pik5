@@ -7,6 +7,7 @@ import {RecordPostButton} from "../../styles/pik5.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPaperPlane} from "@fortawesome/free-solid-svg-icons";
 import {useLocale} from "../../lib/pik5";
+import {mutate} from "swr";
 
 export default function RecordPost({info, rule, console}){
 
@@ -19,6 +20,7 @@ export default function RecordPost({info, rule, console}){
     }
     const handleClose = () => {
         setOpen(false)
+        mutate()
     }
 
     return (

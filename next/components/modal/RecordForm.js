@@ -1,7 +1,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import React, {useRef, useState} from "react";
+import React, {useEffect, useState} from "react";
 import DialogContent from "@mui/material/DialogContent";
 import {useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
@@ -9,11 +9,13 @@ import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
 import {useLocale} from "../../lib/pik5";
-import {MenuItem} from "@mui/material";
+import {Box, MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
 import FormData from "form-data"
 import Link from "next/link";
+import {timeStageList} from "../../lib/const";
+import {mutate} from "swr";
 
 export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}) {
 
@@ -56,8 +58,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         score: yup
             .number()
             .min(1, '０点以下は登録できません。')
-            .max(99999, 'スコアの最大値は99,999です')
-            .required(t.yup.required),
+            .max(99999, 'スコアの最大値は99,999です'),
         videoUrl: yup
             .string()
             .matches(videoRegex,
@@ -73,6 +74,20 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
             .number()
             .min(1, '操作方法の選択は必須です。'),
     })
+
+    // フォームデータの初期化
+    useEffect(() => {
+        reset({
+            defaultValue: {
+                time: "00:00:00",
+                score: 0,
+                consoles: consoleList[0],
+                videoUrl: "",
+                comment: "",
+            }
+        })
+        setConsole(consoleList[0])
+    }, [])
 
     const {register,
         handleSubmit,
@@ -98,7 +113,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         formData.append('post_comment', comment)
         formData.append('created_at', now)
 
-        const res = await fetch('http://localhost:8000/api/record', {
+        const res = await fetch('/api/server/post', {
             method: 'POST',
             body: formData,
         })
@@ -112,16 +127,41 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         const file = e.target.files[0]
         formData.append('file', file)
     }
+
+    // タイム表示判定
+    const isTime = () => {
+        return rule === 33 || rule === 11 || rule === 43 || [338, 341, 343].includes(info.stage_id)
+    }
+    // タイムからスコアに変換
+    function time2score(time){
+        const sec = convertToSeconds(time)
+        const lestTime = timeStageList.find(({stage:s})=> s === info.stage_id)
+        if(lestTime){
+            // 経過時間が表示されるタイプ（ピクミン３）→残り時間に変換して登録
+            setScore((lestTime.time - sec))
+        } else {
+            // 残った時間が表示されるタイプ（ピクミン４）→そのまま登録
+            setScore(sec)
+        }
+    }
+    // "h:mm:ss"形式の文字列を秒数に変換する関数
+    const convertToSeconds = (timeString) => {
+        const [hours, minutes, seconds] = timeString.split(':');
+        return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+    };
     if(!session){
         return (
             <>
                 <Dialog open={open} onClose={handleClose}>
-                    <Link href="/auth/login">投稿にはログインが必要です。</Link>
+                    <Box style={{width:'600px'}}>
+                        <DialogContent>
+                            <Link href="/auth/login">投稿にはログインが必要です。</Link>
+                        </DialogContent>
+                    </Box>
                 </Dialog>
             </>
         )
     }
-
     return (
         <>
             <Dialog open={open} onClose={handleClose}>
@@ -139,7 +179,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                     />
                     <TextField
                         id="rule"
-                        label="ルール"
+                        label="ルール/カテゴリ"
                         type="text"
                         fullWidth
                         disabled
@@ -157,20 +197,37 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         defaultValue={session.user.name ?? ""}
                         margin="normal"
                     />
+
+                    <TextField
+                        id="time"
+                        label="タイム"
+                        type="time"
+                        inputProps={{step: 1, shrink:true, inputMode: 'numeric', pattern: '[0-9]*'}}
+                        onChange={(e) => time2score(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'time' in errors}
+                        helperText={errors.time?.message}
+                        defaultValue="00:00:00"
+                        margin="normal"
+                        className={`${isTime() || "hidden"}`}
+                    />
                     <TextField
                         {...register('score')}
                         id="score"
                         label="スコア"
-                        type={(rule === 33 || rule === 11 || [338, 341, 343].includes(info.stage_id)) ? "time" : "number"}
+                        type="text"
+                        inputProps={{shrink:true, inputMode: 'numeric', pattern: '[0-9]*'}}
                         onChange={(e) => setScore(e.target.value)}
                         fullWidth
                         variant="standard"
                         error={'score' in errors}
                         helperText={errors.score?.message}
                         defaultValue={0}
+                        value={score}
                         margin="normal"
+                        disabled={isTime() && true}
                     />
-                    現在、スコアアタック系はまだ投稿できません。対応をお待ちください。
                     <GetRank stage={info.stage_id} rule={rule} score={score}/>
                     <TextField
                         {...register('console')}

@@ -24,11 +24,11 @@ export default function Rules(props){
         rules.push(23, 26, 27, 28)
     }
     if(parent === 22){
-        if(info.stage_id !== 216 && info.stage_id !== 223){
-            // スプレー縛り（食神のかまど、ひみつの花園は除外）
+        if(![209, 214, 216, 223].includes(info.stage_id)){
+            // スプレー縛り（花園を荒らすもの、ショイグモの巣、食神のかまど、ひみつの花園は除外）
             rules.push(24, 26, 27, 28)
         } else {
-            // 食神のかまど、ひみつの花園
+            // スプレーもタマゴも無いステージ
             rules.push(26, 27, 28)
         }
     }
@@ -36,7 +36,7 @@ export default function Rules(props){
         rules.push(34)
     }
     // 通常ルールの場合とそれ以外とで表示名を分岐する
-    const normalRankings = [10, 21, 22, 31, 32, 33, 36]
+    const normalRankings = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43]
 
     return (
         <>

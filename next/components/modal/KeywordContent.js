@@ -8,9 +8,12 @@ import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import {StairIcon} from "../../styles/pik5.css";
-import {dateFormat} from "../../lib/pik5";
+import {dateFormat, useLocale} from "../../lib/pik5";
+import Head from "next/head";
 
 export function KeywordContent({data}){
+
+    const {t} = useLocale()
 
     const [open, setOpen] = useState(false)
     const handleOpen = () => {
@@ -25,6 +28,9 @@ export function KeywordContent({data}){
 
     return (
         <>
+            <Head>
+                <title>{data.keyword} - {t.g.keyword}</title>
+            </Head>
             <Typography variant="" style={{fontSize:"0.8em",color:"#777"}}>{data.yomi}</Typography><br/>
             <Typography variant="" className="mini-title">{data.keyword}</Typography><br/>
             <Box style={{

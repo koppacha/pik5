@@ -13,9 +13,11 @@ import * as React from "react";
 import Link from "next/link";
 import {HeaderPopMenu, StyledMenuItem} from "../../styles/pik5.css";
 import {useLocale} from "../../lib/pik5";
-import {p4} from "../../lib/const";
+import {dc, dd, ex} from "../../lib/const";
 
-const p4Color = "#ffde5b"
+const dcColor = "#ffde5b"
+const ddColor = "#d7b842"
+const exColor = "#ccb868"
 
 export default function Menu4(props){
 
@@ -32,14 +34,38 @@ export default function Menu4(props){
                     disablePadding
                 >
                     <Grid container onClick={props.handleClose}>
-                        <Grid item xs={3} style={{position:"relative",left:"427px"}}>
+                        <Grid item xs={3}>
                             <StyledMenuItem style={{
-                                borderLeft:"solid 10px "+p4Color,
-                            }} component={Link} href="/total/10" onClick={props.handleClose}>ピクミン4総合</StyledMenuItem>
+                                borderLeft:"solid 10px "+dcColor,
+                            }} component={Link} href="/total/41" onClick={props.handleClose}>ダンドリチャレンジ総合</StyledMenuItem>
                             {
-                                p4.map(n=>
+                                dc.map(n=>
                                     <StyledMenuItem key={n} style={{
-                                        borderLeft:"solid 10px "+p4Color,
+                                        borderLeft:"solid 10px "+dcColor,
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
+                                )
+                            }
+                        </Grid>
+                        <Grid item xs={3}>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+ddColor,
+                            }} component={Link} href="/total/42" onClick={props.handleClose}>ダンドリバトル総合</StyledMenuItem>
+                            {
+                                dd.map(n=>
+                                    <StyledMenuItem key={n} style={{
+                                        borderLeft:"solid 10px "+ddColor,
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
+                                )
+                            }
+                        </Grid>
+                        <Grid item xs={3}>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+exColor,
+                            }} component={Link} href="/total/42" onClick={props.handleClose}>葉っぱ仙人の挑戦状総合</StyledMenuItem>
+                            {
+                                ex.map(n=>
+                                    <StyledMenuItem key={n} style={{
+                                        borderLeft:"solid 10px "+exColor,
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }

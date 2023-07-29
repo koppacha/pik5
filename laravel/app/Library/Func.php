@@ -8,6 +8,7 @@ use DateTime;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
 
@@ -44,15 +45,17 @@ class Func extends Facade
 
         try {
             // TODO: 一部の特殊ランキングが混じってるけど通常ランキングの参加者数を超えることはまずないので一旦無視で
-            $Model = Record::whereIn('stage_id', range(101, 405))
-                ->where('console', $console_operation, $console)
-                ->whereIn('rule', $rule)
-                ->where('created_at', '<', $date)
-                ->where('flg', '<', 2)
-                ->get()
-                ->groupBy(['stage_id', 'user_id'])
-                ->map(function ($g) {
-                    return $g->count();
+            $Model = Cache::remember('memCount', 3600, static function() use ($console_operation, $console, $rule, $date) {
+                return Record::whereIn('stage_id', range(101, 405))
+                    ->where('console', $console_operation, $console)
+                    ->whereIn('rule', $rule)
+                    ->where('created_at', '<', $date)
+                    ->where('flg', '<', 2)
+                    ->get()
+                    ->groupBy(['stage_id', 'user_id'])
+                    ->map(function ($g) {
+                        return $g->count();
+                    });
                 });
         } catch (Exception $e){
             Log::debug("Error", (array)$e->getMessage());

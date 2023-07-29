@@ -1,7 +1,7 @@
-import {Collapse, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
+import {Box, Collapse, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
 import * as React from "react";
 import {MobileMenuBox} from "../../styles/pik5.css";
-import {p1, ne, eg, du, bt, ce, be, ss, db, sb, p4, sp} from "../../lib/const"
+import {p1, ne, eg, du, bt, ce, be, ss, db, sb, p4, sp, dc, dd, ex} from "../../lib/const"
 import {useLocale} from "../../lib/pik5";
 import {useState} from "react";
 import {ExpandLess, ExpandMore} from "@mui/icons-material";
@@ -30,7 +30,9 @@ export default function MobileMenu({open, toggleHandle}){
     const [openSS, setOpenSS] = useState(ss.includes(flag))
     const [openDB, setOpenDB] = useState(db.includes(flag))
     const [openSB, setOpenSB] = useState(sb.includes(flag))
-    const [openP4, setOpenP4] = useState(p4.includes(flag))
+    const [openDC, setOpenDC] = useState(dc.includes(flag))
+    const [openDD, setOpenDD] = useState(dd.includes(flag))
+    const [openEX, setOpenEX] = useState(ex.includes(flag))
     const [openSP, setOpenSP] = useState(sp.includes(runFlag))
 
 
@@ -44,7 +46,9 @@ export default function MobileMenu({open, toggleHandle}){
     const handleClickSS = () => setOpenSS(!openSS)
     const handleClickDB = () => setOpenDB(!openDB)
     const handleClickSB = () => setOpenSB(!openSB)
-    const handleClickP4 = () => setOpenP4(!openP4)
+    const handleClickDC = () => setOpenDC(!openDC)
+    const handleClickDD = () => setOpenDD(!openDD)
+    const handleClickEX = () => setOpenEX(!openEX)
     const handleClickSP = () => setOpenSP(!openSP)
 
     return (
@@ -208,14 +212,44 @@ export default function MobileMenu({open, toggleHandle}){
                             }
                         </List>
                     </Collapse>
-                    <ListItemButton onClick={handleClickP4}>
-                        {t.title[4]}
-                        {openP4 ? <ExpandLess/> : <ExpandMore/>}
+                    <ListItemButton onClick={handleClickDC}>
+                        {t.title[4]} {t.subtitle[41]}
+                        {openDC ? <ExpandLess/> : <ExpandMore/>}
                     </ListItemButton>
-                    <Collapse in={openP4} timeout="auto" unmountOnExit>
+                    <Collapse in={openDC} timeout="auto" unmountOnExit>
                         <List>
                             {
-                                p4.map(stage =>
+                                dc.map(stage =>
+                                    <ListItemButton key={stage} href={"/stage/"+stage}>
+                                        #{stage} {t.stage[stage]}
+                                    </ListItemButton>
+                                )
+                            }
+                        </List>
+                    </Collapse>
+                    <ListItemButton onClick={handleClickDD}>
+                        {t.title[4]} {t.subtitle[42]}
+                        {openDD ? <ExpandLess/> : <ExpandMore/>}
+                    </ListItemButton>
+                    <Collapse in={openDD} timeout="auto" unmountOnExit>
+                        <List>
+                            {
+                                dd.map(stage =>
+                                    <ListItemButton key={stage} href={"/stage/"+stage}>
+                                        #{stage} {t.stage[stage]}
+                                    </ListItemButton>
+                                )
+                            }
+                        </List>
+                    </Collapse>
+                    <ListItemButton onClick={handleClickEX}>
+                        {t.title[4]} {t.subtitle[43]}
+                        {openEX ? <ExpandLess/> : <ExpandMore/>}
+                    </ListItemButton>
+                    <Collapse in={openEX} timeout="auto" unmountOnExit>
+                        <List>
+                            {
+                                ex.map(stage =>
                                     <ListItemButton key={stage} href={"/stage/"+stage}>
                                         #{stage} {t.stage[stage]}
                                     </ListItemButton>
@@ -244,6 +278,7 @@ export default function MobileMenu({open, toggleHandle}){
                     <ListItemButton href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
                     <ListItemButton onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>
                     <ListItemButton href={router.asPath} locale={r}><FontAwesomeIcon icon={faGlobe} /> {t.g.language}</ListItemButton>
+                    <Box style={{backgroundColor:"#212121", overflowY:"hidden", height: "600px"}}> </Box>
                 </List>
             </MobileMenuBox>
         </SwipeableDrawer>

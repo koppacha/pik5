@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
+import bcrypt from "bcrypt";
 
 export const authOptions = {
     adapter: PrismaAdapter(prisma),
@@ -38,29 +39,46 @@ export const authOptions = {
                 password: {label: "Password", type: "password"}
             },
             authorize: async (credentials, req) => {
-                const user = await fetch(
-                    `http://0.0.0.0:3000/api/user/check-credentials`,
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/x-www-form-urlencoded",
-                            accept: "application/json",
+                try {
+                    const {userId, password} = credentials
+                    const user = await prisma.user.findFirstOrThrow({
+                        where: {
+                            userId: userId
                         },
-                        body: Object.entries(credentials)
-                            .map((e) => e.join("="))
-                            .join("&"),
-                    },
-                )
-                    .then((res) => res.json())
-                    .catch((err) => {
-                        logger.debug(err)
-                        return null;
-                    });
-                if (user) {
-                    return user;
-                } else {
-                    return null;
+                    })
+                    // ここで入力されたパスワードをハッシュ化しDB上のハッシュと比較する
+                    if(user && bcrypt.compareSync(password, user.password)){
+                        return user
+                    } else {
+                        return null
+                    }
+                } catch (e) {
+                    logger.debug(e)
+                    return null
                 }
+                // const user = await fetch(
+                //     `auth/user/check-credentials`,
+                //     {
+                //         method: "POST",
+                //         headers: {
+                //             "Content-Type": "application/x-www-form-urlencoded",
+                //             accept: "application/json",
+                //         },
+                //         body: Object.entries(credentials)
+                //             .map((e) => e.join("="))
+                //             .join("&"),
+                //     },
+                // )
+                //     .then((res) => res.json())
+                //     .catch((err) => {
+                //         logger.debug(err)
+                //         return null;
+                //     });
+                // if (user) {
+                //     return user;
+                // } else {
+                //     return null;
+                // }
             },
         })
     ],

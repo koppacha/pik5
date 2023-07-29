@@ -37,19 +37,20 @@ export default function Layout({children}) {
             <Footer/>
             <Link href="/">
                 <MobileMenuButton style={{bottom:"0px"}}>
-                    <FontAwesomeIcon icon={faHome} style={{fontSize:"40px"}} />
+                    <FontAwesomeIcon icon={faHome} style={{fontSize:"30px"}} />
                 </MobileMenuButton>
             </Link>
             <MobileMenuButton onClick={toggleDrawer} style={{bottom:"61px"}}>
-                <FontAwesomeIcon icon={faAnglesLeft} style={{fontSize:"40px"}}/>
+                <FontAwesomeIcon icon={faAnglesLeft} style={{fontSize:"30px"}}/>
             </MobileMenuButton>
             <MobileMenuButton onClick={scrollToTop} style={{bottom:"122px"}}>
-                <FontAwesomeIcon icon={faAngleUp} style={{fontSize:"40px"}} />
+                <FontAwesomeIcon icon={faAngleUp} style={{fontSize:"30px"}} />
             </MobileMenuButton>
-            <MobileMenu open={drawerOpen} toggleHandle={toggleDrawer}/>
+            <MobileMenu open={drawerOpen} toggleHandle={toggleDrawer}
+            />
             <Link href="https://discord.gg/rQEBJQa" target="_blank">
                 <MobileMenuButton style={{bottom:"183px"}}>
-                    <FontAwesomeIcon icon={faDiscord} style={{fontSize:"40px"}} />
+                    <FontAwesomeIcon icon={faDiscord} style={{fontSize:"30px"}} />
                 </MobileMenuButton>
             </Link>
         </>

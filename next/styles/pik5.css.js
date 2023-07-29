@@ -126,7 +126,9 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.subTitle};
     }
   }
-
+  .hidden {
+    display: none;
+  }
   .active {
     background-color: ${colors.light.front} !important;
     color: ${colors.light.back} !important;
@@ -214,6 +216,17 @@ export const RecordPostButton = styled(Box).attrs(props => ({$series: props.seri
   margin: 6px;
   svg {
     color: ${props => SeriesTheme(props.$series)};
+  }
+`
+export const AuthButton = styled(Button)`
+  background-color: #cfd2de;
+  color: #1a293b;
+  font-weight: bold;
+  border-radius: 8px;
+  padding: 4px 12px;
+  &:hover {
+    background-color: #1a293b;
+    color: #cfd2de;
   }
 `
 export const StyledSelect = styled(Select)`
@@ -452,17 +465,17 @@ export const PageHeader = styled(Box)`
 `
 export const MobileMenuButton = styled(Button)`
   ${pc`display: none;`}
-  
+
   position: fixed;
   bottom: 0;
   right: 0;
   width: 80px;
   border-radius: 6px;
-  background-color: #fff;
-  color: #000;
+  background-color: #c5c5c5;
+  color: #3f3f3f;
   height: 60px;
-  opacity: 0.9;
-  
+  opacity: 0.85;
+
   &:hover {
     background-color: #fff;
     color: #000;
