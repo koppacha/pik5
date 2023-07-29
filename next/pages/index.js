@@ -35,19 +35,19 @@ export default function Home({users}) {
 
     // クイックアクセス
     const quickLinks = [
-        ["ログイン", "/auth/login"],
-        ["アカウント作成", "/auth/register"],
-        ["ピクミン1", "/total/10"],
-        ["ピクミン2", "/total/20"],
-        ["ピクミン3", "/total/30"],
-        ["ピクミン4", "/total/40"],
-        ["キーワード", "/keyword"],
+        [t.g.login, "/auth/login"],
+        [t.g.register, "/auth/register"],
+        [t.title[1], "/total/10"],
+        [t.title[2], "/total/20"],
+        [t.title[3], "/total/30"],
+        [t.title[4], "/total/40"],
+        [t.g.key, "/keyword"],
         // ["本編RTA", "/speedrun"],
         // ["期間限定", "/limited"],
-        ["全総合", "/total/1"],
-        ["通常総合", "/total/2"],
-        ["特殊総合", "/total/3"],
-        ["利用規約", "/keyword/rules"],
+        [t.subtitle[1], "/total/1"],
+        [t.subtitle[2], "/total/2"],
+        [t.subtitle[3], "/total/3"],
+        [t.g.ru, "/keyword/rules"],
         ["Discord", "https://discord.gg/rQEBJQa"]
     ]
 
@@ -56,12 +56,11 @@ export default function Home({users}) {
         <Head>
             <title>{t.title[0]}</title>
         </Head>
-        ver.3.00<br/>
+        ver.3.01<br/>
         <Typography variant="" className="title">{t.title[0]}</Typography><br/>
         <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
         <InfoBox>
-            ピクチャレ大会へようこそ。このサイトは、任天堂のゲームソフト『ピクミン』シリーズをやり込む人のためのハイスコアを競い合うランキングサイトです。
-            腕前関係なくどなたでも参加することができます。
+            {t.t.welcome}
         </InfoBox>
         <Grid container>
             <WrapTopBox item xs={12}>
@@ -81,30 +80,32 @@ export default function Home({users}) {
             </WrapTopBox>
             <Grid item xs={12}>
                 <Grid container>
-                    <WrapTopBox item xs={6}>
+                    <WrapTopBox item xs={12} sm={6}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faCheckToSlot} /> ログイン情報
+                                <FontAwesomeIcon icon={faCheckToSlot} /> {t.g.logInfo}
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <Link href="/keyword/moving">旧ピクチャレ大会からの引き継ぎはこちら</Link><br/>
+                                <Link href="/keyword/moving">{t.t.moving}</Link><br/>
                                 {
                                     (session)
                                         &&
                                         <>
-                                            ようこそ、 <Link href={"/user/"+session.user.id}>{session.user.name} さん！</Link><br/>
-                                            <button onClick={()=>signOut()}>サインアウト</button>
+                                            {t.g.loginNow} <Link href={"/user/"+session.user.id}>{session.user.name}</Link><br/>
+                                            <button onClick={()=>signOut()}>{t.g.logout}</button>
                                         </>
                                 }
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
-                    <WrapTopBox item xs={6}>
+                    <WrapTopBox item xs={12} sm={6}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faCircleInfo} /> お知らせ
+                                <FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}
                             </TopBoxHeader>
                             <TopBoxContent>
+                                2023/07/29：ピクミン4全28ステージを追加しました。<br/>
+                                <hr/>
                                 2023/07/21：リニューアルオープンしました！<br/>
                             </TopBoxContent>
                         </TopBox>
@@ -113,7 +114,7 @@ export default function Home({users}) {
                     <WrapTopBox item xs={12}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faArrowTrendUp} /> 最近のトレンド
+                                <FontAwesomeIcon icon={faArrowTrendUp} /> {t.g.trend}
                             </TopBoxHeader>
                             <TopBoxContent>
                                 <TrendRanking/>
@@ -123,7 +124,7 @@ export default function Home({users}) {
                     <WrapTopBox item xs={12}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faFlag} /> 2023年投稿数ランキング
+                                <FontAwesomeIcon icon={faFlag} /> {t.g.countRanking}
                             </TopBoxHeader>
                             <TopBoxContent>
                                 <PostCountRanking users={users}/>
@@ -133,7 +134,7 @@ export default function Home({users}) {
                     <WrapTopBox item xs={12}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faCertificate} /> 新着記録
+                                <FontAwesomeIcon icon={faCertificate} />{t.g.newRecord}
                             </TopBoxHeader>
                             <TopBoxContent>
                                 <NewRecords users={users}/>

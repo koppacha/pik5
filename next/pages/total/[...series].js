@@ -90,7 +90,7 @@ export default function Series(param){
             </PageHeader>
             {
                 param.series > 9 &&
-                <Grid container style={{margin:"2em 0"}} columns={{xs: 4, sm: 4, md: 6, lg: 10, xl: 12}}>
+                <Grid container style={{margin:"2em 0"}} columns={{xs: 4, sm: 4, md: 6, lg: 10, xl: 10}}>
                     {
                         stages?.map(stage =>
                             <Grid key={stage} item xs={1}>

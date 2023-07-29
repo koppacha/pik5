@@ -9,6 +9,7 @@ use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class TotalController extends Controller
@@ -32,7 +33,7 @@ class TotalController extends Controller
             21 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],
             22 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],
             23 => [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230],  // タマゴムシ縛り
-            24 => [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227],  // スプレー縛り
+            24 => [203, 204, 208, 210, 211, 213, 215, 219, 221, 222, 224, 225, 227],  // スプレー縛り
             25 => range(231, 244),  // 本編地下
             26 => range(201, 230),  // 2Pチャレンジ
             27 => range(201, 230),  // TAS
@@ -45,12 +46,16 @@ class TotalController extends Controller
             34 => range(301, 350),// 2Pミッション
             35 => range(351, 362), // ソロビンゴ
             36 => range(331, 344), // サイドストーリー
-            40 => range(401, 405),
+            40 => range(401, 428),
+            41 => range(401, 412), // ダンドリチャレンジ
+            42 => range(413, 418), // ダンドリバトル
+            43 => range(419, 428), // 葉っぱ仙人の挑戦状
             91 => range(1001, 1030), // 旧日替わりチャレンジ
             92 => range(1031, 1103), // 旧参加者企画
             93 => range(1104, 1105), // 本編クリアタイム
             94 => range(1106, 1109), // チャレンジモード全クリアRTA
-            95 => 1110, // 本編カスタムRTA
+            95 => [1110], // 本編カスタムRTA
+            99 => [399], // サンドボックス
             81 => range(2001, 9999) // 期間限定ランキング（スタンダード、チーム対抗戦）
         ];
         if(!isset($request)){
@@ -141,6 +146,10 @@ class TotalController extends Controller
         } elseif ($rule === "30") {
             $rule = [30, 31, 32, 33, 36];
 
+        // ピクミン４総合
+        } elseif ($rule === "40") {
+            $rule = [40, 41, 42, 43];
+
         // それ以外
         } else {
             $rule = [$rule];
@@ -169,15 +178,17 @@ class TotalController extends Controller
             $temp = [];
 
             // 有効データのみ抽出するクエリ
-            $testModel[(int)$stage] = Record::where('stage_id', $stage)
-                ->where('console', $console_operation, $console)
-                ->whereIn('rule', $rule)
-                ->where('created_at', '<', $date)
-                ->where('flg', '<', 2)
-                ->orderBy('score','DESC')
-                ->orderBy('created_at')
-                ->get()
-                ->toArray();
+            $testModel[(int)$stage] = Cache::remember('testModel'.$stage, 3600, static function() use ($stage, $console_operation, $console, $rule, $date) {
+                return Record::where('stage_id', $stage)
+                    ->where('console', $console_operation, $console)
+                    ->whereIn('rule', $rule)
+                    ->where('created_at', '<', $date)
+                    ->where('flg', '<', 2)
+                    ->orderBy('score', 'DESC')
+                    ->orderBy('created_at')
+                    ->get()
+                    ->toArray();
+                });
 
             // ステージごとにユーザーごとのフィルタ条件別の自己ベストを抽出してステージごとに順位・ランクポイントを計算
             $filter = [];

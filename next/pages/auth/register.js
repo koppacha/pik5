@@ -1,14 +1,16 @@
 import React, { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useRouter } from "next/router"
-import {Box, FormControl, Grid, Typography} from "@mui/material";
-import {AuthWindow} from "../../styles/pik5.css";
+import {Box, FormControl, Grid, List, ListItem, Typography} from "@mui/material";
+import {AuthButton, AuthWindow} from "../../styles/pik5.css";
 import TextField from "@mui/material/TextField";
 import {useLocale} from "../../lib/pik5";
 import * as yup from "yup";
 import {yupResolver} from "@hookform/resolvers/yup";
 import Button from "@mui/material/Button";
 import Image from "next/image";
+import Link from "next/link";
+import Head from "next/head";
 
 export default function Register() {
 
@@ -18,12 +20,17 @@ export default function Register() {
     const schema = yup.object({
         name: yup
             .string()
+            .matches(/^[^<>\\"']*$/, "特殊な文字は使えません。")
+            .max(32, "表示名は32文字までです。")
             .required(t.yup.required),
         userId: yup
             .string()
+            .matches(/^[\w-]+$/, "使える文字種は半角英数字、アンダーバー、ハイフンのみです。")
+            .max(32, "ユーザーIDは32文字までです。")
             .required(t.yup.required),
         password: yup
             .string()
+            .matches(/^[^<>\\"']*$/, "特殊な文字は使えません。")
             .required(t.yup.required),
     })
 
@@ -59,47 +66,63 @@ export default function Register() {
     }
 
     return (
-        <Box>
-            <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
-                <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
+        <>
+            <Head>
+                <title>{t.g.register} - {t.title[0]}</title>
+            </Head>
+            <Box>
+                <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
+                    <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
+                </Box>
+                <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
+                    <AuthWindow item>
+                        <Typography variant="strong">ピクチャレ大会へようこそ</Typography><br/>
+                        <Box className="form-helper-text">
+                            <TextField
+                                {...register('name')}
+                                id="name"
+                                label="ユーザー名"
+                                type="text"
+                                variant="standard"
+                                error={'name' in errors}
+                                helperText={errors.userId?.message}
+                            />
+                            <TextField
+                                {...register('userId')}
+                                id="userId"
+                                label="ユーザーID"
+                                type="text"
+                                variant="standard"
+                                error={'userId' in errors}
+                                helperText={errors.userId?.message}
+                            />
+                            <TextField
+                                {...register('password')}
+                                id="password"
+                                label="パスワード"
+                                type="password"
+                                variant="standard"
+                                error={'password' in errors}
+                                helperText={errors.password?.message}
+                            />
+                            <AuthButton onClick={handleSubmit(onSubmit)}>{t.g.submit}</AuthButton>
+                        </Box>
+                        <Box style={{border:"1px solid #fff",borderRadius:"8px",padding:"10px",marginTop:"30px",width:"100%"}}>
+                            ユーザー名はランキングに表示される名前です。今後変更できるようになる予定です。<br/>
+                            ユーザーIDはログインとユーザーページのアクセスに必要なIDです。基本的に変更はできません。<br/>
+                            登録することで利用規約に同意したものとみなします。
+                        </Box>
+                        <Box style={{width:"100%"}}>
+                            <List>
+                                <ListItem><Link href="/">・トップページへ</Link></ListItem>
+                                <ListItem><Link href="/auth/login">・登録済みの方はこちら</Link></ListItem>
+                                <ListItem><Link href="/keyword/rules">・利用規約</Link></ListItem>
+                            </List>
+                        </Box>
+
+                    </AuthWindow>
+                </Grid>
             </Box>
-            <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
-                <AuthWindow item>
-                    <Typography variant="strong">ピクチャレ大会へようこそ</Typography><br/>
-                    <Box className="form-helper-text">
-                        <TextField
-                            {...register('name')}
-                            id="name"
-                            label="ユーザー名"
-                            type="text"
-                            variant="standard"
-                            error={'name' in errors}
-                            helperText={errors.userId?.message}
-                        />
-                        <TextField
-                            {...register('userId')}
-                            id="userId"
-                            label="ユーザーID"
-                            type="text"
-                            variant="standard"
-                            error={'userId' in errors}
-                            helperText={errors.userId?.message}
-                        />
-                        <TextField
-                            {...register('password')}
-                            id="password"
-                            label="パスワード"
-                            type="password"
-                            variant="standard"
-                            error={'password' in errors}
-                            helperText={errors.password?.message}
-                        />
-                        <Button href="/">トップページに戻る</Button>
-                        <Button href="/auth/login">ログイン</Button>
-                        <Button onClick={handleSubmit(onSubmit)}>{t.g.submit}</Button>
-                    </Box>
-                </AuthWindow>
-            </Grid>
-        </Box>
+        </>
     );
 }

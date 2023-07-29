@@ -10,9 +10,6 @@ import {
     Paper
 } from "@mui/material";
 import * as React from "react";
-import {useRouter} from "next/router";
-import {en} from "@/locale/en";
-import {ja} from "@/locale/ja";
 import Link from "next/link";
 import {HeaderPopMenu, StyledMenuItem} from "../../styles/pik5.css";
 import {useLocale} from "../../lib/pik5";

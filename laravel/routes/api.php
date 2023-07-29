@@ -97,7 +97,7 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('max', [Func::class, 'memberCount']);
-    Route::get('password', [GetPasswordController::class, 'show']);
+//    Route::get('password', [GetPasswordController::class, 'show']);
 });
 
 /**

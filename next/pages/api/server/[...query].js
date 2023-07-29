@@ -1,6 +1,5 @@
-
-// Next.jsのサーバーを経由してバックエンドにクエリを渡す
 import {logger} from "../../../lib/logger";
+import fetch from "node-fetch";
 
 export default async function handle(req, res){
 
@@ -10,13 +9,14 @@ export default async function handle(req, res){
             const post = await fetch(`http://laravel:8000/api/${query}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    'Content-Type': 'multipart/form-data',
                 },
                 body: JSON.stringify(req.body)
             })
             const data = await post.json()
             res.status(200).json({data})
         } catch (e) {
+            logger.debug(e)
             res.status(404).end()
         }
     } else {

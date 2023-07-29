@@ -56,6 +56,12 @@ services:
         max-size: 10m
         max-file: '100'
 
+  redis:
+    container_name: redis
+    image: redis:latest
+    volumes:
+      - ./redis:/data
+
   next:
     build:
       context: .
