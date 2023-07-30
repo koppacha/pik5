@@ -61,7 +61,7 @@ export default function Menu4(props){
                         <Grid item xs={3}>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+exColor,
-                            }} component={Link} href="/total/42" onClick={props.handleClose}>葉っぱ仙人の挑戦状総合</StyledMenuItem>
+                            }} component={Link} href="/total/43" onClick={props.handleClose}>葉っぱ仙人の挑戦状総合</StyledMenuItem>
                             {
                                 ex.map(n=>
                                     <StyledMenuItem key={n} style={{
