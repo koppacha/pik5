@@ -19,6 +19,10 @@ export async function getServerSideProps(context){
         where: {
             userId: user
         },
+        select: {
+            userId: true,
+            name: true
+        }
     });
     const userName = users.name
 
