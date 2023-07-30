@@ -98,7 +98,7 @@ export default function Record({data}) {
                             <>
                                 <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
                                 <Lightbox open={imgOpen} close={() => setImgOpen(false)}
-                                          slides={[{src:"http://localhost:8000/api/img/"+data.img_url}]}
+                                          slides={[{src:"/api/file/"+data.img_url}]}
                                           rendar={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
                                           controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
                             </>: undefined}

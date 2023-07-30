@@ -62,7 +62,12 @@ export async function getServerSideProps(context){
     }
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany()
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
 
     return {
         props: {
