@@ -1,6 +1,7 @@
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
 import sha256 from "crypto-js/sha256"
+import bcrypt from "bcrypt";
 
 export default async function handle(req, res) {
     if (req.method === "POST") {
@@ -13,17 +14,25 @@ export default async function handle(req, res) {
 }
 
 const hashPassword = (password) => {
-    return sha256(password).toString();
+    const saltRounds = 10
+    return bcrypt.hashSync(password, saltRounds)
 };
 
-// POST /api/user
 async function handlePOST(res, req) {
-    logger.debug("creating user", {
-        ...req.body,
-        password: hashPassword(req.body.password),
-    });
-    const user = await prisma.user.create({
-        data: { ...req.body, password: hashPassword(req.body.password) },
-    });
-    res.json(user);
+
+    const userSearch = await prisma.user.findFirst({
+        where: {
+            userId: req.body.userId
+        },
+    })
+    if(userSearch){
+        // ユーザーIDの重複は弾く
+        res.status(500).end()
+
+    } else {
+        const user = await prisma.user.create({
+            data: {...req.body, password: hashPassword(req.body.password)},
+        });
+        res.status(200).json(user);
+    }
 }

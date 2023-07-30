@@ -13,6 +13,7 @@ export const en = {
         close: "Close",
         rule: "Check the rules",
         rules: "Terms of Service & Rules",
+        ru: "利用規約",
         year: "Year",
         noComment: "No comments",
         console: "Controls",
@@ -21,10 +22,23 @@ export const en = {
         language: "日本語",
         top: "Home",
         category: "Category",
+        login: "ログイン",
+        logInfo: "ログイン情報",
+        loginNow: "ログイン中：",
+        logout: "ログアウト",
+        register: "アカウント作成",
+        info: "お知らせ",
+        trend: "最近のトレンド",
+        countRanking: "年初来投稿数ランキング",
+        newRecord: "新着記録",
+        userName: "ユーザー名",
+        password: "パスワード"
     },
     t: {
         notFound: "This is not the planet you're looking for.",
+        moving: "旧ピクチャレ大会からの引き継ぎはこちら",
         description: "the Pikmin Series Leaderboards is an unofficial community site where you compete in various Pikmin series rankings.",
+        welcome: "ピクチャレ大会へようこそ。このサイトは、任天堂のゲームソフト『ピクミン』シリーズをやり込む人のためのハイスコアを競い合うランキングサイトです。腕前関係なくどなたでも参加することができます。"
     },
     title: {
         0: "the Pikmin Series Leaderboards",
@@ -46,6 +60,9 @@ export const en = {
         33: "Defeat Bosses!",
         34: "Side Story Mode",
         35: "Solo Bingo",
+        41: "ダンドリチャレンジ",
+        42: "ダンドリバトル",
+        43: "葉っぱ仙人の挑戦状",
     },
     stage: {
         user: "User Ranking",
@@ -72,6 +89,10 @@ export const en = {
         34: "Pikmin3 2P Mission Overall Ranking",
         35: "Pikmin3 Solo Bingo Battle Overall Ranking",
         36: "Pikmin3 Side Story Overall Ranking",
+        40: "ピクミン4総合ランキング",
+        41: "ピクミン4 ダンドリチャレンジ総合ランキング",
+        42: "ピクミン4 ダンドリバトル総合ランキング",
+        43: "ピクミン4 葉っぱ仙人の挑戦状総合ランキング",
         101: "The Impact Site",
         102: "The Forest of Hope",
         103: "The Forest Navel",
@@ -259,7 +280,11 @@ export const en = {
         33: "Defeat Bosses!",
         34: "2P Mission",
         35: "Solo Bingo Battle Mode",
-        36: "Side Story"
+        36: "Side Story",
+        40: "ピクミン4総合",
+        41: "ダンドリチャレンジ",
+        42: "ダンドリバトル",
+        43: "葉っぱ仙人の挑戦状"
     },
     border: {
         2: {
