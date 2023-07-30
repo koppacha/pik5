@@ -243,6 +243,9 @@ export const en = {
         427: "Ku-dan: Territory of Elimination",
         428: "Shu-dan: Purple of Kaiden",
     },
+    info: {
+        422: "For the purposes of this ranking, any play that uses the wall-skipping bug will be considered invalid.",
+    },
     post: {
         title: "Submit Score",
     },
