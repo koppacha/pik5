@@ -110,7 +110,8 @@ export default function Stage(param){
                 #{param.stage}<br/>
                 <BreadCrumb info={param.info} rule={param.rule}/>
                 <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
-                <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography>
+                <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography><br/><br/>
+                <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
             <Grid container style={{margin:"2em 0"}}>
                 {
