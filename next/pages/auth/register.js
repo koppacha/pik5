@@ -7,15 +7,17 @@ import TextField from "@mui/material/TextField";
 import {useLocale} from "../../lib/pik5";
 import * as yup from "yup";
 import {yupResolver} from "@hookform/resolvers/yup";
-import Button from "@mui/material/Button";
 import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
+import {logger} from "../../lib/logger";
 
 export default function Register() {
 
     const {t} = useLocale()
     const router = useRouter();
+
+    const [message, setMessage] = useState('')
 
     const schema = yup.object({
         name: yup
@@ -44,27 +46,25 @@ export default function Register() {
     });
 
     async function onSubmit(values) {
-        try {
-            const body = { ...values };
-            console.log(`POSTing ${JSON.stringify(body, null, 2)}`);
-            const res = await fetch(`/api/user/create`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            });
-            reset();
+        const body = { ...values };
+        const res = await fetch(`/api/user/create`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
+        reset();
+        if(res.status < 300) {
             router.push(
                 `login${
                     router.query.callbackUrl
                         ? `?callbackUrl=${router.query.callbackUrl}`
                         : ""
                 }`,
-            );
-        } catch (error) {
-            console.error(error);
+            )
+        } else {
+            setMessage("すでに登録されているユーザーIDです。");
         }
     }
-
     return (
         <>
             <Head>
@@ -85,8 +85,8 @@ export default function Register() {
                                 type="text"
                                 variant="standard"
                                 error={'name' in errors}
-                                helperText={errors.userId?.message}
-                            />
+                                helperText={errors.name?.message}
+                            /><br/>
                             <TextField
                                 {...register('userId')}
                                 id="userId"
@@ -95,7 +95,7 @@ export default function Register() {
                                 variant="standard"
                                 error={'userId' in errors}
                                 helperText={errors.userId?.message}
-                            />
+                            /><br/>
                             <TextField
                                 {...register('password')}
                                 id="password"
@@ -104,10 +104,13 @@ export default function Register() {
                                 variant="standard"
                                 error={'password' in errors}
                                 helperText={errors.password?.message}
-                            />
+                            /><br/>
                             <AuthButton onClick={handleSubmit(onSubmit)}>{t.g.submit}</AuthButton>
                         </Box>
-                        <Box style={{border:"1px solid #fff",borderRadius:"8px",padding:"10px",marginTop:"30px",width:"100%"}}>
+                        <Box style={{marginTop:"30px",width:"100%"}}>
+                            {message && <>{message}</>}
+                        </Box>
+                        <Box style={{border:"1px solid #fff",borderRadius:"8px",padding:"10px",width:"100%"}}>
                             ユーザー名はランキングに表示される名前です。今後変更できるようになる予定です。<br/>
                             ユーザーIDはログインとユーザーページのアクセスに必要なIDです。基本的に変更はできません。<br/>
                             登録することで利用規約に同意したものとみなします。
