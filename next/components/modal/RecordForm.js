@@ -47,7 +47,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
-        "/^https?://(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)/[\w/\?=]*$/"
+        /^https?:\/\/(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)\/[\w\/?=]*$/
         :
         // 空欄の場合はスルー
         ""
