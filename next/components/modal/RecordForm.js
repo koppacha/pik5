@@ -15,7 +15,6 @@ import GetRank from "./GetRank"
 import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
-import {mutate} from "swr";
 
 export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}) {
 
@@ -48,7 +47,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
-        "/^https?://(www\\.)?(nicovideo\\.jp|youtube\\.com|youtu\\.be|twitch\\.tv|twitter\\.com)/[\\w/\\?=]*$/"
+        "/^https?://(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)/[\w/\?=]*$/"
         :
         // 空欄の場合はスルー
         ""
@@ -146,7 +145,11 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
     }
     // "h:mm:ss"形式の文字列を秒数に変換する関数
     const convertToSeconds = (timeString) => {
-        const [hours, minutes, seconds] = timeString.split(':');
+
+        // Stepsが効かない端末ではhoursを強制的に補完する
+        const hour = (timeString.match(/:/g) || []).length < 2 ? "00:" : ""
+
+        const [hours, minutes, seconds] = (hour + timeString).split(':');
         return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
     };
     if(!session){
@@ -202,7 +205,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         id="time"
                         label="タイム"
                         type="time"
-                        inputProps={{step: 1, shrink:true, inputMode: 'numeric', pattern: '[0-9]*'}}
+                        inputProps={{step: 1, inputMode: 'numeric', pattern: '[0-9]*'}}
                         onChange={(e) => time2score(e.target.value)}
                         fullWidth
                         variant="standard"
@@ -210,14 +213,14 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         helperText={errors.time?.message}
                         defaultValue="00:00:00"
                         margin="normal"
-                        className={`${isTime() || "hidden"}`}
+                        className={isTime() || "hidden"}
                     />
                     <TextField
                         {...register('score')}
                         id="score"
                         label="スコア"
                         type="text"
-                        inputProps={{shrink:true, inputMode: 'numeric', pattern: '[0-9]*'}}
+                        inputProps={{inputMode: 'numeric', pattern: '[0-9]*'}}
                         onChange={(e) => setScore(e.target.value)}
                         fullWidth
                         variant="standard"

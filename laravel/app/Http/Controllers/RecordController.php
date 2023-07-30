@@ -88,8 +88,9 @@ class RecordController extends Controller
         $img = $request->file('file');
         if($img) {
             try {
-                $extension = $img->getClientOriginalExtension();
-                $fileName = date("Ymd-His") . '-' . random_int(1000000000, 9999999999) . '.' . $extension;
+                $extension = pathinfo($img->getClientOriginalName(), PATHINFO_EXTENSION);
+                $dots = ($extension) ? "." : "";
+                $fileName = date("Ymd-His") . '-' . random_int(1000000000, 9999999999) . $dots . $extension;
                 $img->storeAs('public/img', $fileName);
             } catch (Exception $e){
                 Log::debug($e);
