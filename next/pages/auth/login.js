@@ -106,6 +106,9 @@ export default function Login(){
                                 <ListItem><Link href="/keyword/moving">・旧ピクチャレ大会からの引き継ぎはこちら</Link></ListItem>
                             </List>
                         </Box>
+                        <Box>
+                            ＊2023/07/21〜2023/07/29の間に登録した方は、お手数ですが再登録をお願いします。
+                        </Box>
                     </AuthWindow>
                 </Grid>
             </Box>
