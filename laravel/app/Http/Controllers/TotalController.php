@@ -122,8 +122,8 @@ class TotalController extends Controller
         // オプション引数
         // TODO: Extendsで共通処理化したい
         $console = $request['console'] ?: 0;
-        $rule = $request['rule'] ?: $request['id'];
-        $year = $request['year'] ?: date("Y");
+        $reqRule = $request['rule'] ?: $request['id'];
+        $reqYear = $request['year'] ?: date("Y");
 
         // ルールの強制置換
         // 全総合ランキング
@@ -139,27 +139,27 @@ class TotalController extends Controller
             $rule = [11, 23, 24, 22, 25, 29, 35];
 
         // ピクミン２総合
-        } elseif ($rule === "20") {
+        } elseif ($reqRule === "20") {
             $rule = [20, 21, 22];
 
         // ピクミン３総合
-        } elseif ($rule === "30") {
+        } elseif ($reqRule === "30") {
             $rule = [30, 31, 32, 33, 36];
 
         // ピクミン４総合
-        } elseif ($rule === "40") {
+        } elseif ($reqRule === "40") {
             $rule = [40, 41, 42, 43];
 
         // それ以外
         } else {
-            $rule = [$rule];
+            $rule = [$reqRule];
         }
 
         // データの格納先
         $ranking = [];
 
         // オプション引数を加工する
-        $year = (int)$year + 1;
+        $year = (int)$reqYear + 1;
         $console_operation = $console ? "=" : ">";
 //        $rule_operation = $rule ? "=" : ">";
 
@@ -178,7 +178,7 @@ class TotalController extends Controller
             $temp = [];
 
             // 有効データのみ抽出するクエリ
-            $testModel[(int)$stage] = Cache::remember('testModel'.$stage, 3600, static function() use ($stage, $console_operation, $console, $rule, $date) {
+            $testModel[(int)$stage] = Cache::remember('total-'.$stage.'-'.$console.'-'.$reqRule.'-'.$reqYear, 1800, static function() use ($stage, $console_operation, $console, $rule, $date) {
                 return Record::where('stage_id', $stage)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
