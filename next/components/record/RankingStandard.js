@@ -9,7 +9,7 @@ import {logger} from "../../lib/logger";
 export default function RankingStandard({borders, stage, console:consoles, rule, year, users}){
 
     const {t} = useLocale()
-    const { data:posts } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher)
+    const { data:posts } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher, { refreshInterval: 5000 })
 
     if(!posts){
         return (

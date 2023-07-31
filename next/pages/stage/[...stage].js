@@ -26,7 +26,7 @@ export async function getServerSideProps(context){
 
     if(
         stage < 100 ||
-        stage > 999 ||
+        stage > 428 ||
         !available.includes(Number(rule)) ||
         !available.includes(Number(console)) ||
         year < 2014 ||
@@ -43,11 +43,6 @@ export async function getServerSideProps(context){
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
     if(stage_res.status < 300) {
         info = await stage_res.json()
-    }
-    if(!info){
-        return {
-            notFound: true,
-        }
     }
 
     let stages = []

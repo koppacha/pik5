@@ -79,14 +79,6 @@ Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route::post ( 'keyword' , [ KeywordController::class, 'create' ]);
     Route::patch ( 'keyword/{id}' , [ KeywordController::class, 'update' ]);
     Route::delete ( 'keyword/{id}' , [ KeywordController::class, 'destroy' ]);
-    Route::get ('keywords', static function () {
-        $str = "";
-        for($i=1; $i<=13; $i++) {
-            $str .= rands();
-            $str .= "\n";
-        }
-        return $str;
-    });
 });
 
 // 証拠画像取得API
@@ -97,20 +89,5 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('max', [Func::class, 'memberCount']);
-//    Route::get('password', [GetPasswordController::class, 'show']);
 });
 
-/**
- * @throws Exception
- */
-function rands(): string
-{
-    if (function_exists("random_bytes")) {
-        $bytes = random_bytes(ceil(13 / 2));
-    } elseif (function_exists("openssl_random_pseudo_bytes")) {
-        $bytes = openssl_random_pseudo_bytes(ceil(13 / 2));
-    } else {
-        throw new Exception("no cryptographically secure random function available");
-    }
-    return substr(bin2hex($bytes), 0, 13);
-}
