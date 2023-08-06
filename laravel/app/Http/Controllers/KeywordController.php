@@ -60,11 +60,12 @@ class KeywordController extends Controller
     public function create(Request $request): JsonResponse
     {
         try {
+            Log::debug("req", (array)$request);
             $keywords = new Keyword();
             $keywords->fill([
                     'unique_id' => $request['unique_id'] ?: $this->uniqueIdReal(),
                     'keyword' => $request['keyword'],
-                    'category' => $request['category'],
+                    'category' => $request['category'] ?: "other",
                     'tag' => $request['tag'] ?: "その他",
                     'yomi' => $request['yomi'],
                     'content' => $request['content'],
@@ -93,7 +94,7 @@ class KeywordController extends Controller
         } elseif (function_exists("openssl_random_pseudo_bytes")) {
             $bytes = openssl_random_pseudo_bytes(ceil(13 / 2));
         } else {
-            throw new Exception("no cryptographically secure random function available");
+            throw new \RuntimeException("no cryptographically secure random function available");
         }
         return substr(bin2hex($bytes), 0, 13);
     }

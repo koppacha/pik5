@@ -9,7 +9,7 @@ export default async function handle(req, res){
             const post = await fetch(`http://laravel:8000/api/${query}`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'multipart/form-data',
+                    'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(req.body)
             })
@@ -17,7 +17,7 @@ export default async function handle(req, res){
             res.status(200).json({data})
         } catch (e) {
             logger.debug(e)
-            res.status(404).end()
+            res.status(404).json(e)
         }
     } else {
         try {

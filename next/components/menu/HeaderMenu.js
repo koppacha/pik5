@@ -34,7 +34,7 @@ export default function HeaderMenu(){
     return (
         <>
             <ThinAppBar>
-                <Toolbar>
+                <Toolbar className="spHidden">
                     <Typography variant="h6" component="div">
                         <Link href="/">{t.title[0]}</Link>
                     </Typography>

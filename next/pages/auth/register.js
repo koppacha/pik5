@@ -68,7 +68,7 @@ export default function Register() {
     return (
         <>
             <Head>
-                <title>{t.g.register} - {t.title[0]}</title>
+                <title>{t.g.register+" - "+t.title[0]}</title>
             </Head>
             <Box>
                 <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>

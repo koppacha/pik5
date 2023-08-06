@@ -15,6 +15,7 @@ import GetRank from "./GetRank"
 import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
+import Compressor from "compressorjs";
 
 export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}) {
 
@@ -47,7 +48,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
-        /^https?:\/\/(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)\/[\w\/?=]*$/
+        /^https?:\/\/(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)\/[\w\-\/?=]*$/
         :
         // 空欄の場合はスルー
         ""
@@ -80,7 +81,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
             defaultValue: {
                 time: "00:00:00",
                 score: 0,
-                consoles: consoleList[0],
+                console: consoleList[0],
                 videoUrl: "",
                 comment: "",
             }
@@ -100,6 +101,9 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
     // キーワードをバックエンドに送信する
     const onSubmit = async () => {
+
+        // 送信確認（暫定的な実装）
+        const confirm = window.confirm(t.g.confirm)
 
         // 送信するデータをオブジェクトに追加
         formData.append('stage_id', info.stage_id)
@@ -124,7 +128,21 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
     // 画像をアップロード
     const handleFileClick = async (e) => {
         const file = e.target.files[0]
-        formData.append('file', file)
+        if(!file){
+            return null
+        }
+        // 1MBを超える画像は圧縮し、失敗した場合は添付しない
+        new Compressor(file, {
+            quality: 0.6,
+            retainExif: true,
+            convertSize: 1000000,
+            success(result) {
+                formData.append('file', result, result.name)
+            },
+            error(err){
+                console.log(err.message)
+            }
+        })
     }
 
     // タイム表示判定
@@ -151,7 +169,10 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
         const [hours, minutes, seconds] = (hour + timeString).split(':');
         return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
-    };
+    }
+
+    console.log(consoles)
+
     if(!session){
         return (
             <>

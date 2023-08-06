@@ -25,7 +25,7 @@ export default function KeywordIndex(){
 
     const p = c ? `?c=${c}` : t ? `?t=${t}` : ""
 
-    const {data} = useSWR(`/api/server/keyword${p}`, fetcher)
+    const {data} = useSWR(`/api/server/keyword${p}`, fetcher, { refreshInterval: 5000 })
 
     // モーダル制御
     const handleOpen = (id) => {
@@ -65,6 +65,7 @@ export default function KeywordIndex(){
                         <li>Sorry, this content is Japanese only.</li>
                         <li>登録できるのはピクミン界隈にある程度受け入れられている概念に限ります。作成者以外に認知されていない概念等は削除対象です。</li>
                         <li>本文にはMarkdownを使用できます。</li>
+                        <li>タグの記述は任意です。カテゴリ内でグルーピングしたい場合に使用してください。</li>
                         <li>キーワード名及び本文はピクミン初心者にもなるべくわかりやすい表現を心がけてください。</li>
                         <li>キーワード名単独でどのシリーズやステージの用語か分かりにくい場合は（）でステージ名等を付け加えてください。その際、よみがなにカッコ及びカッコ内を含める必要はありません。</li>
                         <li>本文中のゲームタイトルは『』で囲んでください。強調したい言葉は「」で囲んでください。（キーワード名に含まれれる場合は不要）</li>

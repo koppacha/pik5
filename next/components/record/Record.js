@@ -55,7 +55,7 @@ export default function Record({data}) {
     }
     return (
         <RecordContainer container rank={data.post_rank}>
-            <Grid item xs={1.5} sm={1} style={{
+            <Grid item xs={2} sm={1} style={{
                 borderRight: '1px solid #fff'
             }}>
                 <RankEdge as="span">{t.g.rankHead} </RankEdge>
@@ -63,7 +63,7 @@ export default function Record({data}) {
                 <RankEdge as="span"> {t.g.rankTail}</RankEdge>
                 <RankPointType>[{data.rps ?? "?"} rps]</RankPointType>
             </Grid>
-            <Grid item xs={3} sm={3} style={{
+            <Grid item xs={4} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
                 <UserType length={data.user_name.length}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
@@ -74,7 +74,7 @@ export default function Record({data}) {
                 <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType as="span"> {compare}</CompareType>
             </Grid>
-            <Grid item xs={4.5} sm={5} style={{
+            <Grid item xs={3} sm={5} style={{
                 textAlign: 'left',
             }}>
                 <Grid container style={{
