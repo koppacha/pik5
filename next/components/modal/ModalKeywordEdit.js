@@ -68,7 +68,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                 },
                 body: JSON.stringify({
                     'keyword': keyword,
-                    'category': category,
+                    'category': category || 'other',
                     'unique_id': uniqueId || 0,
                     'tag': tag,
                     'yomi': yomi,
@@ -136,7 +136,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                     <TextField
                         {...register('category')}
                         select
-                        id="tag"
+                        id="category"
                         label={t.keyword.g.category}
                         onChange={(e) => setCategory(e.target.value)}
                         fullWidth

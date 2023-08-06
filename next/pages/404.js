@@ -11,7 +11,7 @@ export default function NotFound(){
     return (
         <>
             <Head>
-                <title>404 Page Not Found - {t.title[0]}</title>
+                <title>{"404 Page Not Found - "+t.title[0]}</title>
             </Head>
             <div style={{height:"100vh"}}>
                 <Typography className="title" variant="h2">404 Page Not Found</Typography>

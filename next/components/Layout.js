@@ -1,7 +1,7 @@
 import * as React from 'react';
 import HeaderMenu from "./menu/HeaderMenu";
 import Footer from "./Footer";
-import {MobileDiscordButton, MobileMenuButton, OffsetContainer} from "../styles/pik5.css";
+import {MobileMenuButton, OffsetContainer} from "../styles/pik5.css";
 import {useState} from "react";
 import MobileMenu from "./menu/MobileMenu";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";

@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Foundation\Http\FormRequest;
 
 class RecordController extends Controller
 {
@@ -69,9 +70,8 @@ class RecordController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @param Request $request
+     * @param FormRequest $request
      * @return JsonResponse
-     * @throws Exception
      */
     public function create(Request $request): JsonResponse
     {
@@ -81,20 +81,21 @@ class RecordController extends Controller
                 ["ERROR", 500]
             );
         }
-        // カウントダウン系の場合は経過時間に変換する
-
         // 受信した画像の処理
         $fileName = "";
         $img = $request->file('file');
         if($img) {
             try {
-                $extension = $img->getClientOriginalExtension();
+                $extension = $img->extension();
+                Log::debug($extension);
                 $dots = ($extension) ? "." : "";
                 $fileName = date("Ymd-His") . '-' . random_int(1000000000, 9999999999) . $dots . $extension;
-                $img->storeAs('public/img', $fileName);
+                $path = $img->storeAs('img', $fileName, 'public');
+                if(!$path){
+                    return response()->json("画像の保存に失敗しました。");
+                }
             } catch (Exception $e){
-                Log::debug($e);
-                return response()->json(["ERROR:$e", 500]);
+                return response()->json("error99:".$e);
             }
         }
         // 画像以外の処理
@@ -120,8 +121,7 @@ class RecordController extends Controller
             $posts->save();
 
         } catch (Exception $e) {
-            Log::debug($e);
-            return response()->json(["ERROR:$e", 500]);
+            return response()->json($e);
         }
         return response()->json(
             ["OK", 200]
@@ -178,12 +178,15 @@ class RecordController extends Controller
         } elseif($rule === "30"){
             $rule = [30, 31, 32, 33, 36];
 
+        } elseif($rule === "40"){
+            $rule = [40, 41, 42, 43];
+
         } elseif(!$rule && $where === "stage_id") {
             $rule = [Stage::where('stage_id', $request['id'])->first()->parent];
 
         } elseif(!$rule && $where === "user_id") {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40];
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
 
         } else {
             // 上記すべてに当てはまらない場合
@@ -200,7 +203,8 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $dataset = Record::where($where, $request['id'])
+        $dataset = Record::select('post_id', 'user_id', 'score', 'stage_id', 'rule', 'console', 'region', 'unique_id', 'post_comment', 'img_url', 'video_url', 'flg', 'created_at')
+                ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->whereIn('rule', $rule)
                 ->where('created_at','<', $date)

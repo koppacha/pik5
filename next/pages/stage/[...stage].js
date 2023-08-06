@@ -99,7 +99,7 @@ export default function Stage(param){
     return (
         <>
             <Head>
-                <title>{`${t.stage[param.stage]} (${t.title[param.info.series]}) - ${t.title[0]}`}</title>
+                <title>{t.stage[param.stage]+" ("+t.title[param.info.series]+") - "+t.title[0]}</title>
             </Head>
             <PageHeader>
                 #{param.stage}<br/>
@@ -108,10 +108,10 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography><br/><br/>
                 <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
-            <Grid container style={{margin:"2em 0"}}>
+            <Grid container style={{margin:"2em 0"}} columns={{ xs: 6, sm: 8, md: 10, lg: 10, xl: 10 }}>
                 {
                     param.stages?.map(stage =>
-                        <Grid key={stage} item xs={2.4} lg={1.2}>
+                        <Grid key={stage} item xs={1}>
                             <Link key={stage} href={'/stage/'+stage}><StageListBox>
                                 <span>#{stage}</span><br/>
                                 {t.stage[stage]}</StageListBox>

@@ -160,7 +160,7 @@ export default function Run({data, stage, console, consoles}){
     return (
         <>
             <Head>
-                <title>{`${t.speedrun[stage]} - ${t.title[0]}`}</title>
+                <title>{t.speedrun[stage]+" - "+t.title[0]}</title>
             </Head>
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             <StairIcon icon={faStairs}/>

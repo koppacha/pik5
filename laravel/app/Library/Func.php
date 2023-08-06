@@ -34,7 +34,7 @@ class Func extends Facade
         [$console, ,$date] = $option;
 
         // 期間限定ランキングを設立するまでは全部通常ランキングとして処理する
-        $rule = [10, 21, 22, 30, 31, 32, 33, 36];
+        $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
 
         if(!$date) {
             $datetime = new DateTime("2024-01-01 00:00:00");
@@ -46,7 +46,7 @@ class Func extends Facade
         try {
             // TODO: 一部の特殊ランキングが混じってるけど通常ランキングの参加者数を超えることはまずないので一旦無視で
             $Model = Cache::remember('memCount', 3600, static function() use ($console_operation, $console, $rule, $date) {
-                return Record::whereIn('stage_id', range(101, 405))
+                return Record::whereIn('stage_id', range(101, 428))
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
                     ->where('created_at', '<', $date)

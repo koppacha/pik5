@@ -44,7 +44,7 @@ export default function Stage(param){
     return (
         <>
             <Head>
-                <title>{`${param.userName} - ${t.title[0]}`}</title>
+                <title>{param.userName+" - "+t.title[0]}</title>
             </Head>
             {t.stage.user}<br/>
             <Typography variant="" className="title">{ param.userName }</Typography><br/>

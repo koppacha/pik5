@@ -85,7 +85,7 @@ export default function Series(param){
     return (
         <>
             <Head>
-                <title>{ t.stage[param.series] } - {t.title[0]}</title>
+                <title>{t.stage[param.series]+" - "+t.title[0]}</title>
             </Head>
             <PageHeader>
                 #{param.series}<br/>

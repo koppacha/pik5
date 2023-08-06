@@ -2,7 +2,7 @@ import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import * as React from "react";
 import {useLocale} from "../../lib/pik5";
-import {b, RuleBox, RuleWrapper} from "../../styles/pik5.css"
+import {RuleBox, RuleWrapper} from "../../styles/pik5.css"
 
 export default function Rules(props){
 
@@ -35,7 +35,7 @@ export default function Rules(props){
     if(info.series === 3 && parent !== 35){
         rules.push(34)
     }
-    // 通常ルールの場合とそれ以外とで表示名を分岐する
+    // 通常ルールの場合とそれ以外で表示名を分岐する
     const normalRankings = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43]
 
     return (
