@@ -20,7 +20,12 @@ import Head from "next/head";
 
 export async function getServerSideProps(context) {
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany()
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
     return {
         props: {
             users
@@ -42,8 +47,6 @@ export default function Home({users}) {
         [t.title[3], "/total/30"],
         [t.title[4], "/total/40"],
         [t.g.key, "/keyword"],
-        // ["本編RTA", "/speedrun"],
-        // ["期間限定", "/limited"],
         [t.subtitle[1], "/total/1"],
         [t.subtitle[2], "/total/2"],
         [t.subtitle[3], "/total/3"],
@@ -54,7 +57,7 @@ export default function Home({users}) {
   return (
     <>
         <Head>
-            <title>{t.title[0]}</title>
+            <title>{t.title[0]+" - "+t.t.desc}</title>
         </Head>
         ver.3.01<br/>
         <Typography variant="" className="title">{t.title[0]}</Typography><br/>
@@ -68,7 +71,7 @@ export default function Home({users}) {
                     {
                         quickLinks.map(i =>
                             (
-                                <Grid item key={i} xs={6} sm={3} lg={2} component={Link} href={i[1]}>
+                                <Grid item key={i} xs={3} sm={2} component={Link} href={i[1]}>
                                     <CellBox style={{padding:"10px 0"}}>
                                         {i[0]}
                                     </CellBox>

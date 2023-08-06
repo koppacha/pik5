@@ -79,7 +79,7 @@ const rankColor = (rank, target = 0) => {
     }
 }
 
-// スマホとPCのブレイクポイントを定義
+// スマホとPCのブレイクポイントを定義（TODO:MUIv4で使えない場合は専用クラスを使う）
 const sp = (first, ...interpolations) => css`
   @media (max-width: 600px) {
     ${css(first, ...interpolations)}
@@ -90,7 +90,6 @@ const pc = (first, ...interpolations) => css`
     ${css(first, ...interpolations)}
   }
 `
-
 export const GlobalStyle = createGlobalStyle`
 
   body {
@@ -161,6 +160,9 @@ export const GlobalStyle = createGlobalStyle`
       }
 
     }
+  }
+  .sp-hidden {
+      display: none;
   }
   .markdown-content {
     font-size: 1.0em;

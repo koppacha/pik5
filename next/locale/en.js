@@ -32,11 +32,13 @@ export const en = {
         countRanking: "Year-to-Date Post Count Ranking",
         newRecord: "New Records",
         userName: "Username",
-        password: "Password"
+        password: "Password",
+        confirm: "May I send it?"
     },
     t: {
         notFound: "This is not the planet you're looking for.",
         moving: "Click here to take over from the site (pik4) before the move.",
+        desc: "Pikmin Series High Score Accumulation Site",
         description: "the Pikmin Series Leaderboards is an unofficial community site where you compete in various Pikmin series rankings.",
         welcome: "Welcome to the Pikmin Series Leaderboards. This site is a ranking site to compete for high scores for those who play Nintendo's Pikmin game series. Anyone can participate regardless of skill level."
     },
@@ -51,6 +53,9 @@ export const en = {
         31: "Hey! Pikmin",
     },
     subtitle: {
+        1: "Total of all",
+        2: "General Total",
+        3: "Special Total",
         21: "Egg",
         22: "No Egg",
         23: "Story Mode Dungeon Challenge",
@@ -292,10 +297,10 @@ export const en = {
         34: "2P Mission",
         35: "Solo Bingo Battle Mode",
         36: "Side Story",
-        40: "ピクミン4総合",
-        41: "ダンドリチャレンジ",
-        42: "ダンドリバトル",
-        43: "葉っぱ仙人の挑戦状"
+        40: "Pikmin 4 Overall",
+        41: "Dandori Challenge",
+        42: "Dandori Battle",
+        43: "The Leaf Hermit's Challenge"
     },
     border: {
         2: {
@@ -366,7 +371,7 @@ export const en = {
             "world": "World",
             "term": "General Term",
             "term2": "Completion Term",
-            "psl": "Pikcha-Leaderboards",
+            "psl": "Pikmin Series Leaderboards",
             "technical": "Internal Specifications",
             "glitch": "Glitch Technique/Modification",
             "rule": "Rule",

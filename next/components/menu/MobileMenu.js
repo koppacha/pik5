@@ -1,13 +1,12 @@
 import {Box, Collapse, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
 import * as React from "react";
 import {MobileMenuBox} from "../../styles/pik5.css";
-import {p1, ne, eg, du, bt, ce, be, ss, db, sb, p4, sp, dc, dd, ex} from "../../lib/const"
+import {p1, ne, eg, du, bt, ce, be, ss, db, sb, sp, dc, dd, ex} from "../../lib/const"
 import {useLocale} from "../../lib/pik5";
 import {useState} from "react";
-import {ExpandLess, ExpandMore} from "@mui/icons-material";
 import {faDiscord, faTwitter} from "@fortawesome/free-brands-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
+import {faCloudMoon, faCloudSun, faGlobe, faAngleUp, faAngleDown} from "@fortawesome/free-solid-svg-icons";
 import {useRouter} from "next/router";
 import {useTheme} from "next-themes";
 
@@ -64,7 +63,7 @@ export default function MobileMenu({open, toggleHandle}){
                 <List>
                     <ListItemButton onClick={handleClickP1}>
                         {t.title[1]}
-                        {openP1 ? <ExpandLess/> : <ExpandMore/>}
+                        {openP1 ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openP1} timeout="auto" unmountOnExit>
                         <List>
@@ -79,7 +78,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickEG}>
                         {t.title[2]} {t.subtitle[21]}
-                        {openEG ? <ExpandLess/> : <ExpandMore/>}
+                        {openEG ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openEG} timeout="auto" unmountOnExit>
                         <List>
@@ -94,7 +93,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickNE}>
                         {t.title[2]} {t.subtitle[22]}
-                        {openNE ? <ExpandLess/> : <ExpandMore/>}
+                        {openNE ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openNE} timeout="auto" unmountOnExit>
                         <List>
@@ -109,7 +108,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDU}>
                         {t.title[2]} {t.subtitle[23]}
-                        {openDU ? <ExpandLess/> : <ExpandMore/>}
+                        {openDU ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openDU} timeout="auto" unmountOnExit>
                         <List>
@@ -124,7 +123,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickBT}>
                         {t.title[2]} {t.subtitle[24]}
-                        {openBT ? <ExpandLess/> : <ExpandMore/>}
+                        {openBT ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openBT} timeout="auto" unmountOnExit>
                         <List>
@@ -139,7 +138,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickCE}>
                         {t.title[3]} {t.subtitle[31]}
-                        {openCE ? <ExpandLess/> : <ExpandMore/>}
+                        {openCE ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openCE} timeout="auto" unmountOnExit>
                         <List>
@@ -154,7 +153,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickBE}>
                         {t.title[3]} {t.subtitle[32]}
-                        {openBE ? <ExpandLess/> : <ExpandMore/>}
+                        {openBE ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openBE} timeout="auto" unmountOnExit>
                         <List>
@@ -169,7 +168,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSS}>
                         {t.title[3]} {t.subtitle[34]}
-                        {openSS ? <ExpandLess/> : <ExpandMore/>}
+                        {openSS ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openSS} timeout="auto" unmountOnExit>
                         <List>
@@ -184,7 +183,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDB}>
                         {t.title[3]} {t.subtitle[33]}
-                        {openDB ? <ExpandLess/> : <ExpandMore/>}
+                        {openDB ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openDB} timeout="auto" unmountOnExit>
                         <List>
@@ -199,7 +198,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSB}>
                         {t.title[3]} {t.subtitle[35]}
-                        {openSB ? <ExpandLess/> : <ExpandMore/>}
+                        {openSB ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openSB} timeout="auto" unmountOnExit>
                         <List>
@@ -214,7 +213,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDC}>
                         {t.title[4]} {t.subtitle[41]}
-                        {openDC ? <ExpandLess/> : <ExpandMore/>}
+                        {openDC ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openDC} timeout="auto" unmountOnExit>
                         <List>
@@ -229,7 +228,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDD}>
                         {t.title[4]} {t.subtitle[42]}
-                        {openDD ? <ExpandLess/> : <ExpandMore/>}
+                        {openDD ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openDD} timeout="auto" unmountOnExit>
                         <List>
@@ -244,7 +243,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickEX}>
                         {t.title[4]} {t.subtitle[43]}
-                        {openEX ? <ExpandLess/> : <ExpandMore/>}
+                        {openEX ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openEX} timeout="auto" unmountOnExit>
                         <List>
@@ -259,7 +258,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSP}>
                         {t.speedrun.title}
-                        {openSP ? <ExpandLess/> : <ExpandMore/>}
+                        {openSP ? <faAngleUp/> : <faAngleDown/>}
                     </ListItemButton>
                     <Collapse in={openSP} timeout="auto" unmountOnExit>
                         <List>

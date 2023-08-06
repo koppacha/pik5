@@ -1,6 +1,5 @@
 import '@/styles/globals.css';
 import Layout from '../components/Layout';
-import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import {ThemeProvider} from "next-themes";
 import { SessionProvider } from "next-auth/react";
@@ -9,10 +8,14 @@ import {useEffect} from "react";
 import Script from "next/script";
 import {ga, pageView} from "../lib/gtag";
 import {useRouter} from "next/router";
+import createEmotionCache from "../lib/createEmotionCache";
+import {CacheProvider} from "@emotion/react";
+import PropTypes from "prop-types";
 
-config.autoAddCss = false
+const clientSideEmotionCache = createEmotionCache()
 
-export default function App({ Component, pageProps: { session, ...pageProps } }) {
+export default function App(props) {
+    const {Component, emotionCache = clientSideEmotionCache, pageProps: { session, ...pageProps } } = props
 
     const router = useRouter()
     useEffect(() => {
@@ -42,13 +45,20 @@ export default function App({ Component, pageProps: { session, ...pageProps } })
           <Script id="juicer" strategy="afterInteractive"
                   src="//kitchen.juicer.cc/?color=YICiPNPXjTM=" async/>
           <GlobalStyle/>
-          <SessionProvider session={session}>
-              <ThemeProvider defaultTheme="dark">
-                  <Layout>
-                      <Component {...pageProps} />
-                  </Layout>
-              </ThemeProvider>
-          </SessionProvider>
+          <CacheProvider value={emotionCache}>
+              <SessionProvider session={session}>
+                  <ThemeProvider defaultTheme="dark">
+                      <Layout>
+                          <Component {...pageProps} />
+                      </Layout>
+                  </ThemeProvider>
+              </SessionProvider>
+          </CacheProvider>
       </>
     );
+}
+App.propTypes = {
+    Component: PropTypes.elementType.isRequired,
+    emotionCache: PropTypes.object,
+    pageProps: PropTypes.object.isRequired,
 }

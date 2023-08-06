@@ -20,7 +20,6 @@ export default async function handler(req, res){
                 res.status(500).json({err: err})
             } else {
                 try {
-                    // ここでフォームデータをLaravel APIに送信する処理を実行
                     const formData = new FormData()
                     formData.append('stage_id', fields.stage_id[0]);
                     formData.append('rule', fields.rule[0]);
@@ -32,7 +31,6 @@ export default async function handler(req, res){
                     formData.append('post_comment', fields.post_comment[0]);
                     formData.append('created_at', fields.created_at[0]);
 
-                    logger.debug(files)
                     // 画像の処理
                     if (files?.file) {
                         const file = files.file[0]
@@ -47,6 +45,7 @@ export default async function handler(req, res){
                     // レスポンスをJSONに変換して返す
                     const data = await response.json();
                     res.status(200).json(data);
+
                 } catch (error) {
                     // エラー処理
                     logger.debug(error)
