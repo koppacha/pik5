@@ -193,6 +193,7 @@ export const OffsetContainer = styled(Container)`
   max-width: 1200px;
   min-height: 100vh;
   margin: 0 auto;
+  padding: 0;
   
   ${pc`margin-top: 80px;`}
 `
@@ -216,9 +217,7 @@ export const RecordPostButton = styled(Box).attrs(props => ({$series: props.seri
   border-radius: 4px;
   padding: 12px;
   margin: 6px;
-  svg {
-    color: ${props => SeriesTheme(props.$series)};
-  }
+  cursor: pointer;
 `
 export const AuthButton = styled(Button)`
   background-color: #cfd2de;
@@ -436,6 +435,10 @@ export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank})
     text-align: center;
     box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, 1)};
 `
+export const BattleRecordContainer = styled(RecordContainer)`
+  border-left: 1px solid;
+  box-shadow: 0 0 4px;
+`
 export const AuthWindow = styled(Grid)`
   background-color: ${colors.light.back};
   opacity: 0.85;
@@ -453,10 +456,10 @@ export const StageListBox = styled(Box)`
   border-radius: 6px;
   padding: 6px;
   margin: 2px;
-  min-height: 6em;
+  min-height: 5.5em;
   font-size: 0.8em;
   
-  ${sp`font-size: 0.7em;`}
+  ${sp`font-size: 0.8em;`}
 
   [data-theme='dark'] & {
     background-color: ${colors.dark.subBack};
@@ -465,23 +468,20 @@ export const StageListBox = styled(Box)`
 export const PageHeader = styled(Box)`
   margin-bottom: 20px;
 `
-export const MobileMenuButton = styled(Button)`
+export const MobileFooterMenu = styled(Grid)`
+
   ${pc`display: none;`}
-
+  
   position: fixed;
+  width: 100vw;
+  height: 55px;
   bottom: 0;
-  right: 0;
-  width: 80px;
-  border-radius: 6px;
-  background-color: #c5c5c5;
-  color: #3f3f3f;
-  height: 60px;
+  background-color: #111;
   opacity: 0.85;
-
-  &:hover {
-    background-color: #fff;
-    color: #000;
-  }
+`
+export const MobileFooterItem = styled(Grid)`
+  justify-items: center;
+  place-items: center;
 `
 
 export const MobileMenuBox = styled(Box)`

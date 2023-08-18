@@ -1,6 +1,5 @@
 import {Box, Grid, Typography} from "@mui/material";
 import ModalKeywordEdit from "../../components/modal/ModalKeywordEdit";
-import Button from "@mui/material/Button";
 import React, {useEffect, useRef, useState} from "react";
 import useSWR, {mutate} from "swr";
 import {fetcher, useLocale} from "../../lib/pik5";
@@ -88,7 +87,7 @@ export default function KeywordIndex(){
                         return (
                             <React.Fragment key={post.unique_id}>
                                 <Grid item xs={12} style={{marginTop:"2em"}}><Typography variant="h3">{hi.slice(0, 1).normalize('NFD')[0]}</Typography></Grid>
-                                <Grid item xs={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
+                                <Grid item xs={6} sm={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
                                     <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
                                     <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
                                 </Grid>
@@ -97,7 +96,7 @@ export default function KeywordIndex(){
                     } else {
                         return (
                             <React.Fragment key={post.unique_id}>
-                                <Grid item xs={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
+                                <Grid item xs={6} sm={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
                                     <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
                                     <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
                                 </Grid>

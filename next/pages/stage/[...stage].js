@@ -14,6 +14,7 @@ import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
+import StageList from "../../components/record/StageList";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -108,18 +109,7 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography><br/><br/>
                 <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
-            <Grid container style={{margin:"2em 0"}} columns={{ xs: 6, sm: 8, md: 10, lg: 10, xl: 10 }}>
-                {
-                    param.stages?.map(stage =>
-                        <Grid key={stage} item xs={1}>
-                            <Link key={stage} href={'/stage/'+stage}><StageListBox>
-                                <span>#{stage}</span><br/>
-                                {t.stage[stage]}</StageListBox>
-                            </Link>
-                        </Grid>
-                    )
-                }
-            </Grid>
+            <StageList stages={param.stages} />
             <Grid container>
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>

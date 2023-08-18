@@ -119,6 +119,7 @@ export default function Register() {
                             <List>
                                 <ListItem><Link href="/">・トップページへ</Link></ListItem>
                                 <ListItem><Link href="/auth/login">・登録済みの方はこちら</Link></ListItem>
+                                <ListItem><Link href="/keyword/moving">・旧ピクチャレ大会からの引き継ぎはこちら</Link></ListItem>
                                 <ListItem><Link href="/keyword/rules">・利用規約</Link></ListItem>
                             </List>
                         </Box>

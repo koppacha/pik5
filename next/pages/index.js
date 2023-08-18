@@ -1,5 +1,5 @@
 import Link from "next/link";
-import {Grid, Typography} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 import React from "react";
 import {CellBox, InfoBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../lib/pik5";
@@ -38,9 +38,24 @@ export default function Home({users}) {
     const {t,r} = useLocale()
     const {data: session } = useSession()
 
+    // ログイン判定によって表示を変更
+    const loginName = () => {
+        if(!session){
+            return {
+                name: t.g.login,
+                url: "/auth/login",
+            }
+        } else {
+            return {
+                name: session.user.name,
+                url: "/user/"+session.user.id
+            }
+        }
+    }
+
     // クイックアクセス
     const quickLinks = [
-        [t.g.login, "/auth/login"],
+        [loginName().name, loginName().url],
         [t.g.register, "/auth/register"],
         [t.title[1], "/total/10"],
         [t.title[2], "/total/20"],
@@ -49,7 +64,6 @@ export default function Home({users}) {
         [t.g.key, "/keyword"],
         [t.subtitle[1], "/total/1"],
         [t.subtitle[2], "/total/2"],
-        [t.subtitle[3], "/total/3"],
         [t.g.ru, "/keyword/rules"],
         ["Discord", "https://discord.gg/rQEBJQa"]
     ]
@@ -86,18 +100,17 @@ export default function Home({users}) {
                     <WrapTopBox item xs={12} sm={6}>
                         <TopBox>
                             <TopBoxHeader>
-                                <FontAwesomeIcon icon={faCheckToSlot} /> {t.g.logInfo}
+                                <FontAwesomeIcon icon={faTrophy} /> {t.g.events}
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <Link href="/keyword/moving">{t.t.moving}</Link><br/>
-                                {
-                                    (session)
-                                        &&
-                                        <>
-                                            {t.g.loginNow} <Link href={"/user/"+session.user.id}>{session.user.name}</Link><br/>
-                                            <button onClick={()=>signOut()}>{t.g.logout}</button>
-                                        </>
-                                }
+                                <Link href="/keyword/moving" style={{fontSize:"1.1em",textDecoration:"underline"}}>ダンドリバトル大会テスト</Link><br/>
+                                <Box style={{padding:"10px",margin:"10px 20px",border:"1px",borderRadius:"8px"}}>
+                                    ダンドリバトルを擬似オンラインで行う大会のテストです。<br/>
+                                    開催日時：2023/08/19(土)20:00<br/>
+                                    開催条件：３人以上<br/>
+                                    参加条件：ダンドリバトルを６ステージ解禁していて配信可能な人（声出しは自由）<br/>
+                                </Box>
+
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
@@ -147,6 +160,8 @@ export default function Home({users}) {
                 </Grid>
             </Grid>
         </Grid>
+        <br/>
+        <button onClick={()=>signOut()}>{t.g.logout}</button>
     </>
   )
 }

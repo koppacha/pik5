@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "421d182aca497d3fb44b95ec62a7e54a",
+    "content-hash": "ca011c2b2b2c0df97816298c66609a92",
     "packages": [
         {
             "name": "brick/math",
@@ -60,6 +60,50 @@
                 }
             ],
             "time": "2023-01-15T23:15:59+00:00"
+        },
+        {
+            "name": "chovanec/elo-rating",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Chovanec/elo-rating.git",
+                "reference": "05a6cf07510fc91ed3bbdcb5ef52c6b12e642455"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Chovanec/elo-rating/zipball/05a6cf07510fc91ed3bbdcb5ef52c6b12e642455",
+                "reference": "05a6cf07510fc91ed3bbdcb5ef52c6b12e642455",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.3.0"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Chovanec\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "authors": [
+                {
+                    "name": "Michal Chovanec",
+                    "homepage": "http://michalchovanec.com/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "A PHP implementation of Elo rating system",
+            "homepage": "https://github.com/Chovanec/elo-rating",
+            "keywords": [
+                "Rating",
+                "elo",
+                "ranking"
+            ],
+            "support": {
+                "source": "https://github.com/Chovanec/elo-rating/tree/master"
+            },
+            "time": "2018-09-13T00:00:00+00:00"
         },
         {
             "name": "dflydev/dot-access-data",
@@ -8869,6 +8913,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "chovanec/elo-rating": 20,
         "roave/security-advisories": 20
     },
     "prefer-stable": true,

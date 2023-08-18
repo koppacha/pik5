@@ -26,6 +26,25 @@ export default function PostCountRanking({users}){
         }
     }) : []
 
+    function nameOmission(str) {
+        // マルチバイトかどうか判定
+        if(str.match(/[^\x01-\x7E\xA1-\xDF]+/)){
+            // マルチバイトの場合
+            if(str.length > 9) {
+                return str.substring(0, 8) + ".."
+            } else {
+                return str
+            }
+        // 英数字の場合
+        } else {
+            if(str.length > 24) {
+                return str.substring(0, 23) + ".."
+            } else {
+                return str
+            }
+        }
+    }
+
     return (
         <>
             <Grid container>
@@ -36,7 +55,7 @@ export default function PostCountRanking({users}){
                         <Grid item key={i} xs={4} sm={2} component={Link} href={"/user/"+post.user_id}>
                             <CellBox length={post.user_name.length}>
                                 {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
-                                {post.user_name.length > 10 ? post.user_name.substring(0, 9)+"..." : post.user_name}<br/>
+                                {nameOmission(post.user_name)}<br/>
                                 {post.cnt} {t.g.countTail}
                             </CellBox>
                         </Grid>
