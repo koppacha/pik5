@@ -5,7 +5,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
 import Score from "./Score";
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {
     CompareType,
     RankEdge,
@@ -21,26 +21,21 @@ import "yet-another-react-lightbox/styles.css";
 export default function Record({data}) {
 
     const {t} = useLocale()
-    const date = new Date(data.created_at ?? "2006-09-01 00:00:00")
+    const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
 
     const [imgOpen, setImgOpen] = useState(false)
+    const [editOpen, setEditOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
     const [isClient, setIsClient] = useState(false)
 
     useEffect(() => setIsClient(true), [])
 
-    const imgHandleClose = () => {
-        setImgOpen(false)
-    }
-    const imgHandleOpen = () => {
-        setImgOpen(true)
-    }
-    const videoHandleClose = () => {
-        setVideoOpen(false)
-    }
-    const videoHandleOpen = () => {
-        setVideoOpen(true)
-    }
+    const imgHandleClose = () => setImgOpen(false)
+    const imgHandleOpen = () => setImgOpen(true)
+    const editHandleClose = () => setEditOpen(false)
+    const editHandleOpen = () => setEditOpen(true)
+    const videoHandleClose = () => setVideoOpen(false)
+    const videoHandleOpen = () => setVideoOpen(true)
 
     // カテゴリによってユーザーページリンクを置き換える
     const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user_name : "/user/"+data.user_id
@@ -54,19 +49,19 @@ export default function Record({data}) {
         compare = ""
     }
     return (
-        <RecordContainer container rank={data.post_rank}>
+        <RecordContainer container rank={data?.post_rank}>
             <Grid item xs={2} sm={1} style={{
                 borderRight: '1px solid #fff'
             }}>
                 <RankEdge as="span">{t.g.rankHead} </RankEdge>
-                <RankType as="span">{data.post_rank ?? "?"}</RankType>
+                <RankType as="span">{data?.post_rank ?? "?"}</RankType>
                 <RankEdge as="span"> {t.g.rankTail}</RankEdge>
-                <RankPointType>[{data.rps ?? "?"} rps]</RankPointType>
+                <RankPointType>[{data?.rps ?? "?"} rps]</RankPointType>
             </Grid>
             <Grid item xs={4} sm={3} style={{
                 borderRight: '1px solid #777',
             }}>
-                <UserType length={data.user_name.length}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
+                <UserType length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
             </Grid>
             <Grid item xs={3} sm={3} style={{
                 borderRight: '1px solid #777',
@@ -109,9 +104,11 @@ export default function Record({data}) {
                                 </Link>
                             </>: undefined}
                         {data.unique_id ?
-                            <Tooltip title={"ID: " + data.unique_id} arrow>
-                                <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
-                            </Tooltip>: undefined}
+                            <>
+                                <Link href={"/record/"+data.unique_id}>
+                                    <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
+                                </Link>
+                            </>: undefined}
                         {data.post_comment ? data.post_comment : undefined}
                     </Grid>
                 </Grid>

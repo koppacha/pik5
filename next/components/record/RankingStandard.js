@@ -4,7 +4,6 @@ import Record from "./Record";
 import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
-import {logger} from "../../lib/logger";
 
 export default function RankingStandard({borders, stage, console:consoles, rule, year, users}){
 

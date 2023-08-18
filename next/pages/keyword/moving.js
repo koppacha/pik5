@@ -11,7 +11,7 @@ const content = `
 1. 後日のアップデートでパスワードとユーザー名の変更機能を実装する予定です。変更希望者はしばらくお待ちください。
 1. 2015年08月31日より前に登録し、2015年09月01日以降一度も投稿していないユーザーはロックがかかっています。管理人にお問い合わせください。
 1. このリストに掲載されている情報は、ログインが確認されたユーザーから順次削除予定です。
-1. ログインできない方はお手数ですが管理人までご連絡ください。
+1. パスワードを忘れた方やログインできない方はお手数ですがDiscord/Twitterで管理人宛にDMください。
 
 #### ログインページへ→ https://pik5.net/auth/login
 
@@ -24,7 +24,6 @@ const content = `
 | §マリルイ         | sectionmarilui    |
 | AbsolutlyAsh     | AbsolutlyAsh      |
 | Aeyerlock        | Aeyerlock         |
-| albut3           | albut3            |
 | Altair357        | Altair357         |
 | Anthony          | Anthony           |
 | AnthonyRF        | AnthonyRF         |
@@ -71,10 +70,8 @@ const content = `
 | muratsubo        | muratsubo         |
 | Myelin_sr        | Myelin_sr         |
 | naza             | naza              |
-| noamoa           | noamoa            |
 | nuinuisousou     | nuinuisousou      |
 | perryii          | perryii           |
-| PiePusher11      | PiePusher11       |
 | pikitto          | pikitto           |
 | Pikleaf          | Pikleaf           |
 | pikumin3         | pikumin3          |
@@ -86,10 +83,8 @@ const content = `
 | Refu             | Refu              |
 | RexMcPwn         | RexMcPwn          |
 | Rirure           | Rirure            |
-| robustar         | robustar          |
 | Ruri             | Ruri              |
 | Ruri＆Vincent     | Ruri_Vincent      |
-| S_K              | S_K               |
 | Santa            | Santa             |
 | Sbudiver         | Sbudiver          |
 | sdsg             | sdsg              |
@@ -107,7 +102,6 @@ const content = `
 | VivaReverie      | VivaReverie       |
 | wasimi           | wasimi            |
 | WaterFall        | WaterFall         |
-| XianTwa          | XianTwa           |
 | Y-Tendoo         | Y-Tendoo          |
 | Y-TeNdoo404      | Y-TeNdoo404       |
 | yamany           | yamany            |
@@ -117,16 +111,13 @@ const content = `
 | Zenyat           | Zenyat            |
 | ZEOKU            | ZEOKU             |
 | Zeps             | Zeps              |
-| zukki            | zukki             |
 | アーキー          | arukii            |
 | アカピク♪         | akapiku           |
 | アキサメ          | akisame           |
 | あぐにゃん         | pik_Agnyan        |
 | アクロリ          | akurori           |
 | あごすけ          | agosuke           |
-| あとまい          | atmy_17           |
 | あひる            | ahiru             |
-| アルファ          | alpha_0630        |
 | アレイク          | areiku            |
 | いきもの          | ikimono334        |
 | イシヘビガラス     | ishihebigarasu    |
@@ -148,26 +139,19 @@ const content = `
 | クマチャッピーに似てるな | kumachappiniteruna |
 | くらげ            | kurage            |
 | コアラ            | koara             |
-| こばちのうどん     | kobachi_no_udon   |
-| ごれい             | Gorei_50          |
 | サクレカマドフマ     | ToolAssistedPik   |
 | さざんか           | sazanka           |
 | サンド             | sando             |
-| じーた             | Z_pikmin          |
-| しお               | shiocha78         |
 | シノウちゃん        | shinouchan        |
 | しよ               | C4_child35        |
 | ジョニヮ           | jonijoni_123      |
 | スコティッシュフィールド | scottish-fold   |
 | スナドリネコ        | sunadorineko      |
-| すぱ～く            | spark573          |
 | スフィーダ          | sufida            |
 | スマ               | suma              |
 | すもももも         | sumomomo          |
 | スラスラ           | surasura          |
 | セレン             | Selenium_pikmin   |
-| そざいのあじ       | sozainoaji        |
-| たけし             | takeshi           |
 | ただのピクミン好き   | tadano-pikuminzuki |
 | だっつ             | dattsu            |
 | だよみん           | dayomin           |
@@ -178,7 +162,6 @@ const content = `
 | でんしゃマニア     | denshamania       |
 | トウキョウマルイネズミ | tokyo-maruinezumi |
 | トマトリョーシカ   | tomatopikumin     |
-| とりぽっぽ         | toripoppo0307     |
 | とろろ            | tororo            |
 | とんがりまさお     | tongarimasao      |
 | なかたつ           | nakatatsu         |
@@ -203,7 +186,6 @@ const content = `
 | ほこがまえ         | hokogamae         |
 | ポン               | pon               |
 | ポンポン           | ponpon            |
-| マイコー           | mikou_musicgame   |
 | マカハラ           | makahara          |
 | まちだ             | machida           |
 | マラモン           | maramon           |
@@ -217,8 +199,6 @@ const content = `
 | ゆどうふ           | yudoufu           |
 | ゆんける           | yuyuyunkel        |
 | ライジング-rising- | rising            |
-| リーヌァ           | Argent2home       |
-| りせりせ           | riserise          |
 | りゅうん           | ryuun             |
 | リンドウ           | rindou            |
 | るすと             | rusuto            |
@@ -228,19 +208,15 @@ const content = `
 | ローラーが無いアメボウズ | roora-ganaiamebouzu |
 | わたぬき           | shiragawatanuki   |
 | わち               | wachi             |
-| 運搬能チャージ      | Bl6AltMzq5Jx4aM   |
 | 黄金オリマー       | koganeorima       |
 | 乙がいあ           | otsugaia          |
 | 乙丸大五郎         | YT7GyX7X6SN2S8v   |
-| 罫線               | keisen2853        |
-| 公式記録           | official          |
 | 高野原ちぢみ       | Tizimi77777       |
 | 黒木葉             | 96_Leaf           |
 | 骨スト奥目         | hone-sutookume    |
 | 侍魂               | samuraitamashi    |
 | 次亜塩素酸ナトリウム | jiaenosanshunatoriumu |
 | 紗波               | sanami            |
-| 焼肉               | yakiniku          |
 | 新屋               | shinya_           |
 | 森の中             | morinonaka        |
 | 親子               | oyako             |
@@ -260,9 +236,7 @@ const content = `
 | 不時着             | fuji_luck         |
 | 普通の人間         | futsuunoningen    |
 | 抹茶               | matcha            |
-| 木っ端ちゃっぴー     | koppacha          |
 | 木村咲             | earaxm            |
-| 陸原達也           | 6harapikumin      |
 | φ                | PKtoyama          |
 
 #### ログインページへ→ https://pik5.net/auth/login

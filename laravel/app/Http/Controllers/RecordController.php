@@ -17,6 +17,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RecordController extends Controller
 {
+    public array $selected = [
+        'post_id', 'user_id', 'score', 'stage_id',
+        'rule', 'console', 'region', 'unique_id',
+        'post_comment', 'img_url', 'video_url',
+        'flg', 'created_at'];
+
     public function __invoke(): string
     {
         // TODO: Implement __invoke() method.
@@ -38,7 +44,7 @@ class RecordController extends Controller
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $data = Record::where('unique_id', $request['id'])->first();
+        $data = Record::select($this->selected)->where('unique_id', $request['id'])->first();
 
         if(!$data){
             $data = collect(['message' => "Record Not Found"]);
@@ -154,9 +160,6 @@ class RecordController extends Controller
          * console: 操作方法（任意）
          * year: 集計年（任意）
         */
-        // パフォーマンス計測
-        $startTime = microtime(true);
-
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
 
@@ -203,7 +206,7 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $dataset = Record::select('post_id', 'user_id', 'score', 'stage_id', 'rule', 'console', 'region', 'unique_id', 'post_comment', 'img_url', 'video_url', 'flg', 'created_at')
+        $dataset = Record::select($this->selected)
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->whereIn('rule', $rule)
@@ -293,11 +296,41 @@ class RecordController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Record $record
-     * @return Response
+     * @param Request $request
+     * @return JsonResponse
      */
-    public function destroy(Record $record)
+    public function destroy(Request $request): JsonResponse
     {
-        //
+        $unique_id = $request["id"];
+
+        // 現在時刻
+        $datetime = new DateTime();
+        $now_date = $datetime->format("Y-m-d H:i:s");
+
+        // 投稿時刻を取得
+        $data = Record::select('created_at')->where('unique_id', $unique_id)->first();
+        if(!$data){
+            return response()->json(
+                ["Request Error"]
+            );
+        }
+        $post_date = new DateTime($data["created_at"]);
+        $diff_date = $datetime->diff($post_date)->format('%s');
+
+        if($diff_date < 86400) {
+
+            Record::where("unique_id", $unique_id)->update(
+                [
+                    'flg' => 2,
+                    'updated_at' => $now_date
+                ]);
+
+            return response()->json(
+                ["deleted"]
+            );
+        }
+        return response()->json(
+            ["24時間経過した記録は削除できません"]
+        , 500);
     }
 }

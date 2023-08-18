@@ -39,7 +39,7 @@ export default function Keyword({data}) {
             <Head>
                 <title>{data.keyword+" - "+t.title[0]}</title>
             </Head>
-            <Box style={{height:"100vh"}}>
+            <Box style={{minHeight:"100vh"}}>
                 <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                 <StairIcon icon={faStairs}/>
                 <Link href="/keyword">{t.g.keyword}</Link><br/>

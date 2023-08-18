@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {useLocale} from "../../lib/pik5";
+import {fetcher, useLocale} from "../../lib/pik5";
 import {Box, MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -17,25 +17,30 @@ import Link from "next/link";
 import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
 
-export default function RecordForm({info, rule, currentConsole, open, setOpen, handleClose}) {
+export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
 
     const consoleList = []
 
-    if (info.series < 3) {
+    if (!info) {
+        // バトルモードの場合
+        if(mode === "battle") {
+            consoleList.push(3, 4)
+        }
+    } else if (info.series < 3) {
         consoleList.push(1, 2, 7)
 
-    } else if (info.series === 3 && rule !== 36){
+    } else if (info.series === 3 && rule !== 36) {
         consoleList.push(2, 3, 4, 5)
 
     } else if (rule === 35) {
         consoleList.push(2, 3, 4, 5, 6)
 
-    } else if (info.series === 4){
+    } else if (info.series === 4) {
         consoleList.push(3, 4)
     }
 
     const {t} = useLocale()
-    const {data:session} = useSession()
+    const {data: session} = useSession()
 
     const now = new Date().toLocaleString()
 
@@ -44,7 +49,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
     const [consoles, setConsole] = useState(0)
     const [videoUrl, setVideoUrl] = useState("")
     const [comment, setComment] = useState("")
-    const [img, setImg] = useState()
+    const [img, setImg] = useState(null)
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
@@ -62,7 +67,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         videoUrl: yup
             .string()
             .matches(videoRegex,
-            {message:'有効なURLではありません。有効な動画サイトは「YouTube」「ニコニコ動画」「Twitch」「Twitter」です。'})
+                {message: '有効なURLではありません。有効な動画サイトは「YouTube」「ニコニコ動画」「Twitch」「Twitter」です。'})
             .max(128, 'URLの最大文字数は128文字です。'),
         comment: yup
             .string()
@@ -89,10 +94,12 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         setConsole(consoleList[0])
     }, [])
 
-    const {register,
+    const {
+        register,
         handleSubmit,
         reset,
-        formState: { errors}} = useForm({
+        formState: {errors}
+    } = useForm({
         resolver: yupResolver(schema),
     })
 
@@ -104,31 +111,37 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
         // 送信確認（暫定的な実装）
         const confirm = window.confirm(t.g.confirm)
+        if (confirm) {
+            // 送信するデータをオブジェクトに追加
+            formData.append('stage_id', info.stage_id)
+            formData.append('rule', rule)
+            formData.append('region', region)
+            formData.append('score', score)
+            formData.append('user_id', session.user.id)
+            formData.append('console', consoles)
+            if(img?.name) {
+                formData.append('file', img, img.name)
+            }
+            formData.append('video_url', videoUrl)
+            formData.append('post_comment', comment)
+            formData.append('created_at', now)
 
-        // 送信するデータをオブジェクトに追加
-        formData.append('stage_id', info.stage_id)
-        formData.append('rule', rule)
-        formData.append('region', region)
-        formData.append('score', score)
-        formData.append('user_id', session.user.id)
-        formData.append('console', consoles)
-        formData.append('video_url', videoUrl)
-        formData.append('post_comment', comment)
-        formData.append('created_at', now)
+            const res = await fetch('/api/server/post', {
+                method: 'POST',
+                body: formData,
+            })
 
-        const res = await fetch('/api/server/post', {
-            method: 'POST',
-            body: formData,
-        })
-
-        if(res.status < 300){
-            setOpen(false)
+            if (res.status < 300) {
+                setImg(null)
+                setOpen(false)
+            }
         }
     }
     // 画像をアップロード
     const handleFileClick = async (e) => {
+        e.preventDefault()
         const file = e.target.files[0]
-        if(!file){
+        if (!file) {
             return null
         }
         // 1MBを超える画像は圧縮し、失敗した場合は添付しない
@@ -137,9 +150,9 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
             retainExif: true,
             convertSize: 1000000,
             success(result) {
-                formData.append('file', result, result.name)
+                setImg(result)
             },
-            error(err){
+            error(err) {
                 console.log(err.message)
             }
         })
@@ -147,13 +160,14 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
 
     // タイム表示判定
     const isTime = () => {
-        return rule === 33 || rule === 11 || rule === 43 || [338, 341, 343].includes(info.stage_id)
+        return rule === 33 || rule === 11 || rule === 43 || [338, 341, 343].includes(info?.stage_id)
     }
+
     // タイムからスコアに変換
-    function time2score(time){
+    function time2score(time) {
         const sec = convertToSeconds(time)
-        const lestTime = timeStageList.find(({stage:s})=> s === info.stage_id)
-        if(lestTime){
+        const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
+        if (lestTime) {
             // 経過時間が表示されるタイプ（ピクミン３）→残り時間に変換して登録
             setScore((lestTime.time - sec))
         } else {
@@ -161,6 +175,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
             setScore(sec)
         }
     }
+
     // "h:mm:ss"形式の文字列を秒数に変換する関数
     const convertToSeconds = (timeString) => {
 
@@ -171,13 +186,11 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
         return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
     }
 
-    console.log(consoles)
-
-    if(!session){
+    if (!session) {
         return (
             <>
                 <Dialog open={open} onClose={handleClose}>
-                    <Box style={{width:'600px'}}>
+                    <Box style={{width: '600px'}}>
                         <DialogContent>
                             <Link href="/auth/login">投稿にはログインが必要です。</Link>
                         </DialogContent>
@@ -196,9 +209,9 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         label="ステージ"
                         type="text"
                         fullWidth
-                        disabled
+                        disabled={!!info}
                         variant="standard"
-                        defaultValue={t.stage[info.stage_id]}
+                        defaultValue={t.stage[info?.stage_id || 101]}
                         margin="normal"
                     />
                     <TextField
@@ -252,7 +265,7 @@ export default function RecordForm({info, rule, currentConsole, open, setOpen, h
                         margin="normal"
                         disabled={isTime() && true}
                     />
-                    <GetRank stage={info.stage_id} rule={rule} score={score}/>
+                    <GetRank stage={info?.stage_id} rule={rule} score={score}/>
                     <TextField
                         {...register('console')}
                         select

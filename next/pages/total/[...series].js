@@ -15,6 +15,7 @@ import {PageHeader, StageListBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
+import StageList from "../../components/record/StageList";
 
 export async function getServerSideProps(context){
 
@@ -95,18 +96,7 @@ export default function Series(param){
             </PageHeader>
             {
                 param.series > 9 &&
-                <Grid container style={{margin:"2em 0"}} columns={{xs: 4, sm: 4, md: 6, lg: 10, xl: 10}}>
-                    {
-                        stages?.map(stage =>
-                            <Grid key={stage} item xs={1}>
-                                <Link key={stage} href={'/stage/'+stage}><StageListBox>
-                                    <span>#{stage}</span><br/>
-                                    {t.stage[stage]}</StageListBox>
-                                </Link>
-                            </Grid>
-                        )
-                    }
-                </Grid>
+                <StageList stages={stages} />
             }
             <Grid container>
                 <Grid item>

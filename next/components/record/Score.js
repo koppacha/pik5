@@ -18,8 +18,16 @@ export default function Score({rule, score, stage, category}){
             <></>
         )
     }
-
-    if(Number(rule) === 11 || Number(rule) === 43 || category === "speedrun" || countUpStageList.includes(stage)){
+    if( category === "battle"){
+        // バトルモードの場合
+        return (
+            <>
+                <ScoreTail as="span">Rate </ScoreTail>
+                <ScoreType as="span">{score.toLocaleString()}</ScoreType>
+            </>
+        )
+    }
+    else if(Number(rule) === 11 || Number(rule) === 43 || category === "speedrun" || countUpStageList.includes(stage)){
         // RTAの場合
         return (
             <>
