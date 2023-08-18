@@ -9,7 +9,7 @@ import {faPaperPlane} from "@fortawesome/free-solid-svg-icons";
 import {useLocale} from "../../lib/pik5";
 import {mutate} from "swr";
 
-export default function RecordPost({info, rule, console}){
+export default function RecordPost({info, rule, console, mode}){
 
     const {t, } = useLocale()
 
@@ -20,7 +20,6 @@ export default function RecordPost({info, rule, console}){
     }
     const handleClose = () => {
         setOpen(false)
-        mutate()
     }
 
     return (
@@ -28,7 +27,7 @@ export default function RecordPost({info, rule, console}){
             <Grid item>
                 <RecordPostButton
                     className="active"
-                    series={info.series}
+                    series={info?.series}
                     component={Link}
                     href="#"
                     onClick={handleClickOpen}>
@@ -38,8 +37,8 @@ export default function RecordPost({info, rule, console}){
             <RecordForm
                 info={info}
                 rule={rule}
-                currentConsole={console}
                 open={open}
+                mode={mode}
                 setOpen={setOpen}
                 handleClose={handleClose}
             />

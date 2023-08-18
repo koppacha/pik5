@@ -14,7 +14,6 @@ export default function BreadCrumb({info, rule}){
 
     const {t} = useLocale()
     const superParent = ([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))) ? 2 : 3
-    logger.debug(info.parent)
 
     return (
         <>
