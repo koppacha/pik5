@@ -133,6 +133,21 @@ export async function getServerSideProps(context){
         case 313:
             q += "268e3x56/category/ndx9rovd"
             break
+        case 401:
+            q += "m1zk9901/category/rkl8xe62"
+            break
+        case 402:
+            q += "m1zk9901/category/wk6gn0od"
+            break
+        case 403:
+            q += "m1zk9901/category/zd3mxpv2"
+            break
+        case 404:
+            q += "m1zk9901/category/n2y6oe7d"
+            break
+
+
+
     }
     // ステージ情報をリクエスト
     const res = await fetch(`https://www.speedrun.com/api/v1/leaderboards/${q}`)

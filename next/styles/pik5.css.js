@@ -474,14 +474,15 @@ export const MobileFooterMenu = styled(Grid)`
   
   position: fixed;
   width: 100vw;
-  height: 55px;
+  height: 60px;
   bottom: 0;
   background-color: #111;
   opacity: 0.85;
 `
 export const MobileFooterItem = styled(Grid)`
   justify-items: center;
-  place-items: center;
+  text-align: center;
+  padding-top: 5px;
 `
 
 export const MobileMenuBox = styled(Box)`
