@@ -21,7 +21,7 @@ class Func extends Facade
         $rta_stages = array_merge(range(245, 254), range(351, 362));
 
         if(is_numeric($id)){
-            if($rule === "11" || in_array($id, $rta_stages, true)){
+            if($rule === "11" || in_array((int)$id, $rta_stages, true)){
                 return ['score', 'ASC'];
             }
             return ['score', 'DESC'];
