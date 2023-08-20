@@ -8,7 +8,7 @@ import {p4} from "../../lib/const";
 export default function MenuSpeedrun(props){
 
     const {t} = useLocale()
-    const speedruns = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313]
+    const speedruns = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403]
 
     return (
         <HeaderPopMenu>
