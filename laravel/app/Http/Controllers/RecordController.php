@@ -166,13 +166,16 @@ class RecordController extends Controller
         // 重複削除対象
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
-        $orderBy = Func::orderByRule($request["id"], $request["rule"]);
-
         // オプション引数
         $console = $request['console'] ?: 0;
         $rule    = $request['rule']    ?: 0;
         $year    = $request['year']    ?: date("Y");
         $compare = $request['compare'] ?: 'timebonus';
+
+        // ステージ情報を取得
+        $stage = Stage::where('stage_id', $request['id'])->first();
+
+        $orderBy = Func::orderByRule($request["id"], $stage["parent"]);
 
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
         if($rule === "20"){
