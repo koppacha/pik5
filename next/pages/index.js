@@ -103,12 +103,9 @@ export default function Home({users}) {
                                 <FontAwesomeIcon icon={faTrophy} /> {t.g.events}
                             </TopBoxHeader>
                             <TopBoxContent>
-                                <Link href="https://discord.gg/9MHrQJ5K?event=1142094380602249318" target="_blank" style={{fontSize:"1.1em",textDecoration:"underline"}}>ダンドリバトル大会テスト</Link><br/>
+                                <Link href="#" target="_blank" style={{fontSize:"1.1em",textDecoration:"underline"}}></Link><br/>
                                 <Box style={{padding:"10px",margin:"10px 20px",border:"1px",borderRadius:"8px"}}>
-                                    ダンドリバトルを擬似オンラインで行う大会のテストです。<br/>
-                                    開催日時：2023/08/19(土)20:00<br/>
-                                    開催条件：３人以上<br/>
-                                    参加条件：ダンドリバトルを６ステージ解禁していて配信可能な人（声出しは自由）<br/>
+                                    現在開催予定のイベントはありません。<br/>
                                 </Box>
 
                             </TopBoxContent>
