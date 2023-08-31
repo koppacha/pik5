@@ -145,6 +145,9 @@ export async function getServerSideProps(context){
         case 404:
             q += "m1zk9901/category/n2y6oe7d"
             break
+        case 405:
+            q += "m1zk9901/category/n2y69pmd"
+            break
 
 
 

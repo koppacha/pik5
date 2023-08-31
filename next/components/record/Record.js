@@ -1,6 +1,6 @@
 import {Grid, Tooltip} from "@mui/material";
 import Link from "next/link";
-import {faImage, faTag} from "@fortawesome/free-solid-svg-icons";
+import {faComment, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
@@ -77,10 +77,10 @@ export default function Record({data}) {
                     fontSize: '0.8em',
                     width: '95%'
                 }}>
-                    <Grid item xs={5} sm={6}>
+                    <Grid item xs={12} sm={6}>
                         <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                     </Grid>
-                    <Grid item xs={7} sm={6} style={{
+                    <Grid item xs={12} sm={6} style={{
                         textAlign:'right'
                     }}>
                         {data.stage_id ? <><Link href={'/stage/'+data.stage_id}>{data.stage_id + '#' + t.stage[data.stage_id]}</Link></>:undefined}
@@ -109,7 +109,11 @@ export default function Record({data}) {
                                     <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                 </Link>
                             </>: undefined}
-                        {data.post_comment ? data.post_comment : undefined}
+                        {data.post_comment ?
+                            <>
+                                {data.post_comment}
+                            </>
+                            : undefined}
                     </Grid>
                 </Grid>
             </Grid>
