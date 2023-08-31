@@ -1,7 +1,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import DialogContent from "@mui/material/DialogContent";
 import {useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
@@ -18,6 +18,9 @@ import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
+
+    // 送信イベント判定
+    const isSubmit = useRef(false)
 
     const consoleList = []
 
@@ -109,8 +112,14 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // キーワードをバックエンドに送信する
     const onSubmit = async () => {
 
+        if(isSubmit.current) return
+
         // 送信確認（暫定的な実装）
         const confirm = window.confirm(t.g.confirm)
+
+        // ここから送信処理
+        isSubmit.current = true
+
         if (confirm) {
             // 送信するデータをオブジェクトに追加
             formData.append('stage_id', info.stage_id)
@@ -136,6 +145,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 setOpen(false)
             }
         }
+        // ここまで送信処理
+        isSubmit.current = false
     }
     // 画像をアップロード
     const handleFileClick = async (e) => {
@@ -324,7 +335,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>閉じる</Button>
-                    <Button onClick={handleSubmit(onSubmit)}>送信</Button>
+                    <Button disabled={isSubmit.current} onClick={handleSubmit(onSubmit)}>送信</Button>
                 </DialogActions>
             </Dialog>
         </>
