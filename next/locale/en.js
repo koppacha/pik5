@@ -324,6 +324,11 @@ export const en = {
         311: "Hey! Pikmin Any% RTA",
         312: "Hey! Pikmin All Levels (NG+) RTA",
         313: "Hey! Pikmin All Treasures RTA",
+        401: "Pikmin 4 Rescue Olimar RTA",
+        402: "Pikmin 4 Cure Oatchi RTA",
+        403: "Pikmin 4 All Areas 100% RTA",
+        404: "Pikmin 4 Olimar's Shipwreck Tale",
+        405: "Pikmin 4 All Missions RTA",
         s: {
             101: "All Parts",
             102: "Minimum All Parts",
@@ -336,7 +341,12 @@ export const en = {
             303: "All Fruits",
             311: "Any%",
             312: "Stage Clear",
-            313: "All Treasures"
+            313: "All Treasures",
+            401: "Rescue Olimar",
+            402: "Cure Oatchi",
+            403: "All Areas",
+            404: "Olimar's Shipwreck Tale",
+            405: "All Missions",
         },
         console: {
             title: "console/region",
