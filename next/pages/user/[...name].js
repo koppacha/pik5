@@ -8,6 +8,7 @@ import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
 import prisma from "../../lib/prisma";
+import {available} from "../../lib/const";
 
 export async function getServerSideProps(context){
 
@@ -24,12 +25,22 @@ export async function getServerSideProps(context){
             name: true
         }
     });
-    const userName = users.name
+    const userName = users?.name
 
     const console = query[1] || 0
     const rule    = query[2] || 0
     const year    = query[3] || 2023
 
+    if(
+        !userName ||
+        year < 2014 ||
+        year > 2023 ||
+        query[4]
+    ){
+        return {
+            notFound: true,
+        }
+    }
     return {
         props: {
             user, userName, console, rule, year
