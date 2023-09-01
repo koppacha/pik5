@@ -219,12 +219,8 @@ class TotalController extends Controller
             foreach($ranking as $stage){
                 $totals[$user]["score"] += $stage[$user]["score"] ?? 0;
                 $totals[$user]["rps"] += $stage[$user]["rps"] ?? 0;
-                if(isset($stage[$user]["post_rank"])){
-                    // 有効な順位が入っていたらそれを格納する
-                    $totals[$user]["ranks"][] = $stage[$user]["post_rank"];
-                }
+                $totals[$user]["ranks"][] = $stage[$user]["post_rank"] ?? null;
                 if($totals[$user]["created_at"] < ($stage[$user]["created_at"] ?? 0)){
-                    // 最も新しい投稿日時を総合点数の更新日時として格納する
                     $totals[$user]["created_at"] = $stage[$user]["created_at"];
                 }
             }

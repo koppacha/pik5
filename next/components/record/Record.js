@@ -11,7 +11,7 @@ import {
     RankEdge,
     RankPointType,
     RankType,
-    RecordContainer,
+    RecordContainer, ScoreType,
     UserType
 } from "../../styles/pik5.css";
 import Lightbox from "yet-another-react-lightbox";
@@ -68,6 +68,13 @@ export default function Record({data}) {
             }}>
                 <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType as="span"> {compare}</CompareType>
+                {
+                    // 総合ランキングの場合は投稿ステージ数を表示
+                    (data?.ranks) &&
+                        <>
+                            <ScoreType style={{fontSize:"0.95em",marginLeft:"1em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
+                        </>
+                }
             </Grid>
             <Grid item xs={3} sm={5} style={{
                 textAlign: 'left',

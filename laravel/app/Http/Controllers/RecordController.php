@@ -175,8 +175,11 @@ class RecordController extends Controller
         // ステージ情報を取得
         $stage = Stage::where('stage_id', $request['id'])->first();
 
-        $orderBy = Func::orderByRule($request["id"], $stage["parent"]);
-
+        if($where === "stage_id") {
+            $orderBy = Func::orderByRule($request["id"], $stage["parent"]);
+        } else {
+            $orderBy = ['score','DESC'];
+        }
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
         if($rule === "20"){
             $rule = [20, 21, 22];
