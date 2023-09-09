@@ -21,7 +21,7 @@ class RecordController extends Controller
         'post_id', 'user_id', 'score', 'stage_id',
         'rule', 'console', 'region', 'unique_id',
         'post_comment', 'img_url', 'video_url',
-        'flg', 'created_at'];
+        'flg', 'team', 'created_at'];
 
     public function __invoke(): string
     {

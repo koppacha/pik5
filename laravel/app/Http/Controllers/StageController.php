@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Stage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,8 +39,16 @@ class StageController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        // 記録をリクエスト
-        $data = Stage::where('stage_id', $request['id'])->first();
+        if($request['id'] < 100000) {
+
+            // ５桁以下ならステージ情報データベースから取得
+            $data = Stage::where('stage_id', $request['id'])->first();
+
+        } else {
+
+            // ６桁以上ならイベントデータベースから取得
+            $data = Event::where('stage', $request['id'])->first();
+        }
 
         return response()->json(
             $data
