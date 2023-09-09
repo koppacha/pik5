@@ -8,7 +8,7 @@ import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import {useState} from "react";
-import {PageHeader, RuleBox, StageListBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, RuleWrapper, StageListBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
@@ -27,7 +27,7 @@ export async function getServerSideProps(context){
 
     if(
         stage < 100 ||
-        stage > 428 ||
+        stage > 9999 ||
         !available.includes(Number(rule)) ||
         !available.includes(Number(console)) ||
         year < 2014 ||
@@ -44,6 +44,13 @@ export async function getServerSideProps(context){
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
     if(stage_res.status < 300) {
         info = await stage_res.json()
+    }
+
+    // ステージ情報が存在しないステージIDへのアクセスは全部はじく
+    if(!Object.keys(info).length){
+        return {
+            notFound: true,
+        }
     }
 
     let stages = []
@@ -73,7 +80,7 @@ export async function getServerSideProps(context){
 }
 export default function Stage(param){
 
-    const {t, r} = useLocale()
+    const {t, r, locale} = useLocale()
 
     // ボーダーライン出力用変数
     const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
@@ -97,16 +104,19 @@ export default function Stage(param){
     }
     const handleOpen = () => setOpen(true)
 
+    const stageName = locale === "ja" ? param.info.stage_name : param.info.eng_stage_name
+    const stageNameR= locale === "ja" ? param.info.eng_stage_name : param.info.stage_name
+
     return (
         <>
             <Head>
-                <title>{t.stage[param.stage]+" ("+t.title[param.info.series]+") - "+t.title[0]}</title>
+                <title>{stageName+" ("+t.title[param.info.series]+") - "+t.title[0]}</title>
             </Head>
             <PageHeader>
                 #{param.stage}<br/>
                 <BreadCrumb info={param.info} rule={param.rule}/>
-                <Typography variant="" className="title">{ t.stage[param.stage] }</Typography><br/>
-                <Typography variant="" className="subtitle">{r.stage[param.stage]}</Typography><br/><br/>
+                <Typography variant="" className="title">{stageName}</Typography><br/>
+                <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
             <StageList stages={param.stages} />
@@ -120,7 +130,20 @@ export default function Stage(param){
                 <Grid container style={{
                     marginTop:"30px"
                 }}>
-                    <Rules props={param}/>
+                    {
+                        (param.rule < 100) ?
+                            // 通常ステージの場合はステージに含まれるルールをすべて表示
+                            <Rules props={param}/>
+                            :
+                            // 特殊ステージの場合は総合ランキングへのリンクを表示
+                            <RuleWrapper item>
+                                <RuleBox className={"active"}
+                                         component={Link}
+                                         href={'/limited/'+param.rule}>
+                                    {t.limited[param.rule]}
+                                </RuleBox>
+                            </RuleWrapper>
+                    }
                     <RecordPost
                         info={param.info} rule={param.rule} console={param.console}/>
                     <Grid item style={{

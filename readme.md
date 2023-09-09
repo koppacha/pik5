@@ -3,11 +3,13 @@
 **author:@koppachappy**
 
 ## このプロジェクトについて
-* 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキングどcけ投稿サイトです。
+* 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキング投稿サイトです。
 
 ## このソースコードについて
-当プロジェクトはMITライセンスのオープンソースであり、権利表記を削除しなければソースコードの改変や二次配布は自由にできますが、
-当プロジェクトと同じピクミン関連のコンテンツとして公開することは競合やユーザーの分散による参加人数減につながるため、ご遠慮ください。
+ソースコードは公開していますが、管理人単独での開発が続くかぎり著作権は管理人が保有します。
+転載、二次利用はご遠慮ください。
+ただし、当システムを利用してピクミン以外のランキングサイトを作りたい場合は特例として二次利用を許可する場合があります。
+そのようなケースでの利用をご希望の場合は個別にご連絡ください。
 
 ## 開発環境
 * OS：macOS https://www.apple.com/jp/macos/ventura/
@@ -224,10 +226,14 @@ sudo cartbot renew --dry-run
 # limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド
 $ export DOCKER_HOST=unix:///var/run/docker.sock
 
-# Windows (WSL) では、システムが作成したファイルはrootが権限を持ち編集できない。
+# Windows (WSL) では、システムが作成したファイルはrootが権限を持ち、rootである限り編集できない。
 # これを解決するためには該当するコンテナ内部から以下コマンドで所有権を変更する
 $ ls -l # まずは所有権がrootにあることを確認しよう
-$ chown -R 1000:1000 /Folder # Folderは対象フォルダの相対パス、1000は所有者名（nextの場合はnode）
+$ sudo chown -R user:user Folder/ # Folderは対象フォルダの相対パス、userは所有者名（nextの場合はnode）
+
+# git pull実行時、上記の問題でパーミッションエラーが出ると差分が中途半端に取り込まれる。
+# その場合、まず以下を実行して変更を巻き戻してから上記の解決法で所有者問題をクリアにしてから再pull
+$ git clean -d -f .
 
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
@@ -249,6 +255,4 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 * Speedrun.com APIに対応
 
 ### LICENCE
-This project is compliant with the MIT License.
-Please refer to the "./licence.txt" for license information.
 Copyright (c) 2006 - 2023 koppacha
