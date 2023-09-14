@@ -48,6 +48,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const now = new Date().toLocaleString()
 
     const [score, setScore] = useState(0)
+    const [time, setTime] = useState(0)
     const [region, setRegion] = useState(0)
     const [consoles, setConsole] = useState(0)
     const [videoUrl, setVideoUrl] = useState("")
@@ -81,6 +82,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         console: yup
             .number()
             .min(1, '操作方法の選択は必須です。'),
+        time: yup
+            .string()
+            .matches(/^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, '正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。')
     })
 
     // フォームデータの初期化
@@ -247,11 +251,16 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     />
 
                     <TextField
+                        {...register('time')}
                         id="time"
                         label="タイム"
-                        type="time"
-                        inputProps={{step: 1, inputMode: 'numeric', pattern: '[0-9]*'}}
-                        onChange={(e) => time2score(e.target.value)}
+                        type="text"
+                        inputProps={{inputMode: 'numeric'}}
+                        onChange={function (e){
+                                time2score(e.target.value)
+                                setTime(e.target.value)
+                            }
+                        }
                         fullWidth
                         variant="standard"
                         error={'time' in errors}

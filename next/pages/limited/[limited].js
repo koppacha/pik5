@@ -81,14 +81,13 @@ export default function Limited(param){
                 #{param.limited}<br/>
                 <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                 <StairIcon icon={faStairs}/>
-                <Link href={"/total/4"}>{t.stage[4]}</Link><br/>
+                <Link href={"/limited/"}>ピクチャレ大会イベント</Link>
+                <StairIcon icon={faStairs}/>
+                <Link href={"/total/4"}>期間限定ランキング</Link><br/>
                 <Typography variant="" className="title">{param.info.name}</Typography><br/>
                 <Typography variant="" className="subtitle">{param.info.eng}</Typography>
             </PageHeader>
-            {
-                param.series > 9 &&
-                <StageList stages={stages} />
-            }
+            <StageList stages={stages} />
             <Grid container style={{
                 marginTop:"30px"
             }}>
