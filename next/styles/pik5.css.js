@@ -474,7 +474,7 @@ export const MobileFooterMenu = styled(Grid)`
   
   position: fixed;
   width: 100vw;
-  height: 60px;
+  height: 70px;
   bottom: 0;
   background-color: #111;
   opacity: 0.85;

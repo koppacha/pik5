@@ -69,7 +69,7 @@ export default function RecordPage({users, data}){
             }
         }
     }
-    if(!session || !data){
+    if(!data){
         return (
             <NowLoading/>
         )
@@ -101,7 +101,7 @@ export default function RecordPage({users, data}){
                         <Record data={data}/>
 
                         {
-                            (session.user.id === users.userId && !timeFlag) &&
+                            (session?.user.id === users.userId && !timeFlag) &&
                                 <RecordPostButton
                                     className="active"
                                     href="#"

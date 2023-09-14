@@ -8,7 +8,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAnglesLeft, faAngleUp, faHome} from "@fortawesome/free-solid-svg-icons";
 import {faDiscord} from "@fortawesome/free-brands-svg-icons";
 import Link from "next/link";
-import {Box, Grid} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 
 export default function Layout({children}) {
 
@@ -39,23 +39,23 @@ export default function Layout({children}) {
             <MobileFooterMenu container columns={{xs: 4}}>
                 <MobileFooterItem item xs={1}>
                     <Link href="/">
-                        <FontAwesomeIcon icon={faHome} style={{fontSize:"28px"}} /><br/>
-                        home
+                        <FontAwesomeIcon icon={faHome} style={{fontSize:"26px"}} /><br/>
+                        <Typography style={{fontSize:"0.85em"}}>home</Typography>
                     </Link>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1}>
                     <Link href="https://discord.gg/rQEBJQa" target="_blank">
-                        <FontAwesomeIcon icon={faDiscord} style={{fontSize:"28px"}} /><br/>
-                        Discord
+                        <FontAwesomeIcon icon={faDiscord} style={{fontSize:"26px"}} /><br/>
+                        <Typography style={{fontSize:"0.85em"}}>Discord</Typography>
                     </Link>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1} onClick={scrollToTop}>
-                    <FontAwesomeIcon icon={faAngleUp} style={{fontSize:"30px"}} /><br/>
-                    pageTop
+                    <FontAwesomeIcon icon={faAngleUp} style={{fontSize:"28px"}} /><br/>
+                    <Typography style={{fontSize:"0.85em"}}>pageTop</Typography>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1} onClick={toggleDrawer}>
-                    <FontAwesomeIcon icon={faAnglesLeft} style={{fontSize:"30px"}}/><br/>
-                    menu
+                    <FontAwesomeIcon icon={faAnglesLeft} style={{fontSize:"28px"}}/><br/>
+                    <Typography style={{fontSize:"0.85em"}}>menu</Typography>
                 </MobileFooterItem>
             </MobileFooterMenu>
             <MobileMenu open={drawerOpen} toggleHandle={toggleDrawer}

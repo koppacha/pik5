@@ -24,6 +24,7 @@ export async function getServerSideProps(context){
     const consoles = [0]
 
     switch(Number(stage)){
+        // パーツ全回収
         case 101:
             q += "m1zyjx60/category/9kv9y02g"
             consoles.push(1, 2)
@@ -36,6 +37,7 @@ export async function getServerSideProps(context){
                     break
             }
             break
+        // ピクミン最小限パーツ全回収
         case 102:
             q += "m1zyjx60/category/zd3g682n"
             consoles.push(5, 6)
@@ -48,31 +50,41 @@ export async function getServerSideProps(context){
                     break
             }
             break
+        // 借金返済
         case 201:
-            consoles.push(1, 2)
+            q += "pdv9zv1w/category/zd3x7ndn"
+            consoles.push(1, 2, 4)
             switch (Number(console)){
                 case 1:
-                    q += "pdv9zv1w/category/zd3x7ndn"
+                    q += "?var-yn23w3jl=qyz7vv41"
                     break
                 case 2:
-                    q += "yd4k0ep6/category/7kjg7e3k"
+                    q += "?var-yn23w3jl=ln8e440l"
+                    break
+                case 4:
+                    q += "?var-yn23w3jl=10v6oowl"
                     break
                 default:
-                    q += "pdv9zv1w/category/zd3x7ndn"
+                    q += "?var-yn23w3jl=qyz7vv41"
                     break
             }
             break
+        // お宝全回収
         case 202:
-            consoles.push(1, 2)
+            q += "pdv9zv1w/category/wdmggxdq"
+            consoles.push(1, 2, 4)
             switch (Number(console)){
                 case 1:
-                    q += "pdv9zv1w/category/wdmggxdq"
+                    q += "6njy5y5n/category/qj7266eq"
                     break
                 case 2:
-                    q += "yd4k0ep6/category/xk9w94v2"
+                    q += "6njy5y5n/category/lmo2rrj1"
+                    break
+                case 4:
+                    q += "6njy5y5n/category/1w47vvoq"
                     break
                 default:
-                    q += "pdv9zv1w/category/wdmggxdq"
+                    q += "6njy5y5n/category/qj7266eq"
                     break
             }
             break
@@ -173,7 +185,7 @@ export default function Run({data, stage, console, consoles}){
 
     const {t, r} = useLocale()
 
-    const dates = data.data.runs
+    const dates = data.data?.runs
 
     return (
         <>
@@ -195,7 +207,7 @@ export default function Run({data, stage, console, consoles}){
                 <SpeedRunRules stage={stage} console={console}/>
             </Grid>
             {
-                dates.map(function (post, index){
+                dates?.map(function (post, index){
                         return (
                             <SpeedRunWrapper key={index} post={post} index={index} />
                         )
