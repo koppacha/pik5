@@ -1,4 +1,4 @@
-import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material";
+import {ClickAwayListener, Grid, MenuItem, MenuList, Paper, Typography} from "@mui/material";
 import * as React from "react";
 import Link from "next/link";
 import {useLocale} from "../../lib/pik5";
@@ -26,7 +26,7 @@ export default function MenuSpeedrun(props){
                                 speedruns.map(n=>
                                     <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+SeriesTheme(6),
-                                    }} component={Link} href={"/speedrun/"+n} onClick={props.handleClose}>#S{n} {t.speedrun[n]}</StyledMenuItem>
+                                    }} component={Link} href={"/speedrun/"+n} onClick={props.handleClose}><Typography style={{color:"#e7259e"}}>#</Typography>{n} {t.speedrun[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>

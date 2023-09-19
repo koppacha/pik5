@@ -243,7 +243,7 @@ class RecordController extends Controller
         } else {
 
             // セット単位ではない場合は個別に計算する（ユーザー別、総合ランキング）
-            $max = max(Func::memberCount([$console, $rule, $date]));
+            $max = max(Func::memberCount(0, [$console, $rule, $date]));
 
             foreach($new_data as $key => $value){
 
@@ -264,7 +264,7 @@ class RecordController extends Controller
                 $rank = $temp->user_rank + 1;
                 $new_data[$key]["post_rank"] = $rank;
                 $option = [$console, $rule, $date];
-                $member_count = Func::memberCount($option);
+                $member_count = Func::memberCount(0, $option);
                 $new_data[$key]["rps"] = Func::rankPoint_calc($rank, $member_count[$value["stage_id"]], $max);
             }
         }

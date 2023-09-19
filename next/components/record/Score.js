@@ -27,7 +27,7 @@ export default function Score({rule, score, stage, category}){
             </>
         )
     }
-    else if(Number(rule) === 11 || Number(rule) === 43 || category === "speedrun" || countUpStageList.includes(stage)){
+    else if(Number(rule) === 11 || Number(rule) === 43 || Number(rule) === 91 || category === "speedrun" || countUpStageList.includes(stage)){
         // RTAの場合
         return (
             <>
