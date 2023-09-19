@@ -148,8 +148,8 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 361,鉄くずのブルース,Corroded Maze,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 362,積み木の迷路,Jigsaw Closseum,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 399,試しの砂浜,Sandbox,テスト用,stage,int,9,99,0,0,0,0,0,0,0
-401,ダンドリ養成所,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,0,0,0,0,0,0,0
-402,炎と電気の実験室,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,0,0,0,0,0,0,0
+401,ダンドリ養成所,Dandori Day Care,ピクミン4 ダンドリチャレンジ,stage,int,4,41,300,140,0,0,0,0,0
+402,炎と電気の実験室,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,0,0,0,0,0,0
 403,石つぶて研究所,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,0,0,0,0,0,0,0
 404,バスルーム演習場,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,0,0,0,0,0,0,0
 405,水わたりスクール,,ピクミン4 ダンドリチャレンジ,stage,int,4,41,0,0,0,0,0,0,0
@@ -176,29 +176,15 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 426,捌ダン こてしらべの洞窟,,ピクミン4 葉っぱ仙人の挑戦状,stage,time,4,43,0,0,0,0,0,0,0
 427,玖ダン こてしらべの洞窟,,ピクミン4 葉っぱ仙人の挑戦状,stage,time,4,43,0,0,0,0,0,0,0
 428,拾ダン こてしらべの洞窟,,ピクミン4 葉っぱ仙人の挑戦状,stage,time,4,43,0,0,0,0,0,0,0
-901,ピクミン フリースタイルRTA,,本編チャレンジ,stage,int,1,0,0,0,0,0,0,0,0
-902,ピクミン 全回収RTA,Pikmin SpeedRun: All Parts,本編チャレンジ,stage,int,1,93,0,0,0,0,0,0,0
-903,ピクミン2 フリースタイルRTA,,本編チャレンジ,stage,int,2,0,0,0,0,0,0,0,0
-904,ピクミン2 借金返済RTA,Pikmin 2 SpeedRun: Pay Off Debt,本編チャレンジ,stage,int,2,93,0,0,0,0,0,0,0
-905,ピクミン2 全回収RTA,Pikmin 2 SpeedRun: All Treasures,本編チャレンジ,stage,int,2,93,0,0,0,0,0,0,0
-906,ピクミン2 借金返済クリア,,本編チャレンジ,stage,int,2,93,0,0,0,0,0,0,0
-907,ピクミン2 全回収クリア,,本編チャレンジ,stage,int,2,93,0,0,0,0,0,0,0
-908,ピクミン2 チャレンジ全クリア,Pikmin 2 Challenge Mode All Levels RTA,チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-909,ピクミン2 チャレンジ全公式超え,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-910,ピクミン2 チャレンジ公式超え1区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-911,ピクミン2 チャレンジ公式超え2区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-912,ピクミン2 チャレンジ公式超え3区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-913,ピクミン2 チャレンジ公式超え4区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-914,ピクミン2 チャレンジ公式超え5区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-915,ピクミン2 チャレンジ公式超え6区,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-916,ピクミン2 チャレンジ総合70万点超え,,チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-917,ピクミン2 チャレンジ全回収,Pikmin 2 Challenge Mode All Tresure RTA,チャレンジモード複合,stage,int,2,94,0,0,0,0,0,0,0
-918,ピクミン2 全回収RTA with Missions,Pikmin 2 SpeedRun: All Treasures with Missions,本編チャレンジ,stage,int,2,93,0,0,0,0,0,0,0
-919,ピクミン3 フリースタイルRTA,,本編チャレンジ,stage,int,3,0,0,0,0,0,0,0,0
-920,ピクミン3 Any% RTA,Pikmin 3 SpeedRun: Any% RTA,本編チャレンジ,stage,int,3,93,0,0,0,0,0,0,0
-921,ピクミン3 全回収RTA,Pikmin 3 SpeedRun: All Fruits RTA,本編チャレンジ,stage,int,3,93,0,0,0,0,0,0,0
-1001,コンクリート迷路（タマゴなし）,Concrete Maze,第1回期間限定ランキング,stage,int,2,91,0,0,0,0,0,0,0
-1002,どっすん迷路（タマゴなし）,Bully Den,第1回期間限定ランキング,stage,int,2,91,0,0,0,0,0,0,0
+901,ピクミン2 本編クリアタイム短縮（借金返済）,,その他,stage,time,2,91,0,0,0,0,0,0,0
+902,ピクミン2 本編クリアタイム短縮（お宝全回収）,,その他,stage,time,2,91,0,0,0,0,0,0,0
+903,ピクミン2 チャレンジ全クリア,Pikmin 2 Challenge Mode All Levels RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+904,ピクミン2 チャレンジ全公式超え,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),その他,stage,time,2,91,0,0,0,0,0,0,0
+905,ピクミン2 チャレンジ総合70万点超え,Pikmin 2 Challenge Mode All Levels RTA (Over the 700k pts),その他,stage,time,2,91,0,0,0,0,0,0,0
+906,ピクミン2 チャレンジ全回収,Pikmin 2 Challenge Mode All Tresure RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+907,ピクミン2 本編全回収RTA with Missions,Pikmin2 All Treasure RTA with Missions,その他,stage,time,2,91,0,0,0,0,0,0,0
+1001,コンクリート迷路（タマゴなし）,Concrete Maze,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
+1002,どっすん迷路（タマゴなし）,Bully Den,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1003,地底警備室（スプレーなし）,Subtettanean Lair,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
 1004,倍々ゲームの穴（12匹縛り),Breeding Ground,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
 1005,遭難地点（20匹縛り),The Impact Site,第3回期間限定ランキング,stage,int,1,160319,0,0,0,0,0,0,0
@@ -466,34 +452,33 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1267,どっすん迷路（ムシ取り）,Bully Den,参加者企画,stage,int,2,210829,300,3200,25,0,0,0,0
 1268,スナイパールーム（ムシ取り）,Sniper Room,参加者企画,stage,int,2,210829,255,3252,50,0,0,0,0
 1269,デメマダラの巣窟（ムシ取り）,Emperor's Realm,参加者企画,stage,int,2,210829,500,3097,74,0,0,0,0
-1270,こてしらべの洞窟（794ポコ）,Explorer's Cave,ピクミン2 日替わりチャレンジ,stage,int,2,92,200,794,50,0,0,0,0
-1271,新参者の試練場（1823ポコ）,Novice Training,ピクミン2 日替わりチャレンジ,stage,int,2,92,340,1823,30,0,0,0,0
-1272,神々のおもちゃ箱（867ポコ）,Lost Toy Box,ピクミン2 日替わりチャレンジ,stage,int,2,92,250,867,100,0,0,0,0
-1273,あのひとの庭（684ポコ）,Creator's Garden,ピクミン2 日替わりチャレンジ,stage,int,2,92,180,684,50,0,0,0,0
-1274,グリーンホール（595ポコ）,Green Hole,ピクミン2 日替わりチャレンジ,stage,int,2,92,185,595,50,0,0,0,0
-1275,地下の温室（372ポコ）,Hot House,ピクミン2 日替わりチャレンジ,stage,int,2,92,200,372,35,0,0,0,0
-1276,鉄人の穴（570ポコ）,Brawny Abyss,ピクミン2 日替わりチャレンジ,stage,int,2,92,230,570,50,0,0,0,0
-1277,赤の洞窟（722ポコ）,Red Chasm,ピクミン2 日替わりチャレンジ,stage,int,2,92,130,722,40,0,0,0,0
-1278,花園を荒らすもの（2700ポコ）,Trampled Garden,ピクミン2 日替わりチャレンジ,stage,int,2,92,145,2700,80,0,0,0,0
-1279,たそがれの庭（909ポコ）,Twilight Garden,ピクミン2 日替わりチャレンジ,stage,int,2,92,145,909,50,0,0,0,0
-1280,かくしもちの洞窟（526ポコ）,Cryptic Cavern,ピクミン2 日替わりチャレンジ,stage,int,2,92,300,526,10,0,0,0,0
-1281,コンクリート迷路（460ポコ）,Concrete Maze,ピクミン2 日替わりチャレンジ,stage,int,2,92,220,460,18,0,0,0,0
-1282,コレクタールーム（2011ポコ）,Collector's Room,ピクミン2 日替わりチャレンジ,stage,int,2,92,305,2011,50,0,0,0,0
-1283,ショイグモの巣（643ポコ）,Dweevil Nest,ピクミン2 日替わりチャレンジ,stage,int,2,92,180,643,100,0,0,0,0
-1284,大足の穴（100ポコ）,Cavernous Abyss,ピクミン2 日替わりチャレンジ,stage,int,2,92,200,100,50,0,0,0,0
-1285,食神のかまど（230ポコ）,Snack Pit,ピクミン2 日替わりチャレンジ,stage,int,2,92,150,230,25,0,0,0,0
-1286,三色試練場（662ポコ）,Three Color Training,ピクミン2 日替わりチャレンジ,stage,int,2,92,230,662,60,0,0,0,0
-1287,炎と水の試練場（1364ポコ）,Hazard Training,ピクミン2 日替わりチャレンジ,stage,int,2,92,400,1364,50,0,0,0,0
-1288,鼻息の洞穴（547ポコ）,Cave of Snarls,ピクミン2 日替わりチャレンジ,stage,int,2,92,250,547,50,0,0,0,0
-1289,巨人のトイレ（675ポコ）,The Giant's Bath,ピクミン2 日替わりチャレンジ,stage,int,2,92,350,675,50,0,0,0,0
-1290,土とんの洞窟（1037ポコ）,Rumbling Grotto,ピクミン2 日替わりチャレンジ,stage,int,2,92,290,1037,60,0,0,0,0
-1291,地底警備室（522ポコ）,Subtettanean Lair,ピクミン2 日替わりチャレンジ,stage,int,2,92,90,522,60,0,0,0,0
-1292,ひみつの花園（229ポコ）,The Hidden Garden,ピクミン2 日替わりチャレンジ,stage,int,2,92,200,229,50,0,0,0,0
-1293,さらいの洞窟（456ポコ）,Abduction Den,ピクミン2 日替わりチャレンジ,stage,int,2,92,180,456,60,0,0,0,0
-1294,秘密兵器実験場（900ポコ）,Secret Testing Range,ピクミン2 日替わりチャレンジ,stage,int,2,92,250,900,50,0,0,0,0
-1295,倍々ゲームの穴（682ポコ）,Breeding Ground,ピクミン2 日替わりチャレンジ,stage,int,2,92,430,682,100,0,0,0,0
-1296,天罰の穴（417ポコ）,Cave of Pain,ピクミン2 日替わりチャレンジ,stage,int,2,92,160,417,50,0,0,0,0
-1297,どっすん迷路（551ポコ）,Bully Den,ピクミン2 日替わりチャレンジ,stage,int,2,92,300,551,25,0,0,0,0
-1298,スナイパールーム（1005ポコ）,Sniper Room,ピクミン2 日替わりチャレンジ,stage,int,2,92,255,1005,50,0,0,0,0
-1299,デメマダラの巣窟（1171ポコ）,Emperor's Realm,ピクミン2 日替わりチャレンジ,stage,int,2,92,500,1171,74,0,0,0,0
-922,ピクミン2 本編全回収RTA with Missions,Pikmin2 All Treasure RTA with Missions,本編カスタムRTA,stage,int,2,99,0,0,0,0,0,0,0
+1270,こてしらべの洞窟（794ポコ）,Explorer's Cave,ピクミン2 日替わりチャレンジ,stage,int,2,161022,200,794,50,0,0,0,0
+1271,新参者の試練場（1823ポコ）,Novice Training,ピクミン2 日替わりチャレンジ,stage,int,2,161022,340,1823,30,0,0,0,0
+1272,神々のおもちゃ箱（867ポコ）,Lost Toy Box,ピクミン2 日替わりチャレンジ,stage,int,2,161022,250,867,100,0,0,0,0
+1273,あのひとの庭（684ポコ）,Creator's Garden,ピクミン2 日替わりチャレンジ,stage,int,2,161022,180,684,50,0,0,0,0
+1274,グリーンホール（595ポコ）,Green Hole,ピクミン2 日替わりチャレンジ,stage,int,2,161022,185,595,50,0,0,0,0
+1275,地下の温室（372ポコ）,Hot House,ピクミン2 日替わりチャレンジ,stage,int,2,161022,200,372,35,0,0,0,0
+1276,鉄人の穴（570ポコ）,Brawny Abyss,ピクミン2 日替わりチャレンジ,stage,int,2,161022,230,570,50,0,0,0,0
+1277,赤の洞窟（722ポコ）,Red Chasm,ピクミン2 日替わりチャレンジ,stage,int,2,161022,130,722,40,0,0,0,0
+1278,花園を荒らすもの（2700ポコ）,Trampled Garden,ピクミン2 日替わりチャレンジ,stage,int,2,161022,145,2700,80,0,0,0,0
+1279,たそがれの庭（909ポコ）,Twilight Garden,ピクミン2 日替わりチャレンジ,stage,int,2,161022,145,909,50,0,0,0,0
+1280,かくしもちの洞窟（526ポコ）,Cryptic Cavern,ピクミン2 日替わりチャレンジ,stage,int,2,161022,300,526,10,0,0,0,0
+1281,コンクリート迷路（460ポコ）,Concrete Maze,ピクミン2 日替わりチャレンジ,stage,int,2,161022,220,460,18,0,0,0,0
+1282,コレクタールーム（2011ポコ）,Collector's Room,ピクミン2 日替わりチャレンジ,stage,int,2,161022,305,2011,50,0,0,0,0
+1283,ショイグモの巣（643ポコ）,Dweevil Nest,ピクミン2 日替わりチャレンジ,stage,int,2,161022,180,643,100,0,0,0,0
+1284,大足の穴（100ポコ）,Cavernous Abyss,ピクミン2 日替わりチャレンジ,stage,int,2,161022,200,100,50,0,0,0,0
+1285,食神のかまど（230ポコ）,Snack Pit,ピクミン2 日替わりチャレンジ,stage,int,2,161022,150,230,25,0,0,0,0
+1286,三色試練場（662ポコ）,Three Color Training,ピクミン2 日替わりチャレンジ,stage,int,2,161022,230,662,60,0,0,0,0
+1287,炎と水の試練場（1364ポコ）,Hazard Training,ピクミン2 日替わりチャレンジ,stage,int,2,161022,400,1364,50,0,0,0,0
+1288,鼻息の洞穴（547ポコ）,Cave of Snarls,ピクミン2 日替わりチャレンジ,stage,int,2,161022,250,547,50,0,0,0,0
+1289,巨人のトイレ（675ポコ）,The Giant's Bath,ピクミン2 日替わりチャレンジ,stage,int,2,161022,350,675,50,0,0,0,0
+1290,土とんの洞窟（1037ポコ）,Rumbling Grotto,ピクミン2 日替わりチャレンジ,stage,int,2,161022,290,1037,60,0,0,0,0
+1291,地底警備室（522ポコ）,Subtettanean Lair,ピクミン2 日替わりチャレンジ,stage,int,2,161022,90,522,60,0,0,0,0
+1292,ひみつの花園（229ポコ）,The Hidden Garden,ピクミン2 日替わりチャレンジ,stage,int,2,161022,200,229,50,0,0,0,0
+1293,さらいの洞窟（456ポコ）,Abduction Den,ピクミン2 日替わりチャレンジ,stage,int,2,161022,180,456,60,0,0,0,0
+1294,秘密兵器実験場（900ポコ）,Secret Testing Range,ピクミン2 日替わりチャレンジ,stage,int,2,161022,250,900,50,0,0,0,0
+1295,倍々ゲームの穴（682ポコ）,Breeding Ground,ピクミン2 日替わりチャレンジ,stage,int,2,161022,430,682,100,0,0,0,0
+1296,天罰の穴（417ポコ）,Cave of Pain,ピクミン2 日替わりチャレンジ,stage,int,2,161022,160,417,50,0,0,0,0
+1297,どっすん迷路（551ポコ）,Bully Den,ピクミン2 日替わりチャレンジ,stage,int,2,161022,300,551,25,0,0,0,0
+1298,スナイパールーム（1005ポコ）,Sniper Room,ピクミン2 日替わりチャレンジ,stage,int,2,161022,255,1005,50,0,0,0,0
+1299,デメマダラの巣窟（1171ポコ）,Emperor's Realm,ピクミン2 日替わりチャレンジ,stage,int,2,161022,500,1171,74,0,0,0,0

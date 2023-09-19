@@ -49,7 +49,7 @@ export default function Record({data}) {
         compare = ""
     }
     return (
-        <RecordContainer container rank={data?.post_rank}>
+        <RecordContainer container rank={data?.post_rank} team={data?.team}>
             <Grid item xs={2} sm={1} style={{
                 borderRight: '1px solid #fff'
             }}>

@@ -1,29 +1,38 @@
 import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material";
 import * as React from "react";
+import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
+import Link from "next/link";
+import {lm, mx} from "../../lib/const";
+import {useLocale} from "../../lib/pik5";
 
 export default function MenuLm(props){
+
+    const {t} = useLocale()
+    const color = "#777777"
+    
     return (
-        <Paper>
+        <HeaderPopMenu>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
                     autoFocusItem={open}
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    style={{
-                        backgroundColor:"#79a3ff",
-                    }}
+                    disablePadding
                 >
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            期間限定ランキング
-                            <MenuItem onClick={props.handleClose}>期間限定総合ランキング</MenuItem>
-                            <MenuItem onClick={props.handleClose}>大会ルールの投稿・管理</MenuItem>
-                            <MenuItem onClick={props.handleClose}>ユーザー主催イベントの作成・管理</MenuItem>
+                    <Grid container onClick={props.handleClose}>
+                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                            {
+                                lm.map(n=>
+                                    <StyledMenuItem key={n} style={{
+                                        borderLeft:"solid 10px "+SeriesTheme(5),
+                                    }} component={Link} href={"/limited/"+n} onClick={props.handleClose}>20{String(n).slice(0, 2)+"/"+String(n).slice(2, 4)+"/"+String(n).slice(4, 6)} {t.limited[n]}</StyledMenuItem>
+                                )
+                            }
                         </Grid>
                     </Grid>
                 </MenuList>
             </ClickAwayListener>
-        </Paper>
+        </HeaderPopMenu>
     )
 }

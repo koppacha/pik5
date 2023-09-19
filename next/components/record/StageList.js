@@ -15,7 +15,7 @@ export default function StageList({stages}){
                 stages?.map(stage =>
                     <Grid key={stage} item xs={1}>
                         <Link key={stage} href={'/stage/'+stage}>
-                            <StageListBox>#{stage}<br/>{t.stage[stage]}</StageListBox>
+                            <StageListBox>#{stage}<br/>{t.stage[stage].length > 15 ? t.stage[stage].substring(0, 14)+".." : t.stage[stage]}</StageListBox>
                         </Link>
                     </Grid>
                 )

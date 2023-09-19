@@ -2,6 +2,7 @@
 
 namespace App\Library;
 
+use App\Http\Controllers\TotalController;
 use App\Models\Record;
 use App\Models\Stage;
 use DateTime;
@@ -11,6 +12,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
+use Predis\Command\Argument\Server\To;
 
 class Func extends Facade
 {
@@ -18,7 +20,7 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362));
+        $rta_stages = array_merge(range(245, 254), range(351, 362), range(901, 907));
 
         if(is_numeric($id)){
             if($rule === "11" || in_array((int)$id, $rta_stages, true)){
@@ -28,14 +30,22 @@ class Func extends Facade
         }
         return ['score','DESC'];
     }
-    // 通常ランキング全ステージのうち最大参加者数を求める
-    public static function memberCount ($option = [0, 0, 0]): array
+    // 対象ステージのうち最大参加者数を求める
+    public static function memberCount ($total = 0, $option = [0, 0, 0]): array
     {
-        [$console, ,$date] = $option;
+        [$console, , $date] = $option;
 
-        // 期間限定ランキングを設立するまでは全部通常ランキングとして処理する
-        $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
-
+        if(!$total) {
+            // 総合IDが指定されていない場合は通常総合に等しい対象ルールとステージ
+            $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
+            $stages = TotalController::stage_list("2");
+            $ttl = 1800;
+        } else {
+            // 期間限定などで総合IDが指定されている場合はそれだけを指定する
+            $rule = [$total];
+            $stages = TotalController::stage_list((string)$total);
+            $ttl = 0;
+        }
         if(!$date) {
             $datetime = new DateTime("2024-01-01 00:00:00");
             $date = $datetime->format("Y-m-d H:i:s");
@@ -44,8 +54,7 @@ class Func extends Facade
 //        $rule_operation = ">";
 
         try {
-            // TODO: 一部の特殊ランキングが混じってるけど通常ランキングの参加者数を超えることはまずないので一旦無視で
-            $Model = Cache::remember('memCount', 3600, static function() use ($console_operation, $console, $rule, $date) {
+            $Model = Cache::remember('memCount', $ttl, static function() use ($console_operation, $console, $rule, $date) {
                 return Record::whereIn('stage_id', range(101, 428))
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
@@ -74,7 +83,7 @@ class Func extends Facade
         $member = count($data);
 
         // 最大の参加者数データを取得（取得に失敗した場合は当該ランキングの参加者数を最大値とする）
-        if($memberCount = self::memberCount($option)) {
+        if($memberCount = self::memberCount(0, $option)) {
             $max = max($memberCount);
         } else {
             $max = $member;
@@ -101,6 +110,10 @@ class Func extends Facade
         $r = ($max / $rank ** 1.12) * ($rank ** (0.9 * ($max - $rank + 1) ** 2 / $max ** 2 + 0.1) / $max * 10);
 
         return floor($m * $r * 200);
+    }
+    public static function limitedRankPoint_calc($rank, $max): int
+    {
+        return $max - $rank + 1;
     }
     public static function compare_calc (array $data, $compare = 'timebonus') : array
     {

@@ -2,7 +2,8 @@ import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material"
 import * as React from "react";
 import Link from "next/link";
 import {useLocale} from "../../lib/pik5";
-import {StyledMenuItem} from "../../styles/pik5.css";
+import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
+import {ot} from "../../lib/const";
 
 export default function MenuOt(props){
 
@@ -10,65 +11,28 @@ export default function MenuOt(props){
     const color = "#777777"
 
     return (
-        <Paper>
+        <HeaderPopMenu>
             <ClickAwayListener onClickAway={props.handleClose}>
                 <MenuList
                     autoFocusItem={open}
                     id="composition-menu"
                     aria-labelledby="composition-button"
                     onKeyDown={props.handleListKeyDown}
-                    style={{
-                    }}
+                    disablePadding
                 >
-                    <Grid container spacing={2}>
-                        <Grid item xs={2.4}>
-                            <StyledMenuItem style={{
-                                borderBottom:"solid 1px "+color,
-                                borderLeft:"solid 10px "+color,
-                                margin:"6px 4px 0px 4px",
-                                height:"12em",
-                            }}
-                                component={Link} href="/keyword" onClick={props.handleClose}>{t.g.keyword}</StyledMenuItem>
-                        </Grid>
-                        <Grid item xs={2.4}>
-                            <StyledMenuItem style={{
-                                borderBottom:"solid 1px "+color,
-                                borderLeft:"solid 10px "+color,
-                                margin:"6px 4px 0px 4px",
-                                height:"12em",
-                            }}
-                                            component={Link} href="/keyword/rules" onClick={props.handleClose}>{t.g.rules}</StyledMenuItem>
-                        </Grid>
-                        <Grid item xs={2.4}>
-                            <StyledMenuItem style={{
-                                borderBottom:"solid 1px "+color,
-                                borderLeft:"solid 10px "+color,
-                                margin:"6px 4px 0px 4px",
-                                height:"12em",
-                            }}
-                                            component={Link} href="https://www.pikminwiki.com/" target="_blank" onClick={props.handleClose}>Pikipedia</StyledMenuItem>
-                        </Grid>
-                        <Grid item xs={2.4}>
-                            <StyledMenuItem style={{
-                                borderBottom:"solid 1px "+color,
-                                borderLeft:"solid 10px "+color,
-                                margin:"6px 4px 0px 4px",
-                                height:"12em",
-                            }}
-                                            component={Link} href="https://www.speedrun.com/pikmin" target="_blank" onClick={props.handleClose}>SpeedRun.com</StyledMenuItem>
-                        </Grid>
-                        <Grid item xs={2.4}>
-                            <StyledMenuItem style={{
-                                borderBottom:"solid 1px "+color,
-                                borderLeft:"solid 10px "+color,
-                                margin:"6px 4px 0px 4px",
-                                height:"12em",
-                            }}
-                                            component={Link} href="/speedrun" onClick={props.handleClose}>{t.speedrun.title}</StyledMenuItem>
+                    <Grid container onClick={props.handleClose}>
+                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                            {
+                                ot.map(n=>
+                                    <StyledMenuItem key={n} style={{
+                                        borderLeft:"solid 10px "+color,
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
+                                )
+                            }
                         </Grid>
                     </Grid>
                 </MenuList>
             </ClickAwayListener>
-        </Paper>
+        </HeaderPopMenu>
     )
 }
