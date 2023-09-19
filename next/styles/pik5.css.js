@@ -45,6 +45,8 @@ export const SeriesTheme = (series) => {
             return '#37cfe3'
         case 8: // Discord
             return '#3796e3'
+        case 9: // その他
+            return '#ababab'
         default:
             return '#ffffff'
     }
@@ -60,22 +62,34 @@ const shadow = () => {
             `
 }
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
-const rankColor = (rank, target = 0) => {
+const rankColor = (rank, team, target = 0) => {
     const {theme} = useTheme()
+    const t = Number(team)
     const r = Number(rank)
-    switch (true) {
-        case r === 1: // 1位
-            return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
-        case r === 2: // 2位
-            return target ? '#42f35d' : theme === "dark" ? '#4b4b4b' : '#dedede'
-        case r === 3: // 3位
-            return target ? '#23abf1' : theme === "dark" ? '#2a2a2a' : '#d5d5d5'
-        case r < 11: // 4～10位
-            return target ? '#c7c7c7' : theme === "dark" ? '#181818' : '#b7b7b7'
-        case r < 21: // 11～20位
-            return target ? '#9a9a9a' : theme === "dark" ? '#181818' : '#b7b7b7'
-        default: // 21位～
-            return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
+    if(t === 0 || target === 0){
+        switch (true) {
+            case r === 1: // 1位
+                return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
+            case r === 2: // 2位
+                return target ? '#42f35d' : theme === "dark" ? '#4b4b4b' : '#dedede'
+            case r === 3: // 3位
+                return target ? '#23abf1' : theme === "dark" ? '#2a2a2a' : '#d5d5d5'
+            case r < 11: // 4～10位
+                return target ? '#c7c7c7' : theme === "dark" ? '#181818' : '#b7b7b7'
+            case r < 21: // 11～20位
+                return target ? '#9a9a9a' : theme === "dark" ? '#181818' : '#b7b7b7'
+            default: // 21位～
+                return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
+        }
+    } else {
+        const teamColor = ['',
+            '#19acff', '#ff3919', '#eeeeee', '#b419ff',
+            '#ff63f2', '#e3e3e3', '#f3524c', '#8ba9ff',
+            '#e0e0e0', '#010101', '#45aee6', '#e6d745',
+            '#e6456c', '#e6b945', '#45e675', '#dce645',
+            '#457de6', '#e69345', '#e64575', '#455ae6']
+
+        return teamColor[t]
     }
 }
 
@@ -425,15 +439,16 @@ export const RankPointType = styled(Typography)`
     color: ${colors.dark.subTitle};
   }
 `
-export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank}))`
-    border-left: 10px solid ${props => rankColor(props.$rank, 1)};
-    border-bottom: 1px solid ${props => rankColor(props.$rank, 1)};
-    background-color: ${props => rankColor(props.$rank, 0)};
+export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank, $team: props.team}))`
+  
+    border-left: 10px solid ${props => rankColor(props.$rank, props.$team, 1)};
+    border-bottom: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
+    background-color: ${props => rankColor(props.$rank, props.$team, 0)};
     border-radius: 8px;
     padding: 4px;
     margin-bottom: 10px;
     text-align: center;
-    box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, 1)};
+    box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, props.$team, 1)};
 `
 export const BattleRecordContainer = styled(RecordContainer)`
   border-left: 1px solid;

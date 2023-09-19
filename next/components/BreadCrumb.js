@@ -13,7 +13,15 @@ import {logger} from "../lib/logger";
 export default function BreadCrumb({info, rule}){
 
     const {t} = useLocale()
-    const superParent = ([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))) ? 2 : 3
+    const superParent = () => {
+        if([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))){
+            return 2
+        }
+        if(rule < 100){
+            return 3
+        }
+        return 4
+    }
 
     return (
         <>
@@ -22,14 +30,14 @@ export default function BreadCrumb({info, rule}){
             }
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             {
-                // 第１階層（通常総合 or 特殊総合）
+                // 第１階層（表示画面が通常総合 or 特殊総合でなかった場合は通常総合 or 特殊総合を表示）
                 (info.parent > 1) ?
                 <>
                     <StairIcon icon={faStairs}/>
-                    <Link href={"/total/"+superParent}>{t.stage[superParent]}</Link>
+                    <Link href={"/total/"+superParent()}>{t.stage[superParent()]}</Link>
                 </>
                 :
-                // 全総合
+                // 第１階層（表示画面が通常総合 or 特殊総合の場合は全総合を表示）
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/1"}>{t.stage[1]}</Link>
@@ -37,15 +45,21 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第２階層（シリーズ別総合）
-                (info.parent > 9) &&
+                (info.parent > 9 && info.parent < 100) ?
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
                 </>
+                    :
+                // 第２階層（期間限定） TODO: 常設イベントは厳密には特殊ランキングとして表示するのが妥当
+                <>
+                    <StairIcon icon={faStairs}/>
+                    <Link href={"/total/"+info.parent}>{t.limited[info.parent]}</Link>
+                </>
             }
             {
                 // 第３階層（サブカテゴリ）
-                (info.parent > 20) &&
+                (info.parent > 20 && info.parent < 100) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>

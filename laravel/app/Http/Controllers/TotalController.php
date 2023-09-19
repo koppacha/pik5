@@ -20,13 +20,14 @@ class TotalController extends Controller
         // TODO: Implement __invoke() method.
         return "invoke";
     }
-    public function stage_list(Request|string $request): array
+    public static function stage_list(Request|string $request): array
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
-            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)),
-            2 => array_merge(range(101, 105), range(201, 230), range(301, 350)),
-            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)),
+            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428)), // 全総合
+            2 => array_merge(range(101, 105), range(201, 230), range(301, 350), range(401, 428)), // 通常総合
+            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)), // 特殊総合
+            4 => range(1001, 1299), // 期間限定総合
             10 => [101, 102, 103, 104, 105],
             11 => [101, 102, 103, 104, 105],
             20 => range(201, 230),
@@ -50,12 +51,7 @@ class TotalController extends Controller
             41 => range(401, 412), // ダンドリチャレンジ
             42 => range(413, 418), // ダンドリバトル
             43 => range(419, 428), // 葉っぱ仙人の挑戦状
-            91 => range(1001, 1030), // 旧日替わりチャレンジ（投稿不可）
-            93 => range(1104, 1105), // 本編クリアタイム（ピクミン２）
-            94 => range(1106, 1109), // チャレンジモード全クリアRTA（ピクミン２）
-            95 => [1110], // 旧本編カスタムRTA
-            99 => [399], // サンドボックス
-            81 => range(2001, 9999),
+            91 => range(901, 907), // 複合・その他
             151101 => range(1001, 1002), // TODO: 個別のイベント総合に相当する配列は将来的にデータベースに基づいて読み込むようにする
             160306 => range(1003, 1004), // 期間限定、参加者企画、旧日替わり
             160319 => range(1005, 1006),
@@ -78,8 +74,6 @@ class TotalController extends Controller
             190321 => range(1227, 1256),
             210829 => range(1257, 1269),
             161022 => range(1270, 1299),
-            170709 => range(1300, 1303),
-            230311 => [1304]                      // ↑移転前の特殊ランキングここまで（これ以下はver.3で開催される期間限定、参加者企画、常設ユーザーランキング）
         ];
         if(!isset($request)){
             return [];
@@ -151,11 +145,11 @@ class TotalController extends Controller
         // ルールの強制置換
         // 全総合ランキング
         if ($request['id'] === "1") {
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 11, 23, 24, 22, 25, 29, 35];
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 11, 23, 24, 22, 25, 29, 35, 40, 41, 42, 43, 91];
 
             // 通常総合ランキング
         } elseif ($request['id'] === "2") {
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40];
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
 
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別は対象外）
         } elseif($request['id'] === "3"){
