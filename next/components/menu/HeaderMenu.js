@@ -14,7 +14,7 @@ import {faBook, faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-
 import {useTheme} from "next-themes";
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
-import {CustomMenuButton, ThinAppBar} from "../../styles/pik5.css";
+import {CustomMenuButton, LeftAppBar, ThinAppBar} from "../../styles/pik5.css";
 import {useEffect, useState} from "react";
 
 export default function HeaderMenu(){
@@ -35,30 +35,30 @@ export default function HeaderMenu(){
         <>
             <ThinAppBar>
                 <Toolbar className="spHidden">
-                    <Typography variant="h6" component="div">
-                        <Link href="/">{t.title[0]}</Link>
-                    </Typography>
-                    <CustomMenu series={1}/>
-                    <CustomMenu series={2}/>
-                    <CustomMenu series={3}/>
-                    <CustomMenu series={4}/>
-                    <CustomMenu series={5}/>
-                    <CustomMenu series={6}/>
-                    <CustomMenu series={9}/>
-                    <CustomMenuButton
-                        series={7}
-                        component={Link}
-                        href="/keyword">
-                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faBook} />
-                        {t.g.key}
-                    </CustomMenuButton>
-                    <CustomMenuButton
-                        series={8}
-                        component={Link}
-                        href="https://discord.gg/rQEBJQa">
-                        <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
-                        {t.g.discord}
-                    </CustomMenuButton>
+                    <LeftAppBar>
+                        <CustomMenu series={0}/>
+                        <CustomMenu series={1}/>
+                        <CustomMenu series={2}/>
+                        <CustomMenu series={3}/>
+                        <CustomMenu series={4}/>
+                        <CustomMenu series={5}/>
+                        <CustomMenu series={6}/>
+                        <CustomMenu series={9}/>
+                        <CustomMenuButton
+                            series={7}
+                            component={Link}
+                            href="/keyword">
+                            <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faBook} />
+                            {t.g.key}
+                        </CustomMenuButton>
+                        <CustomMenuButton
+                            series={8}
+                            component={Link}
+                            href="https://discord.gg/rQEBJQa">
+                            <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
+                            {t.g.discord}
+                        </CustomMenuButton>
+                    </LeftAppBar>
 
                     {/*ここから右よせ*/}
                     <Box style={{ flexGrow: 1 }} />
