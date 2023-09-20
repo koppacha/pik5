@@ -263,13 +263,20 @@ export const StyledSelect = styled(Select)`
 `
 export const ThinAppBar = styled(AppBar)`
     background-color: #111;
-
+  
     ${sp`display: none;`}
+`
+export const LeftAppBar = styled(Box)`
+  @media(max-width: 1400px) {
+    width: 1400px;
+    overflow-x: scroll;
+    white-space: nowrap;
+  }
 `
 export const HeaderPopMenu = styled(Paper)`
   color: ${colors.dark.front};
   margin: 0 auto;
-  width: 90vw;
+  width: 100vw;
   box-shadow: none;
   background-color: transparent;
 `
@@ -277,6 +284,7 @@ export const StyledMenuItem = styled(MenuItem)`
   font-family: "M PLUS 1 CODE", sans-serif;
   border-left: 10px solid #f7fafc;
   background-color: #3a3a3a;
+  overflow-x: hidden;
   
   &:hover {
     color: #111;
@@ -466,6 +474,16 @@ export const AuthWindow = styled(Grid)`
     background-color: ${colors.dark.back};
   }
 `
+export const StageListWrapper = styled(Box)`
+
+  margin: 2em 0;
+  width: 100%;
+
+  @media(max-width: 1400px) {
+    overflow-x: scroll;
+    white-space: nowrap;
+  }
+`
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
   border-radius: 6px;
@@ -473,6 +491,7 @@ export const StageListBox = styled(Box)`
   margin: 2px;
   min-height: 5.5em;
   font-size: 0.8em;
+  white-space: break-spaces;
   
   ${sp`font-size: 0.8em;`}
 

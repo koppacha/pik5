@@ -21,7 +21,7 @@ export default function MenuLm(props){
                     disablePadding
                 >
                     <Grid container onClick={props.handleClose}>
-                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                        <Grid item xs={3} style={{position:"relative",left:"600px"}}>
                             {
                                 lm.map(n=>
                                     <StyledMenuItem key={n} style={{

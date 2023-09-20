@@ -21,7 +21,7 @@ export default function MenuOt(props){
                     disablePadding
                 >
                     <Grid container onClick={props.handleClose}>
-                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                        <Grid item xs={4} style={{position:"relative",left:"800px"}}>
                             {
                                 ot.map(n=>
                                     <StyledMenuItem key={n} style={{

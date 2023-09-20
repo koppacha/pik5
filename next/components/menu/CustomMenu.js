@@ -1,8 +1,9 @@
 import {useRef, useState} from "react";
 import {Button, Fade, Popper} from "@mui/material";
 import * as React from "react";
-import Menu2 from "./Menu2";
+import Menu0 from "./Menu0";
 import Menu1 from "./Menu1";
+import Menu2 from "./Menu2";
 import Menu3 from "./Menu3";
 import Menu4 from "./Menu4";
 import MenuLm from "./MenuLm";
@@ -40,7 +41,14 @@ export default function CustomMenu(props){
         }
     }
     function menuObject(s){
-        if(s === 1){
+        if(s === 0){
+            return (
+                <Menu0
+                    handleListKeyDown={handleListKeyDown}
+                    handleClose={handleClose}/>
+            )
+        }
+        else if(s === 1){
             return (
                 <Menu1
                     handleListKeyDown={handleListKeyDown}

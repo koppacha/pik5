@@ -21,7 +21,7 @@ export default function MenuSpeedrun(props){
                     disablePadding
                 >
                     <Grid container onClick={props.handleClose}>
-                        <Grid item xs={3} style={{position:"relative",left:"529px"}}>
+                        <Grid item xs={3} style={{position:"relative",left:"700px"}}>
                             {
                                 speedruns.map(n=>
                                     <StyledMenuItem key={n} style={{
