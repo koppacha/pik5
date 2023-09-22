@@ -144,6 +144,10 @@ class Func extends Facade
                 $bonusBase = (in_array($record['stage_id'], $lowBonusStages, true)) ? 10 : 30;
                 $value = round(($record['score'] - $stage['treasure']) / $bonusBase);
             }
+            // ピクミン４のタイムボーナス
+            elseif(($compare === 'timebonus') && $stage['parent'] === 41) {
+                $value = round($record['score'] - $stage['treasure']);
+            }
 
             $data[$key]['compare'] = $value;
         }
