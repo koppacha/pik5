@@ -1,10 +1,11 @@
-stage,host,support,name,eng,type,rule,first,count,start,end,team1,team2,team3,team4,winner,mvp,idea
+c,host,support,name,eng,type,rule,first,count,start,end,team1,team2,team3,team4,winner,mvp,idea
 151101,koppacha,,第1回期間限定ランキング,"The 1st ""Limited Time"" Tournament",limited,standard,1001,2,2015-11-01 15:00:00,2015-11-08 14:59:59,0,0,0,0,参加者なし,,
 160306,koppacha,,第2回期間限定ランキング,"The 2nd ""Limited Time"" Tournament",limited,standard,1003,2,2016-03-06 15:00:00,2016-03-13 14:59:59,0,0,0,0,ピクミンヤクザ,,
 160319,koppacha,,第3回期間限定ランキング,"The 3rd ""Limited Time"" Tournament",limited,standard,1005,2,2016-03-19 15:00:00,2016-03-26 14:59:59,0,0,0,0,バライト,,
 160423,koppacha,,第4回期間限定ランキング,"The 4th ""Limited Time"" Tournament",limited,standard,1007,2,2016-04-23 15:00:00,2016-04-30 14:59:59,0,0,0,0,ピクミンヤクザ,,
 160430,koppacha,,第5回期間限定ランキング,"The 5th ""Limited Time"" Tournament",limited,standard,1009,4,2016-04-30 15:00:00,2016-05-07 14:59:59,0,0,0,0,ピクミンヤクザ,,
 160806,koppacha,,第6回期間限定ランキング,"The 6th ""Limited Time"" Tournament",limited,standard,1013,2,2016-08-06 15:00:00,2016-08-20 14:59:59,0,0,0,0,ピクミンヤクザ,,
+161022,koppacha,,旧日替わりチャレンジ,Daily challenge,custom,,1270,30,2016-10-22 0:00:00,2023-07-20 23:59:59,0,0,0,0,,,
 170101,koppacha,,第7回期間限定ランキング,"The 7th ""Limited Time"" Tournament",limited,teams,1015,4,2017-01-01 15:00:00,2017-01-08 14:59:59,1,2,0,0,チーム青ピクミン,ピクミンヤクザ,
 170211,koppacha,,第8回期間限定ランキング,"The 8th ""Limited Time"" Tournament",limited,teams,1019,4,2017-02-11 20:00:00,2017-02-19 19:59:59,3,4,0,0,チーム白ピクミン,バライト,
 170325,koppacha,,第9回期間限定ランキング,"The 9th ""Limited Time"" Tournament",limited,teams,1023,6,2017-03-25 20:00:00,2017-04-02 21:59:59,5,6,0,0,チーム岩ピクミン,flyinghawk,
@@ -13,12 +14,12 @@ stage,host,support,name,eng,type,rule,first,count,start,end,team1,team2,team3,te
 171231,koppacha,,第1回ピク杯,The 1st Offline Event,offline,,0,0,2017-12-31 15:00,2017-12-31 20:00,0,0,0,0,,,
 180101,koppacha,,第12回期間限定ランキング,"The 12th ""Limited Time"" Tournament",limited,teams,1043,8,2018-01-01 15:00:00,2018-01-08 21:59:59,11,12,0,0,飴入道組,flyinghawk,
 180429,koppacha,,第2回ピク杯,The 2nd Offline Event,offline,,0,0,2018-04-29 15:00,2018-04-29 20:00,0,0,0,0,,,
-180901,koppacha,,第13回期間限定ランキング,"The 13th ""Limited Time"" Tournament",limited,area,0,30,2018-09-01 1:00:00,2018-09-03 0:59:59,0,0,0,0,みんな,ごれい,
-190209,sectionmarilui,,第1回全ステージ一本勝負,The 1st One-time all-stage play competition,users,,0,30,2019-02-05 21:00:00,2019-02-10 3:59:59,0,0,0,0,,,
-190321,sectionmarilui,,第2回全ステージ一本勝負,The 2nd One-time all-stage play competition,users,,0,30,2019-03-21 20:00:00,2019-03-22 0:59:59,0,0,0,0,,,
-190802,koppacha,,第14回期間限定ランキング,"The 14th ""Limited Time"" Tournament",limited,area,0,30,2019-08-02 22:00:00,2019-08-04 21:59:59,0,0,0,0,iid01,flyinghawk,ピクミンヤクザ
-200723,koppacha,,第15回期間限定ランキング,"The 15th ""Limited Time"" Tournament",limited,area,0,30,2020-07-23 22:00:00,2020-07-26 21:59:59,13,14,0,0,チームツラノカワ,albut3,とりぽっぽ
-200918,koppacha,,第16回期間限定ランキング,"The 16th ""Limited Time"" Tournament",limited,area,0,17,2020-09-18 22:00:00,2020-09-22 21:59:59,15,16,0,0,チームオフランス,ごれい,mercysnow
-210829,sectionmarilui,,タマゴムシ取り大会,Catch the Mitite Competition,users,,0,13,2021-08-29 21:00:00,2021-08-29 23:59:59,0,0,0,0,,,
-211105,koppacha,albut3,第17回期間限定ランキング,"The 17th ""Limited Time"" Tournament",limited,area,0,22,2021-11-05 22:00:00,2021-11-07 21:59:59,17,18,0,0,チームクマキボリ,albut3,
-221008,koppacha,,第18回期間限定ランキング,"The 18th ""Limited Time"" Tournament",limited,area,0,12,2022-10-07 22:00:00,2022-10-10 21:59:59,19,20,0,0,,,
+180901,koppacha,,第13回期間限定ランキング,"The 13th ""Limited Time"" Tournament",limited,area,1051,30,2018-09-01 1:00:00,2018-09-03 0:59:59,0,0,0,0,みんな,ごれい,
+190209,sectionmarilui,,第1回全ステージ一本勝負,The 1st One-time all-stage play competition,users,,1197,30,2019-02-05 21:00:00,2019-02-10 3:59:59,0,0,0,0,,,
+190321,sectionmarilui,,第2回全ステージ一本勝負,The 2nd One-time all-stage play competition,users,,1227,30,2019-03-21 20:00:00,2019-03-22 0:59:59,0,0,0,0,,,
+190802,koppacha,,第14回期間限定ランキング,"The 14th ""Limited Time"" Tournament",limited,area,1085,30,2019-08-02 22:00:00,2019-08-04 21:59:59,0,0,0,0,iid01,flyinghawk,ピクミンヤクザ
+200723,koppacha,,第15回期間限定ランキング,"The 15th ""Limited Time"" Tournament",limited,area,1116,30,2020-07-23 22:00:00,2020-07-26 21:59:59,13,14,0,0,チームツラノカワ,albut3,とりぽっぽ
+200918,koppacha,,第16回期間限定ランキング,"The 16th ""Limited Time"" Tournament",limited,area,1146,17,2020-09-18 22:00:00,2020-09-22 21:59:59,15,16,0,0,チームオフランス,ごれい,mercysnow
+210829,sectionmarilui,,タマゴムシ取り大会,Catch the Mitite Competition,users,,1257,13,2021-08-29 21:00:00,2021-08-29 23:59:59,0,0,0,0,,,
+211105,koppacha,albut3,第17回期間限定ランキング,"The 17th ""Limited Time"" Tournament",limited,area,1163,22,2021-11-05 22:00:00,2021-11-07 21:59:59,17,18,0,0,チームクマキボリ,albut3,
+221008,koppacha,,第18回期間限定ランキング,"The 18th ""Limited Time"" Tournament",limited,area,1185,12,2022-10-07 22:00:00,2022-10-10 21:59:59,19,20,0,0,,,

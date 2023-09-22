@@ -14,12 +14,15 @@ export default function BreadCrumb({info, rule}){
 
     const {t} = useLocale()
     const superParent = () => {
+        // 通常ランキング
         if([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))){
             return 2
         }
+        // 特殊ランキング
         if(rule < 100){
             return 3
         }
+        // 期間限定ランキング
         return 4
     }
 
@@ -51,7 +54,7 @@ export default function BreadCrumb({info, rule}){
                     <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
                 </>
                     :
-                // 第２階層（期間限定） TODO: 常設イベントは厳密には特殊ランキングとして表示するのが妥当
+                // 第２階層（期間限定）
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.limited[info.parent]}</Link>
@@ -59,7 +62,7 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第３階層（サブカテゴリ）
-                (info.parent > 20 && info.parent < 100) &&
+                (info.parent > 20 && info.parent < 90) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>

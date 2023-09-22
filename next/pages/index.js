@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {Box, Grid, Typography} from "@mui/material";
 import React from "react";
-import {CellBox, InfoBox, TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
+import {CellBox, InfoBox, TopBox, TopBoxContent, TopBoxContentList, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp,
@@ -117,9 +117,9 @@ export default function Home({users}) {
                                 <FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}
                             </TopBoxHeader>
                             <TopBoxContent>
-                                2023/07/29：ピクミン4全28ステージを追加しました。<br/>
-                                <hr/>
-                                2023/07/21：リニューアルオープンしました！<br/>
+                                <TopBoxContentList>【ver.3.02】移転前の期間限定、参加者企画、チャレンジ複合、その他ランキング全306ステージを移植しました。（2023/09/20）</TopBoxContentList>
+                                <TopBoxContentList>【ver.3.01】ピクミン4全28ステージを追加しました。（2023/07/29）</TopBoxContentList>
+                                <TopBoxContentList>【ver.3.00】リニューアルオープンしました！（2023/07/21）</TopBoxContentList>
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>
