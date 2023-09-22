@@ -1,14 +1,9 @@
 import {ScoreTail, ScoreType} from "../../styles/pik5.css";
-import {range} from "../../lib/pik5";
+import {range, sec2time} from "../../lib/pik5";
 import {timeStageList} from "../../lib/const";
 
 export default function Score({rule, score, stage, category}){
-    function sec2time(sec){
-        const hh = ~~(sec / 3600)
-        const mm = ("00"+ ~~(~~(sec / 60) % 60)).slice(-2)
-        const ss = ("00"+ ~~(sec % 60)).slice(-2)
-        return (hh ? hh + ":" : "") + mm + ":" + ss
-    }
+
     const soloBattleList = range(245, 254) // ソロバトル
     const bingoBattleList = range(351, 362) // ソロビンゴ
     const countUpStageList = soloBattleList.concat(bingoBattleList)

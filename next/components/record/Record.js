@@ -3,7 +3,7 @@ import Link from "next/link";
 import {faComment, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
+import {dateFormat, fetcher, sec2time, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -42,8 +42,15 @@ export default function Record({data}) {
 
     // 比較値を整形する
     let compare;
+    console.log(data.rule)
     if(!Number.isNaN(data.compare)){
-        if(data.compare > 0) compare = `(+${data.compare})`
+        if(data.compare > 0){
+            if([30, 31, 32, 36, 41].includes(Number(data.rule))){
+                compare = `(+${sec2time(data.compare)})`
+            } else {
+                compare = `(+${data.compare})`
+            }
+        }
         if(data.compare < 0) compare = `(${data.compare})`
     } else {
         compare = ""

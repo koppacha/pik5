@@ -101,7 +101,7 @@ class RecordController extends Controller
                     return response()->json("画像の保存に失敗しました。");
                 }
             } catch (Exception $e){
-                return response()->json("error99:".$e);
+                return response()->json("error:".$e);
             }
         }
         // 画像以外の処理
@@ -114,7 +114,8 @@ class RecordController extends Controller
                 'rule' => $request['rule'],
                 'console' => $request['console'] ?: 0,
                 'region' => 0,
-                'unique_id' => "301".sprintf('%06d',random_int(0, 999999)),
+                'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（frontside APIも同様）
+                'unique_id' => "302".sprintf('%06d',random_int(0, 999999)),
                 'post_comment' => $request['post_comment'] ?: "コメントなし",
                 'user_ip' => $request->ip(),
                 'user_host' => $request->host(),
@@ -304,6 +305,7 @@ class RecordController extends Controller
      *
      * @param Request $request
      * @return JsonResponse
+     * @throws Exception
      */
     public function destroy(Request $request): JsonResponse
     {
