@@ -16,6 +16,13 @@ export const useLocale = () => {
     const r = (locale !== "en") ? en : ja
     return { locale, t, r }
 }
+// 秒数を時間に変換
+export function sec2time(sec){
+    const hh = ~~(sec / 3600)
+    const mm = ("00"+ ~~(~~(sec / 60) % 60)).slice(-2)
+    const ss = ("00"+ ~~(sec % 60)).slice(-2)
+    return (hh ? hh + ":" : "") + mm + ":" + ss
+}
 // 日付をフォーマットする関数
 export function dateFormat(date){
 
