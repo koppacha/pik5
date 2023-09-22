@@ -360,6 +360,12 @@ export const TopBoxHeader = styled(Box)`
 export const TopBoxContent = styled(Box)`
   padding :8px;
 `
+export const TopBoxContentList = styled(Box)`
+  font-size: 0.9em;
+  padding-top :4px;
+  padding-bottom :12px;
+  border-bottom: 1px solid #777;
+`
 export const StyledGrid = styled(Grid)`
   border-bottom: 1px solid ${colors.light.border};
   border-right: 1px solid ${colors.light.border};
@@ -511,7 +517,8 @@ export const MobileFooterMenu = styled(Grid)`
   height: 70px;
   bottom: 0;
   background-color: #111;
-  opacity: 0.85;
+  opacity: 0.9;
+  padding-top: 6px;
 `
 export const MobileFooterItem = styled(Grid)`
   justify-items: center;

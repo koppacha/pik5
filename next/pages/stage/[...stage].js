@@ -46,13 +46,19 @@ export async function getServerSideProps(context){
         info = await stage_res.json()
     }
 
+    let parent
+    // ステージ情報をリクエスト
+    const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
+    if(parent_res.status < 300) {
+        parent = await parent_res.json()
+    }
+
     // ステージ情報が存在しないステージIDへのアクセスは全部はじく
     if(!Object.keys(info).length){
         return {
             notFound: true,
         }
     }
-
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
     const res = await fetch(`http://laravel:8000/api/stages/${info.parent}`)
@@ -74,7 +80,7 @@ export async function getServerSideProps(context){
 
     return {
         props: {
-            stages, stage, rule, console, year, info, users
+            stages, stage, rule, console, year, info, users, parent
         }
     }
 }
@@ -89,10 +95,10 @@ export default function Stage(param){
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
 
-    // 呼び出すレギュレーション本文
-    let uniqueId = param.rule
+    // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
+    let uniqueId = (param.stage > 900) ? param.stage : param.rule
 
-    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールを表示する
+    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
     if(param.rule === 21 || param.rule === 22){
         uniqueId = 20
     }
@@ -106,6 +112,17 @@ export default function Stage(param){
 
     const stageName = locale === "ja" ? param.info.stage_name : param.info.eng_stage_name
     const stageNameR= locale === "ja" ? param.info.eng_stage_name : param.info.stage_name
+
+    function isEvent(info){
+        const currentTime = new Date()
+        const start = new Date(info?.start)
+        const end = new Date(info?.end)
+
+        // 期間が定義されていない場合はイベントではないと判断する
+        if(info?.start === undefined) return true
+
+        return currentTime >= start && currentTime <= end
+    }
 
     return (
         <>
@@ -131,11 +148,12 @@ export default function Stage(param){
                     marginTop:"30px"
                 }}>
                     {
-                        (param.rule < 100) ?
-                            // 通常ステージの場合はステージに含まれるルールをすべて表示
+                        // 通常ステージの場合はステージに含まれるルールをすべて表示
+                        (param.rule < 90) ?
                             <Rules props={param}/>
-                            :
-                            // 特殊ステージの場合は総合ランキングへのリンクを表示
+
+                        // 特殊ステージの場合は総合ランキングへのリンクを表示
+                        : (param.rule > 150901) ?
                             <RuleWrapper item>
                                 <RuleBox className={"active"}
                                          component={Link}
@@ -143,9 +161,17 @@ export default function Stage(param){
                                     {t.limited[param.rule]}
                                 </RuleBox>
                             </RuleWrapper>
+
+                        // 上記どちらも当てはまらない場合はルールボックスを表示しない
+                        :
+                            <></>
                     }
-                    <RecordPost
-                        info={param.info} rule={param.rule} console={param.console}/>
+                    {
+                        // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
+                        (isEvent(param.parent)) &&
+                        <RecordPost
+                            info={param.info} rule={param.rule} console={param.console}/>
+                    }
                     <Grid item style={{
                         marginBottom:"20px",
                     }}>

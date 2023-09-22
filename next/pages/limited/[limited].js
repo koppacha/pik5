@@ -5,19 +5,20 @@ import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
 import Totals from "../../components/rule/Totals";
-import {createContext} from "react";
+import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
 import {useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
-import {PageHeader, StageListBox, StairIcon} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, RuleWrapper, StageListBox, StairIcon} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
+import ModalKeyword from "../../components/modal/ModalKeyword";
 
 export async function getServerSideProps(context){
 
@@ -72,26 +73,42 @@ export default function Limited(param){
 
     const stages = param.stages
 
+    // ルール確認用モーダルの管理用変数
+    const [open, setOpen] = useState(false)
+
+    // 呼び出すレギュレーション本文
+    let uniqueId = param.limited
+
+    const handleClose = () => setOpen(false)
+    const handleOpen = () => setOpen(true)
+
     return (
         <>
             <Head>
-                <title>{t.stage[param.series]+" - "+t.title[0]}</title>
+                <title>{t.limited[param.limited]+" - "+t.title[0]}</title>
             </Head>
             <PageHeader>
                 #{param.limited}<br/>
                 <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                 <StairIcon icon={faStairs}/>
-                <Link href={"/limited/"}>ピクチャレ大会イベント</Link>
-                <StairIcon icon={faStairs}/>
-                <Link href={"/total/4"}>期間限定ランキング</Link><br/>
+                {t.limited.type[param.info.type]}<br/>
                 <Typography variant="" className="title">{param.info.name}</Typography><br/>
                 <Typography variant="" className="subtitle">{param.info.eng}</Typography>
             </PageHeader>
             <StageList stages={stages} />
             <Grid container style={{
-                marginTop:"30px"
+                marginTop:"30px",
             }}>
+                <RuleWrapper item>
+                    <RuleBox className={"active"}
+                             onClick={handleOpen}
+                             component={Link}
+                             href="#">
+                        {t.g.rule}
+                    </RuleBox>
+                </RuleWrapper>
             </Grid>
+            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
             <RankingTotal users={param.users} series={param.limited} console={0} rule={0} year={0}/>
         </>
     )
