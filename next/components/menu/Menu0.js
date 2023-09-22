@@ -43,16 +43,28 @@ export default function Menu0(props){
                             }} component={Link} href="/auth/register" onClick={props.handleClose}>{t.g.register}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/10" onClick={props.handleClose}>{t.stage[10]}</StyledMenuItem>
+                            }} component={Link} href="/total/1" onClick={props.handleClose}>{t.stage[1]}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/20" onClick={props.handleClose}>{t.stage[20]}</StyledMenuItem>
+                            }} component={Link} href="/total/2" onClick={props.handleClose}>{t.stage[2]}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/30" onClick={props.handleClose}>{t.stage[30]}</StyledMenuItem>
+                            }} component={Link} href="/total/3" onClick={props.handleClose}>{t.stage[3]}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/40" onClick={props.handleClose}>{t.stage[40]}</StyledMenuItem>
+                            }} component={Link} href="/total/10" onClick={props.handleClose}>{t.stage[10]}</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+color,
+                            }} component={Link} href="/total/20" onClick={props.handleClose}>{t.stage[20]}</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+color,
+                            }} component={Link} href="/total/30" onClick={props.handleClose}>{t.stage[30]}</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+color,
+                            }} component={Link} href="/total/40" onClick={props.handleClose}>{t.stage[40]}</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+color,
+                            }} component={Link} href="/keyword/rules" onClick={props.handleClose}>{t.g.ru}</StyledMenuItem>
                         </Grid>
                     </Grid>
                 </MenuList>

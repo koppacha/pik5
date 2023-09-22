@@ -5,17 +5,18 @@ import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
 import Totals from "../../components/rule/Totals";
-import {createContext} from "react";
+import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
 import {useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
-import {PageHeader, StageListBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, RuleWrapper, StageListBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
+import ModalKeyword from "../../components/modal/ModalKeyword";
 
 export async function getServerSideProps(context){
 
@@ -81,7 +82,16 @@ export default function Series(param){
 
     const {t, r} = useLocale()
 
+    // ルール確認用モーダルの管理用変数
+    const [open, setOpen] = useState(false)
+
     const stages = param.stages
+
+    // 呼び出すレギュレーション本文
+    const uniqueId = param.rule
+
+    const handleClose = () => setOpen(false)
+    const handleOpen = () => setOpen(true)
 
     return (
         <>
@@ -108,7 +118,16 @@ export default function Series(param){
                 marginTop:"30px"
             }}>
             <Totals props={param}/>
+            <RuleWrapper item>
+                <RuleBox className={"active"}
+                         onClick={handleOpen}
+                         component={Link}
+                         href="#">
+                    {t.g.rule}
+                </RuleBox>
+            </RuleWrapper>
             </Grid>
+            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
             <RankingTotal users={param.users} series={param.series} console={param.console} rule={param.rule} year={param.year}/>
         </>
     )
