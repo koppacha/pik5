@@ -39,7 +39,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
             .required(t.yup.required),
         content: yup
             .string()
-            .max(2048, t.yup.over + "2048" + t.yup.moji)
+            .max(20480, t.yup.over + "20480" + t.yup.moji)
             .required(t.yup.required)
     })
 
