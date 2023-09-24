@@ -200,6 +200,14 @@ export const GlobalStyle = createGlobalStyle`
       font-size: 1.1em;
       color: #f7fafc;
     }
+    table {
+      table-layout: fixed;
+      border-collapse: collapse;
+    }
+    td, th {
+      padding: 8px;
+      border: 1px solid #4a5568;
+    }
   }
 `
 export const OffsetContainer = styled(Container)`
