@@ -11,6 +11,24 @@ import PullDownKeywordCategory from "../../components/form/PullDownKeywordCatego
 import {useSearchParams} from "next/navigation";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import Head from "next/head";
+import prisma from "../../lib/prisma";
+
+export async function getServerSideProps(context){
+
+    // スクリーンネームをリクエスト（検索用）
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    return {
+        props: {
+            users
+        }
+    }
+}
 
 export default function KeywordIndex(){
 

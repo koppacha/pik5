@@ -573,3 +573,11 @@ export const StyledDialogContent = styled(DialogContent)`
     }
   }
 `
+export const SearchResultTag = styled(Typography).attrs(props => ({$color: props.color}))`
+  font-size: 0.7em;
+  border-radius: 4px;
+  padding: 2px;
+  margin: 2px;
+  background-color: ${props => props.$color};
+  color: #000;
+`
