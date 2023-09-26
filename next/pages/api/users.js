@@ -1,6 +1,4 @@
-import {PrismaClient} from "@prisma/client";
-
-const prisma = new PrismaClient()
+import prisma from "../../lib/prisma";
 
 // ユーザー名を取得
 export default async function getUserName(req, res) {

@@ -11,6 +11,24 @@ import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
 import {logger} from "../../lib/logger";
+import prisma from "../../lib/prisma";
+
+export async function getServerSideProps(context){
+
+    // スクリーンネームをリクエスト（検索用）
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    return {
+        props: {
+            users
+        }
+    }
+}
 
 export default function Register() {
 

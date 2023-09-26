@@ -15,7 +15,7 @@ export default function Layout({children}) {
 
     return (
         <>
-            <HeaderMenu/>
+            <HeaderMenu users={children?.props?.users}/>
                     <OffsetContainer>
                         <main>{children}</main>
                     </OffsetContainer>
