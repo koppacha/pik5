@@ -9,6 +9,7 @@ import {StairIcon} from "../../styles/pik5.css";
 import React from "react";
 import {useLocale} from "../../lib/pik5";
 import Head from "next/head";
+import prisma from "../../lib/prisma";
 
 export async function getServerSideProps(context){
 
@@ -23,9 +24,18 @@ export async function getServerSideProps(context){
             notFound: true,
         }
     }
+
+    // スクリーンネームをリクエスト（検索用）
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
     return {
         props: {
-            data: data
+            data: data, users
         }
     }
 }

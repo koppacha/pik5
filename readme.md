@@ -1,4 +1,4 @@
-# 新ピクチャレ大会 Pikmin Series Leaderboards
+# 新ピクチャレ大会 the Pikmin Series Leaderboards
 **Since: 2006/09/01**  
 **author:@koppachappy**
 
@@ -6,10 +6,9 @@
 * 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキング投稿サイトです。
 
 ## このソースコードについて
-ソースコードは公開していますが、管理人単独での開発が続くかぎり著作権は管理人が保有します。
-転載、二次利用はご遠慮ください。
+ソースコードは公開していますが、管理人が作成したすべてのファイルの著作権は管理人が保有します。 無断転載、二次利用はご遠慮ください。
 ただし、当システムを利用してピクミン以外のランキングサイトを作りたい場合は特例として二次利用を許可する場合があります。
-そのようなケースでの利用をご希望の場合は個別にご連絡ください。
+そのようなケースでの利用をご希望の場合は個別に管理人へご連絡ください。
 
 ## 開発環境
 * OS：macOS https://www.apple.com/jp/macos/ventura/
@@ -18,20 +17,14 @@
 * API：Postman https://www.postman.com/
 * Browser：Google Chrome https://www.google.com/intl/ja_jp/chrome/
 
-＊原則として最新版を利用  
-＊Windows環境はDockerの動作が重いので推奨しませんが、もし開発する場合はWSL2(Ubuntu)をインストールし、
-その中にデータを入れるとある程度軽快に動きます。  
-＊現在、lima VMでクロスプラットフォームでも軽快に動く環境を模索中……
-
 ## 動作確認環境
 * PC/OS：Windows 11 (Parallel Desktop for M1 Mac)
 * PC/Browser：Google Chrome
-* SP/OS：iPhone
+* SP/OS：iPhone 12 Pro Max
 * SP/Browser：Safari
 
 ＊原則としてOS、ブラウザともに最新版を利用  
 ＊上記以外（タブレット全般、Android端末、その他のブラウザ）は原則サポート外となります。  
-＊上記に加えて開発環境でも動作確認しています。
 
 ## 主な使用技術
 * PHP：https://www.php.net/manual/ja/index.php (backend)
@@ -42,7 +35,7 @@
     * Material UI：https://mui.com/material-ui/getting-started/overview/ (UI framework)
 * Docker：https://docs.docker.jp/index.html (Infra)
 
-＊インフラ基盤は基本的にUbuntuかAlpine Linuxを使用。
+＊インフラ基盤OSは基本的にUbuntuかAlpine Linuxを使用。
 
 ## その他プラグイン
 * Font Awesome：https://fontawesome.com/ (Icons)
@@ -136,28 +129,6 @@ fetch('http://localhost/api/request') // ←これはダメ
 fetch('/api/request') // ←これはOK。ただし経由APIで加工が必要な場合がある
 ```
 
-## AWS Cloud9で動かす際のメモ
-```shell
-# docker composeが入っていないので下記コマンドで入れる
-$ DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
-$ mkdir -p $DOCKER_CONFIG/cli-plugins
-$ curl -SL https://github.com/docker/compose/releases/download/v2.16.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
-$ chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
-
-# デフォルト設定だとyarn installで落ちるのでボリュームを拡張する
-# 　・インスタンス一覧→インスタンスIDをクリック→ボリュームタブ
-# 　・ボリュームIDをクリック→ボリュームを選択して「アクション」タブ
-# 　・ボリュームの変更をクリック→最低でも15GiB以上に設定する
-# 下記コマンドでボリューム名を確認
-$ df -h
-
-# ボリュームへの割り当てを実行
-$ sudo growpart /dev/nvme0n1 1 #nvme0n1はボリューム名の例
-$ sudo xfs_growfs -d /
-
-# プレビューにはサードパーティーCookie（サイト越えトラッキング）を許可する必要があります
-```
-
 ## 基盤・ネットワーク関連のメモ
 ```shell
 # 初期セットアップ (Ubuntu)
@@ -247,12 +218,26 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 
 ### ver.3.00 (2023/07/21)
 * ゼロベースから作り直しリニューアルオープン
-* ピクミン4に対応
 * 特殊ランキング「ピクミン1全回収タイムアタック」を追加
 * ピクミンキーワードを復活し（旧「新・ピクミンキーワード」も統合）、Markdownに対応
 * 各年末時点のランキングを遡って閲覧できる集計年フィルターを追加
 * 操作方法別集計に完全対応し、同じステージも操作方法ごとに自己ベストを記録できるようにした
 * Speedrun.com APIに対応
+
+### ver.3.01 (2023/07/30)
+* ピクミン4全28ステージに対応し、ピクミン4総合ランキングを新設
+* タイムアタック系のスコア投稿に対応
+* Redisキャッシュサーバーを導入
+* 画像アップロード時にCompresser.jsを噛ますようにした
+* 投稿後24時間以内の記録は投稿者にかぎり削除できるようにした
+* モバイルメニューのデザイン改善
+
+### ver.3.02 (2023/09/21)
+* 移転前の期間限定、参加者企画、チャレンジ複合、その他全306ステージを追加
+* レギュレーション確認ボタンを総合ランキングにも設置
+* ヘッダーとステージリストは横スクロールできるようにした
+* ピクミン４のタイムボーナス表記に対応
+* 時間入力はtimeフォーマットを廃止して正規表現チェックの単純文字列入力に変更
 
 ### LICENCE
 Copyright (c) 2006 - 2023 koppacha

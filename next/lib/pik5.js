@@ -23,6 +23,15 @@ export function sec2time(sec){
     const ss = ("00"+ ~~(sec % 60)).slice(-2)
     return (hh ? hh + ":" : "") + mm + ":" + ss
 }
+// "h:mm:ss"形式の文字列を秒数に変換する関数
+export const convertToSeconds = (timeString) => {
+
+    // Stepsが効かない端末ではhoursを強制的に補完する
+    const hour = (timeString.match(/:/g) || []).length < 2 ? "00:" : ""
+
+    const [hours, minutes, seconds] = (hour + timeString).split(':');
+    return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
+}
 // 日付をフォーマットする関数
 export function dateFormat(date){
 
@@ -55,4 +64,26 @@ export const ag2getParameterByName = function(name, url){
         }
     }
     return null;
+}
+
+// 深いマージを行う 参照： https://qiita.com/riversun/items/60307d58f9b2f461082a
+export function mergeDeeply(target, source, opts) {
+    const isObject = obj => obj && typeof obj === 'object' && !Array.isArray(obj);
+    const isConcatArray = opts && opts.concatArray;
+    let result = Object.assign({}, target);
+    if (isObject(target) && isObject(source)) {
+        for (const [sourceKey, sourceValue] of Object.entries(source)) {
+            const targetValue = target[sourceKey];
+            if (isConcatArray && Array.isArray(sourceValue) && Array.isArray(targetValue)) {
+                result[sourceKey] = targetValue.concat(...sourceValue);
+            }
+            else if (isObject(sourceValue) && target.hasOwnProperty(sourceKey)) {
+                result[sourceKey] = mergeDeeply(targetValue, sourceValue, opts);
+            }
+            else {
+                Object.assign(result, {[sourceKey]: sourceValue});
+            }
+        }
+    }
+    return result;
 }

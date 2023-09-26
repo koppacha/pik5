@@ -13,6 +13,7 @@ import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
+import prisma from "../../lib/prisma";
 
 export async function getServerSideProps(context){
 
@@ -174,9 +175,17 @@ export async function getServerSideProps(context){
         }
     }
 
+    // スクリーンネームをリクエスト（検索用）
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
     return {
         props: {
-            data, stage, console, consoles
+            users, data, stage, console, consoles
         }
     }
 }

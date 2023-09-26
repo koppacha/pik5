@@ -1,4 +1,22 @@
 import {KeywordContent} from "../../components/modal/KeywordContent";
+import prisma from "../../lib/prisma";
+
+export async function getServerSideProps(context){
+
+    // スクリーンネームをリクエスト（検索用）
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    return {
+        props: {
+            users
+        }
+    }
+}
 
 const content = `
 ### 第１条（目的）

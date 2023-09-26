@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {fetcher, useLocale} from "../../lib/pik5";
+import {convertToSeconds, fetcher, useLocale} from "../../lib/pik5";
 import {Box, MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -189,16 +189,6 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             // 残った時間が表示されるタイプ（ピクミン４）→そのまま登録
             setScore(sec)
         }
-    }
-
-    // "h:mm:ss"形式の文字列を秒数に変換する関数
-    const convertToSeconds = (timeString) => {
-
-        // Stepsが効かない端末ではhoursを強制的に補完する
-        const hour = (timeString.match(/:/g) || []).length < 2 ? "00:" : ""
-
-        const [hours, minutes, seconds] = (hour + timeString).split(':');
-        return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
     }
 
     if (!session) {

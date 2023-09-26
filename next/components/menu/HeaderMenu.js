@@ -10,19 +10,30 @@ import * as React from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faDiscord, faTwitter} from '@fortawesome/free-brands-svg-icons'
 import CustomMenu from "./CustomMenu";
-import {faBook, faCloudMoon, faCloudSun, faGlobe} from "@fortawesome/free-solid-svg-icons";
+import {faBook, faCloudMoon, faCloudSun, faGlobe, faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
 import {CustomMenuButton, LeftAppBar, ThinAppBar} from "../../styles/pik5.css";
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
+import ModalSearch from "../modal/ModalSearch";
 
-export default function HeaderMenu(){
+export default function HeaderMenu({users}){
     const [mounted, setMounted] = useState(false)
+    const [searchOpen, setSearchOpen] = useState(false)
+    const searchRef = useRef(null)
     const {theme, setTheme} = useTheme()
     const {t, locale} = useLocale()
     const r = (locale === "en") ? "ja" : "en"
     const router = useRouter()
+
+    const handleSearchClick = () => {
+        setSearchOpen(true)
+    }
+
+    const handleSearchClose = () => {
+        setSearchOpen(false)
+    }
 
     useEffect(() => {
         setMounted(true)
@@ -62,6 +73,14 @@ export default function HeaderMenu(){
 
                     {/*ここから右よせ*/}
                     <Box style={{ flexGrow: 1 }} />
+                    <Tooltip title="検索" arrow>
+                        <IconButton
+                            id="search-button"
+                            style={{color:"#fff"}}
+                            onClick={handleSearchClick}>
+                            <FontAwesomeIcon icon={faMagnifyingGlass}/>
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title="Twitter" arrow>
                         <IconButton
                             id="twitter-button"
@@ -91,6 +110,7 @@ export default function HeaderMenu(){
                     </Tooltip>
                 </Toolbar>
             </ThinAppBar>
+            <ModalSearch users={users} open={searchOpen} handleClose={handleSearchClose} searchRef={searchRef}/>
         </>
     )
 }
