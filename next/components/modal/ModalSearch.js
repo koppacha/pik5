@@ -12,11 +12,15 @@ import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import {Box, List, ListItem, Typography} from "@mui/material";
 import Link from "next/link";
-import {SearchResultTag} from "../../styles/pik5.css";
+import {SearchResultItem, SearchResultTag} from "../../styles/pik5.css";
+import {faBook, faRankingStar, faUser} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {useRouter} from "next/router";
 
 export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     const [search, setSearch] = useState("")
+    const router = useRouter()
 
     // モーダルが開いたら100ms後にフォーカスする
     useEffect(() => {
@@ -35,20 +39,34 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
         shouldSort: true,
         includeMatches: false,
         findAllMatches: false,
-        minMatchCharLength: 2,
+        minMatchCharLength: 1,
         location: 0,
         threshold: 0.4,
-        distance: 500,
-        useExtendedSearch: false,
+        distance: 1000,
+        useExtendedSearch: true,
         ignoreLocation: false,
         ignoreFieldNorm: false,
         fieldNormWeight: 1,
         keys: ['stage_id', 'stage_name', 'eng_stage_name', 'parent',
-            'id', 'unique_id', 'category', 'keyword', 'tag', 'yomi', 'content',
+            'id', 'category', 'keyword', 'tag', 'yomi', 'content',
             'userId', 'name']
     };
 
     const {t} = useLocale()
+
+    const handleKeyDown = (e) => {
+        if(e.key === 'Enter'){
+            const {userId, unique_id, stage_id, type} = fuse.search(search)[0].item
+
+            if(userId){
+                router.push(`/user/${userId}`).then(r => handleClose())
+            } else if(unique_id){
+                router.push(`/keyword/${unique_id}`).then(r => handleClose())
+            } else if(stage_id){
+                router.push(`/${type}/${stage_id}`).then(r => handleClose())
+            }
+        }
+    }
 
     // ステージ情報全取得
     const {data: stages} = useSWR(`/api/server/stage/all`, fetcher)
@@ -76,7 +94,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={open} onClose={handleClose} fullWidth>
                 <TextField
                     id="search"
                     label="検索キーワード"
@@ -87,62 +105,64 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                     value={search}
                     margin="normal"
                     inputRef={searchRef}
+                    onKeyDown={handleKeyDown}
                 />
                 <List style={{width:"100%"}}>
                 {
-                    fuse.search(search).map(function (post) {
+                    fuse.search(search).map(function (post, idx) {
 
                         let color
 
                         // ステージ
                         if(post.item?.stage_name){
 
-                            color = "#d98778"
+                            color = "#e55fb6"
 
                             return (
-                                <ListItem>
-                                    <Link href={"/stage/"+post.item.stage_id} onClick={handleClose}>
-                                        {post.item.stage_name}
-                                    </Link>
-                                    <SearchResultTag color={color}>ステージ</SearchResultTag>
-                                    {
-                                        (post.item?.parent < 100) ?
-                                            <SearchResultTag color={color}>{t.subtitle[post.item.parent]}</SearchResultTag>
-                                            :
-                                            <SearchResultTag color={color}>{t.limited[post.item.parent]}</SearchResultTag>
-                                    }
-                                </ListItem>
+                                <Link key={idx} href={"/"+post.item.type+"/"+post.item.stage_id} onClick={handleClose}>
+                                    <SearchResultItem index={idx}>
+                                        <FontAwesomeIcon icon={faRankingStar} />
+
+                                            {post.item.stage_name}
+                                        {
+                                            (post.item?.parent < 100) ?
+                                                <SearchResultTag color={color}>{t.subtitle[post.item.parent]}</SearchResultTag>
+                                                :
+                                                <SearchResultTag color={color}>{t.limited[post.item.parent]}</SearchResultTag>
+                                        }
+                                    </SearchResultItem>
+                                </Link>
                             )
                         }
 
                         // キーワード
                         if(post.item?.keyword){
 
-                            color = "#78d9c8"
+                            color = "#4decce"
 
                             return (
-                                <ListItem>
-                                    <Link variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
-                                        {post.item.keyword}
-                                    </Link>
-                                    <SearchResultTag color={color}>キーワード</SearchResultTag>
-                                    <SearchResultTag color={color}>{t.keyword.category[post.item?.category]}</SearchResultTag>
-                                </ListItem>
+                                <Link key={idx} variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
+                                    <SearchResultItem index={idx}>
+                                        <FontAwesomeIcon icon={faBook} />
+                                            {post.item.keyword}
+                                        <SearchResultTag color={color}>{t.keyword.category[post.item?.category]}</SearchResultTag>
+                                    </SearchResultItem>
+                                </Link>
                             )
                         }
 
                         // ユーザー
                         if(post.item?.name) {
 
-                            color = "#7880d9"
+                            color = "#5b68f3"
 
                             return (
-                                <ListItem>
-                                    <Link href={"/user/"+post.item.userId} onClick={handleClose}>
-                                        {post.item.name}
-                                    </Link>
-                                    <SearchResultTag color={color}>ユーザー</SearchResultTag>
-                                </ListItem>
+                                <Link key={idx} href={"/user/"+post.item.userId} onClick={handleClose}>
+                                    <SearchResultItem index={idx}>
+                                        <FontAwesomeIcon icon={faUser} />
+                                            {post.item.name}
+                                    </SearchResultItem>
+                                </Link>
                             )
                         }
                     })

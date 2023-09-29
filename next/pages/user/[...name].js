@@ -16,7 +16,15 @@ export async function getServerSideProps(context){
     const user = query[0]
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findFirst({
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    // スクリーンネームをリクエスト
+    const findUsers = await prisma.user.findFirst({
         where: {
             userId: user
         },
@@ -25,7 +33,7 @@ export async function getServerSideProps(context){
             name: true
         }
     });
-    const userName = users?.name
+    const userName = findUsers?.name
 
     const console = query[1] || 0
     const rule    = query[2] || 0
@@ -43,7 +51,7 @@ export async function getServerSideProps(context){
     }
     return {
         props: {
-            user, userName, console, rule, year
+            users, user, userName, console, rule, year
         }
     }
 }
