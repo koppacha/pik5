@@ -33,6 +33,21 @@ class PostCountController extends Controller
             $dataset
         );
     }
+    // ユーザーごとの全期間の投稿数を集計して参加日を算出する
+    public function getUserAllPostCount(): JsonResponse
+    {
+        $dataset = Record::select('user_id')
+            ->selectRaw('COUNT(user_id) as cnt')
+            ->where('flg','<', 2)
+            ->groupBy('user_id')
+            ->orderBy('cnt', "DESC")
+            ->get()
+            ->toArray();
+
+        return response()->json(
+            $dataset
+        );
+    }
     public function getTrendPostCount(): JsonResponse
     {
         $datetime = new DateTime();

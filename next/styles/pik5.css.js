@@ -1,4 +1,4 @@
-import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container, Paper} from "@mui/material";
+import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container, Paper, ListItem} from "@mui/material";
 import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
@@ -580,4 +580,26 @@ export const SearchResultTag = styled(Typography).attrs(props => ({$color: props
   margin: 2px;
   background-color: ${props => props.$color};
   color: #000;
+`
+export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.index}))`
+  width: 100%;
+  border-bottom: 1px solid #000;
+  
+  ${function (props) {
+    if (props.$index === 0) {
+        return css`
+          background-color: #1a293b;
+          color: #cfd2de;
+        `
+    }
+}}
+  
+  &:hover {
+    background-color: #1a293b;
+    color: #cfd2de;
+  }
+  
+  svg {
+    margin-right: 0.5em;
+  }
 `

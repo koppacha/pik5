@@ -18,7 +18,7 @@ class StageController extends Controller
     public function index(): JsonResponse
     {
         // 検索用にすべてのステージ情報を返す
-        return response()->json(Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'parent')->get());
+        return response()->json(Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'parent', 'type')->get());
     }
 
     /**

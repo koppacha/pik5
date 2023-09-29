@@ -17,6 +17,8 @@
 * API：Postman https://www.postman.com/
 * Browser：Google Chrome https://www.google.com/intl/ja_jp/chrome/
 
+＊Windowsで動かす場合、WSLのメモリが最低2GB必要です。
+
 ## 動作確認環境
 * PC/OS：Windows 11 (Parallel Desktop for M1 Mac)
 * PC/Browser：Google Chrome
