@@ -49,6 +49,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'count' , [ PostCountController::class, 'getUserPostCount']);
     Route::get ( 'trend' , [ PostCountController::class, 'getTrendPostCount']);
+    Route::get ( 'count/all' , [ PostCountController::class, 'getUserAllPostCount']);
 });
 
 // 通常総合ランキング取得API
