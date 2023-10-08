@@ -20,7 +20,7 @@ export default function Layout({children}) {
                         <main>{children}</main>
                     </OffsetContainer>
             <Footer/>
-            <MobileFooter/>
+            <MobileFooter users={children?.props?.users}/>
         </>
     )
 }

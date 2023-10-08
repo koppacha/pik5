@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
-import {getSession} from "next-auth/react";
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "../../auth/[...nextauth]";
+import {prismaLogging} from "../[...query]";
 
 export default async function handler(req, res){
 
@@ -14,12 +14,11 @@ export default async function handler(req, res){
     if(req.method === "GET"){
 
         const [uniqueId, userId] = req.query.delete
+        await prismaLogging(session.user.id, "delete", uniqueId)
 
-        if(session.user.id !== userId){
-            res.status(405).json({error: "ユーザー認証に失敗しました。"})
-        }
         const del = await fetch(`http://laravel:8000/api/record/${uniqueId}`,
             {method: "DELETE"})
+
         const data = await del.json()
         res.status(200).json({data})
 

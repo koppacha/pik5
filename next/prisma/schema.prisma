@@ -49,6 +49,15 @@ model User {
   sessions         Session[]
 }
 
+model Log {
+  id               Int       @id @default(autoincrement())
+  userId           String?
+  page             String?
+  query            String?
+  ip               String?
+  date             DateTime  @default(now())
+}
+
 model VerificationToken {
   identifier String
   token      String   @unique

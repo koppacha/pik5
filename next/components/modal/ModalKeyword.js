@@ -26,7 +26,7 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={open} onClose={handleClose} disableScrollLock>
                 <StyledDialogContent>
                     <KeywordContent data={data.data}/>
                 <DialogActions>

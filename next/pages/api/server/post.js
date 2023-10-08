@@ -1,11 +1,14 @@
 /*
  *  バイナリデータを含むPOST専用のAPI
  */
-import {logger} from "../../../lib/logger";
+import {getServerSession} from "next-auth/next";
 const formidable = require("formidable");
+const parser = require('ua-parser-js');
 import fetch from "node-fetch";
 import FormData from "form-data";
 import * as fs from "fs";
+import {authOptions} from "../auth/[...nextauth]";
+import {getIpAddress, prismaLogging} from "./[...query]";
 
 export const config = {
     api: {
@@ -13,11 +16,16 @@ export const config = {
     },
 }
 export default async function handler(req, res){
+
+    const session = await getServerSession(req, res, authOptions)
+    if(!session) return res.status(500).json({err: "Session Error"})
+
     if(req.method === "POST"){
         const form = new formidable.IncomingForm()
-        await form.parse(req, async (err, fields, files) => {
-            if (err) {
-                res.status(500).json({err: err})
+        await form.parse(req, async (error, fields, files) => {
+            if (error) {
+                await prismaLogging(session.user.id, "PostsReqError", error)
+                res.status(500).json({err: error})
             } else {
                 try {
                     const formData = new FormData()
@@ -31,6 +39,8 @@ export default async function handler(req, res){
                     formData.append('team', 0);
                     formData.append('post_comment', fields.post_comment[0]);
                     formData.append('created_at', fields.created_at[0]);
+                    formData.append('user_ip', getIpAddress());
+                    formData.append('user_agent', fields.user_agent[0]);
 
                     // 画像の処理
                     if (files?.file) {
@@ -49,8 +59,8 @@ export default async function handler(req, res){
 
                 } catch (error) {
                     // エラー処理
-                    logger.debug(error)
-                    return res.status(500).json({error: error});
+                    await prismaLogging(session.user.id, "PostsResError", error)
+                    return res.status(500).json({errors: error});
                 }
             }
         })
