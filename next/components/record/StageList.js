@@ -10,8 +10,8 @@ export default function StageList({stages}){
 
 
     return (
-        <StageListWrapper>
-            <Grid style={{minWidth:"1200px"}} container columns={{xs: 10}}>
+        <StageListWrapper count={stages.length}>
+            <Grid style={{minWidth:(stages.length > 16)?"1200px":"100%"}} container columns={{xs:(stages.length > 16)?10:4, lg:10}}>
                 {
                     stages?.map(stage =>
                         <Grid style={{whiteSpace:"nowrap"}} key={stage} item xs={1}>

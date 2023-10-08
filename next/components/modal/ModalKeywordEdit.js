@@ -118,7 +118,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
     if(!session){
         return (
             <>
-                <Dialog open={editOpen} onClose={handleEditClose}>
+                <Dialog open={editOpen} onClose={handleEditClose} disableScrollLock>
                     <Box style={{width:'600px'}}>
                         <DialogContent>
                             編集にはログインが必要です。

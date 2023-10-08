@@ -3,12 +3,11 @@ import * as React from "react";
 import Link from "next/link";
 import {useLocale} from "../../lib/pik5";
 import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
-import {p4} from "../../lib/const";
+import {sp} from "../../lib/const";
 
 export default function MenuSpeedrun(props){
 
     const {t} = useLocale()
-    const speedruns = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403, 404, 405]
 
     return (
         <HeaderPopMenu>
@@ -23,7 +22,7 @@ export default function MenuSpeedrun(props){
                     <Grid container onClick={props.handleClose}>
                         <Grid item xs={3} style={{position:"relative",left:"700px"}}>
                             {
-                                speedruns.map(n=>
+                                sp.map(n=>
                                     <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+SeriesTheme(6),
                                     }} component={Link} href={"/speedrun/"+n} onClick={props.handleClose}><Typography style={{color:"#e7259e"}}>#</Typography>{n} {t.speedrun[n]}</StyledMenuItem>

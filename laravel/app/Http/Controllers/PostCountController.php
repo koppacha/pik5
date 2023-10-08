@@ -34,12 +34,12 @@ class PostCountController extends Controller
         );
     }
     // ユーザーごとの全期間の投稿数を集計して参加日を算出する
-    public function getUserAllPostCount(): JsonResponse
+    public function getUserAllPostCount(Request $request): JsonResponse
     {
-        $dataset = Record::select('user_id')
+        $dataset = Record::select('user_id', Record::raw('MIN(created_at) as oldest_created_at'))
             ->selectRaw('COUNT(user_id) as cnt')
             ->where('flg','<', 2)
-            ->groupBy('user_id')
+            ->where('user_id', $request["id"])
             ->orderBy('cnt', "DESC")
             ->get()
             ->toArray();

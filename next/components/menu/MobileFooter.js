@@ -8,7 +8,7 @@ import * as React from "react";
 import MobileMenu from "./MobileMenu";
 import {useState} from "react";
 
-export default function MobileFooter(){
+export default function MobileFooter({users}){
 
     // ドロワー管理用変数
     const [drawerOpen, setDrawerOpen] = useState(false)
@@ -52,7 +52,7 @@ export default function MobileFooter(){
                     <Typography style={{fontSize:"0.85em"}}>Menu</Typography>
                 </MobileFooterItem>
             </MobileFooterMenu>
-            <MobileMenu open={drawerOpen} toggleHandle={toggleDrawer}/>
+            <MobileMenu users={users} open={drawerOpen} toggleHandle={toggleDrawer}/>
         </>
     )
 }
