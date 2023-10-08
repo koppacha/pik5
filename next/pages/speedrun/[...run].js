@@ -76,16 +76,16 @@ export async function getServerSideProps(context){
             consoles.push(1, 2, 4)
             switch (Number(console)){
                 case 1:
-                    q += "6njy5y5n/category/qj7266eq"
+                    q += "?var-6njy5y5n=qj7266eq"
                     break
                 case 2:
-                    q += "6njy5y5n/category/lmo2rrj1"
+                    q += "?var-6njy5y5n=lmo2rrj1"
                     break
                 case 4:
-                    q += "6njy5y5n/category/1w47vvoq"
+                    q += "?var-6njy5y5n=1w47vvoq"
                     break
                 default:
-                    q += "6njy5y5n/category/qj7266eq"
+                    q += "?var-6njy5y5n=qyz7vv41"
                     break
             }
             break
