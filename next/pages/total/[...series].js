@@ -88,7 +88,7 @@ export default function Series(param){
     const stages = param.stages
 
     // 呼び出すレギュレーション本文
-    const uniqueId = param.rule
+    const uniqueId = param.series
 
     const handleClose = () => setOpen(false)
     const handleOpen = () => setOpen(true)
