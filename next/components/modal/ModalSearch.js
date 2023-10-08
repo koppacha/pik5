@@ -47,9 +47,10 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
         ignoreLocation: false,
         ignoreFieldNorm: false,
         fieldNormWeight: 1,
-        keys: ['stage_id', 'stage_name', 'eng_stage_name', 'parent',
-            'id', 'category', 'keyword', 'tag', 'yomi', 'content',
-            'userId', 'name']
+        keys: [
+            {name: 'stage_id', weight: 2}, {name: 'stage_name', weight: 2}, {name: 'eng_stage_name', weight: 2}, 'parent',
+            'category', 'keyword', 'tag', 'yomi', 'content',
+            {name: 'userId', weight: 2}, {name: 'name', weight: 2}]
     };
 
     const {t} = useLocale()
@@ -94,7 +95,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth>
+            <Dialog open={open} onClose={handleClose} fullWidth disableScrollLock>
                 <TextField
                     id="search"
                     label="検索キーワード"
@@ -126,6 +127,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                                             {post.item.stage_name}
                                         {
                                             (post.item?.parent < 100) ?
+                                                (!post.item?.parent) || // ←parentが0以下ならカテゴリ名は表示しない
                                                 <SearchResultTag color={color}>{t.subtitle[post.item.parent]}</SearchResultTag>
                                                 :
                                                 <SearchResultTag color={color}>{t.limited[post.item.parent]}</SearchResultTag>
@@ -139,6 +141,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                         if(post.item?.keyword){
 
                             color = "#4decce"
+                            if(post.item?.category === "rule") return null
 
                             return (
                                 <Link key={idx} variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
@@ -161,6 +164,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                                     <SearchResultItem index={idx}>
                                         <FontAwesomeIcon icon={faUser} />
                                             {post.item.name}
+                                        <SearchResultTag color={color} style={{color:"#fff"}}>{t.g.userName}</SearchResultTag>
                                     </SearchResultItem>
                                 </Link>
                             )

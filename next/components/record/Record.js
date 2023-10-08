@@ -11,7 +11,7 @@ import {
     RankEdge,
     RankPointType,
     RankType,
-    RecordContainer, ScoreType,
+    RecordContainer, RecordGridWrapper, ScoreType,
     UserType
 } from "../../styles/pik5.css";
 import Lightbox from "yet-another-react-lightbox";
@@ -42,7 +42,6 @@ export default function Record({data}) {
 
     // 比較値を整形する
     let compare;
-    console.log(data.rule)
     if(!Number.isNaN(data.compare)){
         if(data.compare > 0){
             if([30, 31, 32, 36, 41].includes(Number(data.rule))){
@@ -55,35 +54,34 @@ export default function Record({data}) {
     } else {
         compare = ""
     }
+
     return (
         <RecordContainer container rank={data?.post_rank} team={data?.team}>
-            <Grid item xs={2} sm={1} style={{
-                borderRight: '1px solid #fff'
-            }}>
-                <RankEdge as="span">{t.g.rankHead} </RankEdge>
-                <RankType as="span">{data?.post_rank ?? "?"}</RankType>
-                <RankEdge as="span"> {t.g.rankTail}</RankEdge>
-                <RankPointType>[{data?.rps ?? "?"} rps]</RankPointType>
-            </Grid>
-            <Grid item xs={4} sm={3} style={{
-                borderRight: '1px solid #777',
-            }}>
+            <RecordGridWrapper item xs={2} sm={1}>
+                <div>
+                    <RankEdge as="span">{t.g.rankHead} </RankEdge>
+                    <RankType as="span">{data?.post_rank ?? "?"}</RankType>
+                    <RankEdge as="span"> {t.g.rankTail}</RankEdge>
+                    <RankPointType>[{data?.rps ?? "?"} rps]</RankPointType>
+                </div>
+            </RecordGridWrapper>
+            <RecordGridWrapper item xs={3} sm={3}>
                 <UserType length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
-            </Grid>
-            <Grid item xs={3} sm={3} style={{
-                borderRight: '1px solid #777',
-            }}>
+            </RecordGridWrapper>
+            <RecordGridWrapper item xs={3} sm={3}>
+                <div>
                 <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType as="span"> {compare}</CompareType>
                 {
                     // 総合ランキングの場合は投稿ステージ数を表示
                     (data?.ranks) &&
                         <>
-                            <ScoreType style={{fontSize:"0.95em",marginLeft:"1em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
+                            <br/><ScoreType style={{fontSize:"0.8em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
                         </>
                 }
-            </Grid>
-            <Grid item xs={3} sm={5} style={{
+                </div>
+            </RecordGridWrapper>
+            <Grid item xs={4} sm={5} style={{
                 textAlign: 'left',
             }}>
                 <Grid container style={{

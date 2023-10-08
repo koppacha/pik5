@@ -73,7 +73,6 @@ export default function Home({users}) {
         <Head>
             <title>{t.title[0]+" - "+t.t.desc}</title>
         </Head>
-        ver.3.01<br/>
         <Typography variant="" className="title">{t.title[0]}</Typography><br/>
         <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
         <InfoBox>
@@ -117,9 +116,10 @@ export default function Home({users}) {
                                 <FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}
                             </TopBoxHeader>
                             <TopBoxContent>
+                                <TopBoxContentList>【ver.3.03】検索機能、ロール機能、コメントにおけるNGワード検知機能を追加しました。（2023/10/08）</TopBoxContentList>
                                 <TopBoxContentList>【ver.3.02】移転前の期間限定、参加者企画、チャレンジ複合、その他ランキング全306ステージを移植しました。（2023/09/20）</TopBoxContentList>
                                 <TopBoxContentList>【ver.3.01】ピクミン4全28ステージを追加しました。（2023/07/29）</TopBoxContentList>
-                                <TopBoxContentList>【ver.3.00】リニューアルオープンしました！（2023/07/21）</TopBoxContentList>
+                                {/*<TopBoxContentList>【ver.3.00】リニューアルオープンしました！（2023/07/21）</TopBoxContentList>*/}
                             </TopBoxContent>
                         </TopBox>
                     </WrapTopBox>

@@ -70,6 +70,7 @@
     "swr": "^2.2.0",
     "ts-node": "^10.9.1",
     "typescript": "4.9.4",
+    "ua-parser-js": "^1.0.36",
     "yet-another-react-lightbox": "^3.11.3",
     "yup": "^1.1.1"
   },

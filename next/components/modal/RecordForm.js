@@ -16,6 +16,7 @@ import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
+import {logger} from "../../lib/logger";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
 
@@ -54,6 +55,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [videoUrl, setVideoUrl] = useState("")
     const [comment, setComment] = useState("")
     const [img, setImg] = useState(null)
+    const [userAgent, setUserAgent] = useState("")
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
@@ -98,6 +100,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 comment: "",
             }
         })
+        setUserAgent(window.navigator.userAgent)
         setConsole(consoleList[0])
     }, [])
 
@@ -136,6 +139,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 formData.append('file', img, img.name)
             }
             formData.append('video_url', videoUrl)
+            formData.append('user_agent', userAgent)
             formData.append('post_comment', comment)
             formData.append('created_at', now)
 
@@ -206,7 +210,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     }
     return (
         <>
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={open} onClose={handleClose} disableScrollLock>
                 <DialogTitle>{t.post.title}</DialogTitle>
                 <DialogContent>
                     <TextField

@@ -26,10 +26,10 @@ export const authOptions = {
     session: { strategy: "jwt" },
     providers: [
         CredentialsProvider({
-            // The name to display on the sign in form (e.g. "Sign in with...")
+            // The name to display on the sign-in form (e.g. "Sign in with...")
             id: "credentials",
             name: "credentials",
-            // `credentials` is used to generate a form on the sign in page.
+            // `credentials` is used to generate a form on the sign-in page.
             // You can specify which fields should be submitted, by adding keys to the `credentials` object.
             // e.g. domain, username, password, 2FA token, etc.
             // You can pass any HTML attribute to the <input> tag through the object.
@@ -53,7 +53,6 @@ export const authOptions = {
                         return null
                     }
                 } catch (e) {
-                    logger.debug(e)
                     return null
                 }
                 // const user = await fetch(

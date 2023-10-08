@@ -42,8 +42,6 @@ export default function App(props) {
                       `,
                   }}
           />
-          <Script id="juicer" strategy="afterInteractive"
-                  src="//kitchen.juicer.cc/?color=YICiPNPXjTM=" async/>
           <GlobalStyle/>
           <CacheProvider value={emotionCache}>
               <SessionProvider session={session}>

@@ -8,9 +8,10 @@ import prisma from "../../lib/prisma";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faPaperPlane, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
-import {useSession} from "next-auth/react";
+import {getSession, useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
+import {logger} from "../../lib/logger";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -31,20 +32,21 @@ export async function getServerSideProps(context){
     const info = await stage_res.json()
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findFirst({
+    const users = await prisma.user.findMany({
         select: {
             userId: true,
-            name: true
-        },
-        where: {
-            userId: data.user_id
+            name: true,
+            role: true
         }
     })
-    data['user_name'] = users?.name
+    // 表示中のユーザー名を取り出す
+    data.user_name = users.find(function(e){
+        return e.userId === data.user_id
+    }).name
 
     return {
         props: {
-            users, data, info
+            users, data
         }
     }
 }
@@ -53,12 +55,33 @@ export default function RecordPage({users, data}){
     const {t, r} = useLocale()
     const {data: session } = useSession()
     const router = useRouter()
+    let role = 0
+
+    if(session) {
+        // セッションユーザーの情報を取り出す
+        role = Number(users.find(function (e) {
+            return e.userId === session.user.id
+        }).role)
+    }
 
     // 投稿の経過時間を計算
     const postDate = new Date(data.created_at)
     const now = new Date()
 
-    const timeFlag = ((postDate.getTime() + 86400000) < now.getTime())
+    // 削除権限を持っているかどうか判定する
+    const delFlag = () => {
+        // 管理人である場合は常に削除可能
+        if(role === 10) return true
+
+        // 管理人以外の場合、24時間経過していたらアウト
+        if((postDate.getTime() + 86400000) < now.getTime()) return false
+
+        // 24時間以内で投稿者本人の場合は削除可能
+        if(session?.user.id === data.user_id) return true
+
+        // 24時間以内で本人以外でもロールレベルが１以上なら削除可能、それ以外はアウト
+        return role > 0;
+    }
 
     async function handleOpen() {
         const confirm = window.confirm("本当に削除してよろしいですか？")
@@ -66,6 +89,7 @@ export default function RecordPage({users, data}){
             const res = await fetch(`/api/server/delete/${data.unique_id}/${users.userId}`)
             if(res.status < 300) {
                 await router.push("/stage/" + data.stage_id)
+                return null
             }
         }
     }
@@ -74,10 +98,11 @@ export default function RecordPage({users, data}){
             <NowLoading/>
         )
     }
+
     return (
         <>
             <Head>
-                <title>{users?.name+"/"+t.stage[data.stage_id]+" - "+t.title[0]}</title>
+                <title>{data.user_name+"/"+t.stage[data.stage_id]+" - "+t.title[0]}</title>
             </Head>
             {
                 (data.flg > 1 || !data.unique_id) ?
@@ -89,19 +114,19 @@ export default function RecordPage({users, data}){
                     :
                     <>
                         <PageHeader>
+                            {role}<br/>
                             #{data?.unique_id || "?"}<br/>
                             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                             <StairIcon icon={faStairs}/>
-                            <Link href={"/user/"+users?.userId}>{users?.name}</Link>
+                            <Link href={"/user/"+data.user_id}>{data.user_name}</Link>
                             <StairIcon icon={faStairs}/>
-                            記録個別ページ<br/>
+                            記録個別ページ<br/>po
                             <Typography variant="" className="title">{ t.stage[data.stage_id] }</Typography><br/>
                             <Typography variant="" className="subtitle">{r.stage[data.stage_id]}</Typography><br/><br/>
                         </PageHeader>
-                        <Record data={data}/>
-
+                        <Record key={data.unique_id} data={data}/>
                         {
-                            (session?.user.id === users.userId && !timeFlag) &&
+                            (delFlag()) &&
                                 <RecordPostButton
                                     className="active"
                                     href="#"

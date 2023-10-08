@@ -53,8 +53,8 @@ export default function BreadCrumb({info, rule}){
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
                 </>
-                    :
                 // 第２階層（期間限定）
+                :(t.limited[info.parent]) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.limited[info.parent]}</Link>

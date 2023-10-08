@@ -2,13 +2,14 @@ import {Box, Grid, Typography} from "@mui/material";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
-import {fetcher, useLocale} from "../../lib/pik5";
+import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
 import prisma from "../../lib/prisma";
 import {available} from "../../lib/const";
+import {StageListBox, UserInfoBox} from "../../styles/pik5.css";
 
 export async function getServerSideProps(context){
 
@@ -22,18 +23,14 @@ export async function getServerSideProps(context){
             name: true
         }
     })
+    // 表示中のユーザー名を取り出す
+    const userName = users.find(function(e){
+        return e.userId === user
+    }).name
 
-    // スクリーンネームをリクエスト
-    const findUsers = await prisma.user.findFirst({
-        where: {
-            userId: user
-        },
-        select: {
-            userId: true,
-            name: true
-        }
-    });
-    const userName = findUsers?.name
+    // 各種統計情報を取得
+    const res = await fetch(`http://laravel:8000/api/count/${user}`)
+    const info = await res.json()
 
     const console = query[1] || 0
     const rule    = query[2] || 0
@@ -51,7 +48,7 @@ export async function getServerSideProps(context){
     }
     return {
         props: {
-            users, user, userName, console, rule, year
+            users, user, userName, console, rule, year, info
         }
     }
 }
@@ -59,6 +56,7 @@ export async function getServerSideProps(context){
 export default function Stage(param){
 
     const {t} = useLocale()
+    const firstPostDate = new Date(param.info[0].oldest_created_at)
 
     return (
         <>
@@ -68,6 +66,10 @@ export default function Stage(param){
             {t.stage.user}<br/>
             <Typography variant="" className="title">{ param.userName }</Typography><br/>
             <Typography variant="" className="subtitle">@{param.user}</Typography>
+            <Grid container margin="20px 0">
+                <UserInfoBox item><span>総投稿数</span><br/>{param.info[0].cnt}</UserInfoBox>
+                <UserInfoBox item><span>初投稿日</span><br/>{dateFormat(firstPostDate)}</UserInfoBox>
+            </Grid>
             <Grid container marginBottom="20px">
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>

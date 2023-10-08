@@ -1,16 +1,24 @@
-import {Box, Collapse, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
+import {Box, Collapse, IconButton, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
 import * as React from "react";
 import {MobileMenuBox} from "../../styles/pik5.css";
 import {p1, ne, eg, du, bt, ce, be, ss, db, sb, sp, dc, dd, ex} from "../../lib/const"
 import {useLocale} from "../../lib/pik5";
-import {useState} from "react";
+import {useRef, useState} from "react";
 import {faDiscord, faTwitter} from "@fortawesome/free-brands-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCloudMoon, faCloudSun, faGlobe, faAngleUp, faAngleDown} from "@fortawesome/free-solid-svg-icons";
+import {
+    faCloudMoon,
+    faCloudSun,
+    faGlobe,
+    faAngleUp,
+    faAngleDown,
+    faMagnifyingGlass
+} from "@fortawesome/free-solid-svg-icons";
 import {useRouter} from "next/router";
 import {useTheme} from "next-themes";
+import ModalSearch from "../modal/ModalSearch";
 
-export default function MobileMenu({open, toggleHandle}){
+export default function MobileMenu({users, open, toggleHandle}){
 
     const {t, r} = useLocale()
     const router = useRouter()
@@ -34,6 +42,16 @@ export default function MobileMenu({open, toggleHandle}){
     const [openEX, setOpenEX] = useState(ex.includes(flag))
     const [openSP, setOpenSP] = useState(sp.includes(runFlag))
 
+    const searchRef = useRef(null)
+    const [searchOpen, setSearchOpen] = useState(false)
+
+    const handleSearchClick = () => {
+        setSearchOpen(true)
+    }
+
+    const handleSearchClose = () => {
+        setSearchOpen(false)
+    }
 
     const handleClickP1 = () => setOpenP1(!openP1)
     const handleClickNE = () => setOpenNE(!openNE)
@@ -51,6 +69,7 @@ export default function MobileMenu({open, toggleHandle}){
     const handleClickSP = () => setOpenSP(!openSP)
 
     return (
+        <>
         <SwipeableDrawer
             anchor="right"
             open={open}
@@ -63,7 +82,7 @@ export default function MobileMenu({open, toggleHandle}){
                 <List>
                     <ListItemButton onClick={handleClickP1}>
                         {t.title[1]}
-                        {openP1 ? <faAngleUp/> : <faAngleDown/>}
+                        {openP1 ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openP1} timeout="auto" unmountOnExit>
                         <List>
@@ -78,7 +97,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickEG}>
                         {t.title[2]} {t.subtitle[21]}
-                        {openEG ? <faAngleUp/> : <faAngleDown/>}
+                        {openEG ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openEG} timeout="auto" unmountOnExit>
                         <List>
@@ -93,7 +112,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickNE}>
                         {t.title[2]} {t.subtitle[22]}
-                        {openNE ? <faAngleUp/> : <faAngleDown/>}
+                        {openNE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openNE} timeout="auto" unmountOnExit>
                         <List>
@@ -108,7 +127,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDU}>
                         {t.title[2]} {t.subtitle[23]}
-                        {openDU ? <faAngleUp/> : <faAngleDown/>}
+                        {openDU ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openDU} timeout="auto" unmountOnExit>
                         <List>
@@ -123,7 +142,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickBT}>
                         {t.title[2]} {t.subtitle[24]}
-                        {openBT ? <faAngleUp/> : <faAngleDown/>}
+                        {openBT ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openBT} timeout="auto" unmountOnExit>
                         <List>
@@ -138,7 +157,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickCE}>
                         {t.title[3]} {t.subtitle[31]}
-                        {openCE ? <faAngleUp/> : <faAngleDown/>}
+                        {openCE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openCE} timeout="auto" unmountOnExit>
                         <List>
@@ -153,7 +172,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickBE}>
                         {t.title[3]} {t.subtitle[32]}
-                        {openBE ? <faAngleUp/> : <faAngleDown/>}
+                        {openBE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openBE} timeout="auto" unmountOnExit>
                         <List>
@@ -168,7 +187,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSS}>
                         {t.title[3]} {t.subtitle[34]}
-                        {openSS ? <faAngleUp/> : <faAngleDown/>}
+                        {openSS ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openSS} timeout="auto" unmountOnExit>
                         <List>
@@ -183,7 +202,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDB}>
                         {t.title[3]} {t.subtitle[33]}
-                        {openDB ? <faAngleUp/> : <faAngleDown/>}
+                        {openDB ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openDB} timeout="auto" unmountOnExit>
                         <List>
@@ -198,7 +217,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSB}>
                         {t.title[3]} {t.subtitle[35]}
-                        {openSB ? <faAngleUp/> : <faAngleDown/>}
+                        {openSB ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openSB} timeout="auto" unmountOnExit>
                         <List>
@@ -213,7 +232,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDC}>
                         {t.title[4]} {t.subtitle[41]}
-                        {openDC ? <faAngleUp/> : <faAngleDown/>}
+                        {openDC ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openDC} timeout="auto" unmountOnExit>
                         <List>
@@ -228,7 +247,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickDD}>
                         {t.title[4]} {t.subtitle[42]}
-                        {openDD ? <faAngleUp/> : <faAngleDown/>}
+                        {openDD ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openDD} timeout="auto" unmountOnExit>
                         <List>
@@ -243,7 +262,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickEX}>
                         {t.title[4]} {t.subtitle[43]}
-                        {openEX ? <faAngleUp/> : <faAngleDown/>}
+                        {openEX ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openEX} timeout="auto" unmountOnExit>
                         <List>
@@ -258,7 +277,7 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton onClick={handleClickSP}>
                         {t.speedrun.title}
-                        {openSP ? <faAngleUp/> : <faAngleDown/>}
+                        {openSP ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
                     </ListItemButton>
                     <Collapse in={openSP} timeout="auto" unmountOnExit>
                         <List>
@@ -273,13 +292,21 @@ export default function MobileMenu({open, toggleHandle}){
                     </Collapse>
                     <ListItemButton href="/">{t.g.top}</ListItemButton>
                     <ListItemButton href="/keyword">{t.g.keyword}</ListItemButton>
+                    <ListItemButton
+                        id="search-button"
+                        style={{color:"#fff"}}
+                        onClick={handleSearchClick}>
+                        <FontAwesomeIcon icon={faMagnifyingGlass}/>
+                        検索
+                    </ListItemButton>
                     <ListItemButton href="https://discord.gg/rQEBJQa"><FontAwesomeIcon icon={faDiscord} />{t.g.discord}</ListItemButton>
                     <ListItemButton href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
                     <ListItemButton onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>
                     <ListItemButton href={router.asPath} locale={r}><FontAwesomeIcon icon={faGlobe} /> {t.g.language}</ListItemButton>
-                    <Box style={{backgroundColor:"#212121", overflowY:"hidden", height: "600px"}}> </Box>
                 </List>
             </MobileMenuBox>
         </SwipeableDrawer>
+        <ModalSearch users={users} open={searchOpen} handleClose={handleSearchClose} searchRef={searchRef}/>
+        </>
     )
 }

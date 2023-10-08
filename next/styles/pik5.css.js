@@ -66,7 +66,7 @@ const rankColor = (rank, team, target = 0) => {
     const {theme} = useTheme()
     const t = Number(team)
     const r = Number(rank)
-    if(t === 0 || target === 0){
+    if(!t || target === 0){
         switch (true) {
             case r === 1: // 1位
                 return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
@@ -317,7 +317,7 @@ export const RuleWrapper = styled(Grid)`
 
 export const RuleBox = styled(Box)`
   border-radius: 4px;
-  padding: 12px;
+  padding: 12px 6px;
   margin-right: 6px;
   background-color: ${colors.light.subBack};
 
@@ -387,15 +387,19 @@ export const StyledGrid = styled(Grid)`
     border-right: 1px solid ${colors.dark.border};
   }
 `
+export const RecordGridWrapper = styled(Grid)`
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border-right: 1px solid #777;
+`
 export const ScoreType = styled(Typography)`
-  line-height: 80px;
   font-size: 1.3em;
   font-family:"Proza Libre","cursive";
   text-shadow: ${shadow};
 
   ${sp`
-    font-size: 1.1em;
-    line-height: 2.5em;
+    font-size: 0.9em;
   `}
 `
 export const ScoreTail = styled(Typography)`
@@ -418,14 +422,12 @@ export const CompareType = styled(Typography)`
   }
 `
 export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
-    line-height :80px;
     font-size :1.25em;
     text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
 
     ${sp`
-        font-size: 1em;
-        line-height :40px;
+        font-size: 0.9em;
     `}
 
     ${function (props) {
@@ -488,15 +490,23 @@ export const AuthWindow = styled(Grid)`
     background-color: ${colors.dark.back};
   }
 `
-export const StageListWrapper = styled(Box)`
+export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
 
   margin: 2em 0;
   width: 100%;
-
-  @media(max-width: 1400px) {
-    overflow-x: scroll;
-    white-space: nowrap;
+  
+  ${function (props) {
+        // ステージ数が17個以上ならスマホ表示時にオーバーフロー領域をスクロール表示する
+        if (props.$count > 16) {
+            css`
+              @media (max-width: 1400px) {
+                overflow-x: scroll;
+                white-space: nowrap;
+              }
+            `
+        }
   }
+}
 `
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
@@ -511,6 +521,14 @@ export const StageListBox = styled(Box)`
 
   [data-theme='dark'] & {
     background-color: ${colors.dark.subBack};
+  }
+`
+export const UserInfoBox = styled(StageListBox)`
+  padding: 12px;
+  min-height: 3.5em;
+
+  span {
+    color: #9d9d9d;
   }
 `
 export const PageHeader = styled(Box)`
@@ -536,8 +554,10 @@ export const MobileFooterItem = styled(Grid)`
 
 export const MobileMenuBox = styled(Box)`
   width: 60vw;
+  height: 100%;
   color: ${colors.light.front};
   background-color: ${colors.light.back};
+  overflow-y: scroll;
 
   [data-theme='dark'] & {
     color: ${colors.dark.front};

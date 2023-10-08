@@ -87,6 +87,22 @@ class RecordController extends Controller
                 ["ERROR", 500]
             );
         }
+        // コメントのNGワード処理（NGの場合は問答無用で「コメントなし」とする）
+        function ng_word_check($test, $array): bool
+        {
+            foreach ($array as $word){
+                if(str_contains($test, $word)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        if(ng_word_check($request['post_comment'], HiddenController::ngWords())){
+            $comment = "コメントなし ";
+        } else {
+            $comment = $request['post_comment'] ?: "コメントなし";
+        }
+
         // 受信した画像の処理
         $fileName = "";
         $img = $request->file('file');
@@ -114,12 +130,12 @@ class RecordController extends Controller
                 'rule' => $request['rule'],
                 'console' => $request['console'] ?: 0,
                 'region' => 0,
-                'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（frontside APIも同様）
-                'unique_id' => "302".sprintf('%06d',random_int(0, 999999)),
-                'post_comment' => $request['post_comment'] ?: "コメントなし",
-                'user_ip' => $request->ip(),
-                'user_host' => $request->host(),
-                'user_agent' => $request->header('User-Agent'),
+                'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
+                'unique_id' => "303".sprintf('%06d',random_int(0, 999999)),
+                'post_comment' => $comment,
+                'user_ip' => $request['user_ip'],
+                'user_host' => gethostbyaddr($request['user_ip']) ?: "",
+                'user_agent' => $request['user_agent'],
                 'img_url' => $fileName,
                 'video_url' => $request['video_url'] ?: "",
                 'post_memo' => "",
@@ -271,6 +287,11 @@ class RecordController extends Controller
         }
         // 比較値を付与
         $dataset = Func::compare_calc($new_data, $compare);
+
+        // ユーザーページの場合は最後にステージID順にソートする
+        if($where === "user_id"){
+            array_multisort(array_column($dataset, 'stage_id'), SORT_ASC, $dataset);
+        }
 
         return response()->json(
             $dataset
