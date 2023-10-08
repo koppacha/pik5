@@ -85,7 +85,7 @@ export async function getServerSideProps(context){
                     q += "?var-6njy5y5n=1w47vvoq"
                     break
                 default:
-                    q += "?var-6njy5y5n=qyz7vv41"
+                    q += "?var-6njy5y5n=qj7266eq"
                     break
             }
             break
