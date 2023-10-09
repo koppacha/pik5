@@ -179,7 +179,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // タイム表示判定
     const isTime = () => {
-        return rule === 33 || rule === 11 || rule === 43 || [338, 341, 343].includes(info?.stage_id)
+        return rule === 33 || rule === 11 || rule === 43 || rule === 91 || [338, 341, 343].includes(info?.stage_id)
     }
 
     // タイムからスコアに変換
