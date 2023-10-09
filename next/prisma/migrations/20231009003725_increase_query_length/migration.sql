@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `Log` MODIFY `query` MEDIUMTEXT NULL;

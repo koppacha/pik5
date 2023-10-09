@@ -53,7 +53,7 @@ model Log {
   id               Int       @id @default(autoincrement())
   userId           String?
   page             String?
-  query            String?
+  query            String?   @db.MediumText
   ip               String?
   date             DateTime  @default(now())
 }

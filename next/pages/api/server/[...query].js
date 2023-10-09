@@ -94,20 +94,45 @@ export async function prismaLogging(id, page, query) {
         },
     });
 }
+// ログの文字数はmediumTextを超えてはならない
+function truncateIfTooLong(input) {
+    if (input.length > 16777215 ) {
+        return input.substring(0, 16777215);
+    } else {
+        return input;
+    }
+}
 // オブジェクトを連結して文字列に変換
 function stringifyQuery(query) {
     // もし query がオブジェクトまたは配列なら、要素を連結して文字列にする
     if (typeof query === 'object' && query !== null) {
-        return Object.keys(query)
-            .map(key => `${key}=${query[key]}`)
-            .join('&');
+        const flattenQuery = (obj, parentKey = '') => {
+            return Object.keys(obj).map(key => {
+                const value = obj[key]
+                const newKey = parentKey ? `${parentKey}[${key}]` : key
+
+                if (typeof value === 'object' && value !== null) {
+                    // もしオブジェクトが含まれていたら再帰的に処理
+                    return flattenQuery(value, newKey)
+                } else {
+                    return `${encodeURIComponent(newKey)}=${encodeURIComponent(value)}`
+                }
+            }).join('&')
+        };
+
+        const result = flattenQuery(query)
+
+        // 文字列が長すぎる場合に切り捨て
+        return truncateIfTooLong(result)
     }
 
     // もし query が文字列ならそのまま返す
     if (typeof query === 'string') {
-        return query;
+
+        // 文字列が長すぎる場合に切り捨て
+        return truncateIfTooLong(query)
     }
 
     // 上記以外の場合は空文字列を返すか、エラー処理を追加することもできます
-    return '';
+    return ''
 }
