@@ -30,7 +30,7 @@ class Func extends Facade
         }
         return ['score','DESC'];
     }
-    // 対象ステージのうち最大参加者数を求める
+    // 対象ステージ群のうち最大参加者数を求める
     public static function memberCount ($total = 0, $option = [0, 0, 0]): array
     {
         [$console, , $date] = $option;

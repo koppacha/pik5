@@ -315,7 +315,7 @@ export const RuleWrapper = styled(Grid)`
   ${sp`margin-bottom: 30px;`}
 `
 
-export const RuleBox = styled(Box)`
+export const RuleBox = styled(Grid)`
   border-radius: 4px;
   padding: 12px 6px;
   margin-right: 6px;
@@ -495,18 +495,19 @@ export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count
   margin: 2em 0;
   width: 100%;
   
-  ${function (props) {
-        // ステージ数が17個以上ならスマホ表示時にオーバーフロー領域をスクロール表示する
+  ${
+    function (props) {
+        // ステージ数が17個以上なら1200px以下表示時オーバーフロー領域をスクロール表示する
         if (props.$count > 16) {
-            css`
-              @media (max-width: 1400px) {
-                overflow-x: scroll;
-                white-space: nowrap;
-              }
+            return css` 
+                @media (max-width: 1200px) {
+                    overflow: scroll;
+                    white-space: nowrap;
+                }
             `
         }
+    }
   }
-}
 `
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
@@ -540,16 +541,24 @@ export const MobileFooterMenu = styled(Grid)`
   
   position: fixed;
   width: 100vw;
-  height: 70px;
+  height: 62px;
   bottom: 0;
   background-color: #111;
   opacity: 0.9;
   padding-top: 6px;
+  
+  svg {
+    font-size: 20px;
+  }
+  p {
+    font-size: 0.85em;
+  }
 `
 export const MobileFooterItem = styled(Grid)`
   justify-items: center;
   text-align: center;
   padding-top: 5px;
+  
 `
 
 export const MobileMenuBox = styled(Box)`

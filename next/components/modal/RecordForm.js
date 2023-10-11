@@ -289,6 +289,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         fullWidth
                         variant="standard"
                         defaultValue={consoleList[0]}
+                        helperText={"スタンダードとは、Wii U Proコン/Nintendo Switch Proコン/Wii U GamePad両手持ち/Joy-Con 2本持ち/Nintendo Switch Liteのいずれかのことです。"}
                         margin="normal"
                     >
                         {

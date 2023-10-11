@@ -17,12 +17,6 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class RecordController extends Controller
 {
-    public array $selected = [
-        'post_id', 'user_id', 'score', 'stage_id',
-        'rule', 'console', 'region', 'unique_id',
-        'post_comment', 'img_url', 'video_url',
-        'flg', 'team', 'created_at'];
-
     public function __invoke(): string
     {
         // TODO: Implement __invoke() method.
@@ -44,7 +38,7 @@ class RecordController extends Controller
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $data = Record::select($this->selected)->where('unique_id', $request['id'])->first();
+        $data = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first();
 
         if(!$data){
             $data = collect(['message' => "Record Not Found"]);
@@ -56,7 +50,7 @@ class RecordController extends Controller
     }
 
     // 暫定順位を取得する関数
-    public function getRank(Request $request): JsonResponse
+    public function getRank(Request|array $request): JsonResponse
     {
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
@@ -68,6 +62,7 @@ class RecordController extends Controller
 
         $data++;
 
+        // jsonで返却されるため、Laravel内で値を参照する場合は$data->originalを使用する
         return response()->json(
             $data
         );
@@ -229,7 +224,7 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $dataset = Record::select($this->selected)
+        $dataset = Record::select(config('const.selected'))
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->whereIn('rule', $rule)

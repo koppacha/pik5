@@ -1,7 +1,7 @@
 import {Box, Collapse, IconButton, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
 import * as React from "react";
 import {MobileMenuBox} from "../../styles/pik5.css";
-import {p1, ne, eg, du, bt, ce, be, ss, db, sb, sp, dc, dd, ex} from "../../lib/const"
+import {p1, ne, eg, du, bt, ce, be, ss, db, sb, sp, dc, dd, ex, ot} from "../../lib/const"
 import {useLocale} from "../../lib/pik5";
 import {useRef, useState} from "react";
 import {faDiscord, faTwitter} from "@fortawesome/free-brands-svg-icons";
@@ -41,17 +41,7 @@ export default function MobileMenu({users, open, toggleHandle}){
     const [openDD, setOpenDD] = useState(dd.includes(flag))
     const [openEX, setOpenEX] = useState(ex.includes(flag))
     const [openSP, setOpenSP] = useState(sp.includes(runFlag))
-
-    const searchRef = useRef(null)
-    const [searchOpen, setSearchOpen] = useState(false)
-
-    const handleSearchClick = () => {
-        setSearchOpen(true)
-    }
-
-    const handleSearchClose = () => {
-        setSearchOpen(false)
-    }
+    const [openOT, setOpenOT] = useState(ot.includes(flag))
 
     const handleClickP1 = () => setOpenP1(!openP1)
     const handleClickNE = () => setOpenNE(!openNE)
@@ -67,6 +57,7 @@ export default function MobileMenu({users, open, toggleHandle}){
     const handleClickDD = () => setOpenDD(!openDD)
     const handleClickEX = () => setOpenEX(!openEX)
     const handleClickSP = () => setOpenSP(!openSP)
+    const handleClickOT = () => setOpenOT(!openSP)
 
     return (
         <>
@@ -290,15 +281,23 @@ export default function MobileMenu({users, open, toggleHandle}){
                             }
                         </List>
                     </Collapse>
+                    <ListItemButton onClick={handleClickOT}>
+                        {t.title[9]}
+                        {openOT ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
+                    </ListItemButton>
+                    <Collapse in={openOT} timeout="auto" unmountOnExit>
+                        <List>
+                            {
+                                ot.map(stage =>
+                                    <ListItemButton key={"s"+stage} href={"/stage/"+stage}>
+                                        #{stage} {t.stage[stage]}
+                                    </ListItemButton>
+                                )
+                            }
+                        </List>
+                    </Collapse>
                     <ListItemButton href="/">{t.g.top}</ListItemButton>
                     <ListItemButton href="/keyword">{t.g.keyword}</ListItemButton>
-                    <ListItemButton
-                        id="search-button"
-                        style={{color:"#fff"}}
-                        onClick={handleSearchClick}>
-                        <FontAwesomeIcon icon={faMagnifyingGlass}/>
-                        検索
-                    </ListItemButton>
                     <ListItemButton href="https://discord.gg/rQEBJQa"><FontAwesomeIcon icon={faDiscord} />{t.g.discord}</ListItemButton>
                     <ListItemButton href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
                     <ListItemButton onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>
@@ -306,7 +305,6 @@ export default function MobileMenu({users, open, toggleHandle}){
                 </List>
             </MobileMenuBox>
         </SwipeableDrawer>
-        <ModalSearch users={users} open={searchOpen} handleClose={handleSearchClose} searchRef={searchRef}/>
         </>
     )
 }
