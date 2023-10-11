@@ -56,7 +56,7 @@ export default function Record({data}) {
     }
 
     return (
-        <RecordContainer container rank={data?.post_rank} team={data?.team}>
+        <RecordContainer container rank={data?.post_rank ?? 20} team={data?.team}>
             <RecordGridWrapper item xs={2} sm={1}>
                 <div>
                     <RankEdge as="span">{t.g.rankHead} </RankEdge>
