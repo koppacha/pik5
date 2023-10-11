@@ -61,6 +61,8 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 // ステージ情報取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'stage/all' , [ StageController::class, 'index' ]);
+    Route::get ( 'stage/member' , [ StageController::class, 'allStageMember']);
+    Route::get ( 'stage/max' , [ StageController::class, 'maxMember']);
     Route::get ( 'stage/{id}' , [ StageController::class, 'show' ]);
 });
 

@@ -1,12 +1,13 @@
 import {MobileFooterItem, MobileFooterMenu} from "../../styles/pik5.css";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faAnglesLeft, faAngleUp, faHome} from "@fortawesome/free-solid-svg-icons";
-import {Typography} from "@mui/material";
+import {faAnglesLeft, faAngleUp, faHome, faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
+import {ListItemButton, Typography} from "@mui/material";
 import {faDiscord} from "@fortawesome/free-brands-svg-icons";
 import * as React from "react";
 import MobileMenu from "./MobileMenu";
-import {useState} from "react";
+import {useRef, useState} from "react";
+import ModalSearch from "../modal/ModalSearch";
 
 export default function MobileFooter({users}){
 
@@ -28,31 +29,46 @@ export default function MobileFooter({users}){
         })
     }
 
+    const searchRef = useRef(null)
+    const [searchOpen, setSearchOpen] = useState(false)
+
+    const handleSearchClick = () => {
+        setSearchOpen(true)
+    }
+    const handleSearchClose = () => {
+        setSearchOpen(false)
+    }
+
     return (
         <>
-            <MobileFooterMenu container columns={{xs: 4}}>
+            <MobileFooterMenu container columns={{xs: 5}}>
                 <MobileFooterItem item xs={1}>
                     <Link href="/">
-                        <FontAwesomeIcon icon={faHome} style={{fontSize:"24px"}} /><br/>
-                        <Typography style={{fontSize:"0.85em"}}>Home</Typography>
+                        <FontAwesomeIcon icon={faHome}/>
+                        <Typography>Home</Typography>
                     </Link>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1}>
                     <Link href="https://discord.gg/rQEBJQa" target="_blank">
-                        <FontAwesomeIcon icon={faDiscord} style={{fontSize:"24px"}} /><br/>
-                        <Typography style={{fontSize:"0.85em"}}>Discord</Typography>
+                        <FontAwesomeIcon icon={faDiscord}/>
+                        <Typography>Discord</Typography>
                     </Link>
                 </MobileFooterItem>
-                <MobileFooterItem item xs={1} onClick={scrollToTop}>
-                    <FontAwesomeIcon icon={faAngleUp} style={{fontSize:"24px"}} /><br/>
-                    <Typography style={{fontSize:"0.85em"}}>PageTop</Typography>
+                <MobileFooterItem item xs={1} onClick={handleSearchClick} style={{cursor:"pointer"}}>
+                    <FontAwesomeIcon icon={faMagnifyingGlass}/>
+                    <Typography>Search</Typography>
                 </MobileFooterItem>
-                <MobileFooterItem item xs={1} onClick={toggleDrawer}>
-                    <FontAwesomeIcon icon={faAnglesLeft} style={{fontSize:"24px"}}/><br/>
-                    <Typography style={{fontSize:"0.85em"}}>Menu</Typography>
+                <MobileFooterItem item xs={1} onClick={scrollToTop} style={{cursor:"pointer"}}>
+                    <FontAwesomeIcon icon={faAngleUp}/>
+                    <Typography>PageTop</Typography>
+                </MobileFooterItem>
+                <MobileFooterItem item xs={1} onClick={toggleDrawer} style={{cursor:"pointer"}}>
+                    <FontAwesomeIcon icon={faAnglesLeft}/>
+                    <Typography>Menu</Typography>
                 </MobileFooterItem>
             </MobileFooterMenu>
             <MobileMenu users={users} open={drawerOpen} toggleHandle={toggleDrawer}/>
+            <ModalSearch users={users} open={searchOpen} handleClose={handleSearchClose} searchRef={searchRef}/>
         </>
     )
 }

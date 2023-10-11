@@ -21,7 +21,7 @@ export async function getServerSideProps(context){
 
     const query   = context.query.stage
     const stage   = query[0]
-    const console = query[1] || 0
+    const consoles = query[1] || 0
     let   rule    = query[2] || 0
     const year    = query[3] || 2023
 
@@ -29,7 +29,7 @@ export async function getServerSideProps(context){
         stage < 100 ||
         stage > 9999 ||
         !available.includes(Number(rule)) ||
-        !available.includes(Number(console)) ||
+        !available.includes(Number(consoles)) ||
         year < 2014 ||
         year > 2023 ||
         query[4]
@@ -39,35 +39,26 @@ export async function getServerSideProps(context){
         }
     }
 
-    let info
+    let info = null, parent = null, stages = []
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
     if(stage_res.status < 300) {
         info = await stage_res.json()
-    }
 
-    let parent
-    // ステージ情報をリクエスト
-    const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
-    if(parent_res.status < 300) {
-        parent = await parent_res.json()
-    }
-
-    // ステージ情報が存在しないステージIDへのアクセスは全部はじく
-    if(!Object.keys(info).length){
-        return {
-            notFound: true,
+        if(info.parent) {
+            const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
+            if (parent_res.status < 300) {
+                parent = await parent_res.json()
+            }
+            // シリーズ番号に基づくステージ群の配列をリクエスト
+            const res = await fetch(`http://laravel:8000/api/stages/${info.parent}`)
+            if(res.status < 300) {
+                stages = await res.json()
+            }
         }
     }
-    let stages = []
-    // シリーズ番号に基づくステージ群の配列をリクエスト
-    const res = await fetch(`http://laravel:8000/api/stages/${info.parent}`)
-    if(res.status < 300) {
-        stages = await res.json()
-    }
-
-    if(info.parent && !rule){
-        rule = info.parent
+    if(info?.parent && !rule){
+        rule = info?.parent
     }
 
     // スクリーンネームをリクエスト
@@ -80,7 +71,7 @@ export async function getServerSideProps(context){
 
     return {
         props: {
-            stages, stage, rule, console, year, info, users, parent
+            stages, stage, rule, consoles, year, info, users, parent
         }
     }
 }
@@ -89,7 +80,7 @@ export default function Stage(param){
     const {t, r, locale} = useLocale()
 
     // ボーダーライン出力用変数
-    const borders = [param.info.border1, param.info.border2, param.info.border3, param.info.border4]
+    const borders = [param.info?.border1, param.info?.border2, param.info?.border3, param.info?.border4]
 
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
@@ -110,8 +101,8 @@ export default function Stage(param){
     }
     const handleOpen = () => setOpen(true)
 
-    const stageName = locale === "ja" ? param.info.stage_name : param.info.eng_stage_name
-    const stageNameR= locale === "ja" ? param.info.eng_stage_name : param.info.stage_name
+    const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
+    const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
     function isEvent(info){
         const currentTime = new Date()
@@ -127,7 +118,7 @@ export default function Stage(param){
     return (
         <>
             <Head>
-                <title>{stageName+" ("+t.title[param.info.series]+") - "+t.title[0]}</title>
+                <title>{stageName+" ("+t.title[param.info?.series]+") - "+t.title[0]}</title>
             </Head>
             <PageHeader>
                 #{param.stage}<br/>
@@ -170,7 +161,7 @@ export default function Stage(param){
                         // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
                         (isEvent(param.parent)) &&
                         <RecordPost
-                            info={param.info} rule={param.rule} console={param.console}/>
+                            info={param.info} rule={param.rule} console={param.consoles}/>
                     }
                     <Grid item style={{
                         marginBottom:"20px",
@@ -185,7 +176,7 @@ export default function Stage(param){
                 </Grid>
             </Box>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
-            <RankingStandard users={param.users} borders={borders} stage={param.stage} console={param.console} rule={param.rule} year={param.year}/>
+            <RankingStandard users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
         </>
     )
 }

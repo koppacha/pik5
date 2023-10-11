@@ -6,7 +6,7 @@ import {useLocale} from "../../lib/pik5";
 
 export default function PullDownConsole(props){
 
-    const {info, console, rule, year, user} = props.props
+    const {info, consoles:console, rule, year, user} = props.props
 
     const {t} = useLocale()
     
