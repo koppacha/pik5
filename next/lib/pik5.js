@@ -87,3 +87,14 @@ export function mergeDeeply(target, source, opts) {
     }
     return result;
 }
+// オブジェクトを数値範囲で切り出す関数
+export function sliceObject(obj, start, end) {
+    const result = {};
+    for (const key in obj) {
+        const keyAsNumber = parseInt(key, 10); // キーを数値に変換
+        if (!isNaN(keyAsNumber) && keyAsNumber >= start && keyAsNumber <= end) {
+            result[key] = obj[key];
+        }
+    }
+    return result;
+}

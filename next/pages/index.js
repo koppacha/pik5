@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {Box, Grid, Typography} from "@mui/material";
-import React from "react";
+import React, {useState} from "react";
 import {CellBox, InfoBox, TopBox, TopBoxContent, TopBoxContentList, TopBoxHeader, WrapTopBox} from "../styles/pik5.css";
 import {useLocale} from "../lib/pik5";
 import {
@@ -17,6 +17,9 @@ import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
 import prisma from "../lib/prisma"
 import Head from "next/head";
+import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
+import {mutate} from "swr";
+import ModalIdeaPost from "../components/modal/ModalIdeaPost";
 
 export async function getServerSideProps(context) {
     // スクリーンネームをリクエスト
@@ -37,6 +40,12 @@ export default function Home({users}) {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
+
+    // モーダル制御関連
+    const [editOpen, setEditOpen] = useState(false)
+    const [uniqueId, setUniqueId] = useState("")
+    const handleEditOpen = () => setEditOpen(true)
+    const handleEditClose = () => setEditOpen(false)
 
     // ログイン判定によって表示を変更
     const loginName = () => {
@@ -105,6 +114,7 @@ export default function Home({users}) {
                                 <Link href="#" target="_blank" style={{fontSize:"1.1em",textDecoration:"underline"}}></Link><br/>
                                 <Box style={{padding:"10px",margin:"10px 20px",border:"1px",borderRadius:"8px"}}>
                                     現在開催予定のイベントはありません。<br/>
+                                    <Link href="#" onClick={handleEditOpen}>期間限定チャレンジルールを投稿する</Link>
                                 </Box>
 
                             </TopBoxContent>
@@ -159,6 +169,7 @@ export default function Home({users}) {
         </Grid>
         <br/>
         <button onClick={()=>signOut()}>{t.g.logout}</button>
+        <ModalIdeaPost editOpen={editOpen} uniqueId={uniqueId} handleEditClose={handleEditClose} handleEditOpen={handleEditOpen}/>
     </>
   )
 }

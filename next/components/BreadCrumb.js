@@ -57,7 +57,7 @@ export default function BreadCrumb({info, rule}){
                 :(t.limited[info.parent]) &&
                 <>
                     <StairIcon icon={faStairs}/>
-                    <Link href={"/total/"+info.parent}>{t.limited[info.parent]}</Link>
+                    <Link href={"/limited/"+info.parent}>{t.limited[info.parent]}</Link>
                 </>
             }
             {
