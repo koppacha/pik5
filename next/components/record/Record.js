@@ -23,7 +23,8 @@ export default function Record({data}) {
     const {t} = useLocale()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
 
-    const [imgOpen, setImgOpen] = useState(false)
+    const [imgOpen, setImgOpen] = useState(
+        false)
     const [editOpen, setEditOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
     const [isClient, setIsClient] = useState(false)
