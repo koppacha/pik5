@@ -4,7 +4,7 @@ import NowLoading from "../NowLoading";
 import Record from "./Record";
 import * as React from "react";
 
-export default function RankingTotal({series, console:consoles, rule, year, users}){
+export default function RankingTotal({series, console:consoles, rule, year, users, stages}){
 
     const {data:posts} = useSWR(`/api/server/total/${series}/${consoles}/${rule}/${year}`, fetcher)
     if(!posts?.data){
@@ -22,6 +22,6 @@ export default function RankingTotal({series, console:consoles, rule, year, user
     }) : []
 
     return data.map(post =>
-        <Record key={post.user_id} data={post} />
+        <Record key={post.user_id} data={post} stages={stages} />
     )
 }
