@@ -61,13 +61,22 @@ const shadow = () => {
             -2px   0 2px ${shadowColor},    0 -2px 2px ${shadowColor}
             `
 }
+// 順位セル用のカラー生成関数
+const rankCellColor = (rank) => {
+    const hue = rank === 1 ? 58 : rank === 2 ? 125 : rank === 3 ? 190 : 0
+    const saturation = rank === 1 ? "35%" : rank === 2 ? "25%" : rank === 3 ? "15%" : "0%"
+    const lightness = !rank ? "15%" : rank < 10 ? "55%" : rank < 20 ? "35%" : "25%"
+    return `hsl(${hue}, ${saturation}, ${lightness})`
+}
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
-const rankColor = (rank, team, target = 0) => {
+const rankColor = (rank, team = 0, target = 0) => {
     const {theme} = useTheme()
     const t = Number(team)
     const r = Number(rank)
     if(!t || target === 0){
         switch (true) {
+            case !r: // false
+                return target ? '#2d2d2d' : theme === "dark" ? '#181818' : '#b7b7b7'
             case r === 1: // 1位
                 return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
             case r === 2: // 2位
@@ -88,6 +97,7 @@ const rankColor = (rank, team, target = 0) => {
             '#e0e0e0', '#010101', '#45aee6', '#e6d745',
             '#e6456c', '#e6b945', '#45e675', '#dce645',
             '#457de6', '#e69345', '#e64575', '#455ae6']
+        const colors = "rgb(122, 121, 0)"
 
         return teamColor[t]
     }
@@ -631,4 +641,12 @@ export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.
   svg {
     margin-right: 0.5em;
   }
+`
+export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank}))`
+  background-color: ${props => rankCellColor(props.$rank)};
+  width: 16px;
+  height: 16px;
+  margin-right: 2px;
+  margin-bottom: 2px;
+  border-radius: 4px;
 `

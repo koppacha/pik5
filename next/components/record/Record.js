@@ -7,7 +7,7 @@ import {dateFormat, fetcher, sec2time, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
-    CompareType,
+    CompareType, RankCell,
     RankEdge,
     RankPointType,
     RankType,
@@ -18,7 +18,7 @@ import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
 
-export default function Record({data}) {
+export default function Record({data, stages}) {
 
     const {t} = useLocale()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
@@ -102,31 +102,41 @@ export default function Record({data}) {
                         borderTop:'1px solid #777',
                         paddingTop:'8px'
                     }}>
-                        {data.img_url ?
+                        {data.img_url &&
                             <>
                                 <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
                                 <Lightbox open={imgOpen} close={() => setImgOpen(false)}
                                           slides={[{src:"/api/file/"+data.img_url}]}
                                           rendar={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
                                           controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
-                            </>: undefined}
-                        {data.video_url ?
+                            </>}
+                        {data.video_url &&
                             <>
                                 <Link href={data.video_url} target="_blank">
                                     <FontAwesomeIcon icon={faYoutube} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                 </Link>
-                            </>: undefined}
-                        {data.unique_id ?
+                            </>}
+                        {data.unique_id &&
                             <>
                                 <Link href={"/record/"+data.unique_id}>
                                     <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                 </Link>
-                            </>: undefined}
-                        {data.post_comment ?
+                            </>}
+                        {data.post_comment &&
                             <>
                                 {data.post_comment}
-                            </>
-                            : undefined}
+                            </>}
+                        {data?.ranks &&
+                            <>
+                                <Grid container sx={6} md={12} lg={25}>
+                                    {
+                                        data.ranks.map(function(r, i){
+                                            const title = t.stage[stages[i]] + " " + (!r ? "未投稿" : `${r} 位`)
+                                            return <Tooltip style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r}/></Tooltip>
+                                        })
+                                    }
+                                </Grid>
+                            </>}
                     </Grid>
                 </Grid>
             </Grid>
