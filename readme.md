@@ -117,7 +117,7 @@ $ git fetch
 $ git pull origin your_branch
 ```
 
-## 編集時のルール
+## 編集時のルール・メモ
 - CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの属性のひとつ「xs」と似ていて紛らわしいため）
 ```jsx
 <Grid style={{width:"100%"}} xs={12}> {/* ←これはOK */}
@@ -129,6 +129,18 @@ $ git pull origin your_branch
 ```js
 fetch('http://localhost/api/request') // ←これはダメ
 fetch('/api/request') // ←これはOK。ただし経由APIで加工が必要な場合がある
+```
+
+- 三項目が不要な場合は三項演算子を使わず、比較演算子を使う。
+```js
+// 例：pelletがfalseでないならpikminに特定のコンポーネントを代入したい場合
+const pikmin = pellet ? <Oniyon/> : undefined // これはダメ
+
+const pikmin = pellet && <Oniyon/> // 比較演算子&&は左辺がtrue相当なら右辺を返す
+const pikmin = pellet || <Oniyon/> // 比較演算子||は左辺がfalse相当なら右辺を返す
+
+// 状況に応じてこっちも使おう
+const pikmin = pellet ?? <Oniyon/> // Null合体演算子??は左辺がnullかundefinedなら右辺を返す
 ```
 
 ## 基盤・ネットワーク関連のメモ
