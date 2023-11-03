@@ -65,8 +65,9 @@ const shadow = () => {
 const rankCellColor = (rank) => {
     const hue = rank === 1 ? 58 : rank === 2 ? 125 : rank === 3 ? 190 : 0
     const saturation = rank === 1 ? "35%" : rank === 2 ? "25%" : rank === 3 ? "15%" : "0%"
-    const lightness = !rank ? "15%" : rank < 10 ? "55%" : rank < 20 ? "35%" : "25%"
-    return `hsl(${hue}, ${saturation}, ${lightness})`
+    const lightness = !rank ? "15%" : rank < 11 ? "55%" : rank < 21 ? "35%" : "25%"
+    const transparent = !rank ? 0 : 1
+    return `hsl(${hue}, ${saturation}, ${lightness}, ${transparent})`
 }
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
 const rankColor = (rank, team = 0, target = 0) => {

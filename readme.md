@@ -11,38 +11,44 @@
 そのようなケースでの利用をご希望の場合は個別に管理人へご連絡ください。
 
 ## 開発環境
-* OS：macOS https://www.apple.com/jp/macos/ventura/
-* Infra：Docker Desktop https://www.docker.com/products/docker-desktop/
-* IDE：Intellij IDEA https://www.jetbrains.com/ja-jp/idea/
-* API：Postman https://www.postman.com/
-* Browser：Google Chrome https://www.google.com/intl/ja_jp/chrome/
+* OS：[macOS](https://www.apple.com/jp/macos)
+* Infra：[Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* IDE：[Intellij IDEA](https://www.jetbrains.com/ja-jp/idea/)
+* API：[Postman](https://www.postman.com/)
+* Browser/DevTools：[Google Chrome](https://www.google.com/intl/ja_jp/chrome/)
 
-＊Windowsで動かす場合、WSLのメモリが最低2GB必要です。
+>Windowsで動かす場合、WSLに割り当てるメモリが最低3GB必要です。
 
 ## 動作確認環境
-* PC/OS：Windows 11 (Parallel Desktop for M1 Mac)
+* PC/OS：macOS、Windows
 * PC/Browser：Google Chrome
 * SP/OS：iPhone 12 Pro Max
 * SP/Browser：Safari
 
-＊原則としてOS、ブラウザともに最新版を利用  
-＊上記以外（タブレット全般、Android端末、その他のブラウザ）は原則サポート外となります。  
+>原則としてOS、ブラウザともに最新版を利用（WindowsのみWindows 10を使用）  
+>上記以外（タブレット全般、Android端末、その他のブラウザ）は原則サポート外となります。  
 
 ## 主な使用技術
-* PHP：https://www.php.net/manual/ja/index.php (backend)
-  * Laravel：https://readouble.com/laravel/ (backend framework)
-* JavaScript：https://ja.javascript.info/ (frontend)
-  * React：https://ja.reactjs.org/docs/getting-started.html (frontend framework)
-    * Next.js：https://nextjs.org/docs/getting-started (React framework)
-    * Material UI：https://mui.com/material-ui/getting-started/overview/ (UI framework)
-* Docker：https://docs.docker.jp/index.html (Infra)
+* [HTML](https://developer.mozilla.org/ja/docs/Web/HTML)（みんな大好きマークアップ言語。ページの構造化を担当）
+* [CSS](https://developer.mozilla.org/ja/docs/Web/CSS)（みんな大好きスタイリング言語。見た目の装飾などを担当）
+* [PHP](https://www.php.net/manual/ja/index.php) (バックエンド用のプログラミング言語。サーバーでの情報処理に使う)
+  * [Laravel](https://readouble.com/laravel/) (PHPのフレームワークで、主にDBのリクエストや管理、操作などを担当)
+* [JavaScript](https://ja.javascript.info/) (フロントエンド用のプログラミング言語。webブラウザ上での処理に使う)
+  * [React](https://ja.reactjs.org/docs/getting-started.html) (JSのフレームワークで、主に画面表示の制御を担当)
+    * [Next.js](https://nextjs.org/docs/getting-started) (サーバーサイド処理ができるようになるReactのフレームワーク)
+    * [Material UI](https://mui.com/material-ui/getting-started/overview/) (ReactのCSSフレームワークで、デザインの統一感を出すために利用)
+  * [Prisma](https://www.prisma.io/) (Next-Auth.jsとデータベースのやり取りを仲介〈ORM〉する技術)
+* [Docker](https://docs.docker.jp/index.html) (ひとつのOSに仮想コンテナを複数作成するための基盤技術）
+* [nginx](https://www.nginx.co.jp/) (ネットワーク基盤を制御）
 
-＊インフラ基盤OSは基本的にUbuntuかAlpine Linuxを使用。
+>基盤OSは基本的にUbuntuかAlpine Linuxを使用。
 
-## その他プラグイン
-* Font Awesome：https://fontawesome.com/ (Icons)
-* Styled-Components：https://styled-components.com/ (CSS in JS)
-* Yup：https://github.com/jquense/yup (frontend Validation)
+## 主な利用プラグイン
+* [Font Awesome](https://fontawesome.com/) (高クオリティなSVGアイコンが使い放題になる便利なプラグイン）
+* [Styled-Components](https://styled-components.com/) (コンポーネントごとにCSSを適用できるようになる便利なプラグイン)
+* [Yup](https://github.com/jquense/yup) (フォームのバリデーションチェックを楽にする便利なプラグイン)
+* [Fuse.js](https://www.fusejs.io/) (高速検索を超簡単に実装できる便利なプラグイン)
+* [Next-Auth.js (Auth.js)](https://authjs.dev/) (厄介な認証をまとめて処理できる便利なプラグイン)
 
 ## 環境構築手順
 ```shell
@@ -124,14 +130,7 @@ $ git pull origin your_branch
 <Grid sx={{width:"100%"}} xs={12}> {/* ←これはダメ */}
 ```
 
-- フロントサイドレンダリングから直接APIを叩くのはNG。面倒でもNext.jsのAPIサーバーを経由する
-- APIサーバーはNode.jsで記述する（import記法などは使えない）
-```js
-fetch('http://localhost/api/request') // ←これはダメ
-fetch('/api/request') // ←これはOK。ただし経由APIで加工が必要な場合がある
-```
-
-- 三項目が不要な場合は三項演算子を使わず、比較演算子を使う。
+- 三項目のいずれかが不要な場合は三項演算子を使わず、比較演算子を使う。
 ```js
 // 例：pelletがfalseでないならpikminに特定のコンポーネントを代入したい場合
 const pikmin = pellet ? <Oniyon/> : undefined // これはダメ
@@ -151,8 +150,8 @@ $ sudo apt update
 $ sudo apt upgrade
 
 # root以外のユーザーを作ってsudo権限を付与
-$ adduser koppacha
-$ gpasswf -a koppacha sudo # TODO:rootグループでいいかも（sudo入れるの面倒）
+$ adduser username
+$ gpasswf -a username sudo # TODO:rootグループでいいかも（sudo入れるの面倒）
 
 # sudoグループはsudo実行時にいちいちパスワードを聞かれないようにする
 $ sudo visudo
@@ -228,7 +227,7 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 ### ver.1.00〜2.78（2007/04/29〜2023/07/20）
 * ver.1：ピクミン３同盟内コンテンツ時代（2007/04/29〜2015/08/31）
 * ver.2：ピクミンシリーズチャレンジモード大会（2015/09/01〜2023/07/20）  
-詳しくは　https://github.com/koppacha/pik4 を参照
+>過去の履歴についてはリポジトリ[pik4](https://github.com/koppacha/pik4)を参照
 
 ### ver.3.00 (2023/07/21)
 * ゼロベースから作り直しリニューアルオープン
@@ -252,6 +251,12 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 * ヘッダーとステージリストは横スクロールできるようにした
 * ピクミン４のタイムボーナス表記に対応
 * 時間入力はtimeフォーマットを廃止して正規表現チェックの単純文字列入力に変更
+
+### ver.3.03 (2023/10/08)
+* 横断検索機能を追加
+* センシティブなワードを含むコメントは自動削除するようにした
+* ユーザー別ページに初投稿日と総投稿数を表示するようにした
+* ロール機能を追加
 
 ### LICENCE
 Copyright (c) 2006 - 2023 koppacha

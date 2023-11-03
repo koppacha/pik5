@@ -10,6 +10,7 @@ use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
+use App\Http\Controllers\VoteController;
 use App\Library\Func;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -83,6 +84,12 @@ Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
     Route::post ( 'keyword' , [ KeywordController::class, 'create' ]);
     Route::patch ( 'keyword/{id}' , [ KeywordController::class, 'update' ]);
     Route::delete ( 'keyword/{id}' , [ KeywordController::class, 'destroy' ]);
+});
+
+// 投票関連API
+Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
+    Route::post ( 'vote' , [ VoteController::class, 'create' ]);
+    Route::post ( 'vote/{vote}/{user}' , [ VoteController::class, 'create' ]);
 });
 
 // 証拠画像取得API

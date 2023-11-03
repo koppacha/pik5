@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {signIn, useSession} from "next-auth/react";
+import {signIn, useSession, getProviders} from "next-auth/react";
 import {useRouter} from "next/router";
 import {useForm} from "react-hook-form";
 import {logger} from "../../lib/logger";
@@ -15,7 +15,7 @@ import Link from "next/link";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
 
-export async function getServerSideProps(context){
+export async function getServerSideProps(){
 
     // スクリーンネームをリクエスト（検索用）
     const users = await prisma.user.findMany({
