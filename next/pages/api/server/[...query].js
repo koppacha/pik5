@@ -9,6 +9,9 @@ export default async function handle(req, res){
 
     const session = await getServerSession(req, res, authOptions)
 
+    /*
+     * フロントエンドから渡された記録投稿フォーム以外のPOSTリクエストをバックエンドへ橋渡しする
+     */
     if(req.method === "POST") {
         try {
             const query = req.query.query.join("/")
@@ -28,19 +31,16 @@ export default async function handle(req, res){
             await prismaLogging(session?.user?.id ?? "guest", "queryPostError", e)
             res.status(404).json(e)
         }
+    /*
+     * フロントエンドから渡されたGETリクエストをバックエンドへ橋渡しする
+     */
     } else {
         try {
             const query = req.query.query.join("/")
 
-            // URLパラメータが存在する場合の処理 TODO: 汎用性に欠けるのであとで書き直す
-            let urlParam
-            if(req.query.c){
-                urlParam = `?c=${htmlSpecialChars(req.query.c)}`
-            } else if(req.query.t) {
-                urlParam = `?t=${htmlSpecialChars(req.query.t)}`
-            } else {
-                urlParam = ""
-            }
+            // URLパラメータが存在する場合の処理
+            const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
+                                    req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
 
             const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
             const data = await get.json()
