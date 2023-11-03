@@ -20,6 +20,7 @@ import Head from "next/head";
 import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
 import {mutate} from "swr";
 import ModalIdeaPost from "../components/modal/ModalIdeaPost";
+import PostButton from "../components/PostButton";
 
 export async function getServerSideProps(context) {
     // スクリーンネームをリクエスト
@@ -114,6 +115,7 @@ export default function Home({users}) {
                                 <Link href="#" target="_blank" style={{fontSize:"1.1em",textDecoration:"underline"}}></Link><br/>
                                 <Box style={{padding:"10px",margin:"10px 20px",border:"1px",borderRadius:"8px"}}>
                                     現在開催予定のイベントはありません。<br/>
+                                    <PostButton voteId={20231019}/>
                                     <Link href="#" onClick={handleEditOpen}>期間限定チャレンジルールを投稿する</Link>
                                 </Box>
 

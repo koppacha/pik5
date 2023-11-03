@@ -39,7 +39,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 206,地下の温室,Hot House,ピクミン2 チャレンジモード,stage,int,2,21,200,891,35,9360,9390,9410,9480
 207,鉄人の穴,Brawny Abyss,ピクミン2 チャレンジモード,stage,int,2,21,230,1423,50,14860,14885,14910,14960
 208,赤の洞窟,Red Chasm,ピクミン2 チャレンジモード,stage,int,2,22,130,1840,40,18850,18855,18865,18875
-209,花畑を荒らすもの,Trampled Garden,ピクミン2 チャレンジモード,stage,int,2,22,145,5001,80,50870,50875,50880,50895
+209,花園を荒らすもの,Trampled Garden,ピクミン2 チャレンジモード,stage,int,2,22,145,5001,80,50870,50875,50880,50895
 210,たそがれの庭,Twilight Garden,ピクミン2 チャレンジモード,stage,int,2,22,145,2616,50,26745,26750,26755,26760
 211,かくしもちの洞窟,Cryptic Cavern,ピクミン2 チャレンジモード,stage,int,2,22,300,826,10,8510,8520,8530,8540
 212,コンクリート迷路,Concrete Maze,ピクミン2 チャレンジモード,stage,int,2,21,220,460,18,4885,4910,4940,4970
@@ -146,7 +146,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 359,地下のオアシス,Buried Pond,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 360,砂上の王国,Sandbox Kingdom,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 361,鉄くずのブルース,Corroded Maze,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
-362,積み木の迷路,Jigsaw Closseum,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
+362,積み木の迷路,Jigsaw Colosseum,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 399,試しの砂浜,Sandbox,テスト用,stage,int,9,99,0,0,0,0,0,0,0
 401,ダンドリ養成所,Dandori training school,ピクミン4 ダンドリチャレンジ,stage,int,4,41,300,140,0,0,0,0,0
 402,炎と電気の実験室,Flame and electricity laboratory,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,160,0,0,0,0,0
@@ -155,7 +155,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 405,水わたりスクール,Water crossing school,ピクミン4 ダンドリチャレンジ,stage,int,4,41,360,170,0,0,0,0,0
 406,超重配送センター,Super heavy distribution center,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,350,0,0,0,0,0
 407,天空の焼却炉,Incinerator in the sky,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,310,0,0,0,0,0
-408,分業用冷蔵庫,Refrigerator for division of labor,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,180,0,0,0,0,0
+408,分業用冷凍庫,Refrigerator for division of labor,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,180,0,0,0,0,0
 409,テキパキ水族館,Quick Aquarium,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,230,0,0,0,0,0
 410,ひらけゴマ道場,Hirake Goma Dojo,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,240,0,0,0,0,0
 411,断崖アスレチック,cliff athletic,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,260,0,0,0,0,0
@@ -181,11 +181,11 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 903,ピクミン2 チャレンジ全クリア,Pikmin 2 Challenge Mode All Levels RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
 904,ピクミン2 チャレンジ全公式超え,Pikmin 2 Challenge Mode All Levels RTA (Over the Official Records),その他,stage,time,2,91,0,0,0,0,0,0,0
 905,ピクミン2 チャレンジ総合70万点超え,Pikmin 2 Challenge Mode All Levels RTA (Over the 700k pts),その他,stage,time,2,91,0,0,0,0,0,0,0
-906,ピクミン2 チャレンジ全回収,Pikmin 2 Challenge Mode All Tresure RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+906,ピクミン2 チャレンジ全回収,Pikmin 2 Challenge Mode All Treasure RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
 907,ピクミン2 本編全回収RTA with Missions,Pikmin2 All Treasure RTA with Missions,その他,stage,time,2,91,0,0,0,0,0,0,0
 1001,コンクリート迷路（タマゴなし）,Concrete Maze,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1002,どっすん迷路（タマゴなし）,Bully Den,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
-1003,地底警備室（スプレーなし）,Subtettanean Lair,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
+1003,地底警備室（スプレーなし）,Subterranean Lair,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
 1004,倍々ゲームの穴（12匹縛り),Breeding Ground,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
 1005,遭難地点（20匹縛り),The Impact Site,第3回期間限定ランキング,stage,int,1,160319,0,0,0,0,0,0,0
 1006,花園を荒らすもの（90秒縛り),Trampled Garden,第3回期間限定ランキング,stage,int,2,160319,0,0,0,0,0,0,0
@@ -223,7 +223,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1038,鼻息の洞穴（紫禁止）[先鋒],Cave of Snarls,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
 1039,あのひとの庭（石化討伐）[次鋒],Creator's Garden,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
 1040,ショイグモの巣（残ピク減点）[副将],Dweevil Nest,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
-1041,地底警備室（40秒）[大将],Subtettanean Lair,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
+1041,地底警備室（40秒）[大将],Subterranean Lair,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
 1042,こてしらべの洞窟（90秒）[ヘイ],Explorer's Cave,第11回期間限定ランキング,stage,int,2,171013,0,0,0,0,0,0,0
 1043,食神のかまど（残ピク減点）,Snack Pit,第12回期間限定ランキング,stage,int,2,180101,0,0,0,0,0,0,0
 1044,大足の穴（奥200ポコ）,Cavernous Abyss,第12回期間限定ランキング,stage,int,2,180101,0,0,0,0,0,0,0
@@ -238,7 +238,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1053,地下の温室（第13回期間限定）,Hot House,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
 1054,三色試練場（第13回期間限定）,Three Color Training,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
 1055,天罰の穴（攻撃縛り）,Cave of Pain,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
-1056,地底警備室（第13回期間限定）,Subtettanean Lair,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
+1056,地底警備室（第13回期間限定）,Subterranean Lair,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
 1057,さらいの洞窟（第13回期間限定）,Abduction Den,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
 1058,巨人のトイレ（第13回期間限定）,The Giant's Bath,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
 1059,あのひとの庭（80秒縛り）,Creator's Garden,期間限定チャレンジ,stage,int,2,180901,0,0,0,0,0,0,0
@@ -271,7 +271,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1086,デメマダラの巣窟（カギのみ）,Emperor's Realm,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
 1087,コレクタールーム（カギのみ）,Collector's Room,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
 1088,秘密兵器実験場（カギのみ）,Secret Testing Range,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
-1089,地底警備室（カギのみ）,Subtettanean Lair,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
+1089,地底警備室（カギのみ）,Subterranean Lair,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
 1090,グリーンホール（カギのみ）,Green Hole,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
 1091,大足の穴（カギのみ）,Cavernous Abyss,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
 1092,あのひとの庭（カギのみ）,Creator's Garden,期間限定チャレンジ,stage,int,2,190802,0,0,0,0,0,0,0
@@ -353,7 +353,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1168,たそがれの庭（近視）,Twilight Garden,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
 1169,ショイグモの巣（残ピク減点）,Dweevil Nest,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
 1170,食神のかまど（120スタート）,Snack Pit,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
-1171,花畑を荒らすもの（片面のみ）,Trampled Garden,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
+1171,花園を荒らすもの（片面のみ）,Trampled Garden,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
 1172,コンクリート迷路（手禁止）,Concrete Maze,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
 1173,地底警備室（ガチンコ対戦）,Subterranean Lair,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
 1174,どっすん迷路（カギのみ）,Bully Den,期間限定チャレンジ,stage,int,2,211105,0,0,0,0,0,0,0
@@ -387,7 +387,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1202,地下の温室,Hot House,参加者企画,stage,int,2,190209,200,891,35,0,0,0,0
 1203,鉄人の穴,Brawny Abyss,参加者企画,stage,int,2,190209,230,1423,50,0,0,0,0
 1204,赤の洞窟,Red Chasm,参加者企画,stage,int,2,190209,130,1840,40,0,0,0,0
-1205,花畑を荒らすもの,Trampled Garden,参加者企画,stage,int,2,190209,145,5001,80,0,0,0,0
+1205,花園を荒らすもの,Trampled Garden,参加者企画,stage,int,2,190209,145,5001,80,0,0,0,0
 1206,たそがれの庭,Twilight Garden,参加者企画,stage,int,2,190209,145,2616,50,0,0,0,0
 1207,かくしもちの洞窟,Cryptic Cavern,参加者企画,stage,int,2,190209,300,826,10,0,0,0,0
 1208,コンクリート迷路,Concrete Maze,参加者企画,stage,int,2,190209,220,460,18,0,0,0,0
@@ -417,7 +417,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 1232,地下の温室,Hot House,参加者企画,stage,int,2,190321,200,891,35,0,0,0,0
 1233,鉄人の穴,Brawny Abyss,参加者企画,stage,int,2,190321,230,1423,50,0,0,0,0
 1234,赤の洞窟,Red Chasm,参加者企画,stage,int,2,190321,130,1840,40,0,0,0,0
-1235,花畑を荒らすもの,Trampled Garden,参加者企画,stage,int,2,190321,145,5001,80,0,0,0,0
+1235,花園を荒らすもの,Trampled Garden,参加者企画,stage,int,2,190321,145,5001,80,0,0,0,0
 1236,たそがれの庭,Twilight Garden,参加者企画,stage,int,2,190321,145,2616,50,0,0,0,0
 1237,かくしもちの洞窟,Cryptic Cavern,参加者企画,stage,int,2,190321,300,826,10,0,0,0,0
 1238,コンクリート迷路,Concrete Maze,参加者企画,stage,int,2,190321,220,460,18,0,0,0,0

@@ -60,7 +60,6 @@ class KeywordController extends Controller
     public function create(Request $request): JsonResponse
     {
         try {
-            Log::debug("req", (array)$request);
             $keywords = new Keyword();
             $keywords->fill([
                     'unique_id' => $request['unique_id'] ?: $this->uniqueIdReal(),
