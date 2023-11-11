@@ -9,5 +9,5 @@ class Keyword extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['unique_id','keyword','flag', 'category', 'tag', 'yomi', 'content','first_editor','last_editor'];
+    protected $fillable = ['unique_id','keyword','flag', 'category', 'tag', 'yomi', 'content','first_editor','last_editor','stage_id','adopted'];
 }

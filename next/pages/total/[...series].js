@@ -73,7 +73,7 @@ export async function getServerSideProps(context){
 
     return {
         props: {
-            stages, series, rule, console: consoles, year, info, users
+            stages, series, rule, consoles, year, info, users
         }
     }
 }

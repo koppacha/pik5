@@ -43,7 +43,7 @@ class KeywordController extends Controller
         }
 
         // 並び変えの基準
-        $sort_key = array_column($filtered_dataset, 'yomi');
+        $sort_key = array_column($filtered_dataset, 'tag');
         array_multisort($sort_key, SORT_STRING, $filtered_dataset);
 
         return response()->json(
@@ -63,6 +63,8 @@ class KeywordController extends Controller
             $keywords = new Keyword();
             $keywords->fill([
                     'unique_id' => $request['unique_id'] ?: $this->uniqueIdReal(),
+                    'stage_id' => 0,
+                    'adopted' => 0,
                     'keyword' => $request['keyword'],
                     'category' => $request['category'] ?: "other",
                     'tag' => $request['tag'] ?: "その他",
