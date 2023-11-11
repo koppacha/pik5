@@ -6,7 +6,7 @@ import {RuleBox, RuleWrapper} from "../../styles/pik5.css"
 
 export default function Rules(props){
 
-    const { info, rule, console, year } = props.props
+    const { info, rule, consoles:console, year } = props.props
     
     const {t} = useLocale()
     

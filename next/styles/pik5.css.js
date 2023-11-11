@@ -123,7 +123,6 @@ export const GlobalStyle = createGlobalStyle`
     font-family: "M PLUS 1 CODE", sans-serif;
 
     ${sp`font-size: 0.8em`}
-    
     [data-theme='dark'] & {
       color: ${colors.dark.front};
       background-color: ${colors.dark.back};
@@ -133,7 +132,7 @@ export const GlobalStyle = createGlobalStyle`
   .title {
     font-size: 3.5em;
     font-family: "M PLUS 1 CODE", sans-serif;
-    
+
     ${sp`font-size: 2em`}
   }
 
@@ -150,9 +149,11 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.subTitle};
     }
   }
+
   .hidden {
     display: none;
   }
+
   .active {
     background-color: ${colors.light.front} !important;
     color: ${colors.light.back} !important;
@@ -162,6 +163,7 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.back} !important;
     }
   }
+
   .info-box {
     border: 1px solid ${colors.light.back};
     padding: 2em;
@@ -172,49 +174,58 @@ export const GlobalStyle = createGlobalStyle`
       border: 1px solid ${colors.dark.back};
     }
   }
+
   .form-helper-text {
     color: ${colors.light.front};
+
     div, input, label {
       color: ${colors.light.front};
     }
-    
+
     [data-theme='dark'] & {
       color: ${colors.dark.front};
+
       div, input, label {
         color: ${colors.dark.front};
       }
 
     }
   }
+
   .sp-hidden {
-      display: none;
+    display: none;
   }
+
   .markdown-content {
-    font-size: 1.0em;
-    color: #9fb5bd;
-
-    /* ユーザー作成のMarkdownをオーバライドするスタイル */
-
+    
+    /* Markdownをオーバライドするスタイル */
     code {
       font-family: "M PLUS 1 CODE", sans-serif;
     }
 
+    h2, h3, h4, h5, h6 {
+      margin-top: 1em;
+    }
+
     li {
-      margin: 0 3em;
+      margin-top: 0.33em;
+      margin-left: 3em;
     }
 
     ul, ol {
-      padding: 0.75em 0;
+      padding: 0.5em 0;
     }
 
     strong {
       font-size: 1.1em;
       color: #f7fafc;
     }
+
     table {
       table-layout: fixed;
       border-collapse: collapse;
     }
+
     td, th {
       padding: 8px;
       border: 1px solid #4a5568;
@@ -238,6 +249,7 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
   height: 64px;
   padding: 0 18px;
   border-bottom: 4px solid #000;
+  max-width: 210px;
   
   ${sp`font-size: 0.7em;`}
 
@@ -330,6 +342,7 @@ export const RuleBox = styled(Grid)`
   border-radius: 4px;
   padding: 12px 6px;
   margin-right: 6px;
+  cursor: pointer;
   background-color: ${colors.light.subBack};
 
   [data-theme="dark"] & {
@@ -650,4 +663,43 @@ export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank}))`
   margin-right: 2px;
   margin-bottom: 2px;
   border-radius: 4px;
+`
+export const EventContainer = styled(Box)`
+  width: 100%;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+`
+export const EventDate = styled(Box).attrs(props => ({$week: props.week}))`
+  text-align: center;
+  border-radius: 4px;
+  padding: 4px 8px;
+  width: 80px;
+  background-color: ${colors.light.subBack};
+
+  [data-theme="dark"] & {
+    background-color: ${colors.dark.subBack};
+  }
+
+  .month {
+    font-size: 0.8em;
+    vertical-align: top;
+  }
+
+  .date {
+    font-size: 1.5em;
+  }
+
+  .week {
+    font-size: 0.8em;
+    color: #8c8c8c;
+  }
+`
+export const EventContent = styled(Box)`
+  font-size: 0.9em;
+  padding: 0 8px;
+  
+  a {
+    text-decoration: underline;
+  }
 `

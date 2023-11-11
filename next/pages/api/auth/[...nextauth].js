@@ -28,7 +28,7 @@ export const authOptions = {
         },
     },
     session: {
-        jwt: true,
+        strategy: "jwt",
     },
     providers: [
         DiscordProvider({
@@ -100,8 +100,7 @@ export const authOptions = {
         })
     ],
     callbacks: {
-        async session({session, token, user}){
-            logger.debug(user)
+        async session({session, token}){
             if(token){
                 session.user.id = token.id
                 session.user.image = null
@@ -114,13 +113,13 @@ export const authOptions = {
             }
             return token
         },
-        async redirect({ url, baseUrl }) {
-            // Allows relative callback URLs
-            if (url.startsWith("/")) return `${baseUrl}${url}`
-            // Allows callback URLs on the same origin
-            else if (new URL(url).origin === baseUrl) return url
-            return baseUrl
-        },
+        // async redirect({ url, baseUrl }) {
+        //     // Allows relative callback URLs
+        //     if (url.startsWith("/")) return `${baseUrl}${url}`
+        //     // Allows callback URLs on the same origin
+        //     else if (new URL(url).origin === baseUrl) return url
+        //     return baseUrl
+        // },
     },
 }
 
