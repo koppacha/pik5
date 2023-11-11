@@ -98,13 +98,13 @@ export default function KeywordIndex(){
             </Grid>
             <Grid container>
             {
-                data?.data.map(function (post){
-                    mae = hi || "わ"
-                    hi = post.yomi
-                    if(hi.slice(0, 1).normalize('NFD')[0] !== mae.slice(0, 1).normalize('NFD')[0]) {
+                data?.data.map(function (post, i){
+                    if(i > 0) mae = data.data[i - 1].tag
+                    hi = post.tag
+                    if(mae !== hi) {
                         return (
                             <React.Fragment key={post.unique_id}>
-                                <Grid item xs={12} style={{marginTop:"2em"}}><Typography variant="h3">{hi.slice(0, 1).normalize('NFD')[0]}</Typography></Grid>
+                                <Grid item xs={12} style={{marginTop:"4em"}}><Typography variant="h4">{post.tag}</Typography></Grid>
                                 <Grid item xs={6} sm={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
                                     <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
                                     <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>

@@ -1,15 +1,15 @@
 # 新ピクチャレ大会 the Pikmin Series Leaderboards
 **Since: 2006/09/01**  
-**author:@koppachappy**
-
+**author: @koppachappy**
+---
 ## このプロジェクトについて
 * 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキング投稿サイトです。
-
+---
 ## このソースコードについて
 ソースコードは公開していますが、管理人が作成したすべてのファイルの著作権は管理人が保有します。 無断転載、二次利用はご遠慮ください。
 ただし、当システムを利用してピクミン以外のランキングサイトを作りたい場合は特例として二次利用を許可する場合があります。
 そのようなケースでの利用をご希望の場合は個別に管理人へご連絡ください。
-
+---
 ## 開発環境
 * OS：[macOS](https://www.apple.com/jp/macos)
 * Infra：[Docker Desktop](https://www.docker.com/products/docker-desktop/)
@@ -18,7 +18,7 @@
 * Browser/DevTools：[Google Chrome](https://www.google.com/intl/ja_jp/chrome/)
 
 >Windowsで動かす場合、WSLに割り当てるメモリが最低3GB必要です。
-
+---
 ## 動作確認環境
 * PC/OS：macOS、Windows
 * PC/Browser：Google Chrome
@@ -27,7 +27,7 @@
 
 >原則としてOS、ブラウザともに最新版を利用（WindowsのみWindows 10を使用）  
 >上記以外（タブレット全般、Android端末、その他のブラウザ）は原則サポート外となります。  
-
+---
 ## 主な使用技術
 * [HTML](https://developer.mozilla.org/ja/docs/Web/HTML)（みんな大好きマークアップ言語。ページの構造化を担当）
 * [CSS](https://developer.mozilla.org/ja/docs/Web/CSS)（みんな大好きスタイリング言語。見た目の装飾などを担当）
@@ -42,14 +42,14 @@
 * [nginx](https://www.nginx.co.jp/) (ネットワーク基盤を制御）
 
 >基盤OSは基本的にUbuntuかAlpine Linuxを使用。
-
+---
 ## 主な利用プラグイン
 * [Font Awesome](https://fontawesome.com/) (高クオリティなSVGアイコンが使い放題になる便利なプラグイン）
 * [Styled-Components](https://styled-components.com/) (コンポーネントごとにCSSを適用できるようになる便利なプラグイン)
 * [Yup](https://github.com/jquense/yup) (フォームのバリデーションチェックを楽にする便利なプラグイン)
 * [Fuse.js](https://www.fusejs.io/) (高速検索を超簡単に実装できる便利なプラグイン)
 * [Next-Auth.js (Auth.js)](https://authjs.dev/) (厄介な認証をまとめて処理できる便利なプラグイン)
-
+---
 ## 環境構築手順
 ```shell
 # ソースコードをダウンロード
@@ -77,7 +77,7 @@ $ php artisan serve --host 0.0.0.0 # 終了するときはCtrl+C
 # 開発を終了する際は以下でコンテナを廃棄する
 $ docker compose down
 ```
-
+---
 ## 初回プッシュ前の準備
 ```shell
 # ~/.sshフォルダに移動し秘密鍵を作る
@@ -97,11 +97,11 @@ $ git remote set-url origin git@github.com:koppacha/pik5.git
 $ git config user.name "(ユーザー名)"
 $ git config user.email "(公開しても構わないメールアドレス)"
 ```
-
+---
 ## 開発環境のURL一覧
 * フロントエンド画面 http://localhost:3005
 * バックエンド（API） http://localhost:8000
-
+---
 ## バージョン管理のルール
 ```shell
 # 作業が終わったら
@@ -122,15 +122,15 @@ $ git checkout your_branch
 $ git fetch
 $ git pull origin your_branch
 ```
-
+---
 ## 編集時のルール・メモ
-- CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの属性のひとつ「xs」と似ていて紛らわしいため）
+CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGridコンポーネントの属性のひとつ「xs」と似ていて紛らわしいため）
 ```jsx
 <Grid style={{width:"100%"}} xs={12}> {/* ←これはOK */}
 <Grid sx={{width:"100%"}} xs={12}> {/* ←これはダメ */}
 ```
 
-- 三項目のいずれかが不要な場合は三項演算子を使わず、比較演算子を使う。
+三項目のいずれかが不要な場合は三項演算子を使わず、比較演算子を使う。
 ```js
 // 例：pelletがfalseでないならpikminに特定のコンポーネントを代入したい場合
 const pikmin = pellet ? <Oniyon/> : undefined // これはダメ
@@ -141,7 +141,7 @@ const pikmin = pellet || <Oniyon/> // 比較演算子||は左辺がfalse相当�
 // 状況に応じてこっちも使おう
 const pikmin = pellet ?? <Oniyon/> // Null合体演算子??は左辺がnullかundefinedなら右辺を返す
 ```
-
+---
 ## 基盤・ネットワーク関連のメモ
 ```shell
 # 初期セットアップ (Ubuntu)
@@ -204,7 +204,7 @@ sudo ln -s /etc/nginx/sites-available/pik5.conf /etc/nginx/sites-enabled/
 sudo certbot --nginx -d pik5.net
 sudo cartbot renew --dry-run
 ```
-
+---
 ## 備忘録
 ```shell
 # limaでdocker daemonを変更したあと、Docker Desktopに戻したい場合は以下のコマンド
@@ -222,10 +222,11 @@ $ git clean -d -f .
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 ```
-
+---
 ## バージョン履歴
-### ver.1.00〜2.78（2007/04/29〜2023/07/20）
-* ver.1：ピクミン３同盟内コンテンツ時代（2007/04/29〜2015/08/31）
+### ver.1.00〜2.78（2006/09/01〜2023/07/20）
+* ver.1：ピクミン３同盟（2006/09/01〜2015/08/31）
+  * （チャレンジモード大会の開催は2007/04/29）
 * ver.2：ピクミンシリーズチャレンジモード大会（2015/09/01〜2023/07/20）  
 >過去の履歴についてはリポジトリ[pik4](https://github.com/koppacha/pik4)を参照
 

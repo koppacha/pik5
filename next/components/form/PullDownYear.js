@@ -8,7 +8,7 @@ export default function PullDownYear(props){
 
     const {t, } = useLocale()
 
-    const { info, year, rule, console, user } = props.props
+    const { info, year, rule, consoles:console, user } = props.props
 
     const now = new Date()
     const years = range(2014, now.getFullYear()).reverse()
