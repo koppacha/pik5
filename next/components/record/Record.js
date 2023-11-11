@@ -132,7 +132,7 @@ export default function Record({data, stages}) {
                                     {
                                         data.ranks.map(function(r, i){
                                             const title = t.stage[stages[i]] + " " + (!r ? "未投稿" : `${r} 位`)
-                                            return <Tooltip style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r}/></Tooltip>
+                                            return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r}/></Tooltip>
                                         })
                                     }
                                 </Grid>
