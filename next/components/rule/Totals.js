@@ -10,7 +10,7 @@ import {RuleBox} from "../../styles/pik5.css";
 
 export default function Totals(props){
 
-    const { series, console, info, year } = props.props
+    const { series, consoles:console, info, year } = props.props
 
     const {t} = useLocale()
 

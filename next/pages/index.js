@@ -120,17 +120,6 @@ export default function Home({users}) {
                     </TopBoxHeader>
                     <TopBoxContent>
                         <EventContainer>
-                            <EventDate week="6">
-                                <span className="month">11/</span>
-                                <span className="date">11</span><hr/>
-                                <span className="week">{t.g.week[6]}</span>
-                            </EventDate>
-                            <EventContent>
-                                第１回週末ダンドリバトル大会（テスト開催）<br/>
-                                20:00～ Discord「大水源」チャンネル（<Link href="./keyword/990caeaba4816">→ルール</Link>）
-                            </EventContent>
-                        </EventContainer>
-                        <EventContainer>
                             <EventDate week="1">
                                 <span className="month">11/</span>
                                 <span className="date">14</span><hr/>
