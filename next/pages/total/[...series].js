@@ -128,7 +128,7 @@ export default function Series(param){
             </RuleWrapper>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal users={param.users} series={param.series} console={param.console} rule={param.rule} year={param.year} stages={param.stages}/>
+            <RankingTotal users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>
         </>
     )
 }
