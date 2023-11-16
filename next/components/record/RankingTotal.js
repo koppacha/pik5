@@ -22,6 +22,6 @@ export default function RankingTotal({series, console:consoles, rule, year, user
     }) : []
 
     return data.map(post =>
-        <Record key={post.user_id} data={post} stages={stages} />
+        <Record key={post.user_id} data={post} stages={stages} series={series} />
     )
 }

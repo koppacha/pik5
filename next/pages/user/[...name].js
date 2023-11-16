@@ -32,7 +32,7 @@ export async function getServerSideProps(context){
     const res = await fetch(`http://laravel:8000/api/count/${user}`)
     const info = await res.json()
 
-    const console = query[1] || 0
+    const consoles= query[1] || 0
     const rule    = query[2] || 0
     const year    = query[3] || 2023
 
@@ -48,7 +48,7 @@ export async function getServerSideProps(context){
     }
     return {
         props: {
-            users, user, userName, console, rule, year, info
+            users, user, userName, consoles, rule, year, info
         }
     }
 }
@@ -78,7 +78,7 @@ export default function Stage(param){
                 </Grid>
             </Grid>
             {/*<UserScoreTable/>*/}
-            <RankingUser data={param.data} userName={param.userName} userId={param.user} console={param.console} rule={param.rule} year={param.year}/>
+            <RankingUser data={param.data} userName={param.userName} userId={param.user} console={param.consoles} rule={param.rule} year={param.year}/>
         </>
     )
 }

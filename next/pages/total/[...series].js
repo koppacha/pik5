@@ -106,7 +106,7 @@ export default function Series(param){
             </PageHeader>
             {
                 param.series > 9 &&
-                <StageList stages={stages} />
+                <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             }
             <Grid container>
                 <Grid item>
