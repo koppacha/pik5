@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Library\Func;
 use App\Models\Record;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -39,53 +40,59 @@ class UserTotalController extends Controller
      */
     public function show(Request $request): array
     {
+        // モデルを定義
+        $record = new Record();
+
         // 当該ユーザーの通常ランキング全記録をリクエスト
-        $dataset = Record::where("user_id", $request['id'])
+        $dataset = $record::select(config('const.selected'))
+            ->where("user_id", $request['id'])
             ->where('flg','<', 2)
             ->orderBy('created_at', 'DESC')
-            ->get();
+            ->get()
+            ->toArray();
 
-        // 配列型に変換
-        $dataset->toArray();
+        $records = Func::duplicates_cleaner($dataset, "stage_id", "rule", "console");
+        $new_data["scores"] = self::aggregateScores($records);
+        $new_data["marks"] = [];
 
-        $filter = []; // 重複削除するためのフィルター
-        $data = [
-            10 => [0, 0, 0],
-            11 => [0, 0, 0],
-            20 => [0, 0, 0],
-            21 => [0, 0, 0],
-            22 => [0, 0, 0],
-            23 => [0, 0, 0],
-            24 => [0, 0, 0],
-            25 => [0, 0, 0],
-            26 => [0, 0, 0],
-            27 => [0, 0, 0],
-            28 => [0, 0, 0],
-            29 => [0, 0, 0],
-            30 => [0, 0, 0, 0, 0, 0, 0],
-            31 => [0, 0, 0, 0, 0, 0, 0],
-            32 => [0, 0, 0, 0, 0, 0, 0],
-            33 => [0, 0, 0, 0, 0, 0, 0],
-            34 => [0, 0, 0, 0, 0, 0, 0],
-            35 => [0, 0, 0, 0, 0, 0, 0],
-            36 => [0, 0, 0, 0, 0, 0, 0],
-            40 => [0, 0, 0, 0, 0, 0, 0],
-            91 => [0, 0, 0],
-            92 => [0, 0, 0],
-            93 => [0, 0, 0],
-            94 => [0, 0, 0],
-            99 => [0, 0, 0],
-        ];
-
-        // 最新記録のみループを回して各配列にスコアを加算していく
-        foreach($dataset as $value){
-            if(in_array($value["stage_id"].$value["console"].$value["rule"], $filter, true)){
-                continue;
-            }
-            $filter[] = $value["stage_id"].$value["console"].$value["rule"];
-            $data[$value["rule"]][$value["console"]] += $value["score"];
+        foreach ($records as $value){
+            $new_data["marks"][$value["console"]][$value["rule"]][] = $value["stage_id"];
         }
-        return $data;
+        return $new_data;
+    }
+
+    public function aggregateScores($array): array
+    {
+        $output = [];
+
+        foreach ($array as $data) {
+            $console = $data["console"];
+            $rule = $data["rule"];
+            $score = $data["score"];
+
+            // 各consoleごとに初期化
+            if (!isset($output[$console])) {
+                $output[$console] = [];
+            }
+
+            // 各ruleごとに初期化
+            if (!isset($output[$console][$rule])) {
+                $output[$console][$rule] = 0;
+            }
+
+            // スコアを加算
+            $output[$console][$rule] += $score;
+
+            if($rule === 21 or $rule === 22){
+                if (!isset($output[$console]["20"])) {
+                    $output[$console]["20"] = 0;
+                }
+
+                $output[$console]["20"] += $score;
+            }
+        }
+
+        return $output;
     }
 
     /**

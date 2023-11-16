@@ -235,25 +235,13 @@ class RecordController extends Controller
             ->get()
             ->toArray();
 
-        // ランキングページの場合は同一ユーザーの重複を削除して順位を再計算
-        $filter = [];
-        $new_data = [];
-
-        // 重複を削除
-        foreach($dataset as $key => $value){
-            if(in_array($value[$group], $filter, true)){
-                continue;
-            }
-            $filter[] = $value[$group];
-            $new_data[$key] = $value;
-        }
+        $new_data = Func::duplicates_cleaner($dataset, $group);
 
         if($where === "stage_id") {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する
             $new_data = Func::rank_calc("stage", $new_data, [$console, $rule, $date]);
 
         } else {
-
             // セット単位ではない場合は個別に計算する（ユーザー別、総合ランキング）
             $max = max(Func::memberCount(0, [$console, $rule, $date]));
 

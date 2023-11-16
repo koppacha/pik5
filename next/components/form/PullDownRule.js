@@ -7,7 +7,7 @@ import {useLocale} from "../../lib/pik5";
 export default function PullDownRule(props){
 
     // TODO: プルダウン版ルールフィルタはいまのところユーザー別ページでのみ使う
-    const {console, rule, year, user} = props.props
+    const {consoles, rule, year, user} = props.props
 
     const {t} = useLocale()
 
@@ -23,12 +23,13 @@ export default function PullDownRule(props){
             <StyledSelect
                 defaultValue={rule}
                 id="select-rule"
+                MenuProps={{disableScrollLock: true}}
             >
                 {
                     // 操作方法プルダウンを出力
                     rules.map(rule =>
                         <MenuItem key={rule} value={rule} component={Link}
-                                  href={'/'+type+'/'+id+'/'+console+'/'+rule+'/'+year}>{t.rule[rule]}</MenuItem>
+                                  href={'/'+type+'/'+id+'/'+consoles+'/'+rule+'/'+year}>{t.rule[rule]}</MenuItem>
                     )
                 }
             </StyledSelect>

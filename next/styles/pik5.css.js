@@ -65,7 +65,7 @@ const shadow = () => {
 const rankCellColor = (rank) => {
     const hue = rank === 1 ? 58 : rank === 2 ? 125 : rank === 3 ? 190 : 0
     const saturation = rank === 1 ? "35%" : rank === 2 ? "25%" : rank === 3 ? "15%" : "0%"
-    const lightness = !rank ? "15%" : rank < 11 ? "55%" : rank < 21 ? "35%" : "25%"
+    const lightness = !rank ? "15%" : rank < 4 ? "65%" : rank < 11 ? "55%" : rank < 21 ? "35%" : "25%"
     const transparent = !rank ? 0 : 1
     return `hsl(${hue}, ${saturation}, ${lightness}, ${transparent})`
 }
@@ -658,11 +658,11 @@ export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.
 `
 export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank}))`
   background-color: ${props => rankCellColor(props.$rank)};
-  width: 16px;
-  height: 16px;
-  margin-right: 2px;
-  margin-bottom: 2px;
-  border-radius: 4px;
+  width: 14px;
+  height: 14px;
+  margin-right: 1px;
+  margin-bottom: 1px;
+  border-radius: 3px;
 `
 export const EventContainer = styled(Box)`
   width: 100%;

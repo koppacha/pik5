@@ -30,6 +30,7 @@ export default function PullDownYear(props){
             <StyledSelect
                 defaultValue={year}
                 id="select-year"
+                MenuProps={{disableScrollLock: true}}
             >
                 {
                     // 集計年プルダウンを出力

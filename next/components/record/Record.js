@@ -18,7 +18,7 @@ import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
 
-export default function Record({data, stages}) {
+export default function Record({data, stages, series}) {
 
     const {t} = useLocale()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
@@ -40,6 +40,9 @@ export default function Record({data, stages}) {
 
     // カテゴリによってユーザーページリンクを置き換える
     const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user_name : "/user/"+data.user_id
+
+    // シリーズが指定されている場合、ランキングセルの折り返し位置を指定
+    const cols = (series === 2) ? 15 : 25
 
     // 比較値を整形する
     let compare;
@@ -100,7 +103,8 @@ export default function Record({data, stages}) {
                     </Grid>
                     <Grid item xs={12} sm={12} style={{
                         borderTop:'1px solid #777',
-                        paddingTop:'8px'
+                        paddingTop:'8px',
+                        maxWidth:'450px'
                     }}>
                         {data.img_url &&
                             <>
@@ -128,7 +132,7 @@ export default function Record({data, stages}) {
                             </>}
                         {data?.ranks &&
                             <>
-                                <Grid container sx={6} md={12} lg={25}>
+                                <Grid container>
                                     {
                                         data.ranks.map(function(r, i){
                                             const title = t.stage[stages[i]] + " " + (!r ? "未投稿" : `${r} 位`)
