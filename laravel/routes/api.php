@@ -30,6 +30,11 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();
 });
 
+// 汎用API
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get('func/member', [Func::class, 'memberCount']);
+});
+
 // 記録取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'record' , [ RecordController::class, 'index' ]);

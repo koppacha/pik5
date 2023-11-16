@@ -31,9 +31,14 @@ class Func extends Facade
         return ['score','DESC'];
     }
     // 対象ステージ群のうち最大参加者数を求める
-    public static function memberCount ($total = 0, $option = [0, 0, 0]): array
+    public static function memberCount ($total = 0, $option = [0, 0, 2023]): array
     {
-        [$console, , $date] = $option;
+        [$console, , $year] = $option;
+
+        // 対象年からフィルターする年月日を算出
+        $year = (int)$year + 1;
+        $datetime = new DateTime("{$year}-01-01 00:00:00");
+        $date = $datetime->format("Y-m-d H:i:s");
 
         if(!$total) {
             // 総合IDが指定されていない場合は通常総合に等しい対象ルールとステージ
@@ -46,27 +51,23 @@ class Func extends Facade
             $stages = TotalController::stage_list((string)$total);
             $ttl = 0;
         }
-        if(!$date) {
-            $datetime = new DateTime("2024-01-01 00:00:00");
-            $date = $datetime->format("Y-m-d H:i:s");
-        }
         $console_operation = $console ? "=" : ">";
-//        $rule_operation = ">";
 
         try {
-            $Model = Cache::remember('memCount', $ttl, static function() use ($console_operation, $console, $rule, $date) {
-                return Record::whereIn('stage_id', range(101, 428))
+            $Model = Cache::remember('memCount', $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
+                return Record::whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
                     ->where('created_at', '<', $date)
                     ->where('flg', '<', 2)
                     ->get()
                     ->groupBy(['stage_id', 'user_id'])
-                    ->map(function ($g) {
+                    ->map(function($g){
                         return $g->count();
                     });
                 });
         } catch (Exception $e){
+            $Model = Collection::empty();
             Log::debug("Error", (array)$e->getMessage());
         }
         return $Model->toArray();
@@ -152,5 +153,25 @@ class Func extends Facade
             $data[$key]['compare'] = $value;
         }
         return $data;
+    }
+    public static function duplicates_cleaner($dataset, ...$targets): array
+    {
+        $filter = [];
+        $new_data = [];
+
+        foreach ($dataset as $key => $value) {
+            $concat = implode('_', array_map(function ($target) use ($value) {
+                return $value[$target];
+            }, $targets));
+
+            if (in_array($concat, $filter, true)) {
+                continue;
+            }
+
+            $filter[] = $concat;
+            $new_data[$key] = $value;
+        }
+
+        return $new_data;
     }
 }

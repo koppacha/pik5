@@ -127,7 +127,7 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
-            <StageList stages={param.stages} />
+            <StageList stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             <Grid container>
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>
