@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {convertToSeconds, fetcher, useLocale} from "../../lib/pik5";
+import {convertToSeconds, useLocale} from "../../lib/pik5";
 import {Box, MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -16,7 +16,6 @@ import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
-import {logger} from "../../lib/logger";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
 
@@ -179,7 +178,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // タイム表示判定
     const isTime = () => {
-        return rule === 33 || rule === 11 || rule === 43 || rule === 91 || [338, 341, 343].includes(info?.stage_id)
+        return [11, 33, 43].includes(Number(rule)) || [338, 341, 343].includes(info?.stage_id)
     }
 
     // タイムからスコアに変換

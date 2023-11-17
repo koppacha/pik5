@@ -9,11 +9,26 @@ import {range} from "./pik5";
 // 有効な操作方法ID、ステージID、ルールID
 export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43]
 
+// ルールIDから配列に変換する関数
+export function rule2array(rule){
+    const number = [10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43]
+    const arrays    = [p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex]
+    const flg = number.indexOf(rule)
+    if(flg === -1){
+        return []
+    } else {
+        return arrays[flg]
+    }
+}
+
 // 本編
 export const st = [100, 200, 300, 400]
 
 // ピクミン1
 export const p1 = range(101, 105)
+
+// ピクミン2
+export const p2 = range(201, 230)
 
 // タマゴなし
 export const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 222, 223, 224, 225, 227]
@@ -21,11 +36,17 @@ export const ne = [203, 204, 208, 209, 210, 211, 213, 214, 215, 216, 219, 221, 2
 // タマゴあり
 export const eg = [201, 202, 205, 206, 207, 212, 217, 218, 220, 226, 228, 229, 230]
 
+// スプレー縛り
+export const ns = [203, 204, 208, 210, 211, 213, 214, 215, 219, 221, 222, 224, 225, 227]
+
 // 本編地下
 export const du = range(231, 244)
 
 // ソロバトル
 export const bt = range(245, 254)
+
+// ピクミン3/DX
+export const p3 = range(301, 315)
 
 // お宝をあつめろ！
 export const ce = range(301, 315)
@@ -41,6 +62,9 @@ export const db = range(345, 350)
 
 // ソロビンゴ
 export const sb = range(351, 362)
+
+// ピクミン4
+export const p4 = range(401, 428)
 
 // ダンドリチャレンジ
 export const dc = range(401, 412)
