@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Library\Func;
 use App\Models\Record;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
@@ -36,9 +37,9 @@ class UserTotalController extends Controller
      * Display the specified resource.
      *
      * @param Request $request
-     * @return array
+     * @return JsonResponse
      */
-    public function show(Request $request): array
+    public function show(Request $request): JsonResponse
     {
         // モデルを定義
         $record = new Record();
@@ -58,7 +59,9 @@ class UserTotalController extends Controller
         foreach ($records as $value){
             $new_data["marks"][$value["console"]][$value["rule"]][] = $value["stage_id"];
         }
-        return $new_data;
+        return response()->json(
+            $new_data
+        );
     }
 
     public function aggregateScores($array): array

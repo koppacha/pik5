@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Http\FormRequest;
+use InvalidArgumentException;
 
 class RecordController extends Controller
 {
@@ -50,7 +51,7 @@ class RecordController extends Controller
     }
 
     // 暫定順位を取得する関数
-    public function getRank(Request|array $request): JsonResponse
+    public function getRank(Request $request): JsonResponse
     {
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
@@ -66,6 +67,22 @@ class RecordController extends Controller
         return response()->json(
             $data
         );
+    }
+    // 暫定順位を取得する関数バックエンド版
+    public function getRankArray(array $request): int
+    {
+        $data = Record::select('user_id')->where('stage_id', $request['stage'])
+            ->where('rule', $request['rule'])
+            ->where('score', '>', (int)$request['score'])
+            ->where('flg','<', 2)
+            ->get()
+            ->unique('user_id')
+            ->count();
+
+        $data++;
+
+        // jsonで返却されるため、Laravel内で値を参照する場合は$data->originalを使用する
+        return $data;
     }
 
     /**

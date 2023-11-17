@@ -533,6 +533,10 @@ export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count
     }
   }
 `
+export const RenderStagesWrapper = styled(Box)`
+  width: 100%;
+  overflow: scroll;
+`
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
   border-radius: 6px;
@@ -547,6 +551,11 @@ export const StageListBox = styled(Box)`
   [data-theme='dark'] & {
     background-color: ${colors.dark.subBack};
   }
+`
+export const MarkerTableCell = styled(Grid)`
+  max-width: 100px;
+  font-size: 0.8em;
+  align-content: flex-start;
 `
 export const UserInfoBox = styled(StageListBox)`
   padding: 12px;
