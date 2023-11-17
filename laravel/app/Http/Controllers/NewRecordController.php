@@ -30,7 +30,7 @@ class NewRecordController extends Controller
             ->toArray();
         foreach($dataset as $data){
             $data["stage"] = $data["stage_id"];
-            $data["post_rank"] = $RecordController->getRank($data)->original;
+            $data["post_rank"] = $RecordController->getRankArray($data);
 
             $member = $StageController->show($data["stage_id"])->original->member;
             $data["rps"] = $Func->rankPoint_calc($data["post_rank"], $member , $max);
