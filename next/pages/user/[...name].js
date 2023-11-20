@@ -72,13 +72,13 @@ export default function Stage(param){
     function RenderStages({marker}){
         return (
             <RenderStagesWrapper>
-                <Grid container columns={{xs: 17}} style={{width:"1700px"}}>
+                <Grid container columns={{xs: 17}} style={{width:"1800px"}}>
                     <MarkerTableCell item xs={1}>#</MarkerTableCell>
-                    {ruleList.map(rule => <MarkerTableCell item xs={1}>{t.rule[rule]}</MarkerTableCell>)}
+                    {ruleList.map(rule => <MarkerTableCell item xs={1}>{t.ru[rule]}</MarkerTableCell>)}
                     {consoleList.map((console,consoleIndex) =>
                         <>
                             <Grid container item xs={17} columns={{xs: 17}}>
-                                <MarkerTableCell item xs={1}>{t.console[console]}</MarkerTableCell>
+                                <MarkerTableCell item xs={1}>{t.cnsl[console]}</MarkerTableCell>
                                 {
                                     ruleList.map((rule, ruleIndex)=>
                                         // 表示する条件を定義
