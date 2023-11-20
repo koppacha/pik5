@@ -74,7 +74,7 @@ export default function Stage(param){
             <RenderStagesWrapper>
                 <Grid container columns={{xs: 17}} style={{width:"1800px"}}>
                     <MarkerTableCell item xs={1}>#</MarkerTableCell>
-                    {ruleList.map(rule => <MarkerTableCell item xs={1}>{t.ru[rule]}</MarkerTableCell>)}
+                    {ruleList.map(rule => <MarkerTableCell item key={rule} xs={1}>{t.ru[rule]}</MarkerTableCell>)}
                     {consoleList.map((console,consoleIndex) =>
                         <>
                             <Grid container item xs={17} columns={{xs: 17}}>
@@ -88,19 +88,19 @@ export default function Stage(param){
                                             (rule === 35 && console !== 1 && console !== 7) ||          // ソロビンゴ＝Wii、ジャイロなし、ジャイロあり、タッチペン、おすそわけ
                                             (rule > 35 && rule < 50 && (console === 3 || console === 4))// サイドストーリー＆ピクミン４＝ジャイロなし、ジャイロあり
                                         ) ?
-                                            <MarkerTableCell container item xs={1} columns={{xs: 5}}>
+                                            <MarkerTableCell container item key={rule} xs={1} columns={{xs: 5}}>
                                                 {
                                                     rule2array(rule).map((stage) =>
                                                         marker.marks[console]?.[rule]?.includes(stage) ? (
-                                                            <Played stage={stage}/>
+                                                            <Played key={stage} stage={stage}/>
                                                         ) : (
-                                                            <NoPlay stage={stage}/>
+                                                            <NoPlay key={stage} stage={stage}/>
                                                         )
                                                     )
                                                 }
                                             </MarkerTableCell>
                                         :
-                                            <MarkerTableCell item xs={1}></MarkerTableCell>
+                                            <MarkerTableCell item key={rule} xs={1}></MarkerTableCell>
                                     )
                                 }
                             </Grid>
