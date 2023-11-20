@@ -116,18 +116,13 @@ export default function Home({users}) {
             <WrapTopBox item xs={12} sm={6}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faCalendarDays} /> {t.g.events}
+                        <FontAwesomeIcon icon={faCalendarDays} /> アンケートにご協力ください
                     </TopBoxHeader>
                     <TopBoxContent>
                         <EventContainer>
-                            <EventDate week="1">
-                                <span className="month">11/</span>
-                                <span className="date">14</span><hr/>
-                                <span className="week">{t.g.week[2]}</span>
-                            </EventDate>
-                            <EventContent>
-                                ファミ通攻略本<br/>
-                                「<Link href="https://www.kadokawa.co.jp/product/322307001073/" target="_blank">ピクミン４ パーフェクトガイド</Link>」発売日
+                            <EventContent style={{width:"100%",backgroundColor:"#555",borderRadius:"4px",padding:"8px",marginBottom:"10px"}}>
+                                ピクチャレ大会<br/>
+                                <Link href="https://docs.google.com/forms/d/e/1FAIpQLScEbuoP7ltvdMToWYuTm-ZFdQj9-J-OW4FJf3akZUsZehDk_A/viewform" target="_blank">2023年冬季運営方針アンケート</Link> （〜11/26）
                             </EventContent>
                         </EventContainer>
                         <Box style={{borderTop:"1px solid #777",fontSize:"0.8em",color:"#999"}}>

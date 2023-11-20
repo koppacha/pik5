@@ -536,6 +536,7 @@ export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count
 export const RenderStagesWrapper = styled(Box)`
   width: 100%;
   overflow: scroll;
+  margin: 20px 0;
 `
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
@@ -553,8 +554,13 @@ export const StageListBox = styled(Box)`
   }
 `
 export const MarkerTableCell = styled(Grid)`
-  max-width: 100px;
+  max-width: 92px;
+  margin-right: 12px;
   font-size: 0.8em;
+  text-align: center;
+  min-height: 47px;
+  line-height: 47px;
+  border-bottom: 1px dotted #333;
   align-content: flex-start;
 `
 export const UserInfoBox = styled(StageListBox)`
