@@ -34,7 +34,7 @@ export default function BreadCrumb({info, rule}){
             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
             {
                 // 第１階層（表示画面が通常総合 or 特殊総合でなかった場合は通常総合 or 特殊総合を表示）
-                (info.parent > 1) ?
+                (info?.parent > 1) ?
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+superParent()}>{t.stage[superParent()]}</Link>
@@ -48,13 +48,13 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第２階層（シリーズ別総合）
-                (info.parent > 9 && info.parent < 100) ?
+                (info?.parent > 9 && info.parent < 100) ?
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
                 </>
                 // 第２階層（期間限定）
-                :(t.limited[info.parent]) &&
+                :(t.limited[info?.parent]) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/limited/"+info.parent}>{t.limited[info.parent]}</Link>
@@ -62,7 +62,7 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第３階層（サブカテゴリ）
-                (info.parent > 20 && info.parent < 90) &&
+                (info?.parent > 20 && info?.parent < 90) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>

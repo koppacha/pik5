@@ -11,11 +11,11 @@ export default function Rules(props){
     const {t} = useLocale()
     
     // 取得対象が総合ランキングの場合はparentを置換する
-    const parent = (info.parent < 10) ? info.stage_id : info.parent
+    const parent = (info?.parent < 10) ? info?.stage_id : info?.parent
     const rules = [parent]
 
     // ステージによってルール配列を操作
-    if(info.series === 1){
+    if(info?.series === 1){
         // ピクミン１＝Wii・NGC、全回収タイムアタック
         rules.push(11)
     }
@@ -32,7 +32,7 @@ export default function Rules(props){
             rules.push(26, 27, 28)
         }
     }
-    if(info.series === 3 && parent !== 35){
+    if(info?.series === 3 && parent !== 35){
         rules.push(34)
     }
     // 通常ルールの場合とそれ以外で表示名を分岐する
@@ -49,7 +49,7 @@ export default function Rules(props){
                     <RuleWrapper item key={val}>
                         <RuleBox className={(Number(rule) === val)&&"active"}
                                  component={Link}
-                                 href={'/'+info.type+'/'+info.stage_id+'/'+console+'/'+val+'/'+year}>
+                                 href={'/'+info?.type+'/'+info?.stage_id+'/'+console+'/'+val+'/'+year}>
                             {screenName}
                         </RuleBox>
                     </RuleWrapper>
