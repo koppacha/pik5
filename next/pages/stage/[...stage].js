@@ -90,7 +90,7 @@ export default function Stage(param){
     let uniqueId = (param.stage > 900) ? param.stage : param.rule
 
     // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
-    if(param.rule === 21 || param.rule === 22){
+    if(Number(param.rule) === 21 || Number(param.rule) === 22){
         uniqueId = 20
     }
     const handleClose = () => setOpen(false)
@@ -114,7 +114,6 @@ export default function Stage(param){
 
         return currentTime >= start && currentTime <= end
     }
-
     return (
         <>
             <Head>
