@@ -86,6 +86,10 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         time: yup
             .string()
             .matches(/^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, '正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。')
+            .test('isTimeValid', '1以下のスコアは登録できません。', function (value) {
+                const calculatedScore = time2score(value);
+                return calculatedScore > 1;
+            }),
     })
 
     // フォームデータの初期化
@@ -107,9 +111,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         register,
         handleSubmit,
         reset,
-        formState: {errors}
+        formState: {errors},
+        trigger
     } = useForm({
-        resolver: yupResolver(schema),
+        mode: 'onChange',
+        resolver: yupResolver(schema)
     })
 
     // フォームデータ格納先
@@ -187,10 +193,10 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
         if (lestTime) {
             // 経過時間が表示されるタイプ（ピクミン３）→残り時間に変換して登録
-            setScore((lestTime.time - sec))
+            return (lestTime.time - sec) + lestTime.score
         } else {
             // 残った時間が表示されるタイプ（ピクミン４）→そのまま登録
-            setScore(sec)
+            return sec
         }
     }
 
@@ -209,7 +215,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     }
     return (
         <>
-            <Dialog open={open} onClose={handleClose} disableScrollLock>
+            <Dialog open={open} onClose={handleClose}>
                 <DialogTitle>{t.post.title}</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -250,7 +256,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
-                                time2score(e.target.value)
+                                setScore(time2score(e.target.value))
                                 setTime(e.target.value)
                             }
                         }

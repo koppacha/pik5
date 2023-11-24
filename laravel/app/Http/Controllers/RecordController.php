@@ -78,10 +78,8 @@ class RecordController extends Controller
             ->get()
             ->unique('user_id')
             ->count();
-
         $data++;
 
-        // jsonで返却されるため、Laravel内で値を参照する場合は$data->originalを使用する
         return $data;
     }
 
@@ -205,7 +203,7 @@ class RecordController extends Controller
         $stage = Stage::where('stage_id', $request['id'])->first();
 
         if($where === "stage_id") {
-            $orderBy = Func::orderByRule($request["id"], $stage["parent"]);
+            $orderBy = Func::orderByRule($request["id"], $rule);
         } else {
             $orderBy = ['score','DESC'];
         }

@@ -4,7 +4,7 @@ import {StageListBox, StageListWrapper} from "../../styles/pik5.css";
 import * as React from "react";
 import {useLocale} from "../../lib/pik5";
 
-export default function StageList({stages, consoles, rule, year}){
+export default function StageList({currentStage, stages, consoles, rule, year}){
 
     const {t} = useLocale()
 
@@ -18,7 +18,7 @@ export default function StageList({stages, consoles, rule, year}){
                         return (
                             <Grid style={{whiteSpace:"nowrap"}} key={stage} item xs={1}>
                                 <Link key={stage} href={'/stage/'+params}>
-                                    <StageListBox>#{stage}<br/>{t.stage[stage].length > 15 ? t.stage[stage].substring(0, 14)+".." : t.stage[stage]}</StageListBox>
+                                    <StageListBox className={(Number(currentStage) === stage)&&"active"}>#{stage}<br/>{t.stage[stage].length > 15 ? t.stage[stage].substring(0, 14).replace(" ","\n")+".." : t.stage[stage].replace(" ","\n")}</StageListBox>
                                 </Link>
                             </Grid>
                         )}

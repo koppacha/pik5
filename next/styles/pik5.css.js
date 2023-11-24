@@ -137,9 +137,14 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   .mini-title {
-    font-size: 2.5em;
+    font-size: 2.25em;
+    color: ${colors.light.subTitle};
 
     ${sp`font-size: 1.3em`}
+
+    [data-theme='dark'] & {
+      color: ${colors.dark.subTitle};
+    }
   }
 
   .subtitle {
@@ -516,7 +521,7 @@ export const AuthWindow = styled(Grid)`
 `
 export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
 
-  margin: 2em 0;
+  margin-bottom: 2em;
   width: 100%;
   
   ${

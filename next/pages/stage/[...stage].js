@@ -15,6 +15,7 @@ import Head from "next/head";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
+import RuleList from "../../components/record/RuleList";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -51,7 +52,8 @@ export async function getServerSideProps(context){
                 parent = await parent_res.json()
             }
             // シリーズ番号に基づくステージ群の配列をリクエスト
-            const res = await fetch(`http://laravel:8000/api/stages/${info.parent}`)
+            const reqStage = rule || info.parent
+            const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
             if(res.status < 300) {
                 stages = await res.json()
             }
@@ -79,20 +81,10 @@ export default function Stage(param){
 
     const {t, r, locale} = useLocale()
 
-    // ボーダーライン出力用変数
-    const borders = [param.info?.border1, param.info?.border2, param.info?.border3, param.info?.border4]
-
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
 
-    // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
-    let uniqueId = (param.stage > 900) ? param.stage : param.rule
-
-    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
-    if(Number(param.rule) === 21 || Number(param.rule) === 22){
-        uniqueId = 20
-    }
     const handleClose = () => setOpen(false)
 
     const handleEditOpen = () => {
@@ -101,8 +93,13 @@ export default function Stage(param){
     }
     const handleOpen = () => setOpen(true)
 
-    const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
-    const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
+    // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
+    let uniqueId = (param.stage > 900) ? param.stage : param.rule
+
+    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
+    if(Number(param.rule) === 21 || Number(param.rule) === 22){
+        uniqueId = 20
+    }
 
     function isEvent(info){
         const currentTime = new Date()
@@ -114,6 +111,19 @@ export default function Stage(param){
 
         return currentTime >= start && currentTime <= end
     }
+
+    // ボーダーライン出力用変数
+    const borders = [param.info?.border1, param.info?.border2, param.info?.border3, param.info?.border4]
+
+    // 表示するタイトルを定義
+    const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
+    const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
+
+    // 表示するルールタイトルを定義
+    const ruleName = [10, 20, 21, 22, 30, 40, 33, 36, 41, 42, 43].includes(Number(param.rule))
+        ? <></>
+        : <Typography variant="" className="mini-title">（{t.rule?.[param.rule]}）</Typography>
+
     return (
         <>
             <Head>
@@ -122,60 +132,34 @@ export default function Stage(param){
             <PageHeader>
                 #{param.stage}<br/>
                 <BreadCrumb info={param.info} rule={param.rule}/>
-                <Typography variant="" className="title">{stageName}</Typography><br/>
+                <Typography variant="" className="title">{stageName}</Typography>{ruleName}<br/>
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
             </PageHeader>
-            <StageList stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+            <RuleList param={param}/>
+            <StageList currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             <Grid container>
-                <Grid item xs={12}>
+                <Grid item xs={6}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
-            </Grid>
-            <Box style={{margin:"20px 0"}}>
-                <Grid container style={{
-                    marginTop:"30px"
-                }}>
-                    {
-                        // 通常ステージの場合はステージに含まれるルールをすべて表示
-                        (param.rule < 90) ?
-                            <Rules props={param}/>
-
-                        // 特殊ステージの場合は総合ランキングへのリンクを表示
-                        : (param.rule > 150901) ?
-                            <RuleWrapper item>
-                                <RuleBox className={"active"}
-                                         component={Link}
-                                         href={'/limited/'+param.rule}>
-                                    {t.limited[param.rule]}
-                                </RuleBox>
-                            </RuleWrapper>
-
-                        // 上記どちらも当てはまらない場合はルールボックスを表示しない
-                        :
-                            <></>
-                    }
+                <RuleWrapper container item xs={6} style={{marginTop:"45px",justifyContent: 'flex-end'}}>
                     {
                         // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
                         (isEvent(param.parent)) &&
-                        <RecordPost
-                            info={param.info} rule={param.rule} console={param.consoles}/>
+                            <RecordPost
+                                info={param.info} rule={param.rule} console={param.consoles}/>
                     }
-                    <Grid item style={{
-                        marginBottom:"20px",
-                    }}>
-                        <RuleBox className={"active"}
-                                 onClick={handleOpen}
-                                 component={Link}
-                                 href="#">
-                            {t.g.rule}
-                        </RuleBox>
-                    </Grid>
-                </Grid>
-            </Box>
-            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
+                    <RuleBox className={"active"}
+                             onClick={handleOpen}
+                             component={Link}
+                             href="#">
+                        {t.g.rule}
+                    </RuleBox>
+                </RuleWrapper>
+            </Grid>
             <RankingStandard users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
+            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
 }
