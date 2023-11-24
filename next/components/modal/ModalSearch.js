@@ -16,6 +16,7 @@ import {SearchResultItem, SearchResultTag} from "../../styles/pik5.css";
 import {faBook, faRankingStar, faUser} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useRouter} from "next/router";
+import DialogContent from "@mui/material/DialogContent";
 
 export default function ModalSearch({users, open, handleClose, searchRef}) {
 
@@ -57,7 +58,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     const handleKeyDown = (e) => {
         if(e.key === 'Enter'){
-            const {userId, unique_id, stage_id, type} = fuse.search(search)[0].item
+            const {userId, unique_id, stage_id, type} = fuse.search(search)[0]?.item
 
             if(userId){
                 router.push(`/user/${userId}`).then(r => handleClose())
@@ -95,83 +96,85 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     return (
         <>
-            <Dialog open={open} onClose={handleClose} fullWidth disableScrollLock>
-                <TextField
-                    id="search"
-                    label="検索キーワード"
-                    type="text"
-                    onChange={(e) => setSearch(e.target.value)}
-                    fullWidth
-                    variant="standard"
-                    value={search}
-                    margin="normal"
-                    inputRef={searchRef}
-                    onKeyDown={handleKeyDown}
-                />
-                <List style={{width:"100%"}}>
-                {
-                    fuse.search(search).map(function (post, idx) {
+            <Dialog open={open} onClose={handleClose} fullWidth>
+                <DialogContent style={{height: '100vh'}}>
+                    <TextField
+                        id="search"
+                        label="検索キーワード"
+                        type="text"
+                        onChange={(e) => setSearch(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        value={search}
+                        margin="normal"
+                        inputRef={searchRef}
+                        onKeyDown={handleKeyDown}
+                    />
+                    <List style={{width:"100%"}}>
+                    {
+                        fuse.search(search).map(function (post, idx) {
 
-                        let color
+                            let color
 
-                        // ステージ
-                        if(post.item?.stage_name){
+                            // ステージ
+                            if(post.item?.stage_name){
 
-                            color = "#e55fb6"
+                                color = "#e55fb6"
 
-                            return (
-                                <Link key={idx} href={"/"+post.item.type+"/"+post.item.stage_id} onClick={handleClose}>
-                                    <SearchResultItem index={idx}>
-                                        <FontAwesomeIcon icon={faRankingStar} />
+                                return (
+                                    <Link key={idx} href={"/"+post.item.type+"/"+post.item.stage_id} onClick={handleClose}>
+                                        <SearchResultItem index={idx}>
+                                            <FontAwesomeIcon icon={faRankingStar} />
 
-                                            {post.item.stage_name}
-                                        {
-                                            (post.item?.parent < 100) ?
-                                                (!post.item?.parent) || // ←parentが0以下ならカテゴリ名は表示しない
-                                                <SearchResultTag color={color}>{t.subtitle[post.item.parent]}</SearchResultTag>
-                                                :
-                                                <SearchResultTag color={color}>{t.limited[post.item.parent]}</SearchResultTag>
-                                        }
-                                    </SearchResultItem>
-                                </Link>
-                            )
-                        }
+                                                {post.item.stage_name}
+                                            {
+                                                (post.item?.parent < 100) ?
+                                                    (!post.item?.parent) || // ←parentが0以下ならカテゴリ名は表示しない
+                                                    <SearchResultTag color={color}>{t.subtitle[post.item.parent]}</SearchResultTag>
+                                                    :
+                                                    <SearchResultTag color={color}>{t.limited[post.item.parent]}</SearchResultTag>
+                                            }
+                                        </SearchResultItem>
+                                    </Link>
+                                )
+                            }
 
-                        // キーワード
-                        if(post.item?.keyword){
+                            // キーワード
+                            if(post.item?.keyword){
 
-                            color = "#4decce"
-                            if(post.item?.category === "rule") return null
+                                color = "#4decce"
+                                if(post.item?.category === "rule") return null
 
-                            return (
-                                <Link key={idx} variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
-                                    <SearchResultItem index={idx}>
-                                        <FontAwesomeIcon icon={faBook} />
-                                            {post.item.keyword}
-                                        <SearchResultTag color={color}>{t.keyword.category[post.item?.category]}</SearchResultTag>
-                                    </SearchResultItem>
-                                </Link>
-                            )
-                        }
+                                return (
+                                    <Link key={idx} variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
+                                        <SearchResultItem index={idx}>
+                                            <FontAwesomeIcon icon={faBook} />
+                                                {post.item.keyword}
+                                            <SearchResultTag color={color}>{t.keyword.category[post.item?.category]}</SearchResultTag>
+                                        </SearchResultItem>
+                                    </Link>
+                                )
+                            }
 
-                        // ユーザー
-                        if(post.item?.name) {
+                            // ユーザー
+                            if(post.item?.name) {
 
-                            color = "#5b68f3"
+                                color = "#5b68f3"
 
-                            return (
-                                <Link key={idx} href={"/user/"+post.item.userId} onClick={handleClose}>
-                                    <SearchResultItem index={idx}>
-                                        <FontAwesomeIcon icon={faUser} />
-                                            {post.item.name}
-                                        <SearchResultTag color={color} style={{color:"#fff"}}>{t.g.userName}</SearchResultTag>
-                                    </SearchResultItem>
-                                </Link>
-                            )
-                        }
-                    })
-                }
-                </List>
+                                return (
+                                    <Link key={idx} href={"/user/"+post.item.userId} onClick={handleClose}>
+                                        <SearchResultItem index={idx}>
+                                            <FontAwesomeIcon icon={faUser} />
+                                                {post.item.name}
+                                            <SearchResultTag color={color} style={{color:"#fff"}}>{t.g.userName}</SearchResultTag>
+                                        </SearchResultItem>
+                                    </Link>
+                                )
+                            }
+                        })
+                    }
+                    </List>
+                </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose}>閉じる</Button>
                 </DialogActions>
