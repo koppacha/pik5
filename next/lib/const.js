@@ -86,8 +86,17 @@ export const ot = range(901, 907)
 
 // カウントダウン系ステージの初期時間
 export const timeStageList = [
-    {stage:338, time:720}, {stage:341, time:840},
-    {stage:343, time:780}, {stage:345, time:420},
-    {stage:346, time:900}, {stage:347, time:780},
-    {stage:348, time:600}, {stage:349, time:900},
-    {stage:350, time:720}]
+    {stage:101, time:648, score:278},
+    {stage:102, time:1134,score:569},
+    {stage:103, time:972, score:482},
+    {stage:104, time:1134,score:752},
+    {stage:105, time:810, score:299},
+    {stage:338, time:720, score:0},
+    {stage:341, time:840, score:0},
+    {stage:343, time:780, score:0},
+    {stage:345, time:420, score:0},
+    {stage:346, time:900, score:0},
+    {stage:347, time:780, score:0},
+    {stage:348, time:600, score:0},
+    {stage:349, time:900, score:0},
+    {stage:350, time:720, score:0}]

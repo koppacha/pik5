@@ -3,7 +3,7 @@ import React, {useContext, useState} from "react";
 import RecordForm from "./RecordForm";
 import {Box, Grid} from "@mui/material";
 import Link from "next/link";
-import {RecordPostButton} from "../../styles/pik5.css";
+import {RecordPostButton, RuleBox} from "../../styles/pik5.css";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faPaperPlane} from "@fortawesome/free-solid-svg-icons";
 import {useLocale} from "../../lib/pik5";
@@ -24,16 +24,15 @@ export default function RecordPost({info, rule, console, mode}){
 
     return (
         <>
-            <Grid item>
+            <RuleBox item className="active">
                 <RecordPostButton
-                    className="active"
                     series={info?.series}
                     component={Link}
                     href="#"
                     onClick={handleClickOpen}>
                     <FontAwesomeIcon icon={faPaperPlane} /> {t.post.title}
                 </RecordPostButton>
-            </Grid>
+            </RuleBox>
             <RecordForm
                 info={info}
                 rule={rule}
