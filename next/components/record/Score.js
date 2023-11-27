@@ -39,7 +39,7 @@ export default function Score({rule, score, stage, category}){
         )
     } else {
         const time = timeStageList.find(({stage:s})=> s === stage)
-        if(time){
+        if(time && Number(rule) !== 10){
             // 残り時間で競うステージの場合
             const screenTime = time.time - score
 
