@@ -6,7 +6,7 @@ import {en} from "../../locale/en";
 import {ja} from "../../locale/ja";
 import {styled} from "@mui/material/styles";
 import {useLocale} from "../../lib/pik5";
-import {RuleBox} from "../../styles/pik5.css";
+import {RuleBox, RuleWrapper} from "../../styles/pik5.css";
 
 export default function Totals(props){
 
@@ -34,20 +34,16 @@ export default function Totals(props){
     }
 
     return (
-        <>
+        <RuleWrapper container>
         {
             totals.map(val =>
-                <Grid item key={val} style={{
-                    marginBottom:"30px"
-                }}>
-                    <RuleBox className={(Number(series) === val)&&"active"}
-                         component={Link}
-                         href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
-                        {t.rule[val]}
-                    </RuleBox>
-                </Grid>
+                <RuleBox item key={val} className={(Number(series) === val)&&"active"}
+                     component={Link}
+                     href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
+                    {t.rule[val]}
+                </RuleBox>
             )
         }
-        </>
+        </RuleWrapper>
     )
 }

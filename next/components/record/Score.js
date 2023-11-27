@@ -13,6 +13,13 @@ export default function Score({rule, score, stage, category}){
             <></>
         )
     }
+
+    // 全回収TAの場合はスコアから逆算して経過時間を求める
+    function score2time(score, stage){
+        const stageTimes = timeStageList.find(lists => lists.stage === Number(stage))
+        return stageTimes.time - (score - stageTimes.score)
+    }
+
     if( category === "battle"){
         // バトルモードの場合
         return (
@@ -24,9 +31,10 @@ export default function Score({rule, score, stage, category}){
     }
     else if(Number(rule) === 11 || Number(rule) === 43 || Number(rule) === 91 || category === "speedrun" || countUpStageList.includes(stage)){
         // RTAの場合
+        const convertScore = (Number(rule) === 11) ? score2time(score, stage) : score
         return (
             <>
-                <ScoreType as="span">{sec2time(score)}</ScoreType>
+                <ScoreType as="span">{sec2time(convertScore)}</ScoreType>
             </>
         )
     } else {

@@ -109,7 +109,7 @@ export default function Limited(param){
                 </RuleWrapper>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal users={param.users} series={param.limited} console={0} rule={0} year={0}/>
+            <RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
         </>
     )
 }
