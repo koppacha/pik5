@@ -19,9 +19,9 @@ const colors = {
         front: "#282828",
         back: "#e1dbd5",
         subTitle: "#464646",
-        subBack: "#c2a37c",
+        subBack: "#c0b1a2",
         hoverBack: "#2d3748",
-        border: "#d99062",
+        border: "#7a6c62",
         compare: "#e63600",
     }
 }
@@ -235,6 +235,9 @@ export const GlobalStyle = createGlobalStyle`
       padding: 8px;
       border: 1px solid #4a5568;
     }
+    a {
+      text-decoration: underline;
+    }
   }
 `
 export const OffsetContainer = styled(Container)`
@@ -333,14 +336,18 @@ export const InfoBox = styled(Box)`
   margin :2em;
   border-radius :8px;
   
+  a {
+      text-decoration: underline;
+  }
+  
   [data-theme='dark'] & {
     border :1px solid ${colors.dark.border};
   }
 `
 export const RuleWrapper = styled(Grid)`
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   
-  ${sp`margin-bottom: 30px;`}
+  ${sp`margin-bottom: 15px;`}
 `
 
 export const RuleBox = styled(Grid)`
@@ -376,7 +383,7 @@ export const WrapTopBox = styled(Grid)`
 `
 export const TopBox = styled(Box)`
   border: 1px solid ${colors.light.border};
-  border-radius: 4px;
+  border-radius: 6px;
   height: 100%;
 
   [data-theme='dark'] & {
@@ -388,6 +395,12 @@ export const TopBoxHeader = styled(Box)`
   color: ${colors.light.back};
   padding :4px;
   border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  
+  span {
+    display: inline-block;
+  }
   
   [data-theme="dark"] & {
     background-color: ${colors.dark.border};

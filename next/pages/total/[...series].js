@@ -17,6 +17,7 @@ import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
+import RuleList from "../../components/record/RuleList";
 
 export async function getServerSideProps(context){
 
@@ -104,28 +105,24 @@ export default function Series(param){
                 <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
                 <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
             </PageHeader>
+            <Totals props={param}/>
             {
                 param.series > 9 &&
                 <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             }
-            <Grid container>
-                <Grid item>
+            <Grid container style={{marginBottom:'1em'}}>
+                <Grid item xs={6}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
-            </Grid>
-            <Grid container style={{
-                marginTop:"30px"
-            }}>
-            <Totals props={param}/>
-            <RuleWrapper item>
-                <RuleBox className={"active"}
-                         onClick={handleOpen}
-                         component={Link}
-                         href="#">
-                    {t.g.rule}
-                </RuleBox>
-            </RuleWrapper>
+                <RuleWrapper container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+                    <RuleBox className={"active"}
+                             onClick={handleOpen}
+                             component={Link}
+                             href="#">
+                        {t.g.rule}
+                    </RuleBox>
+                </RuleWrapper>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
             <RankingTotal users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>

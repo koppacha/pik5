@@ -58,7 +58,6 @@ export default function Record({data, stages, series}) {
     } else {
         compare = ""
     }
-
     return (
         <RecordContainer container rank={data?.post_rank ?? 20} team={data?.team}>
             <RecordGridWrapper item xs={2} sm={1}>
