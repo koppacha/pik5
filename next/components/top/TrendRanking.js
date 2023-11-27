@@ -27,7 +27,7 @@ export default function TrendRanking(){
                         <Grid item key={i} xs={4} sm={2} component={Link} href={"/stage/"+post.stage_id}>
                             <CellBox length={t.stage[post.stage_id].length}>
                                 {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
-                                {t.stage[post.stage_id].length > 9 ? t.stage[post.stage_id].substring(0, 8)+".." : t.stage[post.stage_id]}<br/>
+                                {t.stage[post.stage_id].length > 10 ? t.stage[post.stage_id].substring(0, 9)+".." : t.stage[post.stage_id]}<br/>
                                 {post.cnt} {t.g.countTail}
                             </CellBox>
                         </Grid>

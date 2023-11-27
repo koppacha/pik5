@@ -17,7 +17,7 @@ import {
     faCalendarDays,
     faCertificate,
     faCircleInfo,
-    faFlag
+    faFlag, faRankingStar
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewRecords from "../components/top/NewRecords";
@@ -32,6 +32,11 @@ import ModalIdeaPost from "../components/modal/ModalIdeaPost";
 import PostButton from "../components/PostButton";
 
 export async function getServerSideProps(context) {
+
+    // 前回のトレンドをリクエスト
+    const res = await fetch(`http://laravel:8000/api/prev`)
+    const prev = (res.status < 300) ? await res.json() : undefined
+
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
@@ -41,12 +46,12 @@ export async function getServerSideProps(context) {
     })
     return {
         props: {
-            users
+            users, prev
         }
     }
 }
 
-export default function Home({users}) {
+export default function Home({users, prev}) {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
@@ -87,6 +92,23 @@ export default function Home({users}) {
         ["Discord", "https://discord.gg/rQEBJQa"]
     ]
 
+    // 特定ユーザーのIDを入力してユーザー名を返す
+    function id2name(users, target){
+        const result = users.find(function(user){
+            return user.userId === target
+        })
+        return result.name
+    }
+    // 先月のトレンド
+    const PrevTrend = (prev.trend[0]?.cnt)
+                    ? <>先月TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
+                    : <></>
+
+    // 去年の最多投稿者
+    const PrevPost = (prev.post[0]?.cnt)
+                   ? <>前年TOP: {id2name(users, prev.post[0]["user_id"])} ({prev.post[0]["cnt"]} 回）</>
+                   : <></>
+
   return (
     <>
         <Head>
@@ -116,13 +138,12 @@ export default function Home({users}) {
             <WrapTopBox item xs={12} sm={6}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faCalendarDays} /> アンケートにご協力ください
+                        <span><FontAwesomeIcon icon={faCalendarDays} /> イベントカレンダー</span>
                     </TopBoxHeader>
                     <TopBoxContent>
                         <EventContainer>
                             <EventContent style={{width:"100%",backgroundColor:"#555",borderRadius:"4px",padding:"8px",marginBottom:"10px"}}>
-                                ピクチャレ大会<br/>
-                                <Link href="https://docs.google.com/forms/d/e/1FAIpQLScEbuoP7ltvdMToWYuTm-ZFdQj9-J-OW4FJf3akZUsZehDk_A/viewform" target="_blank">2023年冬季運営方針アンケート</Link> （〜11/26）
+                                現在予定されているイベントはありません。
                             </EventContent>
                         </EventContainer>
                         <Box style={{borderTop:"1px solid #777",fontSize:"0.8em",color:"#999"}}>
@@ -137,7 +158,7 @@ export default function Home({users}) {
             <WrapTopBox item xs={12} sm={6}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}
+                        <span><FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}</span>
                     </TopBoxHeader>
                     <TopBoxContent>
                         <TopBoxContentList>【ver.3.04】イベントセル、期間限定チャレンジ投稿フォーム、新着記録順位、総合ランキングの順位マーカーを追加しました（2023/11/11）</TopBoxContentList>
@@ -151,7 +172,8 @@ export default function Home({users}) {
             <WrapTopBox item xs={12}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faArrowTrendUp} /> {t.g.trend}
+                        <span><FontAwesomeIcon icon={faArrowTrendUp} /> {t.g.trend}</span>
+                        <span style={{fontSize:"0.8em"}}>{PrevTrend}</span>
                     </TopBoxHeader>
                     <TopBoxContent>
                         <TrendRanking/>
@@ -161,7 +183,8 @@ export default function Home({users}) {
             <WrapTopBox item xs={12}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faFlag} /> {t.g.countRanking}
+                        <span><FontAwesomeIcon icon={faFlag} /> {t.g.countRanking}</span>
+                        <span style={{fontSize:"0.8em"}}>{PrevPost}</span>
                     </TopBoxHeader>
                     <TopBoxContent>
                         <PostCountRanking users={users}/>
@@ -171,7 +194,7 @@ export default function Home({users}) {
             <WrapTopBox item xs={12}>
                 <TopBox>
                     <TopBoxHeader>
-                        <FontAwesomeIcon icon={faCertificate} />{t.g.newRecord}
+                        <span><FontAwesomeIcon icon={faCertificate} /> {t.g.newRecord}</span>
                     </TopBoxHeader>
                     <TopBoxContent>
                         <NewRecords users={users}/>

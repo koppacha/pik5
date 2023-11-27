@@ -120,9 +120,9 @@ export default function Stage(param){
     const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
     // 表示するルールタイトルを定義
-    const ruleName = [10, 20, 21, 22, 30, 40, 33, 36, 41, 42, 43].includes(Number(param.rule))
+    const ruleName = [10, 20, 21, 22, 30, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
         ? <></>
-        : <Typography variant="" className="mini-title">（{t.rule?.[param.rule]}）</Typography>
+        : <Link href={"/total/"+param.rule} className="mini-title">（{t.rule?.[param.rule]}）</Link>
 
     return (
         <>
@@ -138,16 +138,17 @@ export default function Stage(param){
             </PageHeader>
             <RuleList param={param}/>
             <StageList currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
-            <Grid container>
+            <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
-                <RuleWrapper container item xs={6} style={{marginTop:"45px",justifyContent: 'flex-end'}}>
+                <RuleWrapper container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                     {
                         // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
                         (isEvent(param.parent)) &&
                             <RecordPost
+                                style={{alignItems: "center"}}
                                 info={param.info} rule={param.rule} console={param.consoles}/>
                     }
                     <RuleBox className={"active"}
