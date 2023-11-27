@@ -114,13 +114,12 @@ export default function RecordPage({users, data}){
                     :
                     <>
                         <PageHeader>
-                            {role}<br/>
                             #{data?.unique_id || "?"}<br/>
                             <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                             <StairIcon icon={faStairs}/>
                             <Link href={"/user/"+data.user_id}>{data.user_name}</Link>
                             <StairIcon icon={faStairs}/>
-                            記録個別ページ<br/>po
+                            記録個別ページ<br/>
                             <Typography variant="" className="title">{ t.stage[data.stage_id] }</Typography><br/>
                             <Typography variant="" className="subtitle">{r.stage[data.stage_id]}</Typography><br/><br/>
                         </PageHeader>
