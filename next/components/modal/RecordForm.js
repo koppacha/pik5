@@ -87,6 +87,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             .string()
             .matches(/^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, '正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。')
             .test('isTimeValid', '1以下のスコアは登録できません。', function (value) {
+                if(!isTime()) return true
                 const calculatedScore = time2score(value);
                 return calculatedScore > 1;
             }),
