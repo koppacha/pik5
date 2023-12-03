@@ -62,7 +62,7 @@ export default function Menu2(props){
                         <Grid item xs={3}>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+duColor,
-                            }}  component={Link} href="/total/23" onClick={props.handleClose}>本編地下総合</StyledMenuItem>
+                            }}  component={Link} href="/total/25" onClick={props.handleClose}>本編地下総合</StyledMenuItem>
                             {
                                 du.map(n=>
                                     <StyledMenuItem key={n} style={{
@@ -74,7 +74,7 @@ export default function Menu2(props){
                         <Grid item xs={3}>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+btColor,
-                            }}  component={Link} href="/total/24" onClick={props.handleClose}>ソロバトル総合</StyledMenuItem>
+                            }}  component={Link} href="/total/29" onClick={props.handleClose}>ソロバトル総合</StyledMenuItem>
                             {
                                 bt.map(n=>
                                     <StyledMenuItem key={n} style={{

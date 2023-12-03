@@ -20,7 +20,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
     const {t} = useLocale()
     const {data: session } = useSession()
 
-    // 縛りルールのベースステージ（＝通常ランキングすべて）
+    // 縛りルールのベースステージ（第19回〜：ピクミン２とピクミン４の通常ステージ）
     const stages = sliceObject(t.stage, 100, 428)
 
     // バリデーションルール
@@ -64,7 +64,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                     'category': 'idea',
                     'stage_id': stageId || 101,
                     'unique_id': uniqueId || 0,
-                    'tag': tag,
+                    'tag': '期間限定チャレンジ',
                     'yomi': yomi,
                     'content': content,
                     'first_editor':data?.first_editor || 'guest',
@@ -82,7 +82,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
         reset({
             defaultValue: {
                 category: 'idea',
-                tag: "縛りルール案",
+                tag: "期間限定チャレンジ",
                 keyword: data?.data?.keyword,
                 yomi: "",
                 content: data?.data?.content,
@@ -129,10 +129,11 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                         select
                         id="stage_id"
                         label={t.keyword.g.stageName}
-                        onChange={(e) => setCategory(e.target.value)}
+                        onChange={(e) => setStageId(e.target.value)}
                         fullWidth
                         variant="standard"
-                        defaultValue={(data?.data?.category) || 101}
+                        helperText={"第19回はピクミン２、ピクミン４の通常ステージから選出予定です。"}
+                        defaultValue={(data?.data?.stage_id) || 101}
                     >
                         {
                             Object.keys(stages).map((stage) =>
@@ -153,6 +154,18 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                         defaultValue={data?.data?.keyword}
                     />
                     <TextField
+                        {...register('yomi')}
+                        id="yomi"
+                        label={t.keyword.g.yomi}
+                        type="text"
+                        onChange={(e) => setYomi(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        error={'yomi' in errors}
+                        helperText={errors.yomi?.message}
+                        defaultValue={data?.data?.yomi}
+                    />
+                    <TextField
                         {...register('content')}
                         id="content"
                         label={t.keyword.g.content}
@@ -163,7 +176,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                         rows={5}
                         variant="standard"
                         error={'content' in errors}
-                        helperText={"ルールの詳細を入力してください。Markdownが使えます。採用された場合は全ユーザーに公開されます。"}
+                        helperText={"ルールの詳細を入力してください。Markdownが使えます。採用された場合は全ユーザーに公開されます。リタイア記録を無効とする場合はその旨を明記してください。ピクミン４の場合、ソウビの制限有無を明記してください。ダンドリバトルの場合、ストーリーモードか否かを明記してください。"}
                         defaultValue={data?.data?.content}
                     />
                 <DialogActions>

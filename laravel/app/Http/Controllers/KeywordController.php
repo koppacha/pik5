@@ -63,22 +63,24 @@ class KeywordController extends Controller
             $keywords = new Keyword();
             $keywords->fill([
                     'unique_id' => $request['unique_id'] ?: $this->uniqueIdReal(),
-                    'stage_id' => 0,
+                    'stage_id' => $request['stage_id'] ?: 0,
                     'adopted' => 0,
                     'keyword' => $request['keyword'],
                     'category' => $request['category'] ?: "other",
                     'tag' => $request['tag'] ?: "その他",
-                    'yomi' => $request['yomi'],
+                    'yomi' => $request['yomi'] ?: "",
                     'content' => $request['content'],
-                    'first_editor' => $request['first_editor'],
-                    'last_editor' => $request['last_editor'],
-                    'created_at' => $request['created_at'],
+                    'first_editor' => $request['first_editor'] ?: "guest",
+                    'last_editor' => $request['last_editor'] ?: "guest",
                     'flag' => $request['flag'] ?: 1,
                 ]);
             $keywords->save();
 
-        } catch (\Exception $e) {
-            return \response()->json(["ERROR:$e", 500]);
+        } catch (Exception $e) {
+            $array = $request->all();
+            return \response()->json(["REQUEST: ".implode(", ", $array),
+                                      "ERROR: $e",
+                                      500]);
         }
         return response()->json(
             ["OK", 200]

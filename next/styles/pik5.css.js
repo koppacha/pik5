@@ -651,7 +651,7 @@ export const StyledDialogContent = styled(DialogContent)`
     margin-bottom: 10px;
   }
   
-  div, input, svg, label {
+  div, input, svg, label, p {
     color: ${colors.light.front};
 
     [data-theme='dark'] & {

@@ -12,6 +12,7 @@ import {useSearchParams} from "next/navigation";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
+import {useSession} from "next-auth/react";
 
 export async function getServerSideProps(context){
 
@@ -33,6 +34,7 @@ export async function getServerSideProps(context){
 export default function KeywordIndex(){
 
     const {t:tl,r} = useLocale()
+    const {data: session } = useSession()
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
     const [uniqueId, setUniqueId] = useState("")
@@ -88,12 +90,13 @@ export default function KeywordIndex(){
                         <li>本文中のゲームタイトルは『』で囲んでください。強調したい言葉は「」で囲んでください。（キーワード名に含まれれる場合は不要）</li>
                         <li>本文にプレイヤー名を記述する場合は末尾に「氏」をつけてください。（キーワード名にプレイヤー名が含まれる場合は敬称略としてください）</li>
                         <li><Link href="https://docs.google.com/document/d/1-qK5yTcy4SlcK_1sgUT0rLfA0ORXJ8cqR9-pAkLuL3U/edit?usp=sharing" target="_blank">やり込み用語についてはalbut3氏がまとめたスプレッドシートを引用元としています。画像付きで読みたい方はこちらも参照してください。</Link></li>
+                        <li>アイデアカテゴリは管理人と投稿者本人以外には表示されません。あえて公開したい場合、全画面表示URLを他者と共有すると誰でも見れるようになります。</li>
                     </ul>
                 </Box>
             </InfoBox>
             <PullDownKeywordCategory category={c}/>
             <Grid container style={{marginTop:"20px"}}>
-                <RuleBox item xs={3} onClick={handleNewEditOpen}>
+                <RuleBox item xs={2} onClick={handleNewEditOpen}>
                     {tl.keyword.g.newTitle}
                 </RuleBox>
             </Grid>
@@ -102,22 +105,24 @@ export default function KeywordIndex(){
                 data?.data.map(function (post, i){
                     if(i > 0) mae = data.data[i - 1].tag
                     hi = post.tag
-                    if(mae !== hi) {
-                        return (
-                            <React.Fragment key={post.unique_id}>
-                                <Grid item xs={12} style={{marginTop:"4em"}}><Typography variant="h4">{post.tag}</Typography></Grid>
-                                <Grid item xs={6} sm={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
-                                    <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
-                                    <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
-                                </Grid>
-                            </React.Fragment>
-                        )
+                    if(post.category === "idea" && session?.user?.id !== post.last_editor){
+                        return null // 他人が投稿したアイデアは表示しない
                     } else {
                         return (
                             <React.Fragment key={post.unique_id}>
-                                <Grid item xs={6} sm={3} style={{marginBottom:"0.5em",borderBottom:"1px solid #999"}}>
-                                    <Link href={"/keyword?t="+post.tag} style={{color:"#777",fontSize:"0.75em"}}>{post.tag}</Link><br/>
-                                    <Typography style={{cursor:"pointer"}} onClick={()=>handleOpen(post.unique_id)}>{post.keyword}</Typography>
+                                {
+                                    (mae !== hi) &&
+                                    <Grid item xs={12} style={{marginTop: "4em"}}><Typography
+                                        variant="h4">{post.tag}</Typography></Grid>
+                                }
+                                <Grid item xs={6} sm={3}
+                                      style={{marginBottom: "0.5em", borderBottom: "1px solid #999"}}>
+                                    <Typography style={{
+                                        color: "#777",
+                                        fontSize: "0.75em"
+                                    }}>{post.stage_id ? tl.stage[post.stage_id] : post.tag}</Typography>
+                                    <Typography style={{cursor: "pointer"}}
+                                                onClick={() => handleOpen(post.unique_id)}>{post.keyword}</Typography>
                                 </Grid>
                             </React.Fragment>
                         )

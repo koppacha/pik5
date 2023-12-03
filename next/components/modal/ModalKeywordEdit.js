@@ -5,12 +5,12 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogTitle from '@mui/material/DialogTitle';
-import {Box, MenuItem} from "@mui/material";
+import {Box, MenuItem, Select} from "@mui/material";
 import {useForm} from "react-hook-form";
 import * as yup from 'yup'
 import {yupResolver} from "@hookform/resolvers/yup";
 import useSWR from "swr";
-import {fetcher, useLocale} from "../../lib/pik5";
+import {fetcher, sliceObject, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import {StyledDialogContent} from "../../styles/pik5.css";
 import {useSession} from "next-auth/react";
@@ -19,6 +19,9 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
 
     const {t} = useLocale()
     const {data: session } = useSession()
+
+    // 縛りルールのベースステージ（第19回〜：ピクミン２とピクミン４の通常ステージ）
+    const stages = sliceObject(t.stage, 100, 428)
 
     // バリデーションルール
     const schema = yup.object({
@@ -47,6 +50,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
 
     const [tag, setTag] = useState("")
     const [keyword, setKeyword] = useState("")
+    const [stageId, setStageId] = useState(0)
     const [yomi, setYomi] = useState("")
     const [content, setContent] = useState("")
     const [category, setCategory] = useState("")
@@ -69,6 +73,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                 body: JSON.stringify({
                     'keyword': keyword,
                     'category': category || 'other',
+                    'stage_id': stageId || 0,
                     'unique_id': uniqueId || 0,
                     'tag': tag,
                     'yomi': yomi,
@@ -99,6 +104,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
         setKeyword(data?.data?.keyword)
         setYomi(data?.data?.yomi)
         setContent(data?.data?.content)
+        setStageId(data?.data?.stage_id)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
@@ -149,6 +155,25 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                             )
                         }
                     </TextField>
+                    {data?.data?.category === "idea" &&
+                        <Select
+                            {...register('stage_id')}
+                            select
+                            id="stage_id"
+                            label={t.keyword.g.stageName}
+                            onChange={(e) => setStageId(e.target.value)}
+                            fullWidth
+                            variant="standard"
+                            helperText={"第19回はピクミン２、ピクミン４の通常ステージから選出予定です。"}
+                            defaultValue={(data?.data?.stage_id) || 101}
+                        >
+                            {
+                                Object.keys(stages).map((stage) =>
+                                    <MenuItem key={stage} value={stage}>{"#"+stage+" "+t.stage[stage]}</MenuItem>
+                                )
+                            }
+                        </Select>
+                    }
                     <TextField
                         {...register('tag')}
                         id="tag"
