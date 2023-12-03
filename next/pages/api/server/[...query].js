@@ -85,7 +85,7 @@ export function getIpAddress() {
 // 各リクエストをログテーブルへ送信
 export async function prismaLogging(id, page, query) {
 
-    await prisma.log.create({
+    await prisma.log?.create({
         data: {
             userId: id,
             page: page,
