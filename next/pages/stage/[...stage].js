@@ -119,8 +119,9 @@ export default function Stage(param){
     const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
     const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
-    // 表示するルールタイトルを定義
-    const ruleName = [10, 20, 21, 22, 30, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
+    // ルールタイトルを表示しないルールを定義
+    const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
+        || Number(param.rule) > 100
         ? <></>
         : <Link href={"/total/"+param.rule} className="mini-title">（{t.rule?.[param.rule]}）</Link>
 

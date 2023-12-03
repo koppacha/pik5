@@ -96,18 +96,14 @@ export default function Limited(param){
                 <Typography variant="" className="subtitle">{param.info.eng}</Typography>
             </PageHeader>
             <StageList stages={stages} />
-            <Grid container style={{
-                marginTop:"30px",
-            }}>
-                <RuleWrapper item>
-                    <RuleBox className={"active"}
-                             onClick={handleOpen}
-                             component={Link}
-                             href="#">
-                        {t.g.rule}
-                    </RuleBox>
-                </RuleWrapper>
-            </Grid>
+            <RuleWrapper container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+                <RuleBox className={"active"}
+                         onClick={handleOpen}
+                         component={Link}
+                         href="#">
+                    {t.g.rule}
+                </RuleBox>
+            </RuleWrapper>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
             <RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
         </>

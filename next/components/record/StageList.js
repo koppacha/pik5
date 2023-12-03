@@ -14,7 +14,7 @@ export default function StageList({currentStage, stages, consoles, rule, year}){
                   columns={{xs:(stages.length > 16) ? 10 : 4, lg : 10}}>
                 {
                     stages?.map(function(stage){
-                        const params = (rule) ? `${stage}/${consoles}/${rule}/${year}` : stage
+                        const params = (rule > 0 && rule < 100) ? `${stage}/${consoles}/${rule}/${year}` : stage
                         return (
                             <Grid style={{whiteSpace:"nowrap"}} key={stage} item xs={1}>
                                 <Link key={stage} href={'/stage/'+params}>

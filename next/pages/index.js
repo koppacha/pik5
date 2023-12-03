@@ -101,7 +101,7 @@ export default function Home({users, prev}) {
     }
     // 先月のトレンド
     const PrevTrend = (prev.trend[0]?.cnt)
-                    ? <>先月TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
+                    ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
                     : <></>
 
     // 去年の最多投稿者
@@ -150,7 +150,7 @@ export default function Home({users, prev}) {
                             <FontAwesomeIcon icon={faBullhorn} /> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
                         </Box>
                         {/*<PostButton voteId={20231019}/>*/}
-                        {/*<Link href="#" onClick={handleEditOpen}>期間限定チャレンジルールを投稿する</Link>*/}
+                        <Link href="#" onClick={handleEditOpen}>期間限定チャレンジルールを投稿する</Link>
 
                     </TopBoxContent>
                 </TopBox>

@@ -11,7 +11,7 @@ export default function PullDownKeywordCategory({category}){
 
     const {t, } = useLocale()
     
-    const categoryArray = ["all", "game", "pikmin", "field", "object", "creature", "character", "world", "term", "term2", "psl", "technical", "glitch", "rule", "other"]
+    const categoryArray = ["all", "game", "pikmin", "field", "object", "creature", "character", "world", "term", "term2", "psl", "technical", "glitch", "rule", "idea", "other"]
 
     return (
         <FormControl>

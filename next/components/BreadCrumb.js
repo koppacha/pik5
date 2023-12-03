@@ -48,7 +48,7 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第２階層（シリーズ別総合）
-                (info?.parent > 9 && info.parent < 100) ?
+                (info?.parent > 1 && info.parent < 100) ?
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.series+"0"}>{t.title[info.series]}</Link>
@@ -62,7 +62,7 @@ export default function BreadCrumb({info, rule}){
             }
             {
                 // 第３階層（サブカテゴリ）
-                (info?.parent > 20 && info?.parent < 90) &&
+                (info?.parent > 20 && info?.parent < 90 && info?.parent !== 31 && info?.parent !== 32) &&
                 <>
                     <StairIcon icon={faStairs}/>
                     <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>
