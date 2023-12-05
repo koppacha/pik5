@@ -20,7 +20,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
     const {t} = useLocale()
     const {data: session } = useSession()
 
-    // 縛りルールのベースステージ（第19回〜：ピクミン２とピクミン４の通常ステージ）
+    // 縛りルールのベースステージ
     const stages = sliceObject(t.stage, 100, 428)
 
     // バリデーションルール
@@ -38,11 +38,10 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
         yomi: yup
             .string()
             .max(64, t.yup.over + "64" + t.yup.moji)
-            .matches(/^[ぁ-んー]+$/, t.yup.hiragana)
-            .required(t.yup.required),
+            .matches(/^[ぁ-んァ-ヶー々〆〤]+$|^$/, t.yup.hiragana),
         content: yup
             .string()
-            .max(20480, t.yup.over + "20480" + t.yup.moji)
+            .max(48000, t.yup.over + "48000" + t.yup.moji)
             .required(t.yup.required)
     })
 
@@ -76,7 +75,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                     'stage_id': stageId || 0,
                     'unique_id': uniqueId || 0,
                     'tag': tag,
-                    'yomi': yomi,
+                    'yomi': yomi || "",
                     'content': content,
                     'first_editor':data?.first_editor || 'guest',
                     'last_editor':session.user.id,
@@ -155,7 +154,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                             )
                         }
                     </TextField>
-                    {data?.data?.category === "idea" &&
+                    {(data?.data?.category === "idea" || category === "idea") &&
                         <Select
                             {...register('stage_id')}
                             select
