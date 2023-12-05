@@ -33,7 +33,7 @@ class NewRecordController extends Controller
             $data["post_rank"] = $RecordController->getRankArray($data);
 
             $member = $StageController->show($data["stage_id"])->original->member;
-            $data["rps"] = $Func->rankPoint_calc($data["post_rank"], $member , $max);
+            $data["rps"] = $Func::rankPoint_calc($data["stage_id"], $data["post_rank"], $member , $max);
 
             $new_dataset[] = $data;
         }
