@@ -699,15 +699,16 @@ export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank}))`
 `
 export const EventContainer = styled(Box)`
   width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 0.75em;
   display: flex;
-  align-items: center;
+  align-items: stretch;
 `
 export const EventDate = styled(Box).attrs(props => ({$week: props.week}))`
   text-align: center;
   border-radius: 4px;
   padding: 4px 8px;
   width: 80px;
+  height: 100%;
   background-color: ${colors.light.subBack};
 
   [data-theme="dark"] & {
@@ -731,8 +732,24 @@ export const EventDate = styled(Box).attrs(props => ({$week: props.week}))`
 export const EventContent = styled(Box)`
   font-size: 0.9em;
   padding: 0 8px;
+  width: 100%;
+  color: ${colors.light.subTitle};
+
+  [data-theme="dark"] & {
+    color: ${colors.dark.subTitle};
+  }
   
   a {
     text-decoration: underline;
+  }
+  strong {
+    font-size: 1.2em;
+
+    color: ${colors.light.front};
+
+    [data-theme="dark"] & {
+      color: ${colors.dark.front};
+    }
+
   }
 `

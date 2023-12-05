@@ -91,6 +91,7 @@ export default function KeywordIndex(){
                         <li>本文にプレイヤー名を記述する場合は末尾に「氏」をつけてください。（キーワード名にプレイヤー名が含まれる場合は敬称略としてください）</li>
                         <li><Link href="https://docs.google.com/document/d/1-qK5yTcy4SlcK_1sgUT0rLfA0ORXJ8cqR9-pAkLuL3U/edit?usp=sharing" target="_blank">やり込み用語についてはalbut3氏がまとめたスプレッドシートを引用元としています。画像付きで読みたい方はこちらも参照してください。</Link></li>
                         <li>アイデアカテゴリは管理人と投稿者本人以外には表示されません。あえて公開したい場合、全画面表示URLを他者と共有すると誰でも見れるようになります。</li>
+                        <li>このページから期間限定ルールを新規作成する場合、タグは「期間限定チャレンジ」を入力してください。</li>
                     </ul>
                 </Box>
             </InfoBox>
