@@ -65,7 +65,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                     'stage_id': stageId || 101,
                     'unique_id': uniqueId || 0,
                     'tag': '期間限定チャレンジ',
-                    'yomi': yomi,
+                    'yomi': "",
                     'content': content,
                     'first_editor':data?.first_editor || 'guest',
                     'last_editor':session.user.id,
@@ -152,18 +152,6 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                         error={'keyword' in errors}
                         helperText={"ルールの概略を入力してください。ステージ名やカッコは要りません。（例：Aボタン縛り）"}
                         defaultValue={data?.data?.keyword}
-                    />
-                    <TextField
-                        {...register('yomi')}
-                        id="yomi"
-                        label={t.keyword.g.yomi}
-                        type="text"
-                        onChange={(e) => setYomi(e.target.value)}
-                        fullWidth
-                        variant="standard"
-                        error={'yomi' in errors}
-                        helperText={errors.yomi?.message}
-                        defaultValue={data?.data?.yomi}
                     />
                     <TextField
                         {...register('content')}
