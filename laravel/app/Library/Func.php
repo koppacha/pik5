@@ -44,17 +44,18 @@ class Func extends Facade
             // 総合IDが指定されていない場合は通常総合に等しい対象ルールとステージ
             $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
             $stages = TotalController::stage_list("2");
-            $ttl = 1800;
+            $ttl = 1800; // 計算結果は１日保持する
+            $total = 0;
         } else {
             // 期間限定などで総合IDが指定されている場合はそれだけを指定する
             $rule = [$total];
             $stages = TotalController::stage_list((string)$total);
-            $ttl = 0;
+            $ttl = 1;
         }
         $console_operation = $console ? "=" : ">";
 
         try {
-            $Model = Cache::remember('memCount', $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
+            $Model = Cache::remember("memCount_{$total}", $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
                 return Record::whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
@@ -75,6 +76,10 @@ class Func extends Facade
     // 順位とランクポイントを入力された配列内で再計算する（スコア降順であることが前提）
     public static function rank_calc (string $mode, array $data, array $option): array
     {
+        // オプションから親番号を取り出せたら、それを投稿者数集計対象にする
+        [, $rule, ] = $option;
+        $totals = ($rule[0] > 10000) ? $rule[0] : 0;
+
         // 順位の初期値
         $rank = 1;
         $count = 1;
@@ -84,11 +89,8 @@ class Func extends Facade
         $member = count($data);
 
         // 最大の参加者数データを取得（取得に失敗した場合は当該ランキングの参加者数を最大値とする）
-        if($memberCount = self::memberCount(0, $option)) {
-            $max = max($memberCount);
-        } else {
-            $max = $member;
-        }
+        $max = ($memberCount = self::memberCount($totals, $option)) ? max($memberCount) : $member;
+
         foreach($data as $key => $value){
             if($mode !== "user") {
                 // 順位を一括計算
@@ -100,21 +102,22 @@ class Func extends Facade
                 $count++;
             }
             if($mode !== "total") {
-                $data[$key]["rps"] = self::rankPoint_calc($rank, $member, $max);
+                $data[$key]["rps"] = self::rankPoint_calc($value["stage_id"], $rank, $member, $max);
             }
         }
         return $data;
     }
-    public static function rankPoint_calc($rank, $member, $max): float
+    public static function rankPoint_calc($stage, $rank, $member, $max): float
     {
+        // 期間限定ランキングのランクポイント計算式
+        if($stage > 1000) {
+            return $max - $rank + 1;
+        }
+        // 期間限定以外のランクポイント計算式
         $m = (10 - log($max / $member)) * ((0.9 * ($member / $max)) + 0.1);
         $r = ($max / $rank ** 1.12) * ($rank ** (0.9 * ($max - $rank + 1) ** 2 / $max ** 2 + 0.1) / $max * 10);
 
         return floor($m * $r * 200);
-    }
-    public static function limitedRankPoint_calc($rank, $max): int
-    {
-        return $max - $rank + 1;
     }
     public static function compare_calc (array $data, $compare = 'timebonus') : array
     {
