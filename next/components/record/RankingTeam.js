@@ -86,9 +86,11 @@ export default function RankingTeam({stage, users, team}){
         const teamSummaries = {};
 
         Object.entries(teams).forEach(([teamNumber, records]) => {
-            const rps = records.reduce((sum, record) => sum + record.rps, 0);
-            const score = records.reduce((sum, record) => sum + record.score, 0);
-
+            let rps = 0, score = 0
+            if(records) {
+                const rps = records?.reduce((sum, record) => sum + record.rps, 0);
+                const score = records?.reduce((sum, record) => sum + record.score, 0);
+            }
             teamSummaries[teamNumber] = {
                 rps,
                 score,
