@@ -11,7 +11,7 @@ import {
     TopBoxHeader,
     WrapTopBox
 } from "../styles/pik5.css";
-import {useLocale} from "../lib/pik5";
+import {id2name, useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp, faBullhorn,
     faCalendarDays,
@@ -35,7 +35,7 @@ export async function getServerSideProps(context) {
 
     // 前回のトレンドをリクエスト
     const res = await fetch(`http://laravel:8000/api/prev`)
-    const prev = (res.status < 300) ? await res.json() : undefined
+    const prev = (res.status < 300) ? await res.json() : null
 
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
@@ -91,14 +91,6 @@ export default function Home({users, prev}) {
         [t.g.ru, "/keyword/rules"],
         ["Discord", "https://discord.gg/rQEBJQa"]
     ]
-
-    // 特定ユーザーのIDを入力してユーザー名を返す
-    function id2name(users, target){
-        const result = users.find(function(user){
-            return user.userId === target
-        })
-        return result.name
-    }
     // 先月のトレンド
     const PrevTrend = (prev.trend[0]?.cnt)
                     ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
@@ -149,18 +141,20 @@ export default function Home({users, prev}) {
                                     <span className="week">{t.g.week[6]}</span>
                                 </EventDate>
                                 <EventContent>
-                                    <strong>第19回期間限定ランキング</strong><br/>
-                                    19:00～23:59 チーム対抗戦×未定
-                                    <Link href="#" onClick={handleEditOpen}>
-                                        <EventContent style={{textDecoration:"underline",float:"left",width:"60%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>
-                                            期間限定チャレンジルールを投稿する<br/>（12/14 23:00締切）
-                                        </EventContent>
+                                    <Link href="/limited/231216">
+                                        <strong>第19回期間限定ランキング</strong><br/>
+                                        19:00～23:59 チーム対抗戦×新ピンポイント制
                                     </Link>
-                                    <Link href="/keyword?c=idea">
-                                        <EventContent style={{textDecoration:"underline",float:"right",width:"38%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>
-                                            投稿したルールを<br/>確認・編集する
-                                        </EventContent>
-                                    </Link>
+                                    {/*<Link href="#" onClick={handleEditOpen}>*/}
+                                    {/*    <EventContent style={{textDecoration:"underline",float:"left",width:"60%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>*/}
+                                    {/*        期間限定チャレンジルールを投稿する<br/>（12/14 23:00締切）*/}
+                                    {/*    </EventContent>*/}
+                                    {/*</Link>*/}
+                                    {/*<Link href="/keyword?c=idea">*/}
+                                    {/*    <EventContent style={{textDecoration:"underline",float:"right",width:"38%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>*/}
+                                    {/*        投稿したルールを<br/>確認・編集する*/}
+                                    {/*    </EventContent>*/}
+                                    {/*</Link>*/}
                                 </EventContent>
                             </EventContainer>
                         </EventContainer>
@@ -179,7 +173,6 @@ export default function Home({users, prev}) {
                         <Box style={{borderTop:"1px solid #777",fontSize:"0.8em",color:"#999",textAlign:"right"}}>
                             <FontAwesomeIcon icon={faBullhorn} /> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
                         </Box>
-                        {/*<PostButton voteId={20231019}/>*/}
                     </TopBoxContent>
                 </TopBox>
             </WrapTopBox>

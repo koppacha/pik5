@@ -46,11 +46,6 @@ export async function getServerSideProps(context){
     if(stage_res.status < 300) {
         info = await stage_res.json()
     }
-    if(!info){
-        return {
-            notFound: true,
-        }
-    }
 
     // 総合ランキングの総合ランキングにアクセスする場合はルールフィルターを無効にする
     if(series % 10 === 0 || series < 10){

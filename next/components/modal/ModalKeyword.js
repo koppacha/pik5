@@ -32,7 +32,9 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
                 <DialogActions>
                     <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
                     <Button onClick={handleClose}>{t.g.close}</Button>
-                    <Button onClick={handleEditOpen}>{t.g.edit}</Button>
+                    {
+                        handleEditOpen && <Button onClick={handleEditOpen}>{t.g.edit}</Button>
+                    }
                 </DialogActions>
                 </StyledDialogContent>
             </Dialog>

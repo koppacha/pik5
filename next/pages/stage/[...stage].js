@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {useLocale} from "../../lib/pik5";
+import {fetcher, useLocale} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
@@ -16,6 +16,11 @@ import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import RuleList from "../../components/record/RuleList";
+import useSWR from "swr";
+import {KeywordContent} from "../../components/modal/KeywordContent";
+import NowLoading from "../../components/NowLoading";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 // サーバーサイドの処理
 export async function getServerSideProps(context){
@@ -119,6 +124,23 @@ export default function Stage(param){
     const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
     const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
+    // キーワードにルールがあればそれを表示する
+    function RuleInfo(){
+        const {data: keywordData, isValidating} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
+
+        if(isValidating){
+            return <NowLoading/>
+        }
+        if(keywordData) {
+            return (
+                <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
+                    {keywordData.data.content}
+                </ReactMarkdown>
+            )
+        } else {
+            return <></>
+        }
+    }
     // ルールタイトルを表示しないルールを定義
     const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
         || Number(param.rule) > 100
@@ -135,7 +157,7 @@ export default function Stage(param){
                 <BreadCrumb info={param.info} rule={param.rule}/>
                 <Typography variant="" className="title">{stageName}</Typography>{ruleName}<br/>
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
-                <Typography variant="" className="subtitle">{t.info?.[param.stage]}</Typography><br/>
+                <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
             </PageHeader>
             <RuleList param={param}/>
             <StageList currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />

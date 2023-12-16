@@ -94,8 +94,9 @@ Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
 
 // 投票関連API
 Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
+    Route::get ( 'vote/{vote}' , [ VoteController::class, 'show' ]);
+    Route::get ( 'vote' , [ VoteController::class, 'index' ]);
     Route::post ( 'vote' , [ VoteController::class, 'create' ]);
-    Route::post ( 'vote/{vote}/{user}' , [ VoteController::class, 'create' ]);
 });
 
 // 証拠画像取得API
