@@ -88,8 +88,8 @@ export default function RankingTeam({stage, users, team}){
         Object.entries(teams).forEach(([teamNumber, records]) => {
             let rps = 0, score = 0
             if(records) {
-                const rps = records?.reduce((sum, record) => sum + record.rps, 0);
-                const score = records?.reduce((sum, record) => sum + record.score, 0);
+                rps = records?.reduce((sum, record) => sum + record.rps, 0);
+                score = records?.reduce((sum, record) => sum + record.score, 0);
             }
             teamSummaries[teamNumber] = {
                 rps,
@@ -106,8 +106,8 @@ export default function RankingTeam({stage, users, team}){
             <React.Fragment key={index}>
                 {t.limited.team[teamNumbers[index]]}:{teamSummaries[teamNumbers[index]]?.rps}<br/>
                 {
-                    Object.values(team).map(function(record) {
-                        return (<div>{`${record.user_name}:${record.rps}`}</div>)
+                    Object.values(team).map(function(record, index) {
+                        return (<div key={index}>{`${record.user_name}:${record.rps}`}</div>)
                     })
                 }
             </React.Fragment>
