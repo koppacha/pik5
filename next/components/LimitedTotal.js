@@ -14,14 +14,14 @@ export default function LimitedTotal({}){
     const {data:team} = useSWR(`/api/server/vote/20${limited}`,fetcher, { refreshInterval: 1000 })
 
     // チーム情報を整形する
-    const teams = team.reduce((acc, obj) => {
+    const teams = team?.reduce((acc, obj) => {
         const key = obj.select?.toString();
         if (!acc[key]) {
             acc[key] = [];
         }
         acc[key].push(obj?.user);
         return acc;
-    }, {});
+    }, {}) ?? []
 
     const teamColor = ['#58c4c1', '#bbc458']
 
@@ -41,14 +41,14 @@ export default function LimitedTotal({}){
         return rps
     }
     function teamTotalRps(team){
-        if(!param.teams[team]) return 0
+        if(!teams[team]) return 0
 
 
         let rpss = 0
-        param.teams[team].map(function(user){
+        teams[team].map(function(user){
 
             // 各プレイヤーの投稿数を調べて補正係数を適用
-            const rps = rpsBonus(param.total[user]?.ranks.filter(v => v !== null).length, param.total[user]?.rps ?? 0)
+            const rps = rpsBonus(total[user]?.ranks.filter(v => v !== null).length, total[user]?.rps ?? 0)
 
             // チーム別ランクポイントに加算
             rpss += rps
