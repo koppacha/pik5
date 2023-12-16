@@ -1,0 +1,10 @@
+stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,treasure,pikmin,border1,border2,border3,border4
+1300,コレクタールーム（２ピック）,Collector's Room,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1301,三色試練場（エレキ無視）,Three Color Training,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1302,地底警備室（エキス還元祭り）,Subtettanean Lair,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1303,さらいの洞窟（爆殺縛り）,Abduction Den,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1304,ダンドリ養成所（近道禁止）,Dandori Day Care,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1305,テキパキ水族館（ダンドリ検定）,Planning Pools,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1306,超重配送センター（拠点移動禁止）,Hefty Haulway,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1307,漆ダン 一網打尽の庭,7th Story: One Fell Jump,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
+1308,終ダン 紫の免許皆傳,Final Story: The Purple Key,期間限定チャレンジ,stage,int,2,231216,0,0,0,0,0,0,0
