@@ -435,6 +435,16 @@ export const RecordGridWrapper = styled(Grid)`
   width: 100%;
   border-right: 1px solid #777;
 `
+export const TeamScoreType = styled(Typography)`
+  font-size: 1000%;
+  letter-spacing: 10px;
+  font-family:"Proza Libre","cursive";
+  text-shadow: ${shadow};
+
+  ${sp`
+    font-size: 3em;
+  `}
+`
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
   font-family:"Proza Libre","cursive";

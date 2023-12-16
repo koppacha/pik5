@@ -77,6 +77,7 @@ class TotalController extends Controller
             210829 => range(1257, 1269), // ムシ取り
             211105 => range(1163, 1184), // エリア踏破戦
             221008 => range(1185, 1196), // エリア踏破戦
+            231216 => range(1300, 1308), // チーム対抗戦
         ];
         if(!isset($request)){
             return [];
@@ -149,34 +150,35 @@ class TotalController extends Controller
         // 全総合ランキング
         if ($request['id'] === "1") {
             $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 11, 23, 24, 22, 25, 29, 35, 40, 41, 42, 43, 91];
-
+            $ttl = 1800;
         // 通常総合ランキング
         } elseif ($request['id'] === "2") {
             $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
-
+            $ttl = 1800;
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別は対象外）
         } elseif($request['id'] === "3"){
-            $rule = [11, 23, 24, 22, 25, 29, 35];
-
-        // 期間限定ランキング（暫定）
+            $rule = [11, 23, 24, 22, 25, 29, 35, 91];
+            $ttl = 1800;
+        // 期間限定ランキング（終了済みの大会のみ対象）
         } elseif($request['id'] === "4"){
             $rule = [151101, 160306, 160319, 160423, 160430, 160806, 170101, 170211, 170325, 170429, 171013, 180101, 180901, 190802, 200723, 200918, 211105, 221008];
-
+            $ttl = 1800;
         // ピクミン２総合
         } elseif ($reqRule === "20") {
             $rule = [20, 21, 22];
-
+            $ttl = 30;
         // ピクミン３総合
         } elseif ($reqRule === "30") {
             $rule = [30, 31, 32, 33, 36];
-
+            $ttl = 30;
         // ピクミン４総合
         } elseif ($reqRule === "40") {
             $rule = [40, 41, 42, 43];
-
+            $ttl = 30;
         // それ以外
         } else {
             $rule = [$reqRule];
+            $ttl = 1;
         }
 
         // データの格納先
@@ -202,7 +204,7 @@ class TotalController extends Controller
             $temp = [];
 
             // 有効データのみ抽出するクエリ
-            $testModel[(int)$stage] = Cache::remember('total-'.$stage.'-'.$console.'-'.$reqRule.'-'.$reqYear, 1800, static function() use ($stage, $console_operation, $console, $rule, $date) {
+            $testModel[(int)$stage] = Cache::remember('total-'.$stage.'-'.$console.'-'.$reqRule.'-'.$reqYear, $ttl, static function() use ($stage, $console_operation, $console, $rule, $date) {
                 return Record::where('stage_id', $stage)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)

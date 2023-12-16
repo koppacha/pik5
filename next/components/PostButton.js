@@ -9,14 +9,6 @@ export default function PostButton({voteId}){
     const {data: session} = useSession()
     const now = new Date().toLocaleString()
 
-    // if(!session) return null
-
-    const {data} = useSWR(`/api/server/vote/${voteId}/${session?.user?.id}`, fetcher)
-
-    console.log(data)
-
-    if(!data) return null
-
     const onSubmit = async (id) => {
         const confirm = window.confirm(t.g.confirm)
 
@@ -33,14 +25,21 @@ export default function PostButton({voteId}){
                     'created_at': now,
                 })
             })
+            if (res.status < 300) {
+                console.log(res)
+            }
         }
+    }
+    if(!session){
+        return (
+            <>
+                このイベントに参加するにはログインしてください。
+            </>
+        )
     }
     return (
         <>
-            <Button onClick={() => onSubmit(1)}>Button 1</Button>
-            <Button onClick={() => onSubmit(2)}>Button 2</Button>
-            <Button onClick={() => onSubmit(3)}>Button 3</Button>
-            <Button onClick={() => onSubmit(4)}>Button 4</Button>
+            <Button onClick={() => onSubmit(1)}>このイベントに参加する</Button>
         </>
     )
 }
