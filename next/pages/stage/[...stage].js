@@ -134,7 +134,7 @@ export default function Stage(param){
         if(keywordData) {
             return (
                 <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
-                    {keywordData.data.content}
+                    {keywordData.data?.content}
                 </ReactMarkdown>
             )
         } else {

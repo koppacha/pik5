@@ -13,7 +13,7 @@ import Link from "next/link";
 export default function RankingTeam({stage, users, team}){
 
     const {t} = useLocale()
-    const { data:posts } = useSWR(`/api/server/record/${stage}`, fetcher, { refreshInterval: 1000 })
+    const { data:posts, error } = useSWR(`/api/server/record/${stage}`, fetcher)
 
     const teamNumbers = [21, 22]
 
