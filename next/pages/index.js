@@ -134,31 +134,6 @@ export default function Home({users, prev}) {
                     </TopBoxHeader>
                     <TopBoxContent>
                         <EventContainer>
-                            <EventContainer>
-                                <EventDate week="6">
-                                    <span className="month">12/</span>
-                                    <span className="date">16</span><hr/>
-                                    <span className="week">{t.g.week[6]}</span>
-                                </EventDate>
-                                <EventContent>
-                                    <Link href="/limited/231216">
-                                        <strong>第19回期間限定ランキング</strong><br/>
-                                        19:00～23:59 チーム対抗戦×新ピンポイント制
-                                    </Link>
-                                    {/*<Link href="#" onClick={handleEditOpen}>*/}
-                                    {/*    <EventContent style={{textDecoration:"underline",float:"left",width:"60%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>*/}
-                                    {/*        期間限定チャレンジルールを投稿する<br/>（12/14 23:00締切）*/}
-                                    {/*    </EventContent>*/}
-                                    {/*</Link>*/}
-                                    {/*<Link href="/keyword?c=idea">*/}
-                                    {/*    <EventContent style={{textDecoration:"underline",float:"right",width:"38%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>*/}
-                                    {/*        投稿したルールを<br/>確認・編集する*/}
-                                    {/*    </EventContent>*/}
-                                    {/*</Link>*/}
-                                </EventContent>
-                            </EventContainer>
-                        </EventContainer>
-                        <EventContainer>
                             <EventDate week="6">
                                 <span className="month">12/</span>
                                 <span className="date">28</span><hr/>
@@ -168,6 +143,21 @@ export default function Home({users, prev}) {
                                 <strong>RTA in Japan 2023 Winter「ピクミン All Parts RTA」</strong><br/>
                                 走者 <Link href="/user/iid01">iid01さん</Link>/解説 <Link href="/user/TEL">TELさん</Link><br/>
                                 11:00～ Discord「大水源」チャンネル
+                            </EventContent>
+                        </EventContainer>
+                        <hr/>
+                        <EventContainer>
+                            <EventContent>
+                                <Link href="#" onClick={handleEditOpen}>
+                                    <EventContent style={{textDecoration:"underline",float:"left",width:"50%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>
+                                        期間限定ルールを投稿する<br/>
+                                    </EventContent>
+                                </Link>
+                                <Link href="/keyword?c=idea">
+                                    <EventContent style={{textDecoration:"underline",float:"right",width:"48%",backgroundColor:"#333",borderRadius:"4px",padding:"8px",textAlign:"center"}}>
+                                        ルールを確認・編集する
+                                    </EventContent>
+                                </Link>
                             </EventContent>
                         </EventContainer>
                         <Box style={{borderTop:"1px solid #777",fontSize:"0.8em",color:"#999",textAlign:"right"}}>
