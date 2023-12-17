@@ -8,30 +8,30 @@ export default function LimitedTotal({}){
     const limited = 231216
 
     // 対象ステージの記録をリクエスト
-    const {data:total} = useSWR(`/api/server/total/${limited}`,fetcher, { refreshInterval: 1000 })
+    const {data:total} = useSWR(`/api/server/total/${limited}`,fetcher)
 
     // 投票データベースから各ユーザーのチーム情報をリクエスト
-    const {data:team} = useSWR(`/api/server/vote/20${limited}`,fetcher, { refreshInterval: 1000 })
+    const {data:team} = useSWR(`/api/server/vote/20${limited}`,fetcher)
 
     // チーム情報を整形する
-    const teams = team?.reduce((acc, obj) => {
+    const teams = (team?.length > 0) ? team.reduce((acc, obj) => {
         const key = obj.select?.toString();
         if (!acc[key]) {
             acc[key] = [];
         }
         acc[key].push(obj?.user);
         return acc;
-    }, {}) ?? []
+    }, {}) : []
 
     const teamColor = ['#58c4c1', '#bbc458']
 
     function TeamMemberPoints({team}){
-        if(!teams[team]) return <></>
+        if(!teams?.[team]) return <></>
 
-        return teams[team].map(function(user){
+        return teams[team].map(function(user, index){
             const count = total[user]?.ranks.filter(v => v !== null).length ?? 0
             const rps = rpsBonus(count, total[user]?.rps ?? 0)
-            return <><Grid item xs={6}>{id2name(users, user)}</Grid><Grid item xs={6}>{rps} RPS [{count} Stage]</Grid></>
+            return <React.Fragment key={index}><Grid item xs={6}>{id2name(users, user)}</Grid><Grid item xs={6}>{rps} RPS [{count} Stage]</Grid></React.Fragment>
         })
     }
     function rpsBonus(count, rps){
@@ -41,8 +41,7 @@ export default function LimitedTotal({}){
         return rps
     }
     function teamTotalRps(team){
-        if(!teams[team]) return 0
-
+        if(!teams?.[team]) return 0
 
         let rpss = 0
         teams[team].map(function(user){

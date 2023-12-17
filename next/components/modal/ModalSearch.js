@@ -85,11 +85,11 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
     }
 
     // 得られたオブジェクトを結合する
-    let result = stages.data.concat(keywords.data)
+    let result = stages.data?.concat(keywords.data)
 
     if(users){
         // ユーザー情報も取得できていればそれも結合する
-        result = result.concat(users)
+        result = result?.concat(users)
     }
 
     const fuse = new Fuse(result, fuseOptions)

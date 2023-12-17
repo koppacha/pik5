@@ -38,6 +38,7 @@ import PostButton from "../../components/PostButton";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import LimitedTotal from "../../components/LimitedTotal";
+import {notFound} from "next/navigation";
 
 export async function getServerSideProps(context){
 
@@ -79,12 +80,15 @@ export async function getServerSideProps(context){
             name: true
         }
     })
-
     return {
-        props: {
-            stages, limited, info, users, teams, total
-        }
+        notFound: true,
     }
+
+    // return {
+    //     props: {
+    //         stages, limited, info, users, teams, total
+    //     }
+    // }
 }
 
 export default function Limited(param){

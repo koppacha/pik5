@@ -48,7 +48,7 @@ export default async function handle(req, res){
 
         } catch (e) {
             await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", e)
-            res.status(404).end()
+            res.status(404).json({e})
         }
     }
 }
