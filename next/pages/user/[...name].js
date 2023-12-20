@@ -16,6 +16,10 @@ export async function getServerSideProps(context){
     const query = context.query.name
     const user = query[0]
 
+    return {
+        notFound: true,
+    }
+
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
@@ -36,9 +40,13 @@ export async function getServerSideProps(context){
     const mark_res = await fetch(`http://laravel:8000/api/user/total/${user}`)
     const marker = await mark_res.json()
 
-    const consoles= query[1] || 0
-    const rule    = query[2] || 0
-    const year    = query[3] || 2023
+    const consoles = query[1] || 0
+    const rule     = query[2] || 0
+    const year     = query[3] || 2023
+
+    // 記録を取得
+    const recordRes = await fetch(`http://laravel:8000/api/record/${user}/${consoles}/${rule}/${year}`)
+    const posts = await recordRes.json()
 
     if(
         !userName ||
@@ -52,7 +60,7 @@ export async function getServerSideProps(context){
     }
     return {
         props: {
-            users, user, userName, consoles, rule, year, info, marker
+            users, user, userName, consoles, rule, year, info, marker, posts
         }
     }
 }
@@ -135,7 +143,7 @@ export default function Stage(param){
                 </Grid>
             </Grid>
             {/*<UserScoreTable/>*/}
-            <RankingUser data={param.data} userName={param.userName} userId={param.user} console={param.consoles} rule={param.rule} year={param.year}/>
+            <RankingUser posts={param.posts} userName={param.userName} userId={param.user} console={param.consoles} rule={param.rule} year={param.year}/>
         </>
     )
 }
