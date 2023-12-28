@@ -40,18 +40,24 @@ class Func extends Facade
         $datetime = new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
 
-        if(!$total) {
+        if(is_array($total)){
+            // あらかじめ配列が指定されている場合はそれを流用する
+            $rule = $total;
+            $stages = [$total];
+            $ttl = 1800;
+        } elseif($total) {
+            // 期間限定などで総合IDが指定されている場合はそれだけを指定する
+            $rule = [$total];
+            $stages = TotalController::stage_list((string)$total);
+            $ttl = 1;
+        } else {
             // 総合IDが指定されていない場合は通常総合に等しい対象ルールとステージ
             $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
             $stages = TotalController::stage_list("2");
             $ttl = 1800; // 計算結果は１日保持する
             $total = 0;
-        } else {
-            // 期間限定などで総合IDが指定されている場合はそれだけを指定する
-            $rule = [$total];
-            $stages = TotalController::stage_list((string)$total);
-            $ttl = 1;
         }
+
         $console_operation = $console ? "=" : ">";
 
         try {
@@ -68,8 +74,8 @@ class Func extends Facade
                     });
                 });
         } catch (Exception $e){
-            $Model = Collection::empty();
             Log::debug("Error", (array)$e->getMessage());
+            return [999];
         }
         return $Model->toArray();
     }

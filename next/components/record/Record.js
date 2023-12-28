@@ -59,7 +59,7 @@ export default function Record({data, stages, series}) {
         compare = ""
     }
     return (
-        <RecordContainer container rank={data?.post_rank ?? 20} team={data?.team}>
+        <RecordContainer container rank={data?.post_rank ?? 20} team={data?.team ?? 0}>
             <RecordGridWrapper item xs={2} sm={1}>
                 <div>
                     <RankEdge as="span">{t.g.rankHead} </RankEdge>

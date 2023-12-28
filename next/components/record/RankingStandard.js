@@ -5,10 +5,9 @@ import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
 
-export default function RankingStandard({borders, stage, console:consoles, rule, year, users}){
+export default function RankingStandard({posts, borders, stage, console:consoles, rule, year, users}){
 
     const {t} = useLocale()
-    const { data:posts } = useSWR(`/api/server/record/${stage}/${consoles}/${rule}/${year}`, fetcher, { refreshInterval: 5000 })
 
     if(!posts){
         return (
@@ -17,7 +16,7 @@ export default function RankingStandard({borders, stage, console:consoles, rule,
     }
 
     // 取得したデータにPrismaから取ってきたスクリーンネームを入れる TODO: あとで共通化
-    const data = posts.data ? Object.values(posts.data).map(function(post){
+    const data = posts ? Object.values(posts).map(function(post){
         const user = users.find(user => user.userId === post.user_id)
         return {
             ...post,

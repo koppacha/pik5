@@ -9,9 +9,9 @@ export default function StageList({currentStage, stages, consoles, rule, year}){
     const {t} = useLocale()
 
     return (
-        <StageListWrapper count={stages.length}>
-            <Grid container style={{minWidth:(stages.length > 16) ? "1200px" : "100%"}}
-                  columns={{xs:(stages.length > 16) ? 10 : 4, lg : 10}}>
+        <StageListWrapper count={stages?.length}>
+            <Grid container style={{minWidth:(stages?.length > 16) ? "1200px" : "100%"}}
+                  columns={{xs:(stages?.length > 16) ? 10 : 4, lg : 10}}>
                 {
                     stages?.map(function(stage){
                         const params = (rule > 0 && rule < 100) ? `${stage}/${consoles}/${rule}/${year}` : stage

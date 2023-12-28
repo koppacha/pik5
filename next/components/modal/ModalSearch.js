@@ -83,16 +83,18 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
             </>
         )
     }
+    let result = []
 
     // 得られたオブジェクトを結合する
-    let result = stages.data?.concat(keywords.data)
-
+    if(stages?.data && keywords?.data){
+        result = stages.data.concat(keywords.data)
+    }
     if(users){
         // ユーザー情報も取得できていればそれも結合する
-        result = result?.concat(users)
+        result = result.concat(users)
     }
-
     const fuse = new Fuse(result, fuseOptions)
+    const searchResults = fuse?.search(search) ?? []
 
     return (
         <>
@@ -112,7 +114,7 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                     />
                     <List style={{width:"100%"}}>
                     {
-                        fuse.search(search).map(function (post, idx) {
+                        searchResults.map(function (post, idx) {
 
                             let color
 

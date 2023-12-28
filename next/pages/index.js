@@ -92,12 +92,12 @@ export default function Home({users, prev}) {
         ["Discord", "https://discord.gg/rQEBJQa"]
     ]
     // 先月のトレンド
-    const PrevTrend = (prev.trend[0]?.cnt)
+    const PrevTrend = (prev?.trend[0]?.cnt)
                     ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
                     : <></>
 
     // 去年の最多投稿者
-    const PrevPost = (prev.post[0]?.cnt)
+    const PrevPost = (prev?.post[0]?.cnt)
                    ? <>前年TOP: {id2name(users, prev.post[0]["user_id"])} ({prev.post[0]["cnt"]} 回）</>
                    : <></>
 
