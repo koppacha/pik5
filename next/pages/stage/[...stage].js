@@ -45,42 +45,59 @@ export async function getServerSideProps(context){
         }
     }
 
-    let info = null, parent = null, stages = []
-    // ステージ情報をリクエスト
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
-    if(stage_res.status < 300) {
-        info = await stage_res.json()
+    try {
+        // 記録をリクエスト
+        const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
+        if(res.status < 300){
+            console.log(res.error)
+        }
+        const posts = await res.json() ?? [].json()
 
-        if(info.parent) {
-            const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
-            if (parent_res.status < 300) {
-                parent = await parent_res.json()
+        let info = null, parent = null, stages = []
+        // ステージ情報をリクエスト
+        const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
+        if(stage_res.status < 300) {
+            info = await stage_res.json()
+
+            if(info.parent) {
+                const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
+                if (parent_res.status < 300) {
+                    parent = await parent_res.json()
+                }
+                // シリーズ番号に基づくステージ群の配列をリクエスト
+                const reqStage = rule || info.parent
+                const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
+                if(res.status < 300) {
+                    stages = await res.json()
+                }
             }
-            // シリーズ番号に基づくステージ群の配列をリクエスト
-            const reqStage = rule || info.parent
-            const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
-            if(res.status < 300) {
-                stages = await res.json()
+        }
+        if(info?.parent && !rule){
+            rule = info?.parent
+        }
+
+        // スクリーンネームをリクエスト
+        const users = await prisma.user.findMany({
+            select: {
+                userId: true,
+                name: true
+            }
+        })
+
+        return {
+            props: {
+                stages, stage, rule, consoles, year, info, users, parent, posts
+            }
+        }
+    } catch (e) {
+        console.log(e)
+        return {
+            props: {
+                data: null
             }
         }
     }
-    if(info?.parent && !rule){
-        rule = info?.parent
-    }
 
-    // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
-
-    return {
-        props: {
-            stages, stage, rule, consoles, year, info, users, parent
-        }
-    }
 }
 export default function Stage(param){
 
@@ -182,7 +199,7 @@ export default function Stage(param){
                     </RuleBox>
                 </RuleWrapper>
             </Grid>
-            <RankingStandard users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
+            <RankingStandard posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )

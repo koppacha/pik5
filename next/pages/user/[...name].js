@@ -16,10 +16,6 @@ export async function getServerSideProps(context){
     const query = context.query.name
     const user = query[0]
 
-    return {
-        notFound: true,
-    }
-
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
