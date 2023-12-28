@@ -5,9 +5,8 @@ import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
 
-export default function RankingUser({userId, console:consoles, rule, year, userName}){
+export default function RankingUser({posts, userName}){
 
-    const { data:posts } = useSWR(`/api/server/record/${userId}/${consoles}/${rule}/${year}`, fetcher)
     if(!posts){
         return (
             <NowLoading/>
@@ -15,7 +14,7 @@ export default function RankingUser({userId, console:consoles, rule, year, userN
     }
 
     // 取得したデータにPrismaから取ってきたスクリーンネームを入れる
-    const data = posts.data ? Object.values(posts.data).map(function(post){
+    const data = posts ? Object.values(posts).map(function(post){
         return {
             ...post,
             user_name: userName
