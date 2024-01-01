@@ -30,7 +30,7 @@ export default function RecordPost({info, rule, console, mode}){
                     component={Link}
                     href="#"
                     onClick={handleClickOpen}>
-                    <FontAwesomeIcon icon={faPaperPlane} /> {t.post.title}
+                    <span><FontAwesomeIcon icon={faPaperPlane} /> {t.post.title}</span>
                 </RecordPostButton>
             </RuleBox>
             <RecordForm

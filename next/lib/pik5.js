@@ -6,8 +6,12 @@ import {en} from "../locale/en";
 export const range = (start, end) => [...Array((end - start) + 1)].map((_, i) => start + i);
 
 // Fetcher本体
-export function fetcher(url){
-    return fetch(url).then((r)=>r.json())
+export async function fetcher(url){
+    const res = await fetch(url)
+    if(!res.ok){
+        res.status(500).end()
+    }
+    return res.json()
 }
 // 翻訳データ読み込み（SSRでは使用不可）（現在の言語はt、現在の言語でない方はrに格納される）
 export const useLocale = () => {

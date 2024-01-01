@@ -9,48 +9,53 @@ export default async function handle(req, res){
 
     const session = await getServerSession(req, res, authOptions)
 
-    /*
-     * フロントエンドから渡された記録投稿フォーム以外のPOSTリクエストをバックエンドへ橋渡しする
-     */
-    if(req.method === "POST") {
-        try {
-            const query = req.query.query.join("/")
-            await prismaLogging(session?.user?.id ?? "guest", "queryPost", req.body)
+    return new Promise(async resolve => {
+        switch (req.method) {
+            case "POST": {
+                try {
+                    const query = req.query.query.join("/")
+                    await prismaLogging(session?.user?.id ?? "guest", "queryPost", req.body)
 
-            const post = await fetch(`http://laravel:8000/api/${query}`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(req.body)
-            })
-            const data = await post.json()
-            res.status(200).json({data})
+                    const post = await fetch(`http://laravel:8000/api/${query}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(req.body)
+                    })
+                    const data = await post.json()
+                    res.status(200).json({data})
+                    return resolve()
 
-        } catch (e) {
-            await prismaLogging(session?.user?.id ?? "guest", "queryPostError", e)
-            res.status(404).json(e)
+                } catch (e) {
+                    await prismaLogging(session?.user?.id ?? "guest", "queryPostError", e)
+                    res.status(404).json(e)
+                    return resolve()
+                }
+            }
+            case "GET": {
+                try {
+                    const query = req.query.query.join("/")
+
+                    // URLパラメータが存在する場合の処理
+                    const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
+                        req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
+
+                    const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
+                    const data = await get.json()
+                    res.status(200).json({data})
+
+                } catch (e) {
+                    await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", e)
+                    console.log(e)
+                    res.status(500).end()
+                    return resolve()
+                }
+            }
         }
-    /*
-     * フロントエンドから渡されたGETリクエストをバックエンドへ橋渡しする
-     */
-    } else {
-        try {
-            const query = req.query.query.join("/")
-
-            // URLパラメータが存在する場合の処理
-            const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
-                                    req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
-
-            const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
-            const data = await get.json()
-            res.status(200).json({data})
-
-        } catch (e) {
-            await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", e)
-            res.status(404).json({e})
-        }
-    }
+        res.status(405).end()
+        return resolve()
+    })
 }
 
 function htmlSpecialChars(string) {

@@ -44,14 +44,18 @@ export default function MobileFooter({users}){
             <MobileFooterMenu container columns={{xs: 5}}>
                 <MobileFooterItem item xs={1}>
                     <Link href="/">
-                        <FontAwesomeIcon icon={faHome}/>
-                        <Typography>Home</Typography>
+                        <span>
+                            <FontAwesomeIcon icon={faHome}/>
+                            <Typography>Home</Typography>
+                        </span>
                     </Link>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1}>
                     <Link href="https://discord.gg/rQEBJQa" target="_blank">
-                        <FontAwesomeIcon icon={faDiscord}/>
-                        <Typography>Discord</Typography>
+                        <span>
+                            <FontAwesomeIcon icon={faDiscord}/>
+                            <Typography>Discord</Typography>
+                        </span>
                     </Link>
                 </MobileFooterItem>
                 <MobileFooterItem item xs={1} onClick={handleSearchClick} style={{cursor:"pointer"}}>

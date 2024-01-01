@@ -1,3 +1,5 @@
+'use client'
+
 import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container, Paper, ListItem} from "@mui/material";
 import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";

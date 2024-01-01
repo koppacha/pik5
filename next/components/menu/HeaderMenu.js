@@ -59,15 +59,19 @@ export default function HeaderMenu({users}){
                             series={7}
                             component={Link}
                             href="/keyword">
-                            <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faBook} />
-                            {t.g.key}
+                            <span>
+                                <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faBook} />
+                                {t.g.key}
+                            </span>
                         </CustomMenuButton>
                         <CustomMenuButton
                             series={8}
                             component={Link}
                             href="https://discord.gg/rQEBJQa">
-                            <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
-                            {t.g.discord}
+                            <span>
+                                <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
+                                {t.g.discord}
+                            </span>
                         </CustomMenuButton>
                     </LeftAppBar>
 

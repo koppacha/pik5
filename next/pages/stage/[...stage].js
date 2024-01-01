@@ -116,7 +116,7 @@ export default function Stage(param){
     const handleOpen = () => setOpen(true)
 
     // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
-    let uniqueId = (param.stage > 900) ? param.stage : param.rule
+    let uniqueId = (param.stage > 900) ? param.stage : (param.rule) ? param.rule : 0
 
     // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
     if(Number(param.rule) === 21 || Number(param.rule) === 22){
@@ -142,13 +142,12 @@ export default function Stage(param){
     const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
     // キーワードにルールがあればそれを表示する
-    function RuleInfo(){
-        const {data: keywordData, isValidating} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
-
-        if(isValidating){
+    function RuleInfo() {
+        const {data: keywordData, isValidating, error} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
+        if (isValidating) {
             return <NowLoading/>
         }
-        if(keywordData) {
+        if (keywordData) {
             return (
                 <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
                     {keywordData.data?.content}
@@ -162,7 +161,7 @@ export default function Stage(param){
     const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
         || Number(param.rule) > 100
         ? <></>
-        : <Link href={"/total/"+param.rule} className="mini-title">（{t.rule?.[param.rule]}）</Link>
+        : <Link href={"/total/"+param.rule} className="mini-title"><span>（{t.rule?.[param.rule]}）</span></Link>
 
     return (
         <>
@@ -195,7 +194,7 @@ export default function Stage(param){
                              onClick={handleOpen}
                              component={Link}
                              href="#">
-                        {t.g.rule}
+                        <span>{t.g.rule}</span>
                     </RuleBox>
                 </RuleWrapper>
             </Grid>
