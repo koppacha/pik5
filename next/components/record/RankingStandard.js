@@ -44,7 +44,7 @@ export default function RankingStandard({posts, borders, stage, console:consoles
                                 }}>
                                     {star.repeat(i + 2)} {t.border[2][i + 1]} {border.toLocaleString()} pts.
                                 </Box>
-                                <Record data={post}/>
+                                <Record key={post.unique_id} data={post}/>
                             </React.Fragment>
                         )
                     } else {
