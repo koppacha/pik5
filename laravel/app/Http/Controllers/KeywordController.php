@@ -120,10 +120,17 @@ class KeywordController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        $data = Keyword::where('unique_id', $request['id'])->latest()->first();
-        return response()->json(
-            $data
-        );
+        try {
+            $data = Keyword::where('unique_id', $request['id'])->latest()->first();
+            return response()->json(
+                $data
+            );
+        } catch (Exception $e){
+            Log::debug("Keyword:show:error", [$e]);
+            return response()->json(
+                ["server error"]
+            );
+        }
     }
 
     /**

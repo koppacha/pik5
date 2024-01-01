@@ -296,8 +296,8 @@ export default function MobileMenu({users, open, toggleHandle}){
                             }
                         </List>
                     </Collapse>
-                    <ListItemButton href="/">{t.g.top}</ListItemButton>
-                    <ListItemButton href="/keyword">{t.g.keyword}</ListItemButton>
+                    <ListItemButton href="/"><span>{t.g.top}</span></ListItemButton>
+                    <ListItemButton href="/keyword"><span>{t.g.keyword}</span></ListItemButton>
                     <ListItemButton href="https://discord.gg/rQEBJQa"><FontAwesomeIcon icon={faDiscord} />{t.g.discord}</ListItemButton>
                     <ListItemButton href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
                     <ListItemButton onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>

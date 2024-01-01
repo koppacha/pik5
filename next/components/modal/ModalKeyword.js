@@ -30,7 +30,7 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
                 <StyledDialogContent>
                     <KeywordContent data={data.data}/>
                 <DialogActions>
-                    <Button href={"/keyword/"+uniqueId}>全画面表示</Button>
+                    <Button href={"/keyword/"+uniqueId}><span>全画面表示</span></Button>
                     <Button onClick={handleClose}>{t.g.close}</Button>
                     {
                         handleEditOpen && <Button onClick={handleEditOpen}>{t.g.edit}</Button>
