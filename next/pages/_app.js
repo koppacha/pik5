@@ -1,4 +1,5 @@
 import '@/styles/globals.css';
+import '@/styles/styles.scss';
 import Layout from '../components/Layout';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import {ThemeProvider} from "next-themes";

@@ -9,9 +9,6 @@ module.exports = {
     locales: ["en", "ja"],
     defaultLocale: "ja"
   },
-  compiler: {
-    styledComponents: true,
-  },
   images: {
     remotePatterns: [
       {
