@@ -38,7 +38,7 @@ export async function getServerSideProps(context){
 
     const consoles = query[1] || 0
     const rule     = query[2] || 0
-    const year     = query[3] || 2023
+    const year     = query[3] || 2024
 
     // 記録を取得
     const recordRes = await fetch(`http://laravel:8000/api/record/${user}/${consoles}/${rule}/${year}`)
@@ -47,7 +47,7 @@ export async function getServerSideProps(context){
     if(
         !userName ||
         year < 2014 ||
-        year > 2023 ||
+        year > 2024 ||
         query[4]
     ){
         return {

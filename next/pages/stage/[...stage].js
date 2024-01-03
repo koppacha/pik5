@@ -29,7 +29,7 @@ export async function getServerSideProps(context){
     const stage   = query[0]
     const consoles = query[1] || 0
     let   rule    = query[2] || 0
-    const year    = query[3] || 2023
+    const year    = query[3] || 2024
 
     if(
         stage < 100 ||
@@ -37,7 +37,7 @@ export async function getServerSideProps(context){
         !available.includes(Number(rule)) ||
         !available.includes(Number(consoles)) ||
         year < 2014 ||
-        year > 2023 ||
+        year > 2024 ||
         query[4]
     ){
         return {

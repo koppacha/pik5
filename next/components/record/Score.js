@@ -24,8 +24,8 @@ export default function Score({rule, score, stage, category}){
         // バトルモードの場合
         return (
             <>
-                <ScoreTail as="span">Rate </ScoreTail>
-                <ScoreType as="span">{score.toLocaleString()}</ScoreType>
+                <ScoreTail className="score-tail" as="span">Rate </ScoreTail>
+                <ScoreType className="score-type" as="span">{score.toLocaleString()}</ScoreType>
             </>
         )
     }
@@ -34,7 +34,7 @@ export default function Score({rule, score, stage, category}){
         const convertScore = (Number(rule) === 11) ? score2time(score, stage) : score
         return (
             <>
-                <ScoreType as="span">{sec2time(convertScore)}</ScoreType>
+                <ScoreType className="score-type" as="span">{sec2time(convertScore)}</ScoreType>
             </>
         )
     } else {
@@ -45,15 +45,15 @@ export default function Score({rule, score, stage, category}){
 
             return (
                 <>
-                    <ScoreType as="span">{sec2time(screenTime)}</ScoreType>
+                    <ScoreType className="score-type" as="span">{sec2time(screenTime)}</ScoreType>
                 </>
             )
         } else {
             // ポイントで競うステージの場合
             return (
                 <>
-                    <ScoreType as="span">{score.toLocaleString()}</ScoreType>
-                    <ScoreTail as="span"> pts.</ScoreTail>
+                    <ScoreType className="score-type" as="span">{score.toLocaleString()}</ScoreType>
+                    <ScoreTail className="score-tail" as="span"> pts.</ScoreTail>
                 </>
             )
         }

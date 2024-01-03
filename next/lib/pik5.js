@@ -1,6 +1,7 @@
 import {useRouter} from "next/router";
 import {ja} from "../locale/ja";
 import {en} from "../locale/en";
+import {useTheme} from "next-themes";
 
 // 指定値から指定値までの数列を作成する関数
 export const range = (start, end) => [...Array((end - start) + 1)].map((_, i) => start + i);
@@ -108,4 +109,36 @@ export function id2name(users, target){
         return user.userId === target
     })
     return result.name
+}
+// ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
+export const rankColor = (rank, team = 0, target = 0) => {
+    const {theme} = useTheme()
+    const t = Number(team)
+    const r = Number(rank)
+    if(!t || target === 0){
+        switch (true) {
+            case !r: // false
+                return target ? '#2d2d2d' : theme === "dark" ? '#181818' : '#b7b7b7'
+            case r === 1: // 1位
+                return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
+            case r === 2: // 2位
+                return target ? '#42f35d' : theme === "dark" ? '#4b4b4b' : '#dedede'
+            case r === 3: // 3位
+                return target ? '#23abf1' : theme === "dark" ? '#2a2a2a' : '#d5d5d5'
+            case r < 11: // 4～10位
+                return target ? '#c7c7c7' : theme === "dark" ? '#181818' : '#b7b7b7'
+            case r < 21: // 11～20位
+                return target ? '#9a9a9a' : theme === "dark" ? '#181818' : '#b7b7b7'
+            default: // 21位～
+                return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
+        }
+    } else {
+        const teamColor = ['',
+            '#19acff', '#ff3919', '#eeeeee', '#b419ff',
+            '#ff63f2', '#e3e3e3', '#f3524c', '#8ba9ff',
+            '#e0e0e0', '#010101', '#45aee6', '#e6d745',
+            '#e6456c', '#e6b945', '#45e675', '#dce645',
+            '#457de6', '#e69345', '#e64575', '#455ae6']
+        return teamColor[t]
+    }
 }

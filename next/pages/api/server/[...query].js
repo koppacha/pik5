@@ -34,20 +34,25 @@ export default async function handle(req, res){
                 }
             }
             case "GET": {
+
+                const query = req.query.query.join("/")
+
+                // URLパラメータが存在する場合の処理
+                const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
+                    req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
+
+                const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
+                let data
+
                 try {
-                    const query = req.query.query.join("/")
-
-                    // URLパラメータが存在する場合の処理
-                    const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
-                        req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
-
-                    const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
-                    const data = await get.json()
+                    data = await get.json()
                     res.status(200).json({data})
+                    return resolve()
 
                 } catch (e) {
                     await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", e)
-                    console.log(e)
+                    console.error(e)
+                    console.log(get.text())
                     res.status(500).end()
                     return resolve()
                 }

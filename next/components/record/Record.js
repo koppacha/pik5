@@ -3,7 +3,7 @@ import Link from "next/link";
 import {faComment, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {dateFormat, fetcher, sec2time, useLocale} from "../../lib/pik5";
+import {dateFormat, fetcher, rankColor, sec2time, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -58,28 +58,38 @@ export default function Record({data, stages, series}) {
     } else {
         compare = ""
     }
+    const currentRankFrontColor = rankColor(data?.post_rank ?? 20, data?.team ?? 0, 1)
+    const className =             data?.post_rank === 1 ? "rank1" :
+                                         data?.post_rank === 2 ? "rank2" :
+                                         data?.post_rank === 3 ? "rank3" :
+                                         data?.post_rank <  11 ? "rank4" :
+                                         data?.post_rank <  21 ? "rank11": "rank21"
     return (
-        <RecordContainer container rank={data?.post_rank ?? 20} team={data?.team ?? 0}>
-            <RecordGridWrapper item xs={2} sm={1}>
+        <RecordContainer className={`record-container ${className}`} container rank={data?.post_rank ?? 20} team={data?.team ?? 0}
+            style={{borderLeft:      `10px solid ${currentRankFrontColor}`,
+                    borderBottom:    `1px solid ${currentRankFrontColor}`,
+                    boxShadow:       `-3px 1px 4px ${currentRankFrontColor}`}}
+        >
+            <RecordGridWrapper className="record-grid-wrapper" item xs={2} sm={1}>
                 <div>
-                    <RankEdge as="span">{t.g.rankHead} </RankEdge>
-                    <RankType as="span">{data?.post_rank ?? "?"}</RankType>
-                    <RankEdge as="span"> {t.g.rankTail}</RankEdge>
-                    <RankPointType>[{data?.rps ?? "?"} rps]</RankPointType>
+                    <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
+                    <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
+                    <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
+                    <RankPointType className="rank-point-type">[{data?.rps ?? "?"} rps]</RankPointType>
                 </div>
             </RecordGridWrapper>
-            <RecordGridWrapper item xs={3} sm={3}>
-                <UserType length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
+            <RecordGridWrapper className="record-grid-wrapper" item xs={3} sm={3}>
+                <UserType className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
             </RecordGridWrapper>
-            <RecordGridWrapper item xs={3} sm={3}>
+            <RecordGridWrapper className="record-grid-wrapper" item xs={3} sm={3}>
                 <div>
                 <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
-                <CompareType as="span"> {compare}</CompareType>
+                <CompareType className="compare-type" as="span"> {compare}</CompareType>
                 {
                     // 総合ランキングの場合は投稿ステージ数を表示
                     (data?.ranks) &&
                         <>
-                            <br/><ScoreType style={{fontSize:"0.8em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
+                            <br/><ScoreType className="score-type" style={{fontSize:"0.8em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
                         </>
                 }
                 </div>
