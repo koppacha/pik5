@@ -20,9 +20,15 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
+export async function getStaticProps({params}){
 
-    const limited   = context.query.limited
+    const limited   = params.limited
 
     if(
         limited < 150101 ||
@@ -63,7 +69,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             stages, limited, info, users
-        }
+        },
+        revalidate: 1,
     }
 }
 

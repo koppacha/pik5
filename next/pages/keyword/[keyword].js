@@ -11,9 +11,15 @@ import {useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
 
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
+export async function getStaticProps({params}){
 
-    const id = context.query.keyword
+    const id = params.keyword
 
     // キーワード情報をリクエスト
     const res = await fetch(`http://laravel:8000/api/keyword/${id}`)
@@ -36,7 +42,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             data: data, users
-        }
+        },
+        revalidate: 60,
     }
 }
 

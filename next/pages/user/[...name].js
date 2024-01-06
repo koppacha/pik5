@@ -11,9 +11,15 @@ import prisma from "../../lib/prisma";
 import {available, rule2array} from "../../lib/const";
 import {MarkerTableCell, RankCell, RenderStagesWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
+export async function getStaticProps({params}){
 
-    const query = context.query.name
+    const query = params.name
     const user = query[0]
 
     // スクリーンネームをリクエスト
@@ -57,7 +63,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             users, user, userName, consoles, rule, year, info, marker, posts
-        }
+        },
+        revalidate: 600,
     }
 }
 // レンダラー本体（フロントサイド）
