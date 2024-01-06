@@ -19,9 +19,15 @@ import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
 
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
+export async function getStaticProps({params}){
 
-    const query   = context.query.series
+    const query   = params.series
     const series  = query[0]
     const consoles = query[1] || 0
     let   rule    = query[2] || series
@@ -70,7 +76,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             stages, series, rule, consoles, year, info, users
-        }
+        },
+        revalidate: 600,
     }
 }
 

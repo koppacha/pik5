@@ -5,13 +5,16 @@ import '@fortawesome/fontawesome-svg-core/styles.css';
 import {ThemeProvider} from "next-themes";
 import { SessionProvider } from "next-auth/react";
 import {GlobalStyle} from "../styles/pik5.css";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import Script from "next/script";
 import {ga, pageView} from "../lib/gtag";
 import {useRouter} from "next/router";
 import createEmotionCache from "../lib/createEmotionCache";
 import {CacheProvider} from "@emotion/react";
 import PropTypes from "prop-types";
+import {faCircleNotch} from "@fortawesome/free-solid-svg-icons";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import * as React from "react";
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -19,15 +22,37 @@ export default function App(props) {
     const {Component, emotionCache = clientSideEmotionCache, pageProps: { session, ...pageProps } } = props
 
     const router = useRouter()
+    const [pageLoading, setPageLoading] = useState(false)
+
     useEffect(() => {
+        const handleStart = (url) => url !== router.asPath && setPageLoading(true)
+        const handleComplete = () => setPageLoading(false)
         const handleRouterChange = (url) => {
             pageView(url)
         }
+        router.events.on("routeChangeStart", handleStart)
+        router.events.on("routeChangeComplete", handleComplete)
         router.events.on("routeChangeComplete", handleRouterChange)
+        router.events.on("routeChangeError", handleComplete)
         return () => {
+            router.events.off("routeChangeStart", handleStart)
+            router.events.off("routeChangeComplete", handleComplete)
             router.events.off("routeChangeComplete", handleRouterChange)
+            router.events.off("routeChangeError", handleComplete)
         }
     }, [router.events])
+
+    function Loading(){
+        return <div style={{
+            position:"fixed",
+            top:"0",
+            paddingTop:"4em",
+            width:"100%",
+            height:"100%",
+            zIndex:"1000",
+            backgroundColor:"rgba(0,0,0,0.3)",
+        }}> <FontAwesomeIcon icon={faCircleNotch} spin /> Loading...</div>
+    }
 
     return (
       <>
@@ -47,6 +72,7 @@ export default function App(props) {
           <CacheProvider value={emotionCache}>
               <SessionProvider session={session}>
                   <ThemeProvider defaultTheme="dark">
+                      {pageLoading && <Loading/>}
                       <Layout>
                           <Component {...pageProps} />
                       </Layout>

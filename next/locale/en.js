@@ -603,6 +603,16 @@ export const en = {
         6: "Joy-Con Single",
         7: "Nintendo Switch"
     },
+    cnsl: {
+        0: "All",
+        1: "NGC",
+        2: "Wii",
+        3: "No Gyro",
+        4: "Gyro",
+        5: "TouchPen",
+        6: "Joy-Con",
+        7: "Switch",
+    },
     rule: {
         0: "Normal Rules",
         1: "All Overall",
@@ -632,7 +642,39 @@ export const en = {
         41: "Dandori Challenge",
         42: "Dandori Battle",
         43: "The Leaf Hermit's Challenge",
-        91: "Other"
+        91: "Other",
+        231216: "第19回期間限定ランキング",
+    },
+    ru: {
+        0: "通常ルール",
+        1: "全総合",
+        2: "通常総合",
+        3: "特殊総合",
+        4: "期間限定総合",
+        10: "ピクミン1",
+        11: "全回収TA",
+        20: "ピクミン2",
+        21: "タマゴあり",
+        22: "タマゴなし",
+        23: "タマゴムシ縛り",
+        24: "スプレー縛り",
+        25: "本編地下",
+        26: "2Pチャレンジ",
+        27: "TAS",
+        28: "実機無差別",
+        29: "ソロバトル",
+        30: "ピクミン3",
+        31: "お宝をあつめろ",
+        32: "原生生物を倒せ",
+        33: "巨大生物を倒せ",
+        34: "2Pミッション",
+        35: "ソロビンゴ",
+        36: "サイドストーリ",
+        40: "ピクミン4総合",
+        41: "ダンチャレ",
+        42: "ダンバト",
+        43: "葉っぱ仙人",
+        91: "その他",
     },
     border: {
         2: {
@@ -695,11 +737,13 @@ export const en = {
         g: {
             newTitle: "Create a new keyword",
             editTitle: "Create/Edit Keyword",
+            editIdea: "期間限定チャレンジルールを投稿する",
             tag: "Tag",
             category: "Category",
             keyword: "Keyword Name",
             yomi: "Yomi",
             content: "Content",
+            ideaName: "ルール名",
         },
         category: {
             all: "All",
@@ -717,6 +761,7 @@ export const en = {
             technical: "Internal Specifications",
             glitch: "Glitch Technique/Modification",
             rule: "Rule",
+            idea: "アイデア",
             other: "Other"
         },
         flag: {
@@ -759,7 +804,8 @@ export const en = {
         200918: "第16回期間限定ランキング",
         210829: "タマゴムシ取り大会",
         211105: "第17回期間限定ランキング",
-        221008: "第18回期間限定ランキング"
+        221008: "第18回期間限定ランキング",
+        231216: "第19回期間限定ランキング"
     },
     yup: {
         'required': "This field is required.",
