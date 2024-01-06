@@ -15,9 +15,15 @@ import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
 
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
+export async function getStaticProps({params}){
 
-    const query = context.query.run
+    const query = params.run
     const stage = query[0]
     const console = query[1] || 0
 
@@ -161,9 +167,6 @@ export async function getServerSideProps(context){
         case 405:
             q += "m1zk9901/category/n2y69pmd"
             break
-
-
-
     }
     // ステージ情報をリクエスト
     const res = await fetch(`https://www.speedrun.com/api/v1/leaderboards/${q}`)
@@ -186,7 +189,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             users, data, stage, console, consoles
-        }
+        },
+        revalidate: 600,
     }
 }
 

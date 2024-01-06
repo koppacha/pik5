@@ -59,11 +59,11 @@ export default function Record({data, stages, series}) {
         compare = ""
     }
     const currentRankFrontColor = rankColor(data?.post_rank ?? 20, data?.team ?? 0, 1)
-    const className =             data?.post_rank === 1 ? "rank1" :
-                                         data?.post_rank === 2 ? "rank2" :
-                                         data?.post_rank === 3 ? "rank3" :
-                                         data?.post_rank <  11 ? "rank4" :
-                                         data?.post_rank <  21 ? "rank11": "rank21"
+    const className = data?.post_rank === 1 ? "rank1" :
+                             data?.post_rank === 2 ? "rank2" :
+                             data?.post_rank === 3 ? "rank3" :
+                             data?.post_rank <  11 ? "rank4" :
+                             data?.post_rank <  21 ? "rank11": "rank21"
     return (
         <RecordContainer className={`record-container ${className}`} container rank={data?.post_rank ?? 20} team={data?.team ?? 0}
             style={{borderLeft:      `10px solid ${currentRankFrontColor}`,
@@ -135,6 +135,10 @@ export default function Record({data, stages, series}) {
                                     <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                 </Link>
                             </>}
+                        {data.console &&
+                            <span style={{position:"relative",top:"-2px",fontSize:"0.85em",backgroundColor:"#eee",color:"#111",borderRadius:"4px",padding:"2px 4px",marginRight:"0.5em"}}>
+                            {t.cnsl[data.console]}
+                            </span>}
                         {data.post_comment &&
                             <>
                                 {data.post_comment}

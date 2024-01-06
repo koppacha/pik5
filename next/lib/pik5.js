@@ -112,25 +112,24 @@ export function id2name(users, target){
 }
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
 export const rankColor = (rank, team = 0, target = 0) => {
-    const {theme} = useTheme()
     const t = Number(team)
     const r = Number(rank)
     if(!t || target === 0){
         switch (true) {
             case !r: // false
-                return target ? '#2d2d2d' : theme === "dark" ? '#181818' : '#b7b7b7'
+                return target ? '#2d2d2d' : '#b7b7b7'
             case r === 1: // 1位
-                return target ? '#f6f24e' : theme === "dark" ? '#656565' : '#eaeaea'
+                return target ? '#f6f24e' : '#eaeaea'
             case r === 2: // 2位
-                return target ? '#42f35d' : theme === "dark" ? '#4b4b4b' : '#dedede'
+                return target ? '#42f35d' : '#dedede'
             case r === 3: // 3位
-                return target ? '#23abf1' : theme === "dark" ? '#2a2a2a' : '#d5d5d5'
+                return target ? '#23abf1' : '#d5d5d5'
             case r < 11: // 4～10位
-                return target ? '#c7c7c7' : theme === "dark" ? '#181818' : '#b7b7b7'
+                return target ? '#c7c7c7' : '#b7b7b7'
             case r < 21: // 11～20位
-                return target ? '#9a9a9a' : theme === "dark" ? '#181818' : '#b7b7b7'
+                return target ? '#9a9a9a' : '#b7b7b7'
             default: // 21位～
-                return target ? '#3f3d3d' : theme === "dark" ? '#181818' : '#b7b7b7'
+                return target ? '#3f3d3d' : '#b7b7b7'
         }
     } else {
         const teamColor = ['',

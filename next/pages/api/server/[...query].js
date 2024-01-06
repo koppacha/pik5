@@ -44,18 +44,16 @@ export default async function handle(req, res){
                 const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
                 let data
 
-                try {
-                    data = await get.json()
-                    res.status(200).json({data})
-                    return resolve()
-
-                } catch (e) {
-                    await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", e)
-                    console.error(e)
-                    console.log(get.text())
+                if(!get.ok) {
+                    const resText = get.text()
+                    await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", resText)
+                    console.log(resText)
                     res.status(500).end()
                     return resolve()
                 }
+                data = await get.json()
+                res.status(200).json({data})
+                return resolve()
             }
         }
         res.status(405).end()
@@ -63,6 +61,17 @@ export default async function handle(req, res){
     })
 }
 
+// JSON形式にパースできるかどうか判定する
+function isValidJson(value){
+    try {
+        JSON.parse(value)
+    } catch (e) {
+        return false
+    }
+    return true
+}
+
+// HTMLで有効な特殊文字をエンコードする
 function htmlSpecialChars(string) {
     return string.replace(/[&<>"']/g, function (match) {
         switch (match) {

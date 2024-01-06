@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {fetcher, useLocale} from "../../lib/pik5";
+import {range, fetcher, useLocale} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
@@ -22,10 +22,17 @@ import NowLoading from "../../components/NowLoading";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// サーバーサイドの処理
-export async function getServerSideProps(context){
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
 
-    const query   = context.query.stage
+// サーバーサイドの処理
+export async function getStaticProps({params}){
+
+    const query   = params.stage
     const stage   = query[0]
     const consoles = query[1] || 0
     let   rule    = query[2] || 0
@@ -45,59 +52,61 @@ export async function getServerSideProps(context){
         }
     }
 
-    try {
-        // 記録をリクエスト
-        const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
-        if(res.status < 300){
-            console.log(res.error)
-        }
-        const posts = await res.json() ?? [].json()
+    // 記録をリクエスト
+    const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
+    if(res.status < 300){
+        console.log(res.error)
+    }
+    const posts = await res.json() ?? [].json()
 
-        let info = null, parent = null, stages = []
-        // ステージ情報をリクエスト
-        const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
-        if(stage_res.status < 300) {
-            info = await stage_res.json()
+    let info = null, parent = null, stages = [], uniqueId = null
 
-            if(info.parent) {
-                const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
-                if (parent_res.status < 300) {
-                    parent = await parent_res.json()
-                }
-                // シリーズ番号に基づくステージ群の配列をリクエスト
-                const reqStage = rule || info.parent
-                const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
-                if(res.status < 300) {
-                    stages = await res.json()
-                }
+    // ステージ情報をリクエスト
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
+    if(stage_res.status < 300) {
+        info = await stage_res.json()
+
+        if(info.parent) {
+            const parent_res = await fetch(`http://laravel:8000/api/stage/${info.parent}`)
+            if (parent_res.status < 300) {
+                parent = await parent_res.json()
             }
-        }
-        if(info?.parent && !rule){
-            rule = info?.parent
-        }
-
-        // スクリーンネームをリクエスト
-        const users = await prisma.user.findMany({
-            select: {
-                userId: true,
-                name: true
-            }
-        })
-
-        return {
-            props: {
-                stages, stage, rule, consoles, year, info, users, parent, posts
-            }
-        }
-    } catch (e) {
-        console.log(e)
-        return {
-            props: {
-                data: null
+            // シリーズ番号に基づくステージ群の配列をリクエスト
+            const reqStage = rule || info.parent
+            const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
+            if(res.status < 300) {
+                stages = await res.json()
             }
         }
     }
+    if(info?.parent && !rule){
+        rule = info?.parent
+    }
+    // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
+    uniqueId = (stage > 900) ? stage : (rule) ? rule : 0
 
+    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
+    if(Number(rule) === 21 || Number(rule) === 22){
+        uniqueId = 20
+    }
+    // ルール本文をリクエスト
+    const keyword_res = await fetch(`http://laravel:8000/api/keyword/${uniqueId}`)
+    const keyword = (keyword_res.status < 300) ? await keyword_res.json() : ""
+
+    // スクリーンネームをリクエスト
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    return {
+        props: {
+            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword
+        },
+        revalidate: 600,
+    }
 }
 export default function Stage(param){
 
@@ -114,14 +123,6 @@ export default function Stage(param){
         setEditOpen(true)
     }
     const handleOpen = () => setOpen(true)
-
-    // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
-    let uniqueId = (param.stage > 900) ? param.stage : (param.rule) ? param.rule : 0
-
-    // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
-    if(Number(param.rule) === 21 || Number(param.rule) === 22){
-        uniqueId = 20
-    }
 
     function isEvent(info){
         const currentTime = new Date()
@@ -143,20 +144,17 @@ export default function Stage(param){
 
     // キーワードにルールがあればそれを表示する
     function RuleInfo() {
-        const {data: keywordData, isValidating, error} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
-        if (isValidating) {
-            return <NowLoading/>
-        }
-        if (keywordData) {
+        if (param.keyword) {
             return (
                 <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
-                    {keywordData.data?.content}
+                    {param.keyword?.content}
                 </ReactMarkdown>
             )
         } else {
             return <></>
         }
     }
+
     // ルールタイトルを表示しないルールを定義
     const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
         || Number(param.rule) > 100
@@ -199,7 +197,7 @@ export default function Stage(param){
                 </RuleWrapper>
             </Grid>
             <RankingStandard posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
-            <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
+            <ModalKeyword open={open} uniqueId={param.uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
 }

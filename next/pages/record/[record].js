@@ -13,10 +13,16 @@ import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
 import {logger} from "../../lib/logger";
 
+export async function getStaticPaths(){
+    return {
+        paths: [],
+        fallback: 'blocking',
+    }
+}
 // サーバーサイドの処理
-export async function getServerSideProps(context){
+export async function getStaticProps({params}){
 
-    const record = context.query.record
+    const record = params.record
 
     if(record < 100000000 || record > 400000000){
         return {
@@ -47,7 +53,8 @@ export async function getServerSideProps(context){
     return {
         props: {
             users, data
-        }
+        },
+        revalidate: 600,
     }
 }
 export default function RecordPage({users, data}){
