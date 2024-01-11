@@ -134,15 +134,8 @@ export default function Home({users, prev}) {
                     </TopBoxHeader>
                     <TopBoxContent>
                         <EventContainer>
-                            <EventDate week="6">
-                                <span className="month">12/</span>
-                                <span className="date">28</span><hr/>
-                                <span className="week">{t.g.week[4]}</span>
-                            </EventDate>
                             <EventContent>
-                                <strong>RTA in Japan 2023 Winter「ピクミン All Parts RTA」</strong><br/>
-                                走者 <Link href="/user/iid01">iid01さん</Link>/解説 <Link href="/user/TEL">TELさん</Link><br/>
-                                11:00～ Discord「大水源」チャンネル
+                                現在予定されているイベントはありません。
                             </EventContent>
                         </EventContainer>
                         <hr/>
@@ -172,9 +165,11 @@ export default function Home({users, prev}) {
                         <span><FontAwesomeIcon icon={faCircleInfo} /> {t.g.info}</span>
                     </TopBoxHeader>
                     <TopBoxContent>
+                        <TopBoxContentList>【ver.3.06】レンダリング方式を変更して表示を高速化しました（2024/01/11）</TopBoxContentList>
+                        <TopBoxContentList>【ver.3.05】チーム対抗戦コンポーネントを追加しました（2023/12/16）</TopBoxContentList>
                         <TopBoxContentList>【ver.3.04】イベントセル、期間限定チャレンジ投稿フォーム、新着記録順位、総合ランキングの順位マーカーを追加しました（2023/11/11）</TopBoxContentList>
                         <TopBoxContentList>【ver.3.03】検索機能、ロール機能、コメントにおけるNGワード検知機能を追加しました。（2023/10/08）</TopBoxContentList>
-                        <TopBoxContentList>【ver.3.02】移転前の期間限定、参加者企画、チャレンジ複合、その他ランキング全306ステージを移植しました。（2023/09/20）</TopBoxContentList>
+                        {/*<TopBoxContentList>【ver.3.02】移転前の期間限定、参加者企画、チャレンジ複合、その他ランキング全306ステージを移植しました。（2023/09/20）</TopBoxContentList>*/}
                         {/*<TopBoxContentList>【ver.3.01】ピクミン4全28ステージを追加しました。（2023/07/29）</TopBoxContentList>*/}
                         {/*<TopBoxContentList>【ver.3.00】リニューアルオープンしました！（2023/07/21）</TopBoxContentList>*/}
                     </TopBoxContent>
