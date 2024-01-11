@@ -52,18 +52,18 @@ export default async function handler(req, res){
                         method: "POST",
                         body: formData,
                     });
-                    // レスポンスをJSONに変換して返す
-                    const data = await response.json();
-                    res.status(200).json(data);
+                    // レスポンスをJSONに変換
+                    const data = await response.json()
+                    return res.status(200).json(data)
 
                 } catch (error) {
                     // エラー処理
                     await prismaLogging(session.user.id, "PostsResError", error)
-                    return res.status(500).json({errors: error});
+                    return res.status(500).json({error: error})
                 }
             }
         })
     } else {
-        res.status(405).json({error: "Method not allowed"})
+        return res.status(405).json({error: "Method not allowed"})
     }
 }

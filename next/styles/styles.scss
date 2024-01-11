@@ -17,6 +17,20 @@ $light-hover-back: #2d3748;
 $light-border: #7a6c62;
 $light-compare: #e63600;
 
+.loading-layer {
+    position :fixed;
+    top :0;
+    padding-top :4em;
+    width :100%;
+    height :100%;
+    z-index :1000;
+    background-color :rgba(0,0,0,0.1);
+    @media(max-width: 600px) {
+        text-align: right;
+        padding-top: 0;
+    }
+}
+
 .rank1 {
     background-color: #b7b7b7;
     [data-theme='dark'] & {
@@ -727,4 +741,8 @@ body {
         }
 
     }
+}
+.icon-button {
+    color: #fff;
+    font-size: 140%;
 }

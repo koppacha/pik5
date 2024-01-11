@@ -48,13 +48,13 @@ export async function getStaticProps({params}){
     // 表示中のユーザー名を取り出す
     data.user_name = users.find(function(e){
         return e.userId === data.user_id
-    }).name
+    })?.name
 
     return {
         props: {
             users, data
         },
-        revalidate: 600,
+        revalidate: 86400,
     }
 }
 export default function RecordPage({users, data}){

@@ -43,15 +43,9 @@ export default function App(props) {
     }, [router.events])
 
     function Loading(){
-        return <div style={{
-            position:"fixed",
-            top:"0",
-            paddingTop:"4em",
-            width:"100%",
-            height:"100%",
-            zIndex:"1000",
-            backgroundColor:"rgba(0,0,0,0.3)",
-        }}> <FontAwesomeIcon icon={faCircleNotch} spin /> Loading...</div>
+        return <div className="loading-layer">
+            <FontAwesomeIcon icon={faCircleNotch} spin /> Loading...
+        </div>
     }
 
     return (

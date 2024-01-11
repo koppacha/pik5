@@ -46,7 +46,7 @@ export const du = range(231, 244)
 export const bt = range(245, 254)
 
 // ピクミン3/DX
-export const p3 = range(301, 315)
+export const p3 = range(301, 350)
 
 // お宝をあつめろ！
 export const ce = range(301, 315)
@@ -74,6 +74,9 @@ export const dd = range(413, 418)
 
 // 葉っぱ仙人
 export const ex = range(419, 428)
+
+// 通常ステージ全部
+export const p0 = [].concat(p1, p2, p3, p4)
 
 // 本編RTA（Speedrun.com）
 export const sp = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403, 404, 405]

@@ -54,9 +54,6 @@ export async function getStaticProps({params}){
 
     // 記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
-    if(res.status < 300){
-        console.log(res.error)
-    }
     const posts = await res.json() ?? [].json()
 
     let info = null, parent = null, stages = [], uniqueId = null
@@ -105,7 +102,7 @@ export async function getStaticProps({params}){
         props: {
             stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword
         },
-        revalidate: 600,
+        revalidate: 180,
     }
 }
 export default function Stage(param){
