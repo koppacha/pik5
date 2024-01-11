@@ -140,7 +140,7 @@ class RecordController extends Controller
                 'console' => $request['console'] ?: 0,
                 'region' => 0,
                 'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
-                'unique_id' => "305".sprintf('%06d',random_int(0, 999999)),
+                'unique_id' => "306".sprintf('%06d',random_int(0, 999999)),
                 'post_comment' => $comment,
                 'user_ip' => $request['user_ip'],
                 'user_host' => gethostbyaddr($request['user_ip']) ?: "",

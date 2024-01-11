@@ -32,7 +32,7 @@ export async function getStaticProps({params}){
     // 表示中のユーザー名を取り出す
     const userName = users.find(function(e){
         return e.userId === user
-    }).name
+    })?.name
 
     // 各種統計情報を取得
     const res = await fetch(`http://laravel:8000/api/count/${user}`)
@@ -64,7 +64,7 @@ export async function getStaticProps({params}){
         props: {
             users, user, userName, consoles, rule, year, info, marker, posts
         },
-        revalidate: 600,
+        revalidate: 180,
     }
 }
 // レンダラー本体（フロントサイド）

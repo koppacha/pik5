@@ -10,13 +10,14 @@ import * as React from "react";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faDiscord, faTwitter} from '@fortawesome/free-brands-svg-icons'
 import CustomMenu from "./CustomMenu";
-import {faBook, faCloudMoon, faCloudSun, faGlobe, faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
+import {faBook, faCloudMoon, faCloudSun, faDice, faGlobe, faMagnifyingGlass} from "@fortawesome/free-solid-svg-icons";
 import {useTheme} from "next-themes";
 import {useLocale} from "../../lib/pik5";
 import {useRouter} from "next/router";
 import {CustomMenuButton, LeftAppBar, ThinAppBar} from "../../styles/pik5.css";
 import {useEffect, useRef, useState} from "react";
 import ModalSearch from "../modal/ModalSearch";
+import {p0} from "../../lib/const";
 
 export default function HeaderMenu({users}){
     const [mounted, setMounted] = useState(false)
@@ -33,6 +34,11 @@ export default function HeaderMenu({users}){
 
     const handleSearchClose = () => {
         setSearchOpen(false)
+    }
+
+    function handleRandomClick(){
+        const targetStageId = p0[Math.floor(Math.random() * p0.length)]
+        router.push(`/stage/${targetStageId}`).then(r => (!r) && console.log("Response Error from Header Menu"))
     }
 
     useEffect(() => {
@@ -64,23 +70,30 @@ export default function HeaderMenu({users}){
                                 {t.g.key}
                             </span>
                         </CustomMenuButton>
-                        <CustomMenuButton
-                            series={8}
-                            component={Link}
-                            href="https://discord.gg/rQEBJQa">
-                            <span>
-                                <FontAwesomeIcon style={{marginRight:"0.5em"}} icon={faDiscord} />
-                                {t.g.discord}
-                            </span>
-                        </CustomMenuButton>
                     </LeftAppBar>
 
                     {/*ここから右よせ*/}
                     <Box style={{ flexGrow: 1 }} />
+                    <Tooltip title={t.g.discord} arrow>
+                        <IconButton
+                            id="discord-button"
+                            className="icon-button"
+                            href="https://discord.gg/rQEBJQa">
+                            <FontAwesomeIcon icon={faDiscord}/>
+                        </IconButton>
+                    </Tooltip>
+                    <Tooltip title="ランダム選出" arrow>
+                        <IconButton
+                            id="random-button"
+                            className="icon-button"
+                            onClick={handleRandomClick}>
+                            <FontAwesomeIcon icon={faDice}/>
+                        </IconButton>
+                    </Tooltip>
                     <Tooltip title="検索" arrow>
                         <IconButton
                             id="search-button"
-                            style={{color:"#fff"}}
+                            className="icon-button"
                             onClick={handleSearchClick}>
                             <FontAwesomeIcon icon={faMagnifyingGlass}/>
                         </IconButton>
@@ -88,7 +101,7 @@ export default function HeaderMenu({users}){
                     <Tooltip title="Twitter" arrow>
                         <IconButton
                             id="twitter-button"
-                            style={{color:"#fff"}}
+                            className="icon-button"
                             href="https://twitter.com/PikminChallenge"
                             target="_blank">
                             <FontAwesomeIcon icon={faTwitter}/>
@@ -97,7 +110,7 @@ export default function HeaderMenu({users}){
                     <Tooltip title={t.g.theme} arrow>
                         <IconButton
                             id="theme-button"
-                            style={{color:"#fff"}}
+                            className="icon-button"
                             onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}>
                             <FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/>
                         </IconButton>
@@ -108,7 +121,7 @@ export default function HeaderMenu({users}){
                             href={router.asPath}
                             locale={r}
                             id="translate-button"
-                            style={{color:"#fff"}}>
+                            className="icon-button">
                             <FontAwesomeIcon icon={faGlobe} />
                         </IconButton>
                     </Tooltip>
