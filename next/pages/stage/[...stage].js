@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {range, fetcher, useLocale} from "../../lib/pik5";
+import {range, fetcher, useLocale, currentYear} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
@@ -36,7 +36,7 @@ export async function getStaticProps({params}){
     const stage   = query[0]
     const consoles = query[1] || 0
     let   rule    = query[2] || 0
-    const year    = query[3] || 2024
+    const year    = query[3] || currentYear()
 
     if(
         stage < 100 ||
@@ -44,7 +44,7 @@ export async function getStaticProps({params}){
         !available.includes(Number(rule)) ||
         !available.includes(Number(consoles)) ||
         year < 2014 ||
-        year > 2024 ||
+        year > currentYear() ||
         query[4]
     ){
         return {
@@ -151,7 +151,6 @@ export default function Stage(param){
             return <></>
         }
     }
-
     // ルールタイトルを表示しないルールを定義
     const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
         || Number(param.rule) > 100
@@ -171,7 +170,7 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
             </PageHeader>
             <RuleList param={param}/>
-            <StageList currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+            <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6}>
                     <PullDownConsole props={param}/>

@@ -70,7 +70,6 @@ export default function RecordPage({users, data}){
             return e.userId === session.user.id
         }).role)
     }
-
     // 投稿の経過時間を計算
     const postDate = new Date(data.created_at)
     const now = new Date()
@@ -78,9 +77,9 @@ export default function RecordPage({users, data}){
     // 削除権限を持っているかどうか判定する
     const delFlag = () => {
         // 管理人である場合は常に削除可能
-        if(role === 10) return true
+        if(Number(role) === 10) return true
 
-        // 管理人以外の場合、24時間経過していたらアウト
+        // 管理人以外の場合、24時間経過していたら常にアウト
         if((postDate.getTime() + 86400000) < now.getTime()) return false
 
         // 24時間以内で投稿者本人の場合は削除可能
