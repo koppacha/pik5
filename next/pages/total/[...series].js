@@ -7,7 +7,7 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {useLocale} from "../../lib/pik5";
+import {currentYear, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
@@ -31,14 +31,14 @@ export async function getStaticProps({params}){
     const series  = query[0]
     const consoles = query[1] || 0
     let   rule    = query[2] || series
-    const year    = query[3] || 2024
+    const year    = query[3] || currentYear()
 
     if(
         !available.includes(Number(series)) ||
         !available.includes(Number(rule)) ||
         !available.includes(Number(consoles)) ||
         year < 2014 ||
-        year > 2024 ||
+        year > currentYear() ||
         query[4]
     ){
         return {
