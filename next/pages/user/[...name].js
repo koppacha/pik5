@@ -2,7 +2,7 @@ import {Box, Grid, Tooltip, Typography} from "@mui/material";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
-import {dateFormat, fetcher, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
@@ -44,7 +44,7 @@ export async function getStaticProps({params}){
 
     const consoles = query[1] || 0
     const rule     = query[2] || 0
-    const year     = query[3] || 2024
+    const year     = query[3] || currentYear()
 
     // 記録を取得
     const recordRes = await fetch(`http://laravel:8000/api/record/${user}/${consoles}/${rule}/${year}`)
@@ -53,7 +53,7 @@ export async function getStaticProps({params}){
     if(
         !userName ||
         year < 2014 ||
-        year > 2024 ||
+        year > currentYear() ||
         query[4]
     ){
         return {

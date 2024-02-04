@@ -18,11 +18,11 @@ const colors = {
     },
     light: {
         front: "#282828",
-        back: "#e1dbd5",
+        back: "#e7e7e7",
         subTitle: "#464646",
-        subBack: "#c0b1a2",
+        subBack: "#9b9b9b",
         hoverBack: "#2d3748",
-        border: "#7a6c62",
+        border: "#444444",
         compare: "#e63600",
     }
 }

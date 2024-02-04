@@ -57,6 +57,10 @@ export function dateFormat(date){
         return h + ':' + mi + ':' + s
     }
 }
+export const currentYear = () => {
+    const now = new Date()
+    return now.getFullYear()
+}
 
 // URLから特定のパラメータを取り出す関数
 export const ag2getParameterByName = function(name, url){
