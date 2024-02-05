@@ -529,7 +529,7 @@ export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count
 `
 export const RenderStagesWrapper = styled(Box)`
   width: 100%;
-  overflow: scroll;
+  overflow-x: scroll;
   margin: 20px 0;
 `
 export const StageListBox = styled(Box)`
