@@ -3,7 +3,7 @@ import Link from "next/link";
 import {faComment, faImage, faTag} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {dateFormat, fetcher, rankColor, sec2time, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, rankColor, sec2time, stageUrlOutput, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -17,8 +17,9 @@ import {
 import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
+import {hideRuleNames} from "../../lib/const";
 
-export default function Record({data, stages, series}) {
+export default function Record({parent, data, stages, series}) {
 
     const {t} = useLocale()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
@@ -102,13 +103,15 @@ export default function Record({data, stages, series}) {
                     fontSize: '0.8em',
                     width: '95%'
                 }}>
-                    <Grid item xs={12} sm={6}>
+                    <Grid item xs={12} sm={3}>
                         <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                     </Grid>
-                    <Grid item xs={12} sm={6} style={{
+                    <Grid item xs={12} sm={9} style={{
                         textAlign:'right'
                     }}>
-                        {data.stage_id ? <><Link href={'/stage/'+data.stage_id}>{data.stage_id + '#' + t.stage[data.stage_id]}</Link></>:undefined}
+                        {data.stage_id && <Link href={'/stage/'+stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)}>{data.stage_id + '#' + t.stage[data.stage_id]}
+                            {hideRuleNames.includes(data.rule) || <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
+                        </Link>}
                     </Grid>
                     <Grid item xs={12} sm={12} style={{
                         borderTop:'1px solid #777',
