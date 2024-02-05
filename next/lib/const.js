@@ -20,6 +20,8 @@ export function rule2array(rule){
         return arrays[flg]
     }
 }
+// ルールを表示しないルールID
+export const hideRuleNames = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91]
 
 // 本編
 export const st = [100, 200, 300, 400]

@@ -5,7 +5,7 @@ import useSWR from "swr";
 import NowLoading from "../NowLoading";
 import React from 'react'
 
-export default function RankingStandard({posts, borders, stage, console:consoles, rule, year, users}){
+export default function RankingStandard({parent, posts, borders, stage, console:consoles, rule, year, users}){
 
     const {t} = useLocale()
 
@@ -44,13 +44,13 @@ export default function RankingStandard({posts, borders, stage, console:consoles
                                 }}>
                                     {star.repeat(i + 2)} {t.border[2][i + 1]} {border.toLocaleString()} pts.
                                 </Box>
-                                <Record key={post.unique_id} data={post}/>
+                                <Record key={post.unique_id} data={post} parent={parent}/>
                             </React.Fragment>
                         )
                     } else {
                         return (
                             <React.Fragment key={post.unique_id}>
-                                <Record key={post.unique_id} data={post}/>
+                                <Record key={post.unique_id} data={post} parent={parent}/>
                             </React.Fragment>
                         )
                     }

@@ -12,7 +12,7 @@ import {PageHeader, RuleBox, RuleWrapper, StageListBox} from "../../styles/pik5.
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
-import {available} from "../../lib/const";
+import {available, hideRuleNames} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import RuleList from "../../components/record/RuleList";
@@ -152,7 +152,7 @@ export default function Stage(param){
         }
     }
     // ルールタイトルを表示しないルールを定義
-    const ruleName = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91].includes(Number(param.rule))
+    const ruleName = hideRuleNames.includes(Number(param.rule))
         || Number(param.rule) > 100
         ? <></>
         : <Link href={"/total/"+param.rule} className="mini-title"><span>（{t.rule?.[param.rule]}）</span></Link>
@@ -192,7 +192,7 @@ export default function Stage(param){
                     </RuleBox>
                 </RuleWrapper>
             </Grid>
-            <RankingStandard posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
+            <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
             <ModalKeyword open={open} uniqueId={param.uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
