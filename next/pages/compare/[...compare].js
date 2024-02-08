@@ -13,14 +13,15 @@ import {
     CompareType,
     MarkerTableCell,
     RankCell,
-    RenderStagesWrapper,
-    StageListBox,
+    RenderStagesWrapper, ScoreType,
+    StageListBox, TeamRpsType, TeamScoreType,
     UserInfoBox,
     UserType
 } from "../../styles/pik5.css";
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import Score from "../../components/record/Score";
+import PullDownUser from "../../components/form/PullDownUser";
 
 export async function getStaticPaths(){
     return {
@@ -31,8 +32,8 @@ export async function getStaticPaths(){
 export async function getStaticProps({params}){
 
     const query = params.compare
-    const user = query[0]
-    const user2= query[4] || user
+    const user1= query[0]
+    const user2= query[4] || user1
 
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
@@ -43,18 +44,18 @@ export async function getStaticProps({params}){
     })
     // 表示中のユーザー名を取り出す
     const userName = users.find(function(e){
-        return e.userId === user
+        return e.userId === user1
     })?.name
     const userName2= users.find(function(e){
         return e.userId === user2
     })?.name
 
     // 各種統計情報を取得
-    const res = await fetch(`http://laravel:8000/api/count/${user}`)
+    const res = await fetch(`http://laravel:8000/api/count/${user1}`)
     const info = await res.json()
 
     // クリアマーカーを取得
-    const mark_res = await fetch(`http://laravel:8000/api/user/total/${user}`)
+    const mark_res = await fetch(`http://laravel:8000/api/user/total/${user1}`)
     const marker = await mark_res.json()
 
     const consoles = query[1] || 0
@@ -65,7 +66,7 @@ export async function getStaticProps({params}){
     const year2    = query[7] || currentYear()
 
     // 左側の記録を取得
-    const recordRes = await fetch(`http://laravel:8000/api/record/${user}/${consoles}/${rule}/${year}`)
+    const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles}/${rule}/${year}`)
     const posts = await recordRes.json()
 
     // 右側の記録を取得
@@ -73,7 +74,8 @@ export async function getStaticProps({params}){
     const posts2 = await recordResR.json()
 
     // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け）
-    let totals
+    let totals = [0, 0, 0, 0, 0, 0]
+
     for(const key in posts){
         totals[0] += posts[key].score
         totals[1] += posts2[key].score
@@ -93,7 +95,7 @@ export async function getStaticProps({params}){
     }
     return {
         props: {
-            users, user, userName, consoles, rule, year, info, marker, posts, posts2, user2, userName2, totals
+            users, user1, userName, consoles, rule, year, info, marker, posts, posts2, user2, userName2, totals
         },
         revalidate: 180,
     }
@@ -108,23 +110,45 @@ export default function Compare(param){
             <Head>
                 <title>{param.userName+" - "+t.title[0]}</title>
             </Head>
-            スコア比較<br/>
-            <Typography variant="" className="title">{param.userName} × {param.userName2}</Typography><br/>
-            <Typography variant="" className="subtitle">@{param.user} vs. {param.user2}</Typography>
-            <Grid container marginBottom="20px">
-                <Grid item xs={12}>
-                    <PullDownConsole props={param}/>
-                    <PullDownYear props={param}/>
-                    <PullDownRule props={param}/>
+            記録分析ページ<br/>
+            <Typography variant="" className="title">２者スコア比較</Typography><br/>
+            <Typography variant="" className="subtitle">Score Comparison List</Typography>
+            <Grid container style={{margin:"2em 0"}}>
+                <Grid item xs={5}>
+                    <div>
+                        <TeamScoreType style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
+                        <TeamRpsType>{param.totals[0].toLocaleString()}</TeamRpsType>
+                    </div>
+                    <div>
+                        <PullDownConsole props={param}/>
+                        <PullDownYear props={param}/>
+                        <PullDownUser props={param}/>
+                    </div>
+                </Grid>
+                <Grid item xs={2} style={{textAlign:"center"}}>
+                    <div>
+                        <TeamScoreType style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
+                        <TeamRpsType>{param.totals[0].toLocaleString()}</TeamRpsType>
+                    </div>
+                    <div>
+                        <PullDownRule props={param}/>
+                    </div>
+                </Grid>
+                <Grid item xs={5} style={{textAlign: "right"}}>
+                    <div>
+                        <TeamScoreType style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
+                        <TeamRpsType>{param.totals[1].toLocaleString()}</TeamRpsType>
+                    </div>
+                    <div>
+                        <PullDownConsole props={param}/>
+                        <PullDownYear props={param}/>
+                        <PullDownUser props={param}/>
+                    </div>
                 </Grid>
             </Grid>
-            {param.totals[0]} -
-            {param.totals[1]} -
-            {param.totals[2]} -
-            {param.totals[3]} -
-            {param.totals[4]}
-            <RankingCompare posts2={param.posts2} posts={param.posts} userName={param.userName} userId={param.user} console={param.consoles}
-                         rule={param.rule} year={param.year} userName2={param.userName2}/>
+            <RankingCompare posts2={param.posts2} posts={param.posts} userName={param.userName} userId={param.user}
+                            console={param.consoles}
+                            rule={param.rule} year={param.year} userName2={param.userName2}/>
         </>
     )
 }
