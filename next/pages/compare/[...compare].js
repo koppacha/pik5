@@ -13,7 +13,7 @@ import {
     CompareType,
     MarkerTableCell,
     RankCell,
-    RenderStagesWrapper, ScoreType,
+    RenderStagesWrapper, RuleBox, RuleWrapper, ScoreType,
     StageListBox, TeamRpsType, TeamScoreType,
     UserInfoBox,
     UserType
@@ -22,6 +22,8 @@ import Link from "next/link";
 import Button from "@mui/material/Button";
 import Score from "../../components/record/Score";
 import PullDownUser from "../../components/form/PullDownUser";
+import ModalCompare from "../../components/modal/ModalCompare";
+import {useState} from "react";
 
 export async function getStaticPaths(){
     return {
@@ -31,10 +33,30 @@ export async function getStaticPaths(){
 }
 export async function getStaticProps({params}){
 
-    const query = params.compare
-    const user1= query[0]
-    const user2= query[4] || user1
+    let [user1, consoles1, rule1, year1, user2, consoles2, rule2, year2] = params.compare
 
+    const rules = rule2array(rule1)
+
+    if(
+        !user1 ||
+        !user2 ||
+        consoles1 > 7 ||
+        consoles1 < 0 ||
+        consoles2 > 7 ||
+        consoles2 < 0 ||
+        rule1 > 43 ||
+        rule1 < 0 ||
+        rule2 > 43 ||
+        rule1 < 0 ||
+        year1 < 2014 ||
+        year1 > currentYear() ||
+        year2 < 2014 ||
+        year2 > currentYear()
+    ){
+        return {
+            notFound: true,
+        }
+    }
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
@@ -50,54 +72,37 @@ export async function getStaticProps({params}){
         return e.userId === user2
     })?.name
 
-    // 各種統計情報を取得
-    const res = await fetch(`http://laravel:8000/api/count/${user1}`)
-    const info = await res.json()
-
-    // クリアマーカーを取得
-    const mark_res = await fetch(`http://laravel:8000/api/user/total/${user1}`)
-    const marker = await mark_res.json()
-
-    const consoles = query[1] || 0
-    const rule     = query[2] || 0
-    const year     = query[3] || currentYear()
-    const consoles2= query[5] || 0
-    const rule2    = query[6] || 0
-    const year2    = query[7] || currentYear()
-
     // 左側の記録を取得
-    const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles}/${rule}/${year}`)
-    const posts = await recordRes.json()
+    const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`)
+    const posts1 = await recordRes.json()
 
     // 右側の記録を取得
     const recordResR = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`)
     const posts2 = await recordResR.json()
 
-    // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け）
-    let totals = [0, 0, 0, 0, 0, 0]
+    // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け、総合点差）
+    let totals = [0, 0, 0, 0, 0, 0, 0], tempScore = [0, 0]
 
-    for(const key in posts){
-        totals[0] += posts[key].score
-        totals[1] += posts2[key].score
-        if(posts[key].score >   posts2[key].score) totals[2]++
-        if(posts[key].score <   posts2[key].score) totals[3]++
-        if(posts[key].score === posts2[key].score) totals[4]++
-    }
-    if(
-        !userName ||
-        year < 2014 ||
-        year > currentYear() ||
-        query[8]
-    ){
-        return {
-            notFound: true,
-        }
-    }
+    rules?.map(function(stageId){
+        tempScore[0] = Object.values(posts1).find(i => i.stage_id === stageId)?.score ?? 0
+        tempScore[1] = Object.values(posts2).find(i => i.stage_id === stageId)?.score ?? 0
+        totals[0] += tempScore[0]
+        totals[1] += tempScore[1]
+        if(tempScore[0] >   tempScore[1]) totals[2]++
+        if(tempScore[0] <   tempScore[1]) totals[3]++
+        if(tempScore[0] === tempScore[1]) totals[4]++
+
+        totals[6] = Math.abs(totals[0] - totals[1])
+    })
+
     return {
         props: {
-            users, user1, userName, consoles, rule, year, info, marker, posts, posts2, user2, userName2, totals
+            users, userName, userName2,
+            user1, consoles1, rule1, year1,
+            user2, consoles2, rule2, year2,
+            posts1, posts2, totals
         },
-        revalidate: 180,
+        revalidate: 1000,
     }
 }
 // レンダラー本体（フロントサイド）
@@ -105,50 +110,58 @@ export default function Compare(param){
 
     const {t} = useLocale()
 
+    // モーダル制御関連
+    const [open, setOpen] = useState(false)
+    const handleOpen = () => setOpen(true)
+    const handleClose = () => setOpen(false)
+
     return (
         <>
             <Head>
-                <title>{param.userName+" - "+t.title[0]}</title>
+                <title>{`ピクチャレ星取表（${param.userName} vs. ${param.userName2}） - ${t.title[0]}`}</title>
             </Head>
-            記録分析ページ<br/>
-            <Typography variant="" className="title">２者スコア比較</Typography><br/>
-            <Typography variant="" className="subtitle">Score Comparison List</Typography>
+            ツール<br/>
+            <Typography variant="" className="title">ピクチャレ星取表</Typography><br/>
+            <Typography variant="" className="subtitle">Score Comparison List</Typography><br/>
             <Grid container style={{margin:"2em 0"}}>
                 <Grid item xs={5}>
                     <div>
                         <TeamScoreType style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
-                        <TeamRpsType>{param.totals[0].toLocaleString()}</TeamRpsType>
-                    </div>
-                    <div>
-                        <PullDownConsole props={param}/>
-                        <PullDownYear props={param}/>
-                        <PullDownUser props={param}/>
+                        <TeamRpsType className="team-rps-type">{param.totals[0].toLocaleString()}</TeamRpsType>
+                        <UserType>{param.userName}
+                            <span style={{fontSize:"0.8em",marginLeft:"1em"}}>({param.year1}年・{t.console[param.consoles1]})</span>
+                        </UserType>
                     </div>
                 </Grid>
                 <Grid item xs={2} style={{textAlign:"center"}}>
                     <div>
                         <TeamScoreType style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
-                        <TeamRpsType>{param.totals[0].toLocaleString()}</TeamRpsType>
-                    </div>
-                    <div>
-                        <PullDownRule props={param}/>
+                        <TeamRpsType className="team-rps-type">{param.totals[6].toLocaleString()}</TeamRpsType>
+                        <UserType>{t.rule[param.rule1]}</UserType>
                     </div>
                 </Grid>
                 <Grid item xs={5} style={{textAlign: "right"}}>
                     <div>
                         <TeamScoreType style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
-                        <TeamRpsType>{param.totals[1].toLocaleString()}</TeamRpsType>
-                    </div>
-                    <div>
-                        <PullDownConsole props={param}/>
-                        <PullDownYear props={param}/>
-                        <PullDownUser props={param}/>
+                        <TeamRpsType className="team-rps-type">{param.totals[1].toLocaleString()}</TeamRpsType>
+                        <UserType>{param.userName2}
+                            <span style={{fontSize:"0.8em",marginLeft:"1em"}}>({param.year2}年・{t.console[param.consoles2]})</span>
+                        </UserType>
                     </div>
                 </Grid>
             </Grid>
-            <RankingCompare posts2={param.posts2} posts={param.posts} userName={param.userName} userId={param.user}
-                            console={param.consoles}
-                            rule={param.rule} year={param.year} userName2={param.userName2}/>
+            <RuleWrapper container>
+                <RuleBox component={Link}
+                         href="#" onClick={handleOpen}>
+                    条件を変更する
+                </RuleBox>
+                <RuleBox component={Link}
+                         href={`/total/${param.rule1}`}>
+                    総合ランキングへ戻る
+                </RuleBox>
+            </RuleWrapper>
+            <ModalCompare open={open} param={param} handleClose={handleClose}/>
+            <RankingCompare posts2={param.posts2} posts1={param.posts1} userName={param.userName} rule={param.rule1} userName2={param.userName2}/>
         </>
     )
 }
