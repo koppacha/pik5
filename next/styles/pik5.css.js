@@ -4,6 +4,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
 import DialogContent from "@mui/material/DialogContent";
 import {rankColor} from "../lib/pik5";
+import TextField from "@mui/material/TextField";
 
 // 汎用のカラースキーム
 const colors = {
@@ -251,6 +252,7 @@ export const AuthButton = styled(Button)`
 `
 export const StyledSelect = styled(Select)`
     max-width: 200px;
+    margin-right: 10px;
     border: 1px solid ${colors.light.front};
     svg {
       color: ${colors.light.front};
@@ -261,6 +263,31 @@ export const StyledSelect = styled(Select)`
     [data-theme="dark"] & {
       border: 1px solid ${colors.dark.front};
       color: ${colors.dark.front};
+      svg {
+        color: ${colors.dark.front};
+      }
+    }
+`
+export const StyledTextField = styled(TextField)`
+    min-width: 200px;
+    margin-right: 10px;
+    border: 1px solid ${colors.light.front};
+    border-radius: 4px;
+    input {
+        color: ${colors.light.front};
+    }
+    svg {
+      color: ${colors.light.front};
+      font-size: 14px;
+    }
+    ${sp`font-size: 1em;`}
+  
+    [data-theme="dark"] & {
+      border: 1px solid ${colors.dark.front};
+      color: ${colors.dark.front};
+      input {
+          color: ${colors.dark.front};
+      }
       svg {
         color: ${colors.dark.front};
       }
@@ -402,14 +429,27 @@ export const RecordGridWrapper = styled(Grid)`
   border-right: 1px solid #777;
 `
 export const TeamScoreType = styled(Typography)`
-  font-size: 1000%;
+  font-size: 800%;
   letter-spacing: 10px;
+  line-height: 85%;
   font-family:"Proza Libre","cursive";
-  text-shadow: ${shadow};
 
   ${sp`
     font-size: 3em;
   `}
+`
+export const TeamRpsType = styled(Typography)`
+  font-size: 333%;
+  font-family:"Proza Libre","cursive";
+  text-shadow: ${shadow};
+  color: ${colors.light.subTitle};
+
+  ${sp`
+    font-size: 2em;
+  `}
+  [data-theme='dark'] & {
+      color: ${colors.dark.subTitle};
+  }
 `
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
@@ -728,4 +768,13 @@ export const EventContent = styled(Box)`
     }
 
   }
+`
+export const CompareIcon = styled(Typography)`
+    margin-right: 4px;
+    padding :0 4px;
+    background-color :#eee;
+    border-radius :4px;
+    color :#111;
+    font-size: 1em;
+    display: inline-block;
 `

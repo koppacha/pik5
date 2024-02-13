@@ -746,3 +746,17 @@ body {
     color: #fff;
     font-size: 140%;
 }
+.team-rps-type {
+    font-size: 333%;
+    font-family:"Proza Libre","cursive";
+    color: $light-sub-title;
+    text-shadow: $light-shadow;
+
+    [data-theme='dark'] & {
+        color: $dark-sub-title;
+        text-shadow: $dark-shadow;
+    }
+    @media(max-width: 600px) {
+        font-size: 2em;
+    }
+}
