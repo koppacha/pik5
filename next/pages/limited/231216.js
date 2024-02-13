@@ -81,10 +81,13 @@ export async function getServerSideProps(context){
         }
     })
     return {
-        props: {
-            stages, limited, info, users, teams, total
-        }
+        notFound: true,
     }
+    // return {
+    //     props: {
+    //         stages, limited, info, users, teams, total
+    //     }
+    // }
 }
 
 export default function Limited(param){
