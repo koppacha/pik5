@@ -21,7 +21,6 @@ import {
 import Link from "next/link";
 import Button from "@mui/material/Button";
 import Score from "../../components/record/Score";
-import PullDownUser from "../../components/form/PullDownUser";
 import ModalCompare from "../../components/modal/ModalCompare";
 import {useState} from "react";
 
@@ -124,31 +123,36 @@ export default function Compare(param){
             <Typography variant="" className="title">ピクチャレ星取表</Typography><br/>
             <Typography variant="" className="subtitle">Score Comparison List</Typography><br/>
             <Grid container style={{margin:"1em 0"}}>
-                <Grid item xs={5}>
+                <Grid item xs={4}>
                     <div>
-                        <UserType className="user-type" style={{fontSize:"2.4em"}}>{param.userName}
-                            <span style={{fontSize:"0.5em",marginLeft:"1em"}}>({param.year1}年・{t.console[param.consoles1]})</span>
+                        <UserType className="user-type">{param.userName}<br/>
+                            <span>({param.year1}年・{t.console[param.consoles1]})</span>
                         </UserType>
-                        <TeamScoreType style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
-                        <TeamRpsType className="team-rps-type">{param.totals[0].toLocaleString()}</TeamRpsType>
                     </div>
                 </Grid>
-                <Grid item xs={2} style={{textAlign:"center"}}>
+                <Grid item xs={4} style={{textAlign:"center"}}>
                     <div>
-                        <UserType className="user-type" style={{lineHeight:"2.4em",fontSize:"1.6em"}}>{t.rule[param.rule1]}</UserType>
-                        <TeamScoreType style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
-                        <TeamRpsType className="team-rps-type">{param.totals[6].toLocaleString()}</TeamRpsType>
+                        <UserType className="user-type">{t.rule[param.rule1]}</UserType>
                     </div>
                 </Grid>
-                <Grid item xs={5} style={{textAlign: "right"}}>
+                <Grid item xs={4} style={{textAlign: "right"}}>
                     <div>
-                        <UserType className="user-type" style={{fontSize:"2.4em"}}>
-                            <span style={{fontSize:"0.5em",marginRight:"1em"}}>({param.year2}年・{t.console[param.consoles2]})</span>
-                            {param.userName2}
+                        <UserType className="user-type">{param.userName2}<br/>
+                        <span>({param.year2}年・{t.console[param.consoles2]})</span>
                         </UserType>
-                        <TeamScoreType style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
-                        <TeamRpsType className="team-rps-type">{param.totals[1].toLocaleString()}</TeamRpsType>
                     </div>
+                </Grid>
+                <Grid item xs={4} style={{paddingTop:"1em"}}>
+                    <TeamScoreType style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
+                    <TeamRpsType className="team-rps-type">{param.totals[0].toLocaleString()}</TeamRpsType>
+                </Grid>
+                <Grid item xs={4} style={{paddingTop:"1em",textAlign:"center"}}>
+                    <TeamScoreType style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
+                    <TeamRpsType className="team-rps-type">{param.totals[6].toLocaleString()}</TeamRpsType>
+                </Grid>
+                <Grid item xs={4} style={{paddingTop:"1em",textAlign: "right"}}>
+                    <TeamScoreType style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
+                    <TeamRpsType className="team-rps-type">{param.totals[1].toLocaleString()}</TeamRpsType>
                 </Grid>
             </Grid>
             <RuleWrapper container>

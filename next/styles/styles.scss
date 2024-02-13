@@ -461,6 +461,10 @@ body {
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
+    span {
+        font-size: 0.9em;
+        text-shadow: none;
+    }
     @media(max-width: 600px) {
         font-size: 0.9em;
     }
