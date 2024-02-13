@@ -39,7 +39,7 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
         return (
             <React.Fragment key={stageId}>
                 <Grid container style={{width:"100%",border:"1px solid #000"}}>
-                    <Grid item xs={5} style={{textAlign:"right",padding:"0.5em"}}>
+                    <Grid item xs={4.5} sm={5} style={{textAlign:"right",padding:"0.5em"}}>
                         <div style={{marginBottom: "1em"}} key={index}>
                             {post1?.score &&
                                 <>
@@ -53,7 +53,7 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
                             }
                         </div>
                     </Grid>
-                    <Grid item xs={2} style={{
+                    <Grid item xs={3} sm={2} style={{
                         textAlign: "center",
                         justifyContent: "center",
                         backgroundColor: "#666",
@@ -66,7 +66,7 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
                             {t.stage[stageId]}
                         </Link>
                     </Grid>
-                    <Grid item xs={5} style={{padding:"0.5em"}}>
+                    <Grid item xs={4.5} sm={5} style={{padding:"0.5em"}}>
                         <div style={{marginBottom: "1em"}} key={index}>
                             {post2?.score &&
                                 <>

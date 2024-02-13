@@ -435,7 +435,7 @@ export const TeamScoreType = styled(Typography)`
   font-family:"Proza Libre","cursive";
 
   ${sp`
-    font-size: 3em;
+    font-size: 500%;
   `}
 `
 export const TeamRpsType = styled(Typography)`
@@ -445,7 +445,7 @@ export const TeamRpsType = styled(Typography)`
   color: ${colors.light.subTitle};
 
   ${sp`
-    font-size: 2em;
+    font-size: 222%;
   `}
   [data-theme='dark'] & {
       color: ${colors.dark.subTitle};
