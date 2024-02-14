@@ -279,7 +279,8 @@ class RecordController extends Controller
                 $new_data[$key]["post_rank"] = $rank;
                 $option = [$console, $rule, $date];
                 $member_count = Func::memberCount(0, $option);
-                $new_data[$key]["rps"] = Func::rankPoint_calc($value["stage_id"], $rank, $member_count[$value["stage_id"]], $max);
+                $member = array_key_exists($value["stage_id"], $member_count) ? $member_count[$value["stage_id"]] : 1;
+                $new_data[$key]["rps"] = Func::rankPoint_calc($value["stage_id"], $rank, $member, $max);
             }
         }
         // 比較値を付与
