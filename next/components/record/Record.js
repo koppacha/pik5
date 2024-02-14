@@ -59,6 +59,9 @@ export default function Record({parent, data, stages, series, consoles, year, pr
             }
         }
         if(data.compare < 0) compare = `(${data.compare})`
+        if([29, 35].includes(Number(data.rule))){
+            compare = ""
+        }
     } else {
         compare = ""
     }

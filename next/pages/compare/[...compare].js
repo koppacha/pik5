@@ -101,7 +101,7 @@ export async function getStaticProps({params}){
             user2, consoles2, rule2, year2,
             posts1, posts2, totals
         },
-        revalidate: 1000,
+        revalidate: 43200,
     }
 }
 // レンダラー本体（フロントサイド）

@@ -243,7 +243,14 @@ class TotalController extends Controller
         // 各ステージからユーザー情報を抽出する
         foreach($users as $user){
             foreach($ranking as $stage){
-                $totals[$user]["score"] += $stage[$user]["score"] ?? 0;
+                $scoreData = $stage[$user]["score"] ?? 0;
+                if(in_array($stage, array_merge(range(245, 254), range(351, 362)), true)){
+                    // ソロビンゴ・ビンゴバトルは10分からRTを引いた秒数をスコアとする
+                    $totals[$user]["score"] += 600 - ($stage[$user]["score"] ?? 0);
+                } else {
+                    // 上記以外
+                    $totals[$user]["score"] += ($stage[$user]["score"] ?? 0);
+                }
                 $totals[$user]["rps"] += $stage[$user]["rps"] ?? 0;
                 $totals[$user]["ranks"][] = $stage[$user]["post_rank"] ?? null;
                 if($totals[$user]["created_at"] < ($stage[$user]["created_at"] ?? 0)){
