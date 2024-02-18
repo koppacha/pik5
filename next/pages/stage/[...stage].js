@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {range, fetcher, useLocale, currentYear} from "../../lib/pik5";
+import {range, fetcher, useLocale, currentYear, sec2time} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
@@ -8,7 +8,7 @@ import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import {useState} from "react";
-import {PageHeader, RuleBox, RuleWrapper, StageListBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, RuleWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
@@ -139,14 +139,25 @@ export default function Stage(param){
     const stageName = locale === "ja" ? param.info?.stage_name : param.info?.eng_stage_name
     const stageNameR= locale === "ja" ? param.info?.eng_stage_name : param.info?.stage_name
 
-    // キーワードにルールがあればそれを表示する
+    // キーワードにルールがあればそれを表示する（本編地下は表示しない）
     function RuleInfo() {
         if (param.keyword) {
-            return (
-                <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
-                    {param.keyword?.content}
-                </ReactMarkdown>
-            )
+            if(param.rule !== 25){
+                return (
+                    <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
+                        {param.keyword?.content}
+                    </ReactMarkdown>
+                )
+            } else {
+                return (
+                    <ReactMarkdown className="markdown-content" remarkPlugins={[remarkGfm]}>
+                        本編地下は本編の洞窟へ入る瞬間から脱出する瞬間までのお宝回収価値とタイムを競う擬似チャレンジモードです。
+                        初期ピクミンはその洞窟へ入る時点で仲間にしているピクミンであれば自由に編成できます（グリッチを使って仲間にしたピクミンを除く）。
+                        適用できるお宝探査キットには制限があります。詳しくは「ルールを確認」ボタンを押して詳細を確認してください。
+                        スコアは「お宝価値×10＋脱出時ピクミン数×10＋（制限時間 - 残り時間）÷２の切り捨て」です。
+                    </ReactMarkdown>
+                )
+            }
         } else {
             return <></>
         }
@@ -156,6 +167,11 @@ export default function Stage(param){
         || Number(param.rule) > 100
         ? <></>
         : <Link href={"/total/"+param.rule} className="mini-title"><span>（{t.rule?.[param.rule]}）</span></Link>
+
+    // 制限時間を計算する（ピクミン２チャレンジモードのみ２倍）
+    const countdown = (Number(param.rule === 21) || Number(param.rule === 22))
+        ? param.info?.time * 2
+        : param.info?.time
 
     return (
         <>
@@ -169,6 +185,17 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
             </PageHeader>
+            <RuleWrapper container item xs={6} style={{marginTop: "24px"}}>
+                <UserInfoBox item>
+                    <span>制限時間</span><br/>{sec2time(countdown)}
+                </UserInfoBox>
+                <UserInfoBox item>
+                    <span>ピクミン</span><br/>{param.info?.pikmin}
+                </UserInfoBox>
+                <UserInfoBox item>
+                    <span>お宝価値合計</span><br/>{param.info?.treasure}
+                </UserInfoBox>
+            </RuleWrapper>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             <Grid container style={{marginBottom:'1em'}}>
