@@ -39,8 +39,8 @@ export default function Score({rule, score, stage, category}){
         )
     } else {
         const time = timeStageList.find(({stage:s})=> s === stage)
-        if(time && Number(rule) !== 10){
-            // 残り時間で競うステージの場合
+        if(time && Number(rule) !== 10 && Number(rule) !== 25){
+            // 残り時間で競うステージの場合（全回収TA、本編地下を除く）
             const screenTime = time.time - score
 
             return (

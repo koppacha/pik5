@@ -56,6 +56,10 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [img, setImg] = useState(null)
     const [userAgent, setUserAgent] = useState("")
 
+    const [pikmin, setPikmin] = useState(0)
+    const [treasure, setTreasure] = useState(0)
+    const [caveTime, setCaveTime] = useState("")
+
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
         /^https?:\/\/(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)\/[\w\-\/?=]*$/
@@ -200,6 +204,12 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             return sec
         }
     }
+    // タイムからスコアに変換
+    function caveCalc() {
+        const sec = convertToSeconds(caveTime || "0:00:00")
+        const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
+        setScore((Number(pikmin) + Number(treasure)) * 10 + Math.floor((lestTime.time - sec) / 2))
+    }
 
     if (!session) {
         return (
@@ -249,7 +259,66 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         defaultValue={session.user.name ?? ""}
                         margin="normal"
                     />
-
+                    <TextField
+                        {...register('pikmin')}
+                        id="pikmin"
+                        label="脱出時ピクミン数"
+                        type="text"
+                        inputProps={{inputMode: 'numeric'}}
+                        onChange={function (e){
+                            setPikmin(e.target.value)
+                        }}
+                        onBlur={function(){
+                            caveCalc()
+                        }}
+                        fullWidth
+                        variant="standard"
+                        error={'pikmin' in errors}
+                        helperText={errors.time?.message}
+                        defaultValue="0"
+                        margin="normal"
+                        className={[25].includes(rule) || "hidden"}
+                    />
+                    <TextField
+                        {...register('treasure')}
+                        id="treasure"
+                        label="回収したお宝価値"
+                        type="text"
+                        inputProps={{inputMode: 'numeric'}}
+                        onChange={function (e){
+                            setTreasure(e.target.value)
+                        }}
+                        onBlur={function(){
+                            caveCalc()
+                        }}
+                        fullWidth
+                        variant="standard"
+                        error={'treasure' in errors}
+                        helperText={errors.time?.message}
+                        defaultValue="0"
+                        margin="normal"
+                        className={[25].includes(rule) || "hidden"}
+                    />
+                    <TextField
+                        {...register('caveTime')}
+                        id="caveTime"
+                        label="経過時間（リアルタイム）"
+                        type="text"
+                        inputProps={{inputMode: 'numeric'}}
+                        onChange={function (e){
+                            setCaveTime(e.target.value)
+                        }}
+                        onBlur={function(){
+                            caveCalc()
+                        }}
+                        fullWidth
+                        variant="standard"
+                        error={'caveTime' in errors}
+                        helperText={errors.time?.message}
+                        defaultValue="00:00:00"
+                        margin="normal"
+                        className={[25].includes(rule) || "hidden"}
+                    />
                     <TextField
                         {...register('time')}
                         id="time"
@@ -283,7 +352,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         defaultValue={0}
                         value={score}
                         margin="normal"
-                        disabled={isTime() && true}
+                        disabled={(isTime() || [25].includes(rule)) && true}
                     />
                     <GetRank stage={info?.stage_id} rule={rule} score={score}/>
                     <TextField
