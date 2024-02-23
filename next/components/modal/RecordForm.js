@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {convertToSeconds, useLocale} from "../../lib/pik5";
+import {convertToSeconds, rule2consoles, useLocale} from "../../lib/pik5";
 import {Box, MenuItem} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -22,25 +22,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // 送信イベント判定
     const isSubmit = useRef(false)
 
-    const consoleList = []
-
-    if (!info) {
-        // バトルモードの場合
-        if(mode === "battle") {
-            consoleList.push(3, 4)
-        }
-    } else if (info.series < 3) {
-        consoleList.push(1, 2, 7)
-
-    } else if (info.series === 3 && rule !== 36) {
-        consoleList.push(2, 3, 4, 5)
-
-    } else if (rule === 35) {
-        consoleList.push(2, 3, 4, 5, 6)
-
-    } else if (info.series === 4) {
-        consoleList.push(3, 4)
-    }
+    const consoleList = rule2consoles(rule)
 
     const {t} = useLocale()
     const {data: session} = useSession()
