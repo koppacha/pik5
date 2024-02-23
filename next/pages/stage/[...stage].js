@@ -186,15 +186,21 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
             </PageHeader>
             <RuleWrapper container item xs={6} style={{marginTop: "24px"}}>
-                <UserInfoBox item>
-                    <span>制限時間</span><br/>{sec2time(countdown)}
-                </UserInfoBox>
-                <UserInfoBox item>
-                    <span>ピクミン</span><br/>{param.info?.pikmin}
-                </UserInfoBox>
-                <UserInfoBox item>
-                    <span>お宝価値合計</span><br/>{param.info?.treasure}
-                </UserInfoBox>
+                {countdown > 0 &&
+                    <UserInfoBox item>
+                        <span>制限時間</span><br/>{sec2time(countdown)}
+                    </UserInfoBox>
+                }
+                {param.info?.pikmin > 0 &&
+                    <UserInfoBox item>
+                        <span>ピクミン</span><br/>{param.info?.pikmin}
+                    </UserInfoBox>
+                }
+                {param.info?.treasure > 0 &&
+                    <UserInfoBox item>
+                        <span>お宝価値合計</span><br/>{param.info?.treasure}
+                    </UserInfoBox>
+                }
             </RuleWrapper>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />

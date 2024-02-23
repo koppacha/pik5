@@ -165,3 +165,26 @@ export function stageUrlOutput(stage, consoles, rule, year, parent){
     // 期間限定と例外
     return stage
 }
+
+// ルールIDを対象操作方法配列に変換
+export function rule2consoles(rule){
+    const ruleNum = Number(rule ?? 0)
+    if(!ruleNum) return [1, 2, 3, 4, 5, 6, 7]
+
+    // ピクミン1・2はNGC、Wii、Switch
+    if(ruleNum < 30) return [1, 2, 7]
+
+    // ピクミン4はジャイロあり・なし
+    if(ruleNum > 39 && ruleNum < 50) return [3, 4]
+
+    // ピクミン3ソロビンゴはWii、ジャイロあり、ジャイロなし、Wii Uタッチペン、おすそわけ
+    if(ruleNum === 35) return [2, 3, 4, 5, 6]
+
+    // ピクミン3サイドストーリーはジャイロあり、ジャイロなし
+    if(ruleNum === 36) return [3, 4]
+
+    // 上記以外のピクミン3はWii、ジャイロあり、ジャイロなし、Wii Uタッチペン
+    if(ruleNum > 29 && ruleNum < 35) return [2, 3, 4, 5]
+
+    return [1, 2, 3, 4, 5, 6, 7]
+}
