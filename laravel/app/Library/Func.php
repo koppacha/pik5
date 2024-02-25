@@ -74,7 +74,7 @@ class Func extends Facade
                     });
                 });
         } catch (Exception $e){
-            Log::debug("Error", (array)$e->getMessage());
+            Log::debug("Error", [$e->getMessage()]);
             return [999];
         }
         return $Model->toArray();
