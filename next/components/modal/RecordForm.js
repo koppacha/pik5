@@ -9,13 +9,15 @@ import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
 import {convertToSeconds, rule2consoles, useLocale} from "../../lib/pik5";
-import {Box, MenuItem} from "@mui/material";
+import {Box, MenuItem, ToggleButton} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
 import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faCheck} from "@fortawesome/free-solid-svg-icons";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
 
@@ -32,6 +34,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [score, setScore] = useState(0)
     const [time, setTime] = useState(0)
     const [region, setRegion] = useState(0)
+    const [regionScore, setRegionScore] = useState(0)
+    const [regionSelected, setRegionSelected] = useState(false)
     const [consoles, setConsole] = useState(0)
     const [videoUrl, setVideoUrl] = useState("")
     const [comment, setComment] = useState("")
@@ -174,6 +178,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         return [11, 33, 43, 91].includes(Number(rule)) || [338, 341, 343].includes(info?.stage_id)
     }
 
+    // リージョン違い判定
+    const isRegion = () => {
+        return Number(consoles) === 7 || regionSelected
+    }
+
     // タイムからスコアに変換
     function time2score(time) {
         const sec = convertToSeconds(time)
@@ -186,11 +195,23 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             return sec
         }
     }
-    // タイムからスコアに変換
+    // 本編地下のスコアを計算
     function caveCalc() {
         const sec = convertToSeconds(caveTime || "0:00:00")
         const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
         setScore((Number(pikmin) + Number(treasure)) * 10 + Math.floor((lestTime.time - sec) / 2))
+    }
+
+    // リージョン違いのスコアを計算
+    function regionCalc(){
+        // 日本版を基準とするステージ別の差異を定義
+        const regionList = [{stage: 203, diff: 200}, {stage: 213, diff: -100}, {stage: 228, diff: -40}]
+        const diffScore = regionList.find(({stage: s}) => s === info.stage_id)
+        if(diffScore !== undefined){
+            setScore(Number(regionScore) + Number(diffScore.diff))
+        } else {
+            setScore(regionScore)
+        }
     }
 
     if (!session) {
@@ -240,6 +261,55 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         defaultValue={session.user.name ?? ""}
                         margin="normal"
+                    />
+                    <TextField
+                        {...register('console')}
+                        select
+                        id="console"
+                        label="操作方法"
+                        onChange={(e) => setConsole(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        defaultValue={consoleList[0]}
+                        helperText={"スタンダードとは、Wii U Proコン/Nintendo Switch Proコン/Wii U GamePad両手持ち/Joy-Con 2本持ち/Nintendo Switch Liteのいずれかのことです。"}
+                        margin="normal"
+                    >
+                        {
+                            consoleList.map((key) =>
+                                <MenuItem key={key} value={key}>{t.console[key]}</MenuItem>
+                            )
+                        }
+                    </TextField>
+                    <ToggleButton
+                        value="check"
+                        selected={regionSelected}
+                        color="success"
+                        className={[203, 213, 228].includes(info?.stage_id) || "hidden"}
+                        onChange={() => {
+                            setRegionSelected(!regionSelected);
+                        }}
+                    >
+                        <FontAwesomeIcon icon={faCheck} />　Not Japanese Edition（日本語版でない場合はチェック）
+                    </ToggleButton>
+                    <TextField
+                        {...register('region-score')}
+                        id="region-score"
+                        label="元々のスコア"
+                        type="text"
+                        inputProps={{inputMode: 'numeric'}}
+                        onChange={function (e){
+                            setRegionScore(e.target.value)
+                        }}
+                        onBlur={function(){
+                            regionCalc()
+                        }}
+                        fullWidth
+                        variant="standard"
+                        error={'region-score' in errors}
+                        helperText={errors.time?.message}
+                        defaultValue="0"
+                        margin="normal"
+                        className={isRegion() || "hidden"}
                     />
                     <TextField
                         {...register('pikmin')}
@@ -334,27 +404,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         defaultValue={0}
                         value={score}
                         margin="normal"
-                        disabled={(isTime() || [25].includes(rule)) && true}
+                        disabled={(isTime() || [25].includes(rule) || isRegion()) && true}
                     />
                     <GetRank stage={info?.stage_id} rule={rule} score={score}/>
-                    <TextField
-                        {...register('console')}
-                        select
-                        id="console"
-                        label="操作方法"
-                        onChange={(e) => setConsole(e.target.value)}
-                        fullWidth
-                        variant="standard"
-                        defaultValue={consoleList[0]}
-                        helperText={"スタンダードとは、Wii U Proコン/Nintendo Switch Proコン/Wii U GamePad両手持ち/Joy-Con 2本持ち/Nintendo Switch Liteのいずれかのことです。"}
-                        margin="normal"
-                    >
-                        {
-                            consoleList.map((key) =>
-                                <MenuItem key={key} value={key}>{t.console[key]}</MenuItem>
-                            )
-                        }
-                    </TextField>
                     <TextField
                         {...register('img')}
                         id="img"

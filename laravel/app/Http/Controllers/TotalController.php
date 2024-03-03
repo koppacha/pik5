@@ -261,7 +261,10 @@ class TotalController extends Controller
         // 集計対象に基づいて降順に並び替え
         $target = "score"; // TODO: 並び替えフィルターを実装したらここでスイッチできる
         $target_column = array_column($totals, $target);
-        array_multisort($target_column, SORT_DESC, SORT_NUMERIC, $totals);
+        $secondary_target = "created_at";
+        $secondary_column = array_column($totals, $secondary_target);
+        array_multisort($target_column, SORT_DESC, SORT_NUMERIC,
+                               $secondary_column, SORT_ASC, SORT_NATURAL, $totals);
 
         // 順位を再計算
         $totals = Func::rank_calc("total", $totals, [$console, $rule, $date]);
