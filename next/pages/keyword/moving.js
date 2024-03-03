@@ -196,7 +196,6 @@ const content = `
 | ピクナー           | pikuna            |
 | ピクミンヤクザ     | pikmin893         |
 | ピッチョン         | pitchon           |
-| ひょうがき         | hyogakibokaro     |
 | ふきふふき          | fukifufuki        |
 | プラタ             | PlataSmash        |
 | フローズン         | furoozun          |
