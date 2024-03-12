@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from "next-auth/providers/credentials"
-import DiscordProvider from "next-auth/providers/discord"
+import DiscordCastomProvider from "next-auth/providers/discord"
 import TwitterProvider from "next-auth/providers/twitter"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "../../../lib/prisma"
@@ -31,18 +31,17 @@ export const authOptions = {
         strategy: "jwt",
     },
     providers: [
-        DiscordProvider({
-            id: "discord",
-            name: "discord",
-            clientId: process.env.DISCORD_CLIENT_ID,
-            clientSecret: process.env.DISCORD_CLIENT_SECRET,
-            redirectUri: 'https://localhost:3005/api/auth/callback/discord',
-            authorization: {params: {scope: scopes.join(' ')}},
-        }),
-        TwitterProvider({
-            clientId: process.env.TWITTER_CLIENT_ID,
-            clientSecret: process.env.TWITTER_CLIENT_SECRET
-        }),
+        // DiscordCastomProvider({
+        //     id: "discord",
+        //     name: "discord",
+        //     clientId: process.env.DISCORD_CLIENT_ID,
+        //     clientSecret: process.env.DISCORD_CLIENT_SECRET,
+        //     redirectUri: 'https://localhost:3005',
+        // }),
+        // TwitterProvider({
+        //     clientId: process.env.TWITTER_CLIENT_ID,
+        //     clientSecret: process.env.TWITTER_CLIENT_SECRET
+        // }),
         CredentialsProvider({
             // The name to display on the sign-in form (e.g. "Sign in with...")
             id: "credentials",

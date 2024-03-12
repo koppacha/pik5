@@ -42,7 +42,7 @@ import {notFound} from "next/navigation";
 
 export async function getServerSideProps(context){
 
-    const limited = 231216
+    const limited = 240324
 
     // イベント情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${limited}`)
