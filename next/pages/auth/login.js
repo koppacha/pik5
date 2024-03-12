@@ -3,7 +3,7 @@ import {signIn, useSession, getProviders} from "next-auth/react";
 import {useRouter} from "next/router";
 import {useForm} from "react-hook-form";
 import {logger} from "../../lib/logger";
-import {Box, FormControl, Grid, List, ListItem, Typography} from "@mui/material";
+import {Alert, Box, FormControl, Grid, List, ListItem, Typography} from "@mui/material";
 import Button from "@mui/material/Button";
 import {useLocale} from "../../lib/pik5";
 import TextField from "@mui/material/TextField";
@@ -14,6 +14,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
+import {useSearchParams} from "next/navigation";
 
 export async function getServerSideProps(){
 
@@ -35,6 +36,8 @@ export async function getServerSideProps(){
 export default function Login(){
 
     const {t} = useLocale()
+    const searchParams = useSearchParams();
+    const loginError = searchParams.get("error");
 
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -77,13 +80,9 @@ export default function Login(){
         }
     }
     if (status === "authenticated") {
-        router.push("/", {
-            query: {
-                callbackUrl: router.query.callbackUrl,
-            },
-        });
+        router.replace('/')
+        return <></>
     }
-
     return (
         <>
             <Head>
@@ -114,13 +113,17 @@ export default function Login(){
                                 variant="standard"
                                 error={'password' in errors}
                                 helperText={errors.password?.message}
-                            />
-                            <AuthButton onClick={handleSubmit(onSubmit)}>{t.g.login}</AuthButton>
+                            /><br/>
+                            {loginError &&
+                                <Alert style={{marginTop:"2px"}} variant="outlined" severity="error">ユーザー名またはパスワードが間違っています。</Alert>
+                            }
+                            <AuthButton style={{marginTop:"1em"}} onClick={handleSubmit(onSubmit)}>{t.g.login}</AuthButton>
                         </Box>
                         <Box style={{marginTop:"30px",width:"100%"}}>
                             <List>
                                 <ListItem><Link href="/">・トップページへ</Link></ListItem>
                                 <ListItem><Link href="/auth/register">・未登録の方はこちら</Link></ListItem>
+                                {/*<ListItem><Link href="/auth/discord">・Discordでログイン</Link></ListItem>*/}
                                 <ListItem><Link href="/keyword/moving">・旧ピクチャレ大会からの引き継ぎはこちら</Link></ListItem>
                             </List>
                         </Box>

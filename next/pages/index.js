@@ -2,6 +2,7 @@ import Link from "next/link";
 import {Box, Grid, Typography} from "@mui/material";
 import React, {useState} from "react";
 import {
+    AuthButton,
     CellBox,
     EventContainer, EventContent, EventDate,
     InfoBox,
