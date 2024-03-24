@@ -48,6 +48,8 @@ services:
     restart: unless-stopped
     ports:
       - "3006:3000"
+    volumes:
+      - ./wiki:/wiki
 
   mysql:
     container_name: mysql
