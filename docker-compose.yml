@@ -41,7 +41,7 @@ services:
     environment:
       - DB_HOST=mysql
       - DB_TYPE='mysql'
-      - DB_PORT=${DB_PORT}
+      - DB_PORT=3306
       - DB_USER=root
       - DB_PASS=${DB_ROOT_PASS}
       - DB_NAME='wiki'
