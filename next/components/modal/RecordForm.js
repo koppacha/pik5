@@ -180,7 +180,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // リージョン違い判定
     const isRegion = () => {
-        return Number(consoles) === 7 || regionSelected
+        return (Number(consoles) === 7 && [203, 213, 228].includes(info?.stage_id)) || regionSelected
     }
 
     // タイムからスコアに変換

@@ -141,6 +141,20 @@ const pikmin = pellet || <Oniyon/> // 比較演算子||は左辺がfalse相当�
 // 状況に応じてこっちも使おう
 const pikmin = pellet ?? <Oniyon/> // Null合体演算子??は左辺がnullかundefinedなら右辺を返す
 ```
+
+データベースを再作成する場合のコマンド
+```shell
+# まずテーブルを空にする
+docker compose exec mysql bash # MySQLコンテナでログイン
+truncate table stages;
+```
+
+```shell
+# クラスを指定してSeederを再実行する
+docker compose exec laravel bash
+php artisan db:seed --class=StageCsvSeeder
+```
+
 ---
 ## 基盤・ネットワーク関連のメモ
 ```shell
