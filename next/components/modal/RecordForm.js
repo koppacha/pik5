@@ -100,6 +100,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     const {
         register,
+        setValue,
         handleSubmit,
         reset,
         formState: {errors},
@@ -208,8 +209,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         const regionList = [{stage: 203, diff: 200}, {stage: 213, diff: -100}, {stage: 228, diff: -40}]
         const diffScore = regionList.find(({stage: s}) => s === info.stage_id)
         if(diffScore !== undefined){
-            setScore(Number(regionScore) + Number(diffScore.diff))
+            const regiScore = Number(regionScore) + Number(diffScore.diff)
+            setValue('score', regiScore)
+            setScore(regiScore)
         } else {
+            setValue('score', regionScore)
             setScore(regionScore)
         }
     }
