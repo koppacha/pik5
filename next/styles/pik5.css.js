@@ -250,6 +250,22 @@ export const AuthButton = styled(Button)`
     color: #cfd2de;
   }
 `
+export const CustomButton = styled(Button)`
+    color: ${colors.light.back};
+    background-color: ${colors.light.front};
+    font-size: 0.9em;
+    border-radius: 8px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 18px;
+    max-width: 210px;
+    margin: 0.5em;
+    
+    [data-theme="dark"] & {
+        color: ${colors.dark.back};
+        background-color: ${colors.dark.front};
+    }
+`
 export const StyledSelect = styled(Select)`
     max-width: 200px;
     margin-right: 10px;

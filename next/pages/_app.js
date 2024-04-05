@@ -3,7 +3,7 @@ import '@/styles/styles.scss';
 import Layout from '../components/Layout';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import {ThemeProvider} from "next-themes";
-import { SessionProvider } from "next-auth/react";
+import {SessionProvider} from "next-auth/react";
 import {GlobalStyle} from "../styles/pik5.css";
 import {useEffect, useState} from "react";
 import Script from "next/script";
@@ -15,11 +15,13 @@ import PropTypes from "prop-types";
 import {faCircleNotch} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import * as React from "react";
+import {DevSupport} from "@react-buddy/ide-toolbox-next";
+import {ComponentPreviews, useInitial} from "../dev";
 
 const clientSideEmotionCache = createEmotionCache()
 
 export default function App(props) {
-    const {Component, emotionCache = clientSideEmotionCache, pageProps: { session, ...pageProps } } = props
+    const {Component, emotionCache = clientSideEmotionCache, pageProps: {session, ...pageProps}} = props
 
     const router = useRouter()
     const [pageLoading, setPageLoading] = useState(false)
@@ -42,38 +44,42 @@ export default function App(props) {
         }
     }, [router.events])
 
-    function Loading(){
+    function Loading() {
         return <div className="loading-layer">
-            <FontAwesomeIcon icon={faCircleNotch} spin /> Loading...
+            <FontAwesomeIcon icon={faCircleNotch} spin/> Loading...
         </div>
     }
 
     return (
-      <>
-          <Script strategy="afterInteractive"
-                  src="https://www.googletagmanager.com/gtag/js?id=${ga}"/>
-          <Script id="gtag-init" strategy="afterInteractive"
-                  dangerouslySetInnerHTML={{
-                      __html:`
+        <>
+            <Script strategy="afterInteractive"
+                    src="https://www.googletagmanager.com/gtag/js?id=${ga}"/>
+            <Script id="gtag-init" strategy="afterInteractive"
+                    dangerouslySetInnerHTML={{
+                        __html: `
                       window.dataLayer = window.dataLayer || [];
                       function gtag(){dataLayer.push(arguments);}
                       gtag('js', new Date());
                       gtag('config', '${ga}');
                       `,
-                  }}
-          />
-          <GlobalStyle/>
-          <CacheProvider value={emotionCache}>
-              <SessionProvider session={session}>
-                  <ThemeProvider defaultTheme="dark">
-                      {pageLoading && <Loading/>}
-                      <Layout>
-                          <Component {...pageProps} />
-                      </Layout>
-                  </ThemeProvider>
-              </SessionProvider>
-          </CacheProvider>
-      </>
+                    }}
+            />
+            <GlobalStyle/>
+            <CacheProvider value={emotionCache}>
+                <SessionProvider session={session}>
+                    <ThemeProvider defaultTheme="dark">
+                        {pageLoading && <Loading/>}
+                        <Layout>
+                            <DevSupport ComponentPreviews={ComponentPreviews}
+                                        useInitialHook={useInitial}
+                            >
+                                <Component {...pageProps} />
+                            </DevSupport>
+                        </Layout>
+                    </ThemeProvider>
+                </SessionProvider>
+            </CacheProvider>
+        </>
     );
 }
 App.propTypes = {
