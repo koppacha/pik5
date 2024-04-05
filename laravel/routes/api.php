@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ArenaController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\GetPasswordController;
 use App\Http\Controllers\KeywordController;
@@ -102,6 +103,11 @@ Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
 // 証拠画像取得API
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('img/{file}', [GetImageController::class, 'show']);
+});
+
+// アリーナ情報取得API
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route:: get('arena', [ArenaController::class, 'index']);
 });
 
 // テスト用

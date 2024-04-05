@@ -22,13 +22,21 @@ import {useLocale, id2name} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
-import {PageHeader, RuleBox, RuleWrapper, StageListBox, StairIcon, TeamScoreType} from "../../styles/pik5.css";
+import {
+    CustomButton,
+    PageHeader,
+    RuleBox,
+    RuleWrapper,
+    StageListBox,
+    StairIcon,
+    TeamScoreType
+} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
+import {faChevronLeft, faHouseChimney, faSquare, faStairs} from "@fortawesome/free-solid-svg-icons";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RankingTeam from "../../components/record/RankingTeam";
 import {useTheme} from "next-themes";
@@ -39,10 +47,11 @@ import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import LimitedTotal from "../../components/LimitedTotal";
 import {notFound} from "next/navigation";
+import Button from "@mui/material/Button";
 
 export async function getServerSideProps(context){
 
-    const limited = 240324
+    const limited = 240421
 
     // イベント情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${limited}`)
@@ -80,14 +89,14 @@ export async function getServerSideProps(context){
             name: true
         }
     })
-    return {
-        notFound: true,
-    }
     // return {
-    //     props: {
-    //         stages, limited, info, users, teams, total
-    //     }
+    //     notFound: true,
     // }
+    return {
+        props: {
+            stages, limited, info, users, teams, total
+        }
+    }
 }
 
 export default function Limited(param){
@@ -148,19 +157,10 @@ export default function Limited(param){
                 <Typography variant="" className="title">第19回期間限定ランキング</Typography><br/>
                 <Typography variant="" className="subtitle">The 19th Special Limited Tournament</Typography><br/>
                 <br/>
-                <Typography variant="span" style={{fontSize:"1.25em"}}>チーム対抗戦×新ピンポイント制</Typography>
+                <Typography variant="span" style={{fontSize:"1.25em"}}>アリーナ戦×チーム対抗制</Typography>
                 <br/>
                 <Box style={{padding:"2em"}}>
                     <ul>
-                        <li>期間限定ランキングは、期間中に特殊なルールのステージのランキングを競い合うイベントです。今回の開催期間は <strong>12/16 19:00〜24:00</strong> となります。</li>
-                        <li>開催１時間前からチーム振り分けを受け付けます。途中参加も可能ですが、終了間際の場合は下記参加条件を満たせることをご確認ください。</li>
-                        <li>開催期間中に１ステージ以上の投稿ができることが参加条件になります。</li>
-                        <li>チーム対抗戦では、参加者が２チームに分かれて競います。最終的にチーム別合計ランクポイントの多い方が優勝チームとなります。</li>
-                        <li>各ステージの投稿には(大会参加者数 - 順位 + 1)のランクポイントが付与されます。（大会参加者数＝１ステージ以上投稿しているプレイヤーの人数）</li>
-                        <li>各参加者は原則最大４ステージまで選択して投稿できます。選択したステージには時間内であれば何度でも投稿できます。（５ステージ以上投稿することもできますが、ランクポイントにマイナス補正がかかります）</li>
-                        <li>投稿数差によるチーム間格差を是正するために投稿数が３未満のプレイヤーのランクポイントには補正がかけられます。</li>
-                        <li>大会最優秀賞（MVP）はランクポイントが最も多いプレイヤーに贈られます。同点が複数名いる場合はすべてのプレイヤーに贈られます。</li>
-                        <li>原則として１位は証拠動画が必要ですが、大会終了後の提出でも構いません。</li>
                         <li>今大会の縛りルール採用倍率：5.75倍（エクストラ枠除く）</li>
                     </ul><br/>
                     <ul>
@@ -188,15 +188,45 @@ export default function Limited(param){
             }
             {/*<CountdownDisplay suppressHydrationWarning/>*/}
             <LimitedTotal/>
+
+            <Grid container alignItems="flex-start" style={{marginTop:"1em"}}>
+                <Grid container alignItems="flex-start" item xs={12} md={6}>
+                    <div style={{
+                        width: "98%",
+                        height: "300px",
+                        border: "1px solid #fff",
+                        color: "#fff",
+                        textAlign: "center",
+                        padding: "8px",
+                        borderRadius: "4px"
+                    }}>
+                        秘密兵器実験場（Aボタン縛り）<br/>
+                        １位：45,000 pts ごれい 21:20:30<br/>
+                        ２位：〜<br/>
+                        ３位：〜<br/>
+                        <br/>
+                        残り 34:21<br/>
+                    </div>
+                    <CustomButton>ルール詳細</CustomButton>
+                    <CustomButton>投稿</CustomButton>
+                    <CustomButton>次のステージへ（残４）</CustomButton>
+                </Grid>
+                <Grid container alignItems="flex-start" item xs={12} md={6}>
+                    <div style={{width:"98%",height:"300px",border:"1px solid #fff",color:"#fff",textAlign:"center",padding:"8px",borderRadius:"4px"}}>
+                        食神のかまど（笛縛り）
+                    </div>
+                </Grid>
+            </Grid>
             {
                 // ステージ別スコア表示コンポーネント
-                param.stages.map(s => <RankingTeam key={s} team={param.teams} stage={s} users={param.users}/>)
+                // param.stages.map(s => <RankingTeam key={s} team={param.teams} stage={s} users={param.users}/>)
             }
             {
                 // 各ステージのチームごとのトップスコアを表示する部分
+                // 大会が終わったら表示
             }
-            <br/>
-            <RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
+            {/*<br/>*/}
+            {/*<RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>*/}
         </>
     )
 }
