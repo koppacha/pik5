@@ -108,6 +108,7 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 // アリーナ情報取得API
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('arena', [ArenaController::class, 'index']);
+    Route:: get('arena/update/{team}/{stage?}/{time?}', [ArenaController::class, 'update']);
 });
 
 // テスト用

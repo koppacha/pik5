@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Arena;
+use App\Models\Record;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,7 +33,7 @@ class ArenaController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -43,7 +44,7 @@ class ArenaController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Arena  $arena
+     * @param Arena $arena
      * @return \Illuminate\Http\Response
      */
     public function show(Arena $arena)
@@ -54,7 +55,7 @@ class ArenaController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Arena  $arena
+     * @param Arena $arena
      * @return \Illuminate\Http\Response
      */
     public function edit(Arena $arena)
@@ -65,19 +66,45 @@ class ArenaController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Arena  $arena
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param Arena $arena
+     * @return JsonResponse|void
      */
     public function update(Request $request, Arena $arena)
     {
-        //
+        // /api/arena/update/{team}/{stage?}/{time?}
+        $arenas = new Arena();
+        $team = $request["team"];
+
+        if($team === 1 || $team === 2) {
+            return response()->json(["error", "Incorrect team number."]);
+        }
+        if(!empty($request["stage"]) && $request["stage"] > 1299){
+            // 次へボタンを押したときの前処理
+            $records = new Record();
+            $recordCount = $records->where("stage_id", $request["stage"])->count();
+            $arenaRecord = $arenas->where('stage', $request["stage"])->first();
+            if($arenaRecord) {
+                $arenaRecord->flag = ($recordCount) ? $team + 2 : 9;
+                $arenaRecord->save();
+            }
+        }
+        // 次のステージを抽選する処理
+        $getRandomStage = $arenas->where('flag', $team + 2)->orderBy('updated_at', 'desc')->first();
+
+        if(!$getRandomStage) {
+            $getRandomStage = $arenas->where('flag', 0)->inRandomOrder()->first();
+        }
+        if($getRandomStage){
+            $getRandomStage->flag = $team;
+            $getRandomStage->save();
+        }
     }
 
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Arena  $arena
+     * @param Arena $arena
      * @return \Illuminate\Http\Response
      */
     public function destroy(Arena $arena)

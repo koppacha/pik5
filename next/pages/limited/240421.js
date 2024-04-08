@@ -61,6 +61,10 @@ export async function getServerSideProps(context){
     const total_res = await fetch(`http://laravel:8000/api/total/${limited}`)
     const total = (total_res.status < 300) ? await total_res.json() : []
 
+    // アリーナの状態管理DBをリクエスト
+    const arena_res = await fetch(`http://laravel:8000/api/arena`)
+    const arena = (arena_res.status < 300) ? await arena_res.json() : null
+
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
     const res = await fetch(`http://laravel:8000/api/stages/${limited}`)
@@ -94,7 +98,7 @@ export async function getServerSideProps(context){
     // }
     return {
         props: {
-            stages, limited, info, users, teams, total
+            stages, limited, info, users, teams, total, arena
         }
     }
 }
@@ -209,7 +213,8 @@ export default function Limited(param){
                     </div>
                     <CustomButton>ルール詳細</CustomButton>
                     <CustomButton>投稿</CustomButton>
-                    <CustomButton>次のステージへ（残４）</CustomButton>
+                    {/*スタートボタンは次へ、スルーボタンの機能を兼ねる*/}
+                    <CustomButton>スタート</CustomButton>
                 </Grid>
                 <Grid container alignItems="flex-start" item xs={12} md={6}>
                     <div style={{width:"98%",height:"300px",border:"1px solid #fff",color:"#fff",textAlign:"center",padding:"8px",borderRadius:"4px"}}>
