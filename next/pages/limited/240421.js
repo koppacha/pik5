@@ -18,7 +18,7 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {useLocale, id2name} from "../../lib/pik5";
+import {useLocale, id2name, fetcher} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
@@ -36,7 +36,7 @@ import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faChevronLeft, faHouseChimney, faSquare, faStairs} from "@fortawesome/free-solid-svg-icons";
+import {faChevronLeft, faHouseChimney, faSquare, faStairs, faXmark} from "@fortawesome/free-solid-svg-icons";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RankingTeam from "../../components/record/RankingTeam";
 import {useTheme} from "next-themes";
@@ -48,6 +48,7 @@ import NowLoading from "../../components/NowLoading";
 import LimitedTotal from "../../components/LimitedTotal";
 import {notFound} from "next/navigation";
 import Button from "@mui/material/Button";
+import useSWR from "swr";
 
 export async function getServerSideProps(context){
 
@@ -64,6 +65,9 @@ export async function getServerSideProps(context){
     // アリーナの状態管理DBをリクエスト
     const arena_res = await fetch(`http://laravel:8000/api/arena`)
     const arena = (arena_res.status < 300) ? await arena_res.json() : null
+
+    // TODO: 状態管理DBを分解してflag=1を左チームに、flag=2を右チームに表示
+    // TODO: flag=0,3,4の数を数えてアイコンにそのカウント結果を表示
 
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
@@ -109,9 +113,10 @@ export default function Limited(param){
     const {data: session } = useSession()
     const stages = param.stages
 
+    // 左チームは１、右チームは２
     const currentTeam =
-        param.teams[21]?.includes(session?.user.id) ? 21 :
-        param.teams[22]?.includes(session?.user.id) ? 22 : 0
+        param.teams[21]?.includes(session?.user.id) ? 1 :
+        param.teams[22]?.includes(session?.user.id) ? 2 : 0
 
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
@@ -119,6 +124,38 @@ export default function Limited(param){
     // 呼び出すレギュレーション本文
     let uniqueId = param.limited
 
+    // アリーナ情報を取得する
+    const {data:arenaData, error: arenaError} = useSWR(`/api/server/arena`, fetcher)
+    if (!arenaData || arenaError) {
+        return <NowLoading/>
+    }
+    // アリーナ情報から各チームの現在ステージ情報を取得
+    const stage = [
+        Object.values(arenaData.data).find(p => p.flag === 1),
+        Object.values(arenaData.data).find(p => p.flag === 2)
+    ]
+    // ステージ情報から左チームが着手中のランキングを取得
+    const {data:recordLeftData, error: recordLeftError} = useSWR(`/api/server/record/1003`, fetcher)
+    if (!recordLeftData || recordLeftError) {
+        return <NowLoading/>
+    }
+    // ステージ情報から右チームが着手中のランキングを取得
+    const {data:recordRightData, error: recordRightError} = useSWR(`/api/server/record/1004`, fetcher)
+    if (!recordRightData || recordRightError) {
+        return <NowLoading/>
+    }
+
+    console.log(recordRightData)
+
+    // 次へ・スタートボタン
+    async function arenaSubmit() {
+        const confirm = window.confirm(t.g.confirm)
+        if (confirm) {
+            const res = await fetch(`/api/server/arena/update/${currentTeam}`)
+            console.log(res.status)
+        }
+    }
+    
     function CountdownDisplay() {
         const now = new Date();
         const start = new Date("2023/12/12 19:00:00");
@@ -161,7 +198,7 @@ export default function Limited(param){
                 <Typography variant="" className="title">第19回期間限定ランキング</Typography><br/>
                 <Typography variant="" className="subtitle">The 19th Special Limited Tournament</Typography><br/>
                 <br/>
-                <Typography variant="span" style={{fontSize:"1.25em"}}>アリーナ戦×チーム対抗制</Typography>
+                <Typography variant="span" style={{fontSize:"1.25em"}}>アリーナ戦<FontAwesomeIcon style={{padding:"0 0.3em"}} icon={faXmark} />チーム対抗制</Typography>
                 <br/>
                 <Box style={{padding:"2em"}}>
                     <ul>
@@ -204,24 +241,31 @@ export default function Limited(param){
                         padding: "8px",
                         borderRadius: "4px"
                     }}>
-                        秘密兵器実験場（Aボタン縛り）<br/>
-                        １位：45,000 pts ごれい 21:20:30<br/>
-                        ２位：〜<br/>
-                        ３位：〜<br/>
+                        {stage[0].stage}<br/>
                         <br/>
                         残り 34:21<br/>
                     </div>
                     <CustomButton>ルール詳細</CustomButton>
                     <CustomButton>投稿</CustomButton>
                     {/*スタートボタンは次へ、スルーボタンの機能を兼ねる*/}
-                    <CustomButton>スタート</CustomButton>
+                    <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
                 </Grid>
                 <Grid container alignItems="flex-start" item xs={12} md={6}>
                     <div style={{width:"98%",height:"300px",border:"1px solid #fff",color:"#fff",textAlign:"center",padding:"8px",borderRadius:"4px"}}>
-                        食神のかまど（笛縛り）
+                        {stage[1].stage}<br/>
                     </div>
                 </Grid>
             </Grid>
+            {
+                Object.values(recordLeftData.data).map(function(post){
+                    return <Record key={post.unique_id} data={post} parent={parent}/>
+                })
+            }
+            {
+                Object.values(recordRightData.data).map(function(post){
+                    return <Record key={post.unique_id} data={post} parent={parent}/>
+                })
+            }
             {
                 // ステージ別スコア表示コンポーネント
                 // param.stages.map(s => <RankingTeam key={s} team={param.teams} stage={s} users={param.users}/>)
