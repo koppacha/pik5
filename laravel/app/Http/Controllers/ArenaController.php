@@ -82,7 +82,7 @@ class ArenaController extends Controller
         if(!empty($request["stage"]) && $request["stage"] > 1299){
             // 次へボタンを押したときの前処理
             $records = new Record();
-            $recordCount = $records->where("stage_id", $request["stage"])->count();
+            $recordCount = $records->where('stage_id', $request["stage"])->count();
             $arenaRecord = $arenas->where('stage', $request["stage"])->first();
             if($arenaRecord) {
                 $arenaRecord->flag = ($recordCount) ? $team + 2 : 9;
@@ -99,6 +99,7 @@ class ArenaController extends Controller
             $getRandomStage->flag = $team;
             $getRandomStage->save();
         }
+        return response()->json($getRandomStage);
     }
 
     /**
