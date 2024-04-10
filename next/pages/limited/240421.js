@@ -18,7 +18,7 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {useLocale, id2name, fetcher} from "../../lib/pik5";
+import {useLocale, id2name, fetcher, addName2posts} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
@@ -49,6 +49,9 @@ import LimitedTotal from "../../components/LimitedTotal";
 import {notFound} from "next/navigation";
 import Button from "@mui/material/Button";
 import useSWR from "swr";
+import RecordMini from "../../components/record/RecordMini";
+import remarkGfm from "remark-gfm";
+import ReactMarkdown from "react-markdown";
 
 export async function getServerSideProps(context){
 
@@ -66,8 +69,15 @@ export async function getServerSideProps(context){
     const arena_res = await fetch(`http://laravel:8000/api/arena`)
     const arena = (arena_res.status < 300) ? await arena_res.json() : null
 
-    // TODO: 状態管理DBを分解してflag=1を左チームに、flag=2を右チームに表示
-    // TODO: flag=0,3,4の数を数えてアイコンにそのカウント結果を表示
+    // アリーナの状況を整理
+    let flagCount = {}
+    arena.forEach(record => {
+        if(flagCount[record.flag]){
+            flagCount[record.flag]++
+        } else {
+            flagCount[record.flag] = 1
+        }
+    })
 
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
@@ -97,12 +107,9 @@ export async function getServerSideProps(context){
             name: true
         }
     })
-    // return {
-    //     notFound: true,
-    // }
     return {
         props: {
-            stages, limited, info, users, teams, total, arena
+            stages, limited, info, users, teams, total, arena, flagCount
         }
     }
 }
@@ -126,26 +133,28 @@ export default function Limited(param){
 
     // アリーナ情報を取得する
     const {data:arenaData, error: arenaError} = useSWR(`/api/server/arena`, fetcher)
+    // アリーナ情報から各チームの現在ステージ情報を取得
+    const stage = [
+        Object.values(arenaData?.data ?? {}).find(p => p.flag === 1),
+        Object.values(arenaData?.data ?? {}).find(p => p.flag === 2)
+    ]
+    // ステージ情報から左チームが着手中のランキングを取得
+    const {data:recordLeftData, error: recordLeftError} = useSWR(`/api/server/record/1049`, fetcher)
+    // ステージ情報から右チームが着手中のランキングを取得
+    const {data:recordRightData, error: recordRightError} = useSWR(`/api/server/record/1050`, fetcher)
     if (!arenaData || arenaError) {
         return <NowLoading/>
     }
-    // アリーナ情報から各チームの現在ステージ情報を取得
-    const stage = [
-        Object.values(arenaData.data).find(p => p.flag === 1),
-        Object.values(arenaData.data).find(p => p.flag === 2)
-    ]
-    // ステージ情報から左チームが着手中のランキングを取得
-    const {data:recordLeftData, error: recordLeftError} = useSWR(`/api/server/record/1003`, fetcher)
     if (!recordLeftData || recordLeftError) {
         return <NowLoading/>
     }
-    // ステージ情報から右チームが着手中のランキングを取得
-    const {data:recordRightData, error: recordRightError} = useSWR(`/api/server/record/1004`, fetcher)
     if (!recordRightData || recordRightError) {
         return <NowLoading/>
     }
 
-    console.log(recordRightData)
+    // 取得したデータを加工
+    const left = addName2posts(recordLeftData.data, param.users)
+    const right = addName2posts(recordRightData.data, param.users)
 
     // 次へ・スタートボタン
     async function arenaSubmit() {
@@ -198,7 +207,9 @@ export default function Limited(param){
                 <Typography variant="" className="title">第19回期間限定ランキング</Typography><br/>
                 <Typography variant="" className="subtitle">The 19th Special Limited Tournament</Typography><br/>
                 <br/>
-                <Typography variant="span" style={{fontSize:"1.25em"}}>アリーナ戦<FontAwesomeIcon style={{padding:"0 0.3em"}} icon={faXmark} />チーム対抗制</Typography>
+                <Typography variant="span" style={{fontSize:"1.25em"}}>
+                    アリーナ戦<FontAwesomeIcon style={{padding:"0 0.3em"}} icon={faXmark} />チーム対抗制
+                </Typography>
                 <br/>
                 <Box style={{padding:"2em"}}>
                     <ul>
@@ -234,38 +245,57 @@ export default function Limited(param){
                 <Grid container alignItems="flex-start" item xs={12} md={6}>
                     <div style={{
                         width: "98%",
-                        height: "300px",
                         border: "1px solid #fff",
                         color: "#fff",
                         textAlign: "center",
                         padding: "8px",
                         borderRadius: "4px"
                     }}>
-                        {stage[0].stage}<br/>
+                        {t.stage[stage[0].stage]}<br/>
+                        <ReactMarkdown className="markdown-content mini-content" remarkPlugins={[remarkGfm]}>
+                            {t.info[stage[0].stage]}
+                        </ReactMarkdown>
                         <br/>
                         残り 34:21<br/>
+                        <CustomButton>ルール詳細</CustomButton>
+                        <CustomButton>投稿</CustomButton>
+                        <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
+                        {
+                            Object.values(left).map(function(post){
+                                return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
+                            })
+                        }
+
                     </div>
-                    <CustomButton>ルール詳細</CustomButton>
-                    <CustomButton>投稿</CustomButton>
-                    {/*スタートボタンは次へ、スルーボタンの機能を兼ねる*/}
-                    <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
                 </Grid>
                 <Grid container alignItems="flex-start" item xs={12} md={6}>
-                    <div style={{width:"98%",height:"300px",border:"1px solid #fff",color:"#fff",textAlign:"center",padding:"8px",borderRadius:"4px"}}>
-                        {stage[1].stage}<br/>
+                    <div style={{
+                        width: "98%",
+                        border: "1px solid #fff",
+                        color: "#fff",
+                        textAlign: "center",
+                        padding: "8px",
+                        borderRadius: "4px"
+                    }}>
+                        {t.stage[stage[1].stage]}<br/>
+                        <ReactMarkdown className="markdown-content mini-content" remarkPlugins={[remarkGfm]}>
+                            {t.info[stage[1].stage]}
+                        </ReactMarkdown>
+
+                        <br/>
+                        残り 34:21<br/>
+                        <CustomButton>ルール詳細</CustomButton>
+                        <CustomButton>投稿</CustomButton>
+                        <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
+
+                        {
+                            Object.values(right).map(function (post) {
+                                return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
+                            })
+                        }
                     </div>
                 </Grid>
             </Grid>
-            {
-                Object.values(recordLeftData.data).map(function(post){
-                    return <Record key={post.unique_id} data={post} parent={parent}/>
-                })
-            }
-            {
-                Object.values(recordRightData.data).map(function(post){
-                    return <Record key={post.unique_id} data={post} parent={parent}/>
-                })
-            }
             {
                 // ステージ別スコア表示コンポーネント
                 // param.stages.map(s => <RankingTeam key={s} team={param.teams} stage={s} users={param.users}/>)

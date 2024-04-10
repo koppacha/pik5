@@ -21,7 +21,7 @@ import "yet-another-react-lightbox/styles.css";
 import {hideRuleNames} from "../../lib/const";
 import {useSession} from "next-auth/react";
 
-export default function Record({parent, data, stages, series, consoles, year, prevUser}) {
+export default function Record({mini, parent, data, stages, series, consoles, year, prevUser}) {
 
     const {t} = useLocale()
     const {data: session } = useSession()
@@ -78,18 +78,18 @@ export default function Record({parent, data, stages, series, consoles, year, pr
                     boxShadow:       `-3px 1px 4px ${currentRankFrontColor}`}}
         >
             <RecordGridWrapper className="record-grid-wrapper" item xs={2} sm={1}>
-                <div>
+                <div style={{fontSize:mini ? "0.8em" : "1.0em"}}>
                     <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                     <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                     <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                    <RankPointType className="rank-point-type">[{data?.rps ?? "?"} rps]</RankPointType>
+                    {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} rps]</RankPointType>}
                 </div>
             </RecordGridWrapper>
             <RecordGridWrapper className="record-grid-wrapper" item xs={3} sm={3}>
-                <UserType className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
+                <UserType style={{fontSize:mini ? "0.9em" : "1.0em"}} className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
             </RecordGridWrapper>
             <RecordGridWrapper className="record-grid-wrapper" item xs={3} sm={3}>
-                <div>
+                <div style={{fontSize:mini ? "0.9em" : "1.0em"}}>
                 <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} />
                 <CompareType className="compare-type" as="span"> {compare}</CompareType>
                 {
@@ -112,7 +112,7 @@ export default function Record({parent, data, stages, series, consoles, year, pr
                     <Grid item xs={12} sm={3}>
                         <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                     </Grid>
-                    <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
+                    {mini || <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                         {data.stage_id &&
                             <Link href={'/stage/'+stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)}>{data.stage_id + '#' + t.stage[data.stage_id]}
                                 {hideRuleNames.includes(data.rule) || <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
@@ -132,7 +132,7 @@ export default function Record({parent, data, stages, series, consoles, year, pr
                             }
                             </>
                         }
-                    </Grid>
+                    </Grid>}
                     <Grid item xs={12} sm={12} style={{
                         borderTop:'1px solid #777',
                         paddingTop:'8px',
@@ -163,6 +163,9 @@ export default function Record({parent, data, stages, series, consoles, year, pr
                             {t.cnsl[data.console]}
                             </span>}
                         {data.post_comment &&
+                            mini ?
+                            <Tooltip title={data.post_comment} arrow><FontAwesomeIcon icon={faComment} /></Tooltip>
+                            :
                             <>
                                 {data.post_comment}
                             </>}
