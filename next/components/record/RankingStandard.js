@@ -1,5 +1,5 @@
 import {Box} from "@mui/material";
-import {fetcher, useLocale} from "../../lib/pik5";
+import {addName2posts, fetcher, useLocale} from "../../lib/pik5";
 import Record from "./Record";
 import useSWR from "swr";
 import NowLoading from "../NowLoading";
@@ -15,14 +15,8 @@ export default function RankingStandard({parent, posts, borders, stage, console:
         )
     }
 
-    // 取得したデータにPrismaから取ってきたスクリーンネームを入れる TODO: あとで共通化
-    const data = posts ? Object.values(posts).map(function(post){
-        const user = users.find(user => user.userId === post.user_id)
-        return {
-            ...post,
-            user_name: user ? user.name : ""
-        }
-    }) : []
+    // 取得したデータにPrismaから取ってきたスクリーンネームを入れる
+    const data = addName2posts(posts, users)
 
     let i = borders.length - 1
 
