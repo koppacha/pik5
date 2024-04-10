@@ -188,3 +188,14 @@ export function rule2consoles(rule){
 
     return [1, 2, 3, 4, 5, 6, 7]
 }
+
+// 記録オブジェクトに対してスクリーンネームを追加する関数
+export function addName2posts(posts, users){
+    return posts ? Object.values(posts).map(post => {
+        const user = users.find(user => user.userId === post.user_id)
+        return {
+            ...post,
+            user_name: user ? user.name : ""
+        }
+    }) : []
+}

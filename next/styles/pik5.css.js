@@ -168,6 +168,15 @@ export const GlobalStyle = createGlobalStyle`
     display: none;
   }
 
+  .mini-content {
+      color: ${colors.light.subTitle};
+      font-size: 0.8em;
+
+      [data-theme='dark'] & {
+          color: ${colors.dark.subTitle};
+      }
+  }
+  
   .markdown-content {
     
     /* Markdownをオーバライドするスタイル */
