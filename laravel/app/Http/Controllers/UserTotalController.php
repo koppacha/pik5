@@ -53,7 +53,7 @@ class UserTotalController extends Controller
             ->toArray();
 
         $records = Func::duplicates_cleaner($dataset, "stage_id", "rule", "console");
-        $new_data["scores"] = self::aggregateScores($records);
+        $new_data["scores"] = $this->aggregateScores($records);
         $new_data["marks"] = [];
 
         foreach ($records as $value){
@@ -86,7 +86,7 @@ class UserTotalController extends Controller
             // スコアを加算
             $output[$console][$rule] += $score;
 
-            if($rule === 21 or $rule === 22){
+            if($rule === 21 || $rule === 22){
                 if (!isset($output[$console]["20"])) {
                     $output[$console]["20"] = 0;
                 }

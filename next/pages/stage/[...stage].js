@@ -185,27 +185,27 @@ export default function Stage(param){
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
             </PageHeader>
-            <RuleWrapper container item xs={6} style={{marginTop: "24px"}}>
+            <RuleWrapper container item xs={12} style={{marginTop: "24px",marginBottom:"16px"}}>
                 {countdown > 0 &&
                     <UserInfoBox item>
-                        <span>制限時間</span><br/>{sec2time(countdown)}
+                        <span>制限時間：</span>{sec2time(countdown)}
                     </UserInfoBox>
                 }
                 {param.info?.pikmin > 0 &&
                     <UserInfoBox item>
-                        <span>ピクミン</span><br/>{param.info?.pikmin}
+                        <span>ピクミン：</span>{param.info?.pikmin}
                     </UserInfoBox>
                 }
                 {param.info?.treasure > 0 &&
                     <UserInfoBox item>
-                        <span>お宝価値合計</span><br/>{param.info?.treasure}
+                        <span>お宝価値合計：</span>{param.info?.treasure}
                     </UserInfoBox>
                 }
             </RuleWrapper>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
-            <Grid container style={{marginBottom:'1em'}}>
-                <Grid item xs={6}>
+            <Grid container style={{marginBottom:'0.25em'}}>
+                <Grid item xs={6} style={{paddingLeft:'0.5em'}}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>

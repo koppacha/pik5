@@ -3,7 +3,7 @@ import {
     Box,
     Container,
     FormControl,
-    Grid,
+    Grid, LinearProgress,
     List, ListItem,
     MenuItem,
     Select,
@@ -52,6 +52,7 @@ import useSWR from "swr";
 import RecordMini from "../../components/record/RecordMini";
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
+import RecordPost from "../../components/modal/RecordPost";
 
 export async function getServerSideProps(context){
 
@@ -138,19 +139,25 @@ export default function Limited(param){
         Object.values(arenaData?.data ?? {}).find(p => p.flag === 1),
         Object.values(arenaData?.data ?? {}).find(p => p.flag === 2)
     ]
-    // ステージ情報から左チームが着手中のランキングを取得
+    // ステージ情報から左チームが着手中のランキングとステージ情報を取得
     const {data:recordLeftData, error: recordLeftError} = useSWR(`/api/server/record/1049`, fetcher)
-    // ステージ情報から右チームが着手中のランキングを取得
+    const {data:infoLeftData, error: infoLeftError} = useSWR(`/api/server/stage/1049`, fetcher)
+
+    // ステージ情報から右チームが着手中のランキングとステージ情報を取得
     const {data:recordRightData, error: recordRightError} = useSWR(`/api/server/record/1050`, fetcher)
-    if (!arenaData || arenaError) {
-        return <NowLoading/>
+    const {data:infoRightData, error: infoRightError} = useSWR(`/api/server/stage/1050`, fetcher)
+
+    // useSWRをすべてリクエストしたらそれぞれでローディング判定
+    if (
+        !arenaData || arenaError ||
+        !recordLeftData || recordLeftError ||
+        !recordRightData || recordRightError ||
+        !infoLeftData || infoLeftError ||
+        !infoRightData || infoRightError
+    ) {
+        return <NowLoading />
     }
-    if (!recordLeftData || recordLeftError) {
-        return <NowLoading/>
-    }
-    if (!recordRightData || recordRightError) {
-        return <NowLoading/>
-    }
+
 
     // 取得したデータを加工
     const left = addName2posts(recordLeftData.data, param.users)
@@ -257,9 +264,11 @@ export default function Limited(param){
                         </ReactMarkdown>
                         <br/>
                         残り 34:21<br/>
-                        <CustomButton>ルール詳細</CustomButton>
-                        <CustomButton>投稿</CustomButton>
+                        <RecordPost
+                            style={{alignItems: "center"}}
+                            info={infoLeftData.data} rule={240421} console={0}/>
                         <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
+                        <LinearProgress variant="determinate" style={{height:"12px", margin:"8px 0",borderRadius:"8px"}} value={50} />
                         {
                             Object.values(left).map(function(post){
                                 return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
@@ -284,10 +293,10 @@ export default function Limited(param){
 
                         <br/>
                         残り 34:21<br/>
-                        <CustomButton>ルール詳細</CustomButton>
-                        <CustomButton>投稿</CustomButton>
+                        <RecordPost
+                            style={{alignItems: "center"}}
+                            info={infoRightData.data} rule={240421} console={0}/>
                         <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
-
                         {
                             Object.values(right).map(function (post) {
                                 return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>

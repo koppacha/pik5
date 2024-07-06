@@ -169,7 +169,7 @@ class Func extends Facade
         $new_data = [];
 
         foreach ($dataset as $key => $value) {
-            $concat = implode('_', array_map(function ($target) use ($value) {
+            $concat = implode('_', array_map(static function ($target) use ($value) {
                 return $value[$target];
             }, $targets));
 

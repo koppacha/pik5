@@ -24,14 +24,10 @@ export default function RecordPost({info, rule, console, mode}){
 
     return (
         <>
-            <RuleBox item className="active">
-                <RecordPostButton
-                    series={info?.series}
-                    component={Link}
-                    href="#"
-                    onClick={handleClickOpen}>
-                    <span><FontAwesomeIcon icon={faPaperPlane} /> {t.post.title}</span>
-                </RecordPostButton>
+            <RuleBox
+                className={"active"}
+                onClick={handleClickOpen}>
+                <span><FontAwesomeIcon icon={faPaperPlane} /> {t.g.post}</span>
             </RuleBox>
             <RecordForm
                 info={info}

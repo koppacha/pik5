@@ -57,7 +57,7 @@ export default function MobileMenu({users, open, toggleHandle}){
     const handleClickDD = () => setOpenDD(!openDD)
     const handleClickEX = () => setOpenEX(!openEX)
     const handleClickSP = () => setOpenSP(!openSP)
-    const handleClickOT = () => setOpenOT(!openSP)
+    const handleClickOT = () => setOpenOT(!openOT)
 
     return (
         <>
