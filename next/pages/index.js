@@ -1,5 +1,5 @@
 import Link from "next/link";
-import {Box, Grid, Typography} from "@mui/material";
+import {Box, Grid, List, ListItem, Typography} from "@mui/material";
 import React, {useState} from "react";
 import {
     AuthButton,
@@ -17,7 +17,7 @@ import {
     faArrowTrendUp, faBullhorn,
     faCalendarDays,
     faCertificate,
-    faCircleInfo,
+    faCircleInfo, faFaceSmileBeam,
     faFlag, faRankingStar
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -81,7 +81,6 @@ export default function Home({users, prev}) {
     // クイックアクセス
     const quickLinks = [
         [loginName().name, loginName().url],
-        [t.g.register, "/auth/register"],
         [t.title[1], "/total/10"],
         [t.title[2], "/total/20"],
         [t.title[3], "/total/30"],
@@ -111,6 +110,8 @@ export default function Home({users, prev}) {
           <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
           <InfoBox>
               {t.t.welcome}
+              <hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
+              <div style={{textAlign:"right"}}>初めての方はまず<Link href="/auth/register">アカウント作成</Link>！</div>
           </InfoBox>
           <Grid container>
               <WrapTopBox item xs={12}>
@@ -128,18 +129,12 @@ export default function Home({users, prev}) {
                       }
                   </Grid>
               </WrapTopBox>
-              <WrapTopBox item xs={12} sm={6}>
+              <WrapTopBox item xs={12}>
                   <TopBox>
                       <TopBoxHeader>
-                          <span><FontAwesomeIcon icon={faCalendarDays}/> イベントカレンダー</span>
+                          <span><FontAwesomeIcon icon={faCircleInfo} /> ダッシュボード</span>
                       </TopBoxHeader>
                       <TopBoxContent>
-                          <EventContainer>
-                              <EventContent>
-                                  現在予定されているイベントはありません。
-                              </EventContent>
-                          </EventContainer>
-                          <hr style={{margin:"1em",borderWidth:"1px 0 0 0"}}/>
                           <EventContainer>
                               <EventContent>
                                   <Link href="#" onClick={handleEditOpen}>
@@ -178,24 +173,6 @@ export default function Home({users, prev}) {
                           }}>
                               <FontAwesomeIcon icon={faBullhorn}/> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
                           </Box>
-                      </TopBoxContent>
-                  </TopBox>
-              </WrapTopBox>
-              <WrapTopBox item xs={12} sm={6}>
-                  <TopBox>
-                      <TopBoxHeader>
-                          <span><FontAwesomeIcon icon={faCircleInfo}/> {t.g.info}</span>
-                      </TopBoxHeader>
-                      <TopBoxContent>
-                          <TopBoxContentList>【ver.3.08】ピクミンキーワードをWikiプラットフォームにしました（2024/03/24）</TopBoxContentList>
-                          <TopBoxContentList>【ver.3.07】２プレイヤー間スコア比較ツール「ピクチャレ星取表」を追加しました（2024/02/13）</TopBoxContentList>
-                          <TopBoxContentList>【ver.3.06】レンダリング方式を変更して表示を高速化しました（2024/01/11）</TopBoxContentList>
-                          <TopBoxContentList>【ver.3.05】チーム対抗戦コンポーネントを追加しました（2023/12/16）</TopBoxContentList>
-                          {/*<TopBoxContentList>【ver.3.04】イベントセル、期間限定チャレンジ投稿フォーム、新着記録順位、総合ランキングの順位マーカーを追加しました（2023/11/11）</TopBoxContentList>*/}
-                          {/*<TopBoxContentList>【ver.3.03】検索機能、ロール機能、コメントにおけるNGワード検知機能を追加しました。（2023/10/08）</TopBoxContentList>*/}
-                          {/*<TopBoxContentList>【ver.3.02】移転前の期間限定、参加者企画、チャレンジ複合、その他ランキング全306ステージを移植しました。（2023/09/20）</TopBoxContentList>*/}
-                          {/*<TopBoxContentList>【ver.3.01】ピクミン4全28ステージを追加しました。（2023/07/29）</TopBoxContentList>*/}
-                          {/*<TopBoxContentList>【ver.3.00】リニューアルオープンしました！（2023/07/21）</TopBoxContentList>*/}
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>

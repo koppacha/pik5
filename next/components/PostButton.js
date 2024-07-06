@@ -2,6 +2,7 @@ import Button from "@mui/material/Button";
 import {fetcher, useLocale} from "../lib/pik5";
 import {useSession} from "next-auth/react";
 import useSWR from "swr";
+import {CustomButton} from "../styles/pik5.css";
 
 export default function PostButton({voteId}){
 
@@ -39,7 +40,7 @@ export default function PostButton({voteId}){
     }
     return (
         <>
-            <Button onClick={() => onSubmit(1)}>このイベントに参加する</Button>
+            <CustomButton onClick={() => onSubmit(1)}>このイベントに参加する</CustomButton>
         </>
     )
 }

@@ -165,7 +165,11 @@ export const GlobalStyle = createGlobalStyle`
   }
 
   .sp-hidden {
-    display: none;
+      ${sp`display: none`}
+  }
+  
+  .pc-hidden {
+      ${pc`display: none`}
   }
 
   .mini-content {
@@ -242,24 +246,20 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
     background-color: #2d4448;
   }
 `
-export const RecordPostButton = styled(Box).attrs(props => ({$series: props.series}))`
-  border-radius: 4px;
-  padding: 12px;
-  margin: 6px;
-  cursor: pointer;
-`
 export const AuthButton = styled(Button)`
-  background-color: #cfd2de;
-  color: #1a293b;
-  font-weight: bold;
-  border-radius: 8px;
-  padding: 4px 12px;
-  &:hover {
-    background-color: #1a293b;
-    color: #cfd2de;
-  }
+    font-family: "M PLUS 1 CODE", sans-serif;
+    background-color: #cfd2de;
+    color: #1a293b;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 4px 12px;
+    &:hover {
+      background-color: #1a293b;
+      color: #cfd2de;
+    }
 `
 export const CustomButton = styled(Button)`
+    font-family: "M PLUS 1 CODE", sans-serif;
     color: ${colors.light.back};
     background-color: ${colors.light.front};
     font-size: 0.9em;
@@ -277,6 +277,7 @@ export const CustomButton = styled(Button)`
 `
 export const StyledSelect = styled(Select)`
     max-width: 200px;
+    max-height: 42px;
     margin-right: 10px;
     border: 1px solid ${colors.light.front};
     svg {
@@ -301,6 +302,9 @@ export const StyledTextField = styled(TextField)`
     input {
         color: ${colors.light.front};
     }
+    label {
+        color: ${colors.light.front};
+    }
     svg {
       color: ${colors.light.front};
       font-size: 14px;
@@ -312,6 +316,9 @@ export const StyledTextField = styled(TextField)`
       color: ${colors.dark.front};
       input {
           color: ${colors.dark.front};
+      }
+      label {
+        color: ${colors.dark.front};
       }
       svg {
         color: ${colors.dark.front};
@@ -623,9 +630,8 @@ export const MarkerTableCell = styled(Grid)`
   align-content: flex-start;
 `
 export const UserInfoBox = styled(StageListBox)`
-  padding: 12px;
-  min-height: 3.5em;
-
+  padding: 8px;
+  min-height: 2em;
   span {
     color: #9d9d9d;
   }
@@ -656,7 +662,11 @@ export const MobileFooterItem = styled(Grid)`
   justify-items: center;
   text-align: center;
   padding-top: 5px;
-  
+    
+    [data-theme='light'] & {
+        color: ${colors.light.back};
+    }
+
 `
 
 export const MobileMenuBox = styled(Box)`
