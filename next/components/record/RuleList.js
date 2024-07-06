@@ -16,8 +16,8 @@ export default function RuleList({param}){
         <>
             <Box style={{margin:"0px 0"}}>
                 <Grid container style={{
-                    marginTop:"30px",
-                    marginBottom:"20px"
+                    marginTop:"8px",
+                    marginBottom:"12px"
                 }}>
                     {
                         // 通常ステージの場合はステージに含まれるルールをすべて表示
