@@ -179,8 +179,8 @@ export default function Stage(param){
                 <title>{stageName+" ("+t.title[param.info?.series]+") - "+t.title[0]}</title>
             </Head>
             <PageHeader>
-                #{param.stage}<br/>
                 <BreadCrumb info={param.info} rule={param.rule}/>
+                <Typography variant="" className="subtitle">#{param.stage}</Typography><br/>
                 <Typography variant="" className="title">{stageName}</Typography>{ruleName}<br/>
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>

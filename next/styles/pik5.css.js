@@ -1,4 +1,16 @@
-import {Box, Grid, MenuItem, Select, Typography, Button, AppBar, Container, Paper, ListItem} from "@mui/material";
+import {
+    Box,
+    Grid,
+    MenuItem,
+    Select,
+    Typography,
+    Button,
+    AppBar,
+    Container,
+    Paper,
+    ListItem,
+    ListItemButton
+} from "@mui/material";
 import styled, {createGlobalStyle, css} from "styled-components";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {useTheme} from "next-themes";
@@ -230,6 +242,7 @@ export const OffsetContainer = styled(Container)`
   ${pc`margin-top: 80px;`}
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
+  font-family: "M PLUS 1 CODE", sans-serif;
   color: #d2d8e0;
   background-color: transparent;
   font-size: 0.9em;
@@ -812,4 +825,8 @@ export const CompareIcon = styled(Typography)`
     color :#111;
     font-size: 1em;
     display: inline-block;
+`
+
+export const CustomListItemButton = styled(ListItemButton)`
+    text-align: right;
 `

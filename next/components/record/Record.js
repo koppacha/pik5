@@ -50,23 +50,13 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user_name : "/user/"+data.user_id
 
     // ステージへのリンク
-    const stageLink = '/stage/' + stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
+    const stageUrl = stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
+    const stageLink = (stageUrl) ? '/stage/'+stageUrl : ""
 
-    const left = {
-        bg: `linear-gradient(120deg, #f093fb 0%, #f5576c 100%)`,
-        justifySelf: 'end',
-    }
-    const right = {
-        bg: `linear-gradient(120deg, #96fbc4 0%, #f9f586 100%)`,
-        justifySelf: 'start',
-    }
-
-    const LeftIcon = () => (
-        <div style={{ width: 30, height: 30, background: 'red', borderRadius: '50%' }} />
-    )
-
-    const RightIcon = () => (
-        <div style={{ width: 30, height: 30, background: 'green', borderRadius: '50%' }} />
+    const SwiperTooltip = ({ message }) => (
+        <div style={{ position: 'absolute', top: '-65px', left: '15px', background: '#e0e0e0', color: '#444444', padding: '10px', borderRadius: '8px' }}>
+            {message ?? ""}
+        </div>
     )
 
     // スワイプメニュー
@@ -74,45 +64,58 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
         const [{x, bg, scale, justifySelf}, api] = useSpring(() => ({
             x: 0,
             scale: 1,
-            ...left,
+            justifySelf: 'center',
         }))
-        const bind = useDrag(({ active, movement: [x], cancel }) => {
-            if(x > 100){
-                router.push(userPageUrl)
-                cancel()
-            } else if(x < -100){
-                router.push(stageLink)
-                cancel()
-            } else if(!active){
-                api.start({x:0, scale: 1})
+        const [showTooltip, setShowTooltip] = useState(false);
+        const [tooltipMessage, setTooltipMessage] = useState('');
+        const bind = useDrag(({ active, movement: [mx], direction: [xDir] }) => {
+            if(!active){
+                if(mx > 100){
+                    setTimeout(() => {
+                        router.push(userPageUrl).then(setShowTooltip(false))
+                    }, 1000)
+                } else if(mx < -100){
+                    setTimeout(() => {
+                        if(stageLink){
+                            router.push(stageLink).then(setShowTooltip(false))
+                        }
+                    }, 1000)
+                } else {
+                    api.start({x: 0, scale: 1})
+                }
             } else {
+                if (Math.abs(mx) > 0 && Math.abs(mx) < 100) {
+                    setTooltipMessage(mx > 0 ? `${data.user_name}さんのページへ→` : stageLink ? `←${t.stage[data.stage_id]}のページへ` : "移動できません！");
+                    setShowTooltip(true);
+                    setTimeout(() => {
+                        setShowTooltip(false);
+                    }, 1000)
+                } else {
+                    setShowTooltip(false);
+                }
                 api.start({
-                    x: x,
+                    x: mx,
                     scale: active ? 1.1 : 1,
-                    ...(x < 0 ? left : right),
                     immediate: name => active && name === 'x',
-                })
+                });
             }
         })
-        const avSize = x.to({
+        const aSize = x.to({
             map: Math.abs,
             range: [50, 300],
             output: [0.5, 1],
             extrapolate: 'clamp',
         })
-
         return (
-            <animated.div {...bind()} style={{touchAction: 'none'}}>
-                <animated.div style={{scale: avSize, justifySelf}}/>
+            <animated.div {...bind()} style={{
+                touchAction: 'none',
+                position: 'relative'
+            }}>
+                <animated.div style={{scale: aSize, justifySelf}}/>
                 <animated.div style={{x, scale}}>
                     {children}
                 </animated.div>
-                <animated.div style={{position: 'absolute', left: 10}}>
-                    {x.to(xVal => (xVal < -100 ? <LeftIcon/> : null))}
-                </animated.div>
-                <animated.div style={{position: 'absolute', right: 10}}>
-                    {x.to(xVal => (xVal > 100 ? <RightIcon/> : null))}
-                </animated.div>
+                {showTooltip && <SwiperTooltip message={tooltipMessage}/>}
             </animated.div>
         )
     }
@@ -150,7 +153,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         boxShadow:       `-3px 1px 4px ${currentRankFrontColor}`}}
             >
                 <RecordGridWrapper className="record-grid-wrapper" item xs={1.8} sm={1}>
-                    <div style={{fontSize:mini ? "0.8em" : "1.0em"}}>
+                    <div style={{fontSize:mini && "0.8em"}}>
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
@@ -158,18 +161,15 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>
-                    <UserType style={{fontSize:mini ? "0.9em" : "1.0em"}} className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
+                    <UserType style={{fontSize:mini && "0.9em"}} className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
-                    <div style={{fontSize:mini ? "0.9em" : "1.0em"}}>
+                    <div style={{fontSize:mini && "0.9em"}}>
                     <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span"> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
-                        (data?.ranks) &&
-                            <>
-                                <br/><ScoreType className="score-type" style={{fontSize:"0.8em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType>
-                            </>
+                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType></>
                     }
                     </div>
                 </RecordGridWrapper>

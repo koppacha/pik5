@@ -5,7 +5,7 @@ import * as React from "react";
 import Styled from "styled-components";
 import {fetcher, useLocale} from "../lib/pik5";
 import useSWR from "swr";
-import {Typography} from "@mui/material";
+import {Box, Typography} from "@mui/material";
 import NowLoading from "./NowLoading";
 import {StairIcon} from "../styles/pik5.css";
 import {logger} from "../lib/logger";
@@ -27,7 +27,7 @@ export default function BreadCrumb({info, rule}){
     }
 
     return (
-        <>
+        <Box style={{marginBottom:"0.5em"}}>
             {
                 // 第０階層（ホームページ）
             }
@@ -68,7 +68,6 @@ export default function BreadCrumb({info, rule}){
                     <Link href={"/total/"+info.parent}>{t.rule[info.parent]}</Link>
                 </>
             }
-            <br/>
-        </>
+        </Box>
     )
 }
