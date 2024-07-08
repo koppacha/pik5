@@ -110,7 +110,6 @@ export default function CustomMenu(props){
         <>
             <CustomMenuButton
                 series={props.series}
-                style={{maxWidth:"200px"}}
                 ref={anchorEl}
                 onClick={handleClick}>
                 {t.title[props.series]}

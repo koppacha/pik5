@@ -1,6 +1,6 @@
 import {Box, Collapse, IconButton, List, ListItem, ListItemButton, SwipeableDrawer} from "@mui/material";
 import * as React from "react";
-import {MobileMenuBox} from "../../styles/pik5.css";
+import {CustomListItemButton, MobileMenuBox} from "../../styles/pik5.css";
 import {p1, ne, eg, du, bt, ce, be, ss, db, sb, sp, dc, dd, ex, ot} from "../../lib/const"
 import {useLocale} from "../../lib/pik5";
 import {useRef, useState} from "react";
@@ -59,6 +59,46 @@ export default function MobileMenu({users, open, toggleHandle}){
     const handleClickSP = () => setOpenSP(!openSP)
     const handleClickOT = () => setOpenOT(!openOT)
 
+    const items = [
+        { onClick: handleClickP1, title: t.title[1], subtitle: "", open: openP1, stages: p1 },
+        { onClick: handleClickEG, title: t.title[2], subtitle: t.subtitle[21], open: openEG, stages: eg },
+        { onClick: handleClickNE, title: t.title[2], subtitle: t.subtitle[22], open: openNE, stages: ne },
+        { onClick: handleClickDU, title: t.title[2], subtitle: t.subtitle[25], open: openDU, stages: du },
+        { onClick: handleClickBT, title: t.title[2], subtitle: t.subtitle[29], open: openBT, stages: bt },
+        { onClick: handleClickCE, title: t.title[3], subtitle: t.subtitle[31], open: openCE, stages: ce },
+        { onClick: handleClickBE, title: t.title[3], subtitle: t.subtitle[32], open: openBE, stages: be },
+        { onClick: handleClickSS, title: t.title[3], subtitle: t.subtitle[36], open: openSS, stages: ss },
+        { onClick: handleClickDB, title: t.title[3], subtitle: t.subtitle[33], open: openDB, stages: db },
+        { onClick: handleClickSB, title: t.title[3], subtitle: t.subtitle[35], open: openSB, stages: sb },
+        { onClick: handleClickDC, title: t.title[4], subtitle: t.subtitle[41], open: openDC, stages: dc },
+        { onClick: handleClickDD, title: t.title[4], subtitle: t.subtitle[42], open: openDD, stages: dd },
+        { onClick: handleClickEX, title: t.title[4], subtitle: t.subtitle[43], open: openEX, stages: ex },
+        { onClick: handleClickSP, title: t.speedrun.title, subtitle: "", open: openSP, stages: sp },
+        { onClick: handleClickOT, title: t.title[9], subtitle: "", open: openOT, stages: ot },
+    ];
+
+    function MobileMenuItems(){
+        return (
+            items.map((item, index) => (
+                <React.Fragment key={index}>
+                    <ListItemButton onClick={item.onClick} divider={true}>
+                        {item.title} {item.subtitle}　
+                        {item.open ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
+                    </ListItemButton>
+                    <Collapse in={item.open} timeout="auto" unmountOnExit>
+                        <List>
+                            {item.stages.map(stage => (
+                                <ListItemButton key={stage} href={"/stage/"+stage} divider={true}>
+                                    #{stage} {t.stage[stage]}
+                                </ListItemButton>
+                            ))}
+                        </List>
+                    </Collapse>
+                </React.Fragment>
+            ))
+        )
+    }
+
     return (
         <>
         <SwipeableDrawer
@@ -71,237 +111,14 @@ export default function MobileMenu({users, open, toggleHandle}){
                 role="presentation"
             >
                 <List>
-                    <ListItemButton onClick={handleClickP1}>
-                        {t.title[1]}
-                        {openP1 ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openP1} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                p1.map(stage =>
-                                <ListItemButton key={stage} href={"/stage/"+stage}>
-                                    #{stage} {t.stage[stage]}
-                                </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickEG}>
-                        {t.title[2]} {t.subtitle[21]}
-                        {openEG ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openEG} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                eg.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickNE}>
-                        {t.title[2]} {t.subtitle[22]}
-                        {openNE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openNE} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                ne.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickDU}>
-                        {t.title[2]} {t.subtitle[23]}
-                        {openDU ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openDU} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                du.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickBT}>
-                        {t.title[2]} {t.subtitle[24]}
-                        {openBT ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openBT} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                bt.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickCE}>
-                        {t.title[3]} {t.subtitle[31]}
-                        {openCE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openCE} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                ce.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickBE}>
-                        {t.title[3]} {t.subtitle[32]}
-                        {openBE ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openBE} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                be.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickSS}>
-                        {t.title[3]} {t.subtitle[34]}
-                        {openSS ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openSS} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                ss.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickDB}>
-                        {t.title[3]} {t.subtitle[33]}
-                        {openDB ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openDB} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                db.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickSB}>
-                        {t.title[3]} {t.subtitle[35]}
-                        {openSB ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openSB} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                sb.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickDC}>
-                        {t.title[4]} {t.subtitle[41]}
-                        {openDC ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openDC} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                dc.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickDD}>
-                        {t.title[4]} {t.subtitle[42]}
-                        {openDD ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openDD} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                dd.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickEX}>
-                        {t.title[4]} {t.subtitle[43]}
-                        {openEX ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openEX} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                ex.map(stage =>
-                                    <ListItemButton key={stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickSP}>
-                        {t.speedrun.title}
-                        {openSP ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openSP} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                sp.map(stage =>
-                                    <ListItemButton key={"s"+stage} href={"/speedrun/"+stage}>
-                                        #S{stage} {t.speedrun[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton onClick={handleClickOT}>
-                        {t.title[9]}
-                        {openOT ? <FontAwesomeIcon icon={faAngleUp}/> : <FontAwesomeIcon icon={faAngleDown}/>}
-                    </ListItemButton>
-                    <Collapse in={openOT} timeout="auto" unmountOnExit>
-                        <List>
-                            {
-                                ot.map(stage =>
-                                    <ListItemButton key={"s"+stage} href={"/stage/"+stage}>
-                                        #{stage} {t.stage[stage]}
-                                    </ListItemButton>
-                                )
-                            }
-                        </List>
-                    </Collapse>
-                    <ListItemButton href="/"><span>{t.g.top}</span></ListItemButton>
-                    <ListItemButton href="/keyword"><span>{t.g.keyword}</span></ListItemButton>
-                    <ListItemButton href="https://discord.gg/rQEBJQa"><FontAwesomeIcon icon={faDiscord} />{t.g.discord}</ListItemButton>
-                    <ListItemButton href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
-                    <ListItemButton onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>
-                    <ListItemButton href={router.asPath} locale={r}><FontAwesomeIcon icon={faGlobe} /> {t.g.language}</ListItemButton>
+                    <MobileMenuItems/>
+                    <br/>
+                    <ListItemButton divider={true} href="/"><span>{t.g.top}</span></ListItemButton>
+                    <ListItemButton divider={true} href="/keyword"><span>{t.g.keyword}</span></ListItemButton>
+                    <ListItemButton divider={true} href="https://discord.gg/rQEBJQa"><FontAwesomeIcon icon={faDiscord} />{t.g.discord}</ListItemButton>
+                    <ListItemButton divider={true} href="https://twitter.com/PikminChallenge"><FontAwesomeIcon  icon={faTwitter}/> Twitter</ListItemButton>
+                    <ListItemButton divider={true} onClick={()=> setTheme(theme === "dark" ? 'light' : 'dark')}><FontAwesomeIcon icon={theme === "dark" ? faCloudSun : faCloudMoon}/> {t.g.theme}</ListItemButton>
+                    <ListItemButton divider={true} href={router.asPath} locale={r}><FontAwesomeIcon icon={faGlobe} /> {t.g.language}</ListItemButton>
                 </List>
             </MobileMenuBox>
         </SwipeableDrawer>
