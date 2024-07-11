@@ -9,7 +9,15 @@ import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
 import prisma from "../../lib/prisma";
 import {available, rule2array} from "../../lib/const";
-import {MarkerTableCell, RankCell, RenderStagesWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
+import {
+    MarkerTableCell,
+    RankCell,
+    RenderStagesWrapper,
+    StageListBox,
+    UserInfoBox, UserInfoSeriesHeader,
+    UserInfoTotalBox
+} from "../../styles/pik5.css";
+import Score from "../../components/record/Score";
 
 export async function getStaticPaths(){
     return {
@@ -74,12 +82,31 @@ export default function Stage(param){
     const firstPostDate = new Date(param.info[0].oldest_created_at)
 
     // マーカーテーブルに出力するルール一覧
-    const ruleList = [10, 11, 21, 22, 23, 24, 25, 91, 31, 32, 33, 35, 36, 41, 42, 43]
-    const consoleList = [1, 2, 7, 3, 4, 5, 6]
+    const ruleList = [10, 11, 20, 21, 22, 23, 24, 25, 91, 31, 32, 33, 35, 36, 41, 42, 43]
+    const consoleList = [1, 2, 7, 3, 4] // 5, 6（おすそわけ・タッチペンは省略）
 
     const Played = ({stage}) => <Tooltip title={t.stage[stage]} placement="top" arrow><RankCell item rank={10}/></Tooltip>
     const NoPlay = ({stage}) => <Tooltip title={t.stage[stage]} placement="top" arrow><RankCell item rank={30}/></Tooltip>
 
+    // 新クリアマーカー
+    function TotalScoreTable(){
+        return (
+            <RenderStagesWrapper>
+                <Grid container columns={{xs: 17}} style={{maxWidth:"2000px"}}>
+                    {ruleList.map(rule => param.marker.scores[rule] &&
+                        <UserInfoTotalBox item key={rule} xs={1} series={Number(String(rule).slice(0, 1))}>
+                            {t.ru[rule]}<br/>
+                            <Score score={param.marker.scores[rule]}/><br/>
+                            {param.marker.marks[rule]}/{rule2array(rule).length}
+                        </UserInfoTotalBox>
+                    )}
+
+                </Grid>
+            </RenderStagesWrapper>
+        )
+    }
+
+    // クリアマーカー（操作方法区分統合まで公開停止中）
     function RenderStages({marker}){
         return (
             <RenderStagesWrapper>
@@ -123,6 +150,7 @@ export default function Stage(param){
         )
     }
 
+
     return (
         <>
             <Head>
@@ -135,9 +163,7 @@ export default function Stage(param){
                 <UserInfoBox item><span>総投稿数</span><br/>{param.info[0].cnt}</UserInfoBox>
                 <UserInfoBox item><span>初投稿日</span><br/>{dateFormat(firstPostDate)}</UserInfoBox>
             </Grid>
-
-            <RenderStages marker={param.marker}/>
-
+            <TotalScoreTable/>
             <Grid container marginBottom="20px">
                 <Grid item xs={12}>
                     <PullDownConsole props={param}/>
