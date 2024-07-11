@@ -71,9 +71,12 @@ class RecordController extends Controller
     // 暫定順位を取得する関数バックエンド版
     public function getRankArray(array $request): int
     {
+        $orderBy = Func::orderByRule($request['stage'], $request['rule']);
+        $inequality = ($orderBy[1] === 'ASC') ? '<' : '>';
+
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
-            ->where('score', '>', (int)$request['score'])
+            ->where('score', $inequality, (int)$request['score'])
             ->where('flg','<', 2)
             ->get()
             ->unique('user_id')

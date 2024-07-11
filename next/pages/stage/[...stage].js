@@ -1,6 +1,6 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {range, fetcher, useLocale, currentYear, sec2time} from "../../lib/pik5";
+import {range, fetcher, useLocale, currentYear, sec2time, dateFormat} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
@@ -21,6 +21,9 @@ import {KeywordContent} from "../../components/modal/KeywordContent";
 import NowLoading from "../../components/NowLoading";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import {token} from "stylis";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRotate} from "@fortawesome/free-solid-svg-icons";
 
 export async function getStaticPaths(){
     return {
@@ -98,11 +101,25 @@ export async function getStaticProps({params}){
         }
     })
 
+    // キャッシュ時間を取得（MM/dd hh:mm:ss）
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const parts = formatter.formatToParts(now);
+    const formattedDate = `${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+
     return {
         props: {
-            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword
+            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword, formattedDate
         },
-        revalidate: 180,
+        revalidate: 3600,
     }
 }
 export default function Stage(param){
@@ -112,6 +129,9 @@ export default function Stage(param){
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
+
+    // ボタンフラグ
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const handleClose = () => setOpen(false)
 
@@ -173,6 +193,21 @@ export default function Stage(param){
         ? param.info?.time * 2
         : param.info?.time
 
+    // キャッシュを再作成する
+    const handlePurgeCache = async () => {
+        setIsProcessing(true)
+        const res = await fetch(`/api/revalidate?id=${param.stage}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
+            },
+        })
+        if(res.ok){
+            window.location.reload()
+        } else {
+            setIsProcessing(true)
+        }
+    }
     return (
         <>
             <Head>
@@ -198,9 +233,12 @@ export default function Stage(param){
                 }
                 {param.info?.treasure > 0 &&
                     <UserInfoBox item>
-                        <span>お宝価値合計：</span>{param.info?.treasure}
+                        <span>お宝価値：</span>{param.info?.treasure}
                     </UserInfoBox>
                 }
+                <UserInfoBox item>
+                    <span>最終更新：</span>{param.formattedDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                </UserInfoBox>
             </RuleWrapper>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />

@@ -47,11 +47,18 @@ export default async function handler(req, res){
                         const {filepath} = file
                         formData.append('file', fs.createReadStream(filepath));
                     }
-
+                    // バックエンドへ送信
                     const response = await fetch("http://laravel:8000/api/record", {
                         method: "POST",
                         body: formData,
-                    });
+                    })
+                    // キャッシュをクリア
+                    const res = await fetch(`/api/revalidate?id=${fields.stage_id[0]}`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
+                        },
+                    })
                     // レスポンスをJSONに変換
                     const data = await response.json()
                     return res.status(200).json(data)
