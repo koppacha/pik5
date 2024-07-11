@@ -649,6 +649,12 @@ export const UserInfoBox = styled(StageListBox)`
     color: #9d9d9d;
   }
 `
+export const UserInfoTotalBox = styled(StageListBox).attrs(props => ({$series: props.series}))`
+  padding: 12px;
+  margin-right: 6px;
+  min-height: 2em;
+  border-left: 6px solid ${props => SeriesTheme(props.$series)};
+`
 export const PageHeader = styled(Box)`
   margin-bottom: 20px;
 `
