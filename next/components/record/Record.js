@@ -119,9 +119,6 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
             </animated.div>
         )
     }
-    // シリーズが指定されている場合、ランキングセルの折り返し位置を指定
-    const cols = (series === 2) ? 15 : 25
-
     // 比較値を整形する
     let compare;
     if (!Number.isNaN(data.compare)) {
@@ -190,7 +187,8 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                     {hideRuleNames.includes(data.rule) || <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
                                 </Link>
                             }
-                            {(data?.ranks && series < 100) &&
+                            {// シリーズ別総合ランキングは星取表へのリンクを表示する
+                                (data.ranks && series < 100 && series > 9) &&
                                 <>
                                 {(session && session.user.id !== data.user_id) &&
                                     <Link href={`/compare/${session.user.id}/${consoles}/${series}/${year}/${data.user_id}/${consoles}/${series}/${year}`}>
@@ -247,7 +245,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                         {
                                             data.ranks.map(function(r, i){
                                                 const title = t.stage[stages[i]] + " " + (!r ? "未投稿" : `${r} 位`)
-                                                return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r}/></Tooltip>
+                                                return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r} series={series}/></Tooltip>
                                             })
                                         }
                                     </Grid>

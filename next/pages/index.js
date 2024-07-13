@@ -86,10 +86,6 @@ export default function Home({users, prev}) {
         [t.title[3], "/total/30"],
         [t.title[4], "/total/40"],
         [t.g.key, "/keyword"],
-        [t.subtitle[1], "/total/1"],
-        [t.subtitle[2], "/total/2"],
-        [t.g.ru, "/keyword/rules"],
-        ["Discord", "https://discord.gg/rQEBJQa"]
     ]
     // 先月のトレンド
     const PrevTrend = (prev?.trend[0]?.cnt)
@@ -115,26 +111,24 @@ export default function Home({users, prev}) {
           </InfoBox>
           <Grid container>
               <WrapTopBox item xs={12}>
-                  <Grid container>
-                      {
-                          quickLinks.map(i =>
-                              (
-                                  <Grid item key={i} xs={3} sm={2} component={Link} href={i[1]}>
-                                      <CellBox style={{padding: "10px 0"}}>
-                                          {i[0]}
-                                      </CellBox>
-                                  </Grid>
-                              )
-                          )
-                      }
-                  </Grid>
-              </WrapTopBox>
-              <WrapTopBox item xs={12}>
                   <TopBox>
                       <TopBoxHeader>
                           <span><FontAwesomeIcon icon={faCircleInfo} /> ダッシュボード</span>
                       </TopBoxHeader>
                       <TopBoxContent>
+                          <Grid container style={{marginBottom:"8px"}}>
+                              {
+                                  quickLinks.map(i =>
+                                      (
+                                          <Grid item key={i} xs={3} sm={2} component={Link} href={i[1]}>
+                                              <CellBox style={{padding: "10px 0"}}>
+                                                  {i[0]}
+                                              </CellBox>
+                                          </Grid>
+                                      )
+                                  )
+                              }
+                          </Grid>
                           <EventContainer>
                               <EventContent>
                                   <Link href="#" onClick={handleEditOpen}>
@@ -169,7 +163,8 @@ export default function Home({users, prev}) {
                               borderTop: "1px solid #777",
                               fontSize: "0.8em",
                               color: "#999",
-                              textAlign: "right"
+                              textAlign: "right",
+                              display: "none"
                           }}>
                               <FontAwesomeIcon icon={faBullhorn}/> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
                           </Box>
