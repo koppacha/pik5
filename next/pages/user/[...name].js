@@ -82,7 +82,7 @@ export default function Stage(param){
     const firstPostDate = new Date(param.info[0].oldest_created_at)
 
     // マーカーテーブルに出力するルール一覧
-    const ruleList = [10, 11, 20, 21, 22, 23, 24, 25, 91, 31, 32, 33, 35, 36, 41, 42, 43]
+    const ruleList = [10, 11, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 91]
     const consoleList = [1, 2, 7, 3, 4] // 5, 6（おすそわけ・タッチペンは省略）
 
     const Played = ({stage}) => <Tooltip title={t.stage[stage]} placement="top" arrow><RankCell item rank={10}/></Tooltip>
@@ -92,9 +92,9 @@ export default function Stage(param){
     function TotalScoreTable(){
         return (
             <RenderStagesWrapper>
-                <Grid container columns={{xs: 17}} style={{maxWidth:"2000px"}}>
+                <Grid container wrap="nowrap" columns={{xs: 19}}>
                     {ruleList.map(rule => param.marker.scores[rule] &&
-                        <UserInfoTotalBox item key={rule} xs={1} series={Number(String(rule).slice(0, 1))}>
+                        <UserInfoTotalBox style={{whiteSpace: 'nowrap'}} item key={rule} xs={1} series={Number(String(rule).slice(0, 1))}>
                             {t.ru[rule]}<br/>
                             <Score score={param.marker.scores[rule]}/><br/>
                             {param.marker.marks[rule]}/{rule2array(rule).length}

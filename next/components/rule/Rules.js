@@ -33,8 +33,14 @@ export default function Rules(props){
         }
     }
     if(info?.series === 3 && parent !== 35){
+        // ピクミン３：2Pモード（ソロビンゴ以外）
         rules.push(34)
     }
+    // ピクミン４：ゲキカラモード
+    if(parent === 41) rules.push(44)
+    if(parent === 42) rules.push(45)
+    if(parent === 43) rules.push(46)
+
     // 通常ルールの場合とそれ以外で表示名を分岐する
     const normalRankings = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43]
 

@@ -184,6 +184,12 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 906,ピクミン2 チャレンジ全回収,Pikmin 2 Challenge Mode All Tresure RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
 907,ピクミン2 本編全回収RTA with Missions,Pikmin 2 All Treasure RTA with Missions,その他,stage,time,2,91,0,0,0,0,0,0,0
 908,ピクミン2 チャレンジ全ステージ全滅,Pikmin 2 Challenge Mode All Levels Extinction RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+909,ピクミン2 チャレンジ総合701000点超え,Pikmin 2 Challenge Mode All Levels RTA (Over the 701k pts),その他,stage,time,2,91,0,0,0,0,0,0,0
+910,ピクミン2 タイトル画面全滅,Pikmin 2 Title Screen Extinction RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+911,ピクミン1 本編1000匹タイムアタック,Pikmin 1 Story Mode 1000 Pikmin RTA,その他,stage,time,1,91,0,0,0,0,0,0,0
+912,ピクミン2 本編1000匹タイムアタック,Pikmin 2 Story Mode 1000 Pikmin RTA,その他,stage,time,2,91,0,0,0,0,0,0,0
+913,ピクミン3 本編1000匹タイムアタック,Pikmin 3 Story Mode 1000 Pikmin RTA,その他,stage,time,3,91,0,0,0,0,0,0,0
+914,ピクミン4 本編1000匹タイムアタック,Pikmin 4 Story Mode 1000 Pikmin RTA,その他,stage,time,4,91,0,0,0,0,0,0,0
 1001,コンクリート迷路（タマゴなし）,Concrete Maze,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1002,どっすん迷路（タマゴなし）,Bully Den,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1003,地底警備室（スプレーなし）,Subtettanean Lair,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0

@@ -199,3 +199,30 @@ export function addName2posts(posts, users){
         }
     }) : []
 }
+// キャッシュ再作成をNext.js APIに指示する関数
+export const purgeCache = async (page, id, token) => {
+    const res = await fetch(`/api/revalidate?page=${page}&id=${id}`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    })
+    if(res.ok){
+        window.location.reload()
+    }
+}
+// キャッシュ時間を取得（hh:mm:ss）
+export const formattedDate = () => {
+    const now = new Date()
+    const formatter = new Intl.DateTimeFormat('ja-JP', {
+        timeZone: 'Asia/Tokyo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+    });
+    const parts = formatter.formatToParts(now);
+    return `${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
+}
