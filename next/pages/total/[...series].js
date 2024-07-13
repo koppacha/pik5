@@ -1,4 +1,4 @@
-import {AppBar, Box, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
+import {AppBar, Box, Button, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 import Record from "../../components/record/Record";
 import PullDownConsole from "../../components/form/PullDownConsole";
@@ -7,17 +7,19 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {currentYear, useLocale} from "../../lib/pik5";
+import {currentYear, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
-import {PageHeader, RuleBox, RuleWrapper, StageListBox} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, RuleWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
 import prisma from "../../lib/prisma";
 import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRotate} from "@fortawesome/free-solid-svg-icons";
 
 export async function getStaticPaths(){
     return {
@@ -72,10 +74,12 @@ export async function getStaticProps({params}){
             name: true
         }
     })
+    // キャッシュ時間をリクエスト
+    const fDate = formattedDate()
 
     return {
         props: {
-            stages, series, rule, consoles, year, info, users
+            stages, series, rule, consoles, year, info, users, fDate
         },
         revalidate: 600,
     }
@@ -87,6 +91,7 @@ export default function Series(param){
 
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
+    const [isProcessing, setIsProcessing] = useState(false)
 
     const stages = param.stages
 
@@ -95,6 +100,12 @@ export default function Series(param){
 
     const handleClose = () => setOpen(false)
     const handleOpen = () => setOpen(true)
+
+    // キャッシュを再作成するボタン
+    const handlePurgeCache = () => {
+        setIsProcessing(true)
+        purgeCache("total", param.series).then(r => setIsProcessing(false))
+    }
 
     return (
         <>
@@ -107,6 +118,9 @@ export default function Series(param){
                 <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
                 <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
             </PageHeader>
+            <UserInfoBox item>
+                <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+            </UserInfoBox>
             <Totals props={param}/>
             {
                 param.series > 9 &&

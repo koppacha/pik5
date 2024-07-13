@@ -759,13 +759,13 @@ export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.
     margin-right: 0.5em;
   }
 `
-export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank}))`
+export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank, $series: props.series}))`
   background-color: ${props => rankCellColor(props.$rank)};
-  width: 14px;
-  height: 14px;
+  width: ${props => props.$series < 10 ? "7px" : "14px"};
+  height: ${props => props.$series < 10 ? "7px" : "14px"};
   margin-right: 1px;
   margin-bottom: 1px;
-  border-radius: 3px;
+  border-radius: 2px;
 `
 export const EventContainer = styled(Box)`
   width: 100%;

@@ -24,9 +24,9 @@ class TotalController extends Controller
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
-            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428)), // 全総合
+            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428), range(901, 908)), // 全総合
             2 => array_merge(range(101, 105), range(201, 230), range(301, 350), range(401, 428)), // 通常総合
-            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 350), range(351, 362)), // 特殊総合
+            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(351, 362)), // 特殊総合
             4 => range(1001, 1299), // 期間限定総合
             10 => [101, 102, 103, 104, 105],
             11 => [101, 102, 103, 104, 105],
@@ -51,7 +51,7 @@ class TotalController extends Controller
             41 => range(401, 412), // ダンドリチャレンジ
             42 => range(413, 418), // ダンドリバトル
             43 => range(419, 428), // 葉っぱ仙人の挑戦状
-            91 => range(901, 908), // 複合・その他
+            91 => range(901, 914), // 複合・その他
 
             // TODO: 個別のイベント総合に相当する配列は将来的にデータベースに基づいて読み込むようにする
 
@@ -149,7 +149,7 @@ class TotalController extends Controller
         // ルールの強制置換
         // 全総合ランキング
         if ($request['id'] === "1") {
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 11, 23, 24, 22, 25, 29, 35, 40, 41, 42, 43, 91];
+            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43, 11, 23, 24, 25, 29, 35, 91];
             $ttl = 1800;
         // 通常総合ランキング
         } elseif ($request['id'] === "2") {
@@ -157,7 +157,7 @@ class TotalController extends Controller
             $ttl = 1800;
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別は対象外）
         } elseif($request['id'] === "3"){
-            $rule = [11, 23, 24, 22, 25, 29, 35, 91];
+            $rule = [11, 23, 24, 25, 29, 35, 91];
             $ttl = 1800;
         // 期間限定ランキング（終了済みの大会のみ対象）
         } elseif($request['id'] === "4"){
@@ -198,7 +198,7 @@ class TotalController extends Controller
         $users = [];
 
         // 対象ステージの数だけループ処理
-        foreach($this->stage_list($request['id']) as $stage) {
+        foreach(self::stage_list($request['id']) as $stage) {
 
             // 各ループごとに初期化する値
             $temp = [];

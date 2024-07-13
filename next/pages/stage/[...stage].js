@@ -1,13 +1,13 @@
 import * as React from "react";
 import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
-import {range, fetcher, useLocale, currentYear, sec2time, dateFormat} from "../../lib/pik5";
+import {range, fetcher, useLocale, currentYear, sec2time, dateFormat, purgeCache, formattedDate} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import Rules from "../../components/rule/Rules";
 import BreadCrumb from "../../components/BreadCrumb";
 import ModalKeyword from "../../components/modal/ModalKeyword";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {PageHeader, RuleBox, RuleWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
@@ -58,7 +58,11 @@ export async function getStaticProps({params}){
     // 記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
     const posts = await res.json() ?? [].json()
-
+    if(res.status >= 300){
+        return {
+            notFound: true,
+        }
+    }
     let info = null, parent = null, stages = [], uniqueId = null
 
     // ステージ情報をリクエスト
@@ -77,6 +81,10 @@ export async function getStaticProps({params}){
             if(res.status < 300) {
                 stages = await res.json()
             }
+        }
+    } else {
+        return {
+            notFound: true,
         }
     }
     if(info?.parent && !rule){
@@ -100,24 +108,11 @@ export async function getStaticProps({params}){
             name: true
         }
     })
-
-    // キャッシュ時間を取得（MM/dd hh:mm:ss）
-    const now = new Date()
-    const formatter = new Intl.DateTimeFormat('ja-JP', {
-        timeZone: 'Asia/Tokyo',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-    });
-    const parts = formatter.formatToParts(now);
-    const formattedDate = `${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
-
+    // キャッシュ時間をリクエスト
+    const fDate = formattedDate()
     return {
         props: {
-            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword, formattedDate
+            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword, fDate
         },
         revalidate: 3600,
     }
@@ -131,7 +126,7 @@ export default function Stage(param){
     const [editOpen, setEditOpen] = useState(false)
 
     // ボタンフラグ
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [isProcessing, setIsProcessing] = useState(false)
 
     const handleClose = () => setOpen(false)
 
@@ -193,20 +188,21 @@ export default function Stage(param){
         ? param.info?.time * 2
         : param.info?.time
 
-    // キャッシュを再作成する
-    const handlePurgeCache = async () => {
-        setIsProcessing(true)
-        const res = await fetch(`/api/revalidate?id=${param.stage}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
-            },
-        })
-        if(res.ok){
-            window.location.reload()
-        } else {
-            setIsProcessing(true)
+    // トークンを取得
+    const [token, setToken] = useState('')
+    useEffect(() => {
+        const fetchToken = async () => {
+            const res = await fetch('/api/token')
+            const { token } = await res.json()
+            setToken(token)
         }
+        fetchToken()
+    }, []);
+
+    // キャッシュを再作成するボタン
+    const handlePurgeCache = () => {
+        setIsProcessing(true)
+        purgeCache("stage", param.stage, token).then(r => setIsProcessing(false))
     }
     return (
         <>
@@ -237,7 +233,7 @@ export default function Stage(param){
                     </UserInfoBox>
                 }
                 <UserInfoBox item>
-                    <span>最終更新：</span>{param.formattedDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                    <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </UserInfoBox>
             </RuleWrapper>
             <RuleList param={param}/>

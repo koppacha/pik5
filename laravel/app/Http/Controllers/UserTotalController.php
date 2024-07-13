@@ -74,12 +74,23 @@ class UserTotalController extends Controller
             }
             $new_data["marks"][$value["rule"]]++;
 
-            // TODO:ピクミン３・４にも適用する（先頭文字で判別？
             if($value["rule"] === 21 || $value["rule"] === 22){
                 if(!isset($new_data["marks"]["20"])){
                     $new_data["marks"]["20"] = 0;
                 }
                 $new_data["marks"]["20"]++;
+            }
+            if($value["rule"] === 31 || $value["rule"] === 32 || $value["rule"] === 33 || $value["rule"] === 36){
+                if(!isset($new_data["marks"]["30"])){
+                    $new_data["marks"]["30"] = 0;
+                }
+                $new_data["marks"]["30"]++;
+            }
+            if($value["rule"] === 41 || $value["rule"] === 42 || $value["rule"] === 43){
+                if(!isset($new_data["marks"]["40"])){
+                    $new_data["marks"]["40"] = 0;
+                }
+                $new_data["marks"]["40"]++;
             }
         }
         return response()->json(
@@ -103,13 +114,23 @@ class UserTotalController extends Controller
             // スコアを加算
             $output[$rule] += $score;
 
-            // タマゴありとなしはピクミン２総合にも加算
             if($rule === 21 || $rule === 22){
                 if (!isset($output["20"])) {
                     $output["20"] = 0;
                 }
-
                 $output["20"] += $score;
+            }
+            if($rule === 31 || $rule === 32 || $rule === 33 || $rule === 36){
+                if(!isset($output["30"])){
+                    $output["30"] = 0;
+                }
+                $output["30"] += $score;
+            }
+            if($rule === 41 || $rule === 42 || $rule === 43){
+                if(!isset($output["40"])){
+                    $output["40"] = 0;
+                }
+                $output["40"] += $score;
             }
         }
         return $output;

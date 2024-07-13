@@ -53,6 +53,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
     const [yomi, setYomi] = useState("")
     const [content, setContent] = useState("")
     const [category, setCategory] = useState("")
+    const [id, setId] = useState(uniqueId)
 
     const now = new Date().toLocaleString()
     const {register,
@@ -73,7 +74,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
                     'keyword': keyword,
                     'category': category || 'other',
                     'stage_id': stageId || 0,
-                    'unique_id': uniqueId || 0,
+                    'unique_id': id || 0,
                     'tag': tag,
                     'yomi': yomi || "",
                     'content': content,
@@ -104,6 +105,7 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
         setYomi(data?.data?.yomi)
         setContent(data?.data?.content)
         setStageId(data?.data?.stage_id)
+        setId(data?.data?.id)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
@@ -133,11 +135,24 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
             </>
         )
     }
+    console.log(session)
     return (
         <>
             <Dialog open={editOpen} onClose={handleEditClose}>
                 <StyledDialogContent>
                     <DialogTitle>{t.keyword.g.editTitle}</DialogTitle>
+                    {(session?.user?.id === "koppacha") &&
+                        <TextField
+                            {...register('uniqueId')}
+                            id="uniqueId"
+                            label="ID"
+                            type="text"
+                            onChange={(e) => setId(e.target.value)}
+                            fullWidth
+                            variant="standard"
+                            defaultValue={uniqueId}
+                        />
+                    }
                     <TextField
                         {...register('category')}
                         select
