@@ -615,7 +615,7 @@ export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count
 export const RenderStagesWrapper = styled(Box)`
   width: 100%;
   overflow-x: scroll;
-  margin: 20px 0;
+  margin: 0;
 `
 export const StageListBox = styled(Box)`
   background-color: ${colors.light.subBack};
@@ -657,6 +657,7 @@ export const UserInfoTotalBox = styled(StageListBox).attrs(props => ({$series: p
 `
 export const PageHeader = styled(Box)`
   margin-bottom: 20px;
+  margin-top: 80px;
 `
 export const MobileFooterMenu = styled(Grid)`
 

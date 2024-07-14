@@ -8,7 +8,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faAnglesLeft, faAngleUp, faHome} from "@fortawesome/free-solid-svg-icons";
 import {faDiscord} from "@fortawesome/free-brands-svg-icons";
 import Link from "next/link";
-import {Box, Grid, Typography} from "@mui/material";
+import {Box, Container, Grid, Typography} from "@mui/material";
 import MobileFooter from "./menu/MobileFooter";
 
 export default function Layout({children}) {
@@ -16,9 +16,9 @@ export default function Layout({children}) {
     return (
         <>
             <HeaderMenu users={children?.props?.users}/>
-                    <OffsetContainer>
+                    <Container className="offset-container">
                         <main>{children}</main>
-                    </OffsetContainer>
+                    </Container>
             <Footer/>
             <MobileFooter users={children?.props?.users}/>
         </>

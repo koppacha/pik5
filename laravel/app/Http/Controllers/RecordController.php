@@ -203,9 +203,7 @@ class RecordController extends Controller
 
         // ステージ情報を取得
         $stage = Stage::where('stage_id', $request['id'])->first();
-        if(!$stage){
-            return response()->json([]);
-        }
+
         if($where === "stage_id") {
             $orderBy = Func::orderByRule($request["id"], $rule);
         } else {

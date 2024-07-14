@@ -27,7 +27,8 @@ export default function PullDownConsole(props){
     return (
         <FormControl>
             <FormHelperText className="form-helper-text">{t.g.console}</FormHelperText>
-            <StyledSelect
+            <Select
+                className="styled-select"
                 defaultValue={consoles}
                 id="select-console"
                 MenuProps={{disableScrollLock: true}}
@@ -39,7 +40,7 @@ export default function PullDownConsole(props){
                                   href={'/'+type+'/'+id+'/'+val+'/'+rule+'/'+year}>{t.console[val]}</MenuItem>
                     )
                 }
-            </StyledSelect>
+            </Select>
         </FormControl>
     )
 }

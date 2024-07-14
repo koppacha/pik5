@@ -49,7 +49,6 @@ import LimitedTotal from "../../components/LimitedTotal";
 import {notFound} from "next/navigation";
 import Button from "@mui/material/Button";
 import useSWR from "swr";
-import RecordMini from "../../components/record/RecordMini";
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
 import RecordPost from "../../components/modal/RecordPost";

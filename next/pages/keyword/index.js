@@ -72,11 +72,13 @@ export default function KeywordIndex(){
             <Head>
                 <title>{`${tl.g.keyword} - ${tl.title[0]}`}</title>
             </Head>
-            <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
-            <StairIcon icon={faStairs}/>
-            <Link href="/keyword">{tl.g.keyword}</Link><br/>
-            <Typography variant="" className="title">{tl.g.keyword}</Typography><br/>
-            <Typography variant="" className="subtitle">{r.g.keyword}</Typography><br/>
+            <Box className="page-header">
+                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                <StairIcon icon={faStairs}/>
+                <Link href="/keyword">{tl.g.keyword}</Link><br/>
+                <Typography variant="" className="title">{tl.g.keyword}</Typography><br/>
+                <Typography variant="" className="subtitle">{r.g.keyword}</Typography><br/>
+            </Box>
             <InfoBox>
             ピクミンシリーズ、ピクチャレ大会、ピクミン界隈にまつわる専門用語や流行語などをなんでも保存しておくためのページです。基本的にどなたでも編集できます。
                 <Box style={{ margin: '1em'}}>

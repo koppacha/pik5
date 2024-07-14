@@ -26,13 +26,13 @@ export default function RuleList({param}){
 
                             // 特殊ステージの場合は総合ランキングへのリンクを表示
                             : (param.rule > 150901) ?
-                                <RuleWrapper item>
-                                    <RuleBox className={"active"}
+                                <Grid className="rule-wrapper" item>
+                                    <Box className={"rule-box active"}
                                              component={Link}
                                              href={'/limited/'+param.rule}>
                                         {t.limited[param.rule]}
-                                    </RuleBox>
-                                </RuleWrapper>
+                                    </Box>
+                                </Grid>
 
                                 // 上記どちらも当てはまらない場合はルールボックスを表示しない
                                 :

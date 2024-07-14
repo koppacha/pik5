@@ -1,23 +1,24 @@
 import { NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import {jwtVerify} from "jose";
 
-export function middleware(request) {
-    const { authorization } = request.headers;
+const secret = new TextEncoder().encode(process.env.API_SECRET)
 
+export async function middleware(request) {
+
+    const {authorization} = request.headers.get('Authorization')
     if (!authorization) {
-        return new NextResponse(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
+        return new NextResponse(JSON.stringify({message: 'Unauthorized'}), {status: 401});
     }
-
     const token = authorization.split(' ')[1];
 
     try {
-        jwt.verify(token, process.env.JWT_SECRET);
+        await jwtVerify(token, secret)
         return NextResponse.next(); // トークンが有効なら次の処理に進む
     } catch (err) {
-        return new NextResponse(JSON.stringify({ message: 'Unauthorized' }), { status: 401 });
+        return new NextResponse(JSON.stringify({message: 'Unauthorized'}), {status: 401});
     }
 }
 
 export const config = {
-    matcher: '/api/revalidate', // ミドルウェアを適用するパスを指定
+    matcher: '/api/auth-test', // ミドルウェアを適用するパスを指定
 };
