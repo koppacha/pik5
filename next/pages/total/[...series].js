@@ -81,7 +81,7 @@ export async function getStaticProps({params}){
         props: {
             stages, series, rule, consoles, year, info, users, fDate
         },
-        revalidate: 600,
+        revalidate: 604800,
     }
 }
 
@@ -112,15 +112,17 @@ export default function Series(param){
             <Head>
                 <title>{t.stage[param.series]+" - "+t.title[0]}</title>
             </Head>
-            <PageHeader>
+            <Box className="page-header">
                 #{param.series}<br/>
                 <BreadCrumb info={param.info} rule={param.rule}/>
                 <Typography variant="" className="title">{ t.stage[param.series] }</Typography><br/>
                 <Typography variant="" className="subtitle">{r.stage[param.series]}</Typography>
-            </PageHeader>
-            <UserInfoBox item>
-                <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
-            </UserInfoBox>
+            </Box>
+            <Grid container style={{marginBottom:"8px"}}>
+                <Grid className="user-info-box" item>
+                    <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                </Grid>
+            </Grid>
             <Totals props={param}/>
             {
                 param.series > 9 &&
@@ -131,14 +133,14 @@ export default function Series(param){
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
-                <RuleWrapper container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
-                    <RuleBox className={"active"}
+                <Grid className="rule-wrapper" container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+                    <Box className={"rule-box active"}
                              onClick={handleOpen}
                              component={Link}
                              href="#">
                         {t.g.rule}
-                    </RuleBox>
-                </RuleWrapper>
+                    </Box>
+                </Grid>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
             <RankingTotal users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>

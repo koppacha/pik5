@@ -27,7 +27,8 @@ export default function PullDownYear(props){
     return (
         <FormControl style={{ marginLeft: 3}}>
             <FormHelperText className="form-helper-text">{t.g.year}</FormHelperText>
-            <StyledSelect
+            <Select
+                className="styled-select"
                 defaultValue={year}
                 id="select-year"
                 MenuProps={{disableScrollLock: true}}
@@ -39,7 +40,7 @@ export default function PullDownYear(props){
                             console+'/'+rule+'/'+val}>{val}</MenuItem>
                     )
                 }
-            </StyledSelect>
+            </Select>
         </FormControl>
     )
 }

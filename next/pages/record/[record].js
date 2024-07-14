@@ -1,7 +1,7 @@
 import * as React from "react";
 import {Typography} from "@mui/material";
 import {useLocale} from "../../lib/pik5";
-import {PageHeader, RecordPostButton, StairIcon} from "../../styles/pik5.css";
+import {PageHeader, RuleBox, StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
@@ -132,13 +132,13 @@ export default function RecordPage({users, data}){
                         <Record key={data.unique_id} data={data}/>
                         {
                             (delFlag()) &&
-                                <RecordPostButton
+                                <RuleBox
                                     className="active"
                                     href="#"
                                     style={{width: 200}}
                                     onClick={handleOpen}>
                                     <FontAwesomeIcon style={{color:"#868686"}} icon={faTrashCan} /> この記録を削除する
-                                </RecordPostButton>
+                                </RuleBox>
                         }
                     </>
             }

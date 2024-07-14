@@ -114,7 +114,7 @@ export async function getStaticProps({params}){
         props: {
             stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword, fDate
         },
-        revalidate: 3600,
+        revalidate: 86400,
     }
 }
 export default function Stage(param){
@@ -192,11 +192,18 @@ export default function Stage(param){
     const [token, setToken] = useState('')
     useEffect(() => {
         const fetchToken = async () => {
-            const res = await fetch('/api/token')
-            const { token } = await res.json()
-            setToken(token)
+            try {
+                const res = await fetch('/api/token')
+                if (!res.ok) {
+                    console.error('Token fetch failed')
+                }
+                const {token} = await res.json()
+                setToken(token)
+            } catch (e) {
+                console.error(e)
+            }
         }
-        fetchToken()
+        fetchToken().then(r => null)
     }, []);
 
     // キャッシュを再作成するボタン
@@ -209,33 +216,33 @@ export default function Stage(param){
             <Head>
                 <title>{stageName+" ("+t.title[param.info?.series]+") - "+t.title[0]}</title>
             </Head>
-            <PageHeader>
+            <Box className="page-header">
                 <BreadCrumb info={param.info} rule={param.rule}/>
                 <Typography variant="" className="subtitle">#{param.stage}</Typography><br/>
                 <Typography variant="" className="title">{stageName}</Typography>{ruleName}<br/>
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
                 <Typography variant="" className="subtitle"><RuleInfo/></Typography><br/>
-            </PageHeader>
-            <RuleWrapper container item xs={12} style={{marginTop: "24px",marginBottom:"16px"}}>
+            </Box>
+            <Grid className="rule-wrapper" container item xs={12}>
                 {countdown > 0 &&
-                    <UserInfoBox item>
+                    <Grid className="user-info-box" item>
                         <span>制限時間：</span>{sec2time(countdown)}
-                    </UserInfoBox>
+                    </Grid>
                 }
                 {param.info?.pikmin > 0 &&
-                    <UserInfoBox item>
+                    <Grid className="user-info-box" item>
                         <span>ピクミン：</span>{param.info?.pikmin}
-                    </UserInfoBox>
+                    </Grid>
                 }
                 {param.info?.treasure > 0 &&
-                    <UserInfoBox item>
+                    <Grid className="user-info-box" item>
                         <span>お宝価値：</span>{param.info?.treasure}
-                    </UserInfoBox>
+                    </Grid>
                 }
-                <UserInfoBox item>
+                <Grid className="user-info-box" item>
                     <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
-                </UserInfoBox>
-            </RuleWrapper>
+                </Grid>
+            </Grid>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             <Grid container style={{marginBottom:'0.25em'}}>
@@ -251,12 +258,12 @@ export default function Stage(param){
                                 style={{alignItems: "center"}}
                                 info={param.info} rule={param.rule} console={param.consoles}/>
                     }
-                    <RuleBox className={"active"}
+                    <Box className={"rule-box active"}
                              onClick={handleOpen}
                              component={Link}
                              href="#">
                         <span>{t.g.rule}</span>
-                    </RuleBox>
+                    </Box>
                 </RuleWrapper>
             </Grid>
             <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>

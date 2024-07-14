@@ -10,7 +10,7 @@ import {RuleBox, RuleWrapper} from "../../styles/pik5.css";
 
 export default function Totals(props){
 
-    const { series, consoles:console, info, year } = props.props
+    const { series, consoles, info, year } = props.props
 
     const {t} = useLocale()
 
@@ -27,23 +27,23 @@ export default function Totals(props){
             totals.push(30, 31, 32, 33, 36, 34, 35)
             break
         case 4:
-            totals.push(40, 41, 42, 43)
+            totals.push(40, 41, 42, 43, 44, 45, 46)
             break
         default:
             totals.push(1, 2, 3) // TODO: 期間限定を解禁したら4以降を追加する
     }
 
     return (
-        <RuleWrapper container>
+        <Grid className="rule-wrapper" container>
         {
             totals.map(val =>
-                <RuleBox item key={val} className={(Number(series) === val)&&"active"}
+                <Grid item key={val} className={`rule-box ${(Number(series) === val)&&"active"}`}
                      component={Link}
-                     href={'/total/'+val+'/'+console+'/'+val+'/'+year}>
-                    {t.rule[val]}
-                </RuleBox>
+                     href={'/total/'+val+'/'+consoles+'/'+val+'/'+year}>
+                    {(info.series === 4) ? t.ru[val] : t.rule[val]}
+                </Grid>
             )
         }
-        </RuleWrapper>
+        </Grid>
     )
 }

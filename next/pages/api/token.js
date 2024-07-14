@@ -1,13 +1,14 @@
-import jwt from 'jsonwebtoken';
+import {SignJWT} from "jose";
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
     if (req.method === 'GET') {
-        const token = jwt.sign(
-            { purpose: 'purge-cache' },
-            process.env.API_SECRET,
-            { expiresIn: '5m' }
-        );
-        res.status(200).json({ token });
+        const secret = new TextEncoder().encode(process.env.API_SECRET)
+
+        const token = await new SignJWT({purpose: 'purge-cache'})
+            .setProtectedHeader({alg: 'HS256'})
+            .setExpirationTime('5m')
+            .sign(secret)
+        res.status(200).json({token});
     } else {
         res.setHeader('Allow', ['GET']);
         res.status(405).end(`Method ${req.method} Not Allowed`);

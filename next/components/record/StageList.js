@@ -22,7 +22,7 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
     }
 
     return (
-        <StageListWrapper count={stages?.length}>
+        <Box className="stage-list-wrapper" count={stages?.length}>
             <Grid container style={{minWidth:(stages?.length > 16) ? "1200px" : "100%"}}
                   columns={{xs:(stages?.length > 16) ? 10 : 4, lg : 10}}>
                 {
@@ -30,13 +30,13 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
                         return (
                             <Grid style={{whiteSpace:"nowrap"}} key={stage} item xs={1}>
                                 <Link key={stage} href={'/stage/'+stageUrlOutput(stage, consoles, rule, year, parent)}>
-                                    <StageListBox className={(Number(currentStage) === stage)&&"active"}>#{stage}<br/>{stageNameFormat(stage)}</StageListBox>
+                                    <Box className={`stage-list-box ${(Number(currentStage) === stage)&&"active"}`}>#{stage}<br/>{stageNameFormat(stage)}</Box>
                                 </Link>
                             </Grid>
                         )}
                     )
                 }
             </Grid>
-        </StageListWrapper>
+        </Box>
     )
 }
