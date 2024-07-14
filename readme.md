@@ -4,6 +4,7 @@
 ---
 ## このプロジェクトについて
 * 任天堂よりリリースされたゲームシリーズ『ピクミン』のスコアアタックランキング投稿サイトです。
+* 本番環境：https://pik5.net
 ---
 ## このソースコードについて
 * ソースコードは公開していますが、管理人が作成したすべてのファイルの著作権は管理人が保有します。 無断転載、二次利用はご遠慮ください。
@@ -136,7 +137,7 @@ CSS-in-JSをインラインで使う場合はstyle propを使う。（＊sxはGr
 const pikmin = pellet ? <Oniyon/> : undefined // これはダメ
 
 const pikmin = pellet && <Oniyon/> // 比較演算子&&は左辺がtrue相当なら右辺を返す
-const pikmin = pellet || <Oniyon/> // 比較演算子||は左辺がfalse相当なら右辺を返す
+const pikmin = pellet || <Oniyon/> // 比較演算子||は左辺がfalse相当なら右辺を返す（PHPの?:に相当）
 
 // 状況に応じてこっちも使おう
 const pikmin = pellet ?? <Oniyon/> // Null合体演算子??は左辺がnullかundefinedなら右辺を返す
@@ -144,13 +145,13 @@ const pikmin = pellet ?? <Oniyon/> // Null合体演算子??は左辺がnullかun
 
 データベースを再作成する場合のコマンド
 ```shell
-# まずテーブルを空にする
+# MYSQLコンテナから直接テーブルを空にする場合
 docker compose exec mysql bash # MySQLコンテナでログイン
 truncate table stages;
 ```
 
 ```shell
-# クラスを指定してSeederを再実行する
+# クラスを指定してSeederを再実行する場合
 docker compose exec laravel bash
 php artisan db:seed --class=StageCsvSeeder
 ```
@@ -236,6 +237,12 @@ $ git clean -d -f .
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 ```
+Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
+というエラーが出た場合、おそらくサーバーサイドからfetch()を含むコードをコピペした際の自動インポートが原因。以下のコードを削除で直る。
+```javascript
+import fetch from "node-fetch";
+```
+
 ---
 ## バージョン履歴
 ### ver.1.00〜2.78（2006/09/01〜2023/07/20）
@@ -321,7 +328,7 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 * ピクミン２のSwitch版、海外版におけるリージョン違いに対応した
 * ピクミン２チャレンジモード全ステージ全滅RTAを追加
 
-### ver.3.09（2024/07/13）
+### ver.3.09（2024/07/15）
 * イベントカレンダーとお知らせカラムを廃止し、トップメニューと縛りルール投稿はダッシュボードへ統合
 * スマホメニューの各種不具合を修正
 * ステージ情報などのヘッダー要素の縦幅を調整してスマホ表示時のUXを改善
@@ -333,8 +340,8 @@ $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 * チャレンジ総合70.1万RTA、タイトル画面全滅RTA、本編1000匹RTAを追加
 * ダンドリチャレンジ、ダンドリバトル、葉っぱ仙人の挑戦状にゲキカラモードを追加
 * 権限がある場合、キーワードをID指定して新規作成できるようにした
-* オンデマンドISR機能（投稿タイミングでのみキャッシュ更新）を試験的に導入した
+* オンデマンドISR機能（更新ボタン押下か投稿タイミングでのみキャッシュ更新）を試験的に導入した
 * 全総合のマーカーの大きさを４分の１に変更した
 
 ### LICENCE
-Copyright (c) 2006 - 2023 koppacha
+Copyright (c) 2006 - 2024 koppacha (Twitter@koppachappy)

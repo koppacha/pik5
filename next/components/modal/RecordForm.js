@@ -140,14 +140,48 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             formData.append('post_comment', comment)
             formData.append('created_at', now)
 
+            // APIへ送信
             const res = await fetch('/api/server/post', {
                 method: 'POST',
                 body: formData,
             })
-
+            // 投稿後の処理
             if (res.status < 300) {
+                // フォームを閉じる
                 setImg(null)
                 setOpen(false)
+
+                // キャッシュクリア用のトークンをリクエスト
+                const tokenRes = await fetch('/api/token')
+                const { token } = await tokenRes.json()
+
+                // ステージ別ページのキャッシュをクリア
+                const resStage = await fetch(`/api/revalidate?page=stage&id=${info.stage_id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                })
+                if(resStage.ok){
+                    window.location.reload()
+                }
+                // 総合ページのキャッシュをクリア
+                const resTotal = await fetch(`/api/revalidate?page=total&id=${rule}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                })
+                // ユーザーページのキャッシュをクリア
+                const resUser = await fetch(`/api/revalidate?page=total&id=${session.user.id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                })
+                if(!resTotal.ok || !resUser.ok){
+                    console.error("User or Total Page Cache Clear Failed")
+                }
             }
         }
         // ここまで送信処理

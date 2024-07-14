@@ -52,13 +52,13 @@ export default function Rules(props){
                 const screenName = (normalRankings.includes(val)) ? t.rule[0] : t.rule[val]
 
                 return (
-                    <RuleWrapper item key={val}>
-                        <RuleBox className={(Number(rule) === val)&&"active"}
+                    <Grid className="rule-wrapper" item key={val}>
+                        <Box className={`rule-box ${(Number(rule) === val)&&"active"}`}
                                  component={Link}
                                  href={'/'+info?.type+'/'+info?.stage_id+'/'+console+'/'+val+'/'+year}>
                             {screenName}
-                        </RuleBox>
-                    </RuleWrapper>
+                        </Box>
+                    </Grid>
                 )
             })
         }

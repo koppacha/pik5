@@ -53,7 +53,7 @@ export default function App(props) {
     return (
         <>
             <Script strategy="afterInteractive"
-                    src="https://www.googletagmanager.com/gtag/js?id=${ga}"/>
+                    src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
             <Script id="gtag-init" strategy="afterInteractive"
                     dangerouslySetInnerHTML={{
                         __html: `

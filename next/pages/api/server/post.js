@@ -5,7 +5,7 @@ import {getServerSession} from "next-auth/next";
 const formidable = require("formidable");
 import fetch from "node-fetch";
 import FormData from "form-data";
-import * as fs from "fs";
+import fs from "fs";
 import {authOptions} from "../auth/[...nextauth]";
 import {getIpAddress, prismaLogging} from "./[...query]";
 
@@ -51,13 +51,6 @@ export default async function handler(req, res){
                     const response = await fetch("http://laravel:8000/api/record", {
                         method: "POST",
                         body: formData,
-                    })
-                    // キャッシュをクリア
-                    const res = await fetch(`/api/revalidate?id=${fields.stage_id[0]}`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${process.env.NEXT_PUBLIC_API_SECRET}`,
-                        },
                     })
                     // レスポンスをJSONに変換
                     const data = await response.json()

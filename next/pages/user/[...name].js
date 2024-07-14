@@ -1,8 +1,8 @@
-import {Box, Grid, Tooltip, Typography} from "@mui/material";
+import {Box, Button, Grid, Tooltip, Typography} from "@mui/material";
 import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
-import {currentYear, dateFormat, fetcher, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
@@ -18,6 +18,9 @@ import {
     UserInfoTotalBox
 } from "../../styles/pik5.css";
 import Score from "../../components/record/Score";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRotate} from "@fortawesome/free-solid-svg-icons";
+import {useState} from "react";
 
 export async function getStaticPaths(){
     return {
@@ -68,11 +71,13 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
+    // キャッシュ時間をリクエスト
+    const fDate = formattedDate()
     return {
         props: {
-            users, user, userName, consoles, rule, year, info, marker, posts
+            users, user, userName, consoles, rule, year, info, marker, posts, fDate
         },
-        revalidate: 180,
+        revalidate: 604800,
     }
 }
 // レンダラー本体（フロントサイド）
@@ -80,6 +85,14 @@ export default function Stage(param){
 
     const {t} = useLocale()
     const firstPostDate = new Date(param.info[0].oldest_created_at)
+
+    const [isProcessing, setIsProcessing] = useState(false)
+
+    // キャッシュを再作成するボタン
+    const handlePurgeCache = () => {
+        setIsProcessing(true)
+        purgeCache("user", param.user).then(r => setIsProcessing(false))
+    }
 
     // マーカーテーブルに出力するルール一覧
     const ruleList = [10, 11, 20, 21, 22, 23, 24, 25, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 91]
@@ -156,13 +169,18 @@ export default function Stage(param){
             <Head>
                 <title>{param.userName+" - "+t.title[0]}</title>
             </Head>
-            {t.stage.user}<br/>
-            <Typography variant="" className="title">{ param.userName }</Typography><br/>
-            <Typography variant="" className="subtitle">@{param.user}</Typography>
-            <Grid container margin="20px 0">
-                <UserInfoBox item><span>総投稿数</span><br/>{param.info[0].cnt}</UserInfoBox>
-                <UserInfoBox item><span>初投稿日</span><br/>{dateFormat(firstPostDate)}</UserInfoBox>
-            </Grid>
+            <Box className="page-header">
+                {t.stage.user}<br/>
+                <Typography variant="" className="title">{ param.userName }</Typography><br/>
+                <Typography variant="" className="subtitle">@{param.user}</Typography>
+                <Grid container>
+                    <UserInfoBox item><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
+                    <UserInfoBox item><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
+                    <UserInfoBox item>
+                        <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                    </UserInfoBox>
+                </Grid>
+            </Box>
             <TotalScoreTable/>
             <Grid container marginBottom="20px">
                 <Grid item xs={12}>
