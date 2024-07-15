@@ -20,7 +20,7 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362), range(901, 907));
+        $rta_stages = array_merge(range(245, 254), range(351, 362), range(901, 914));
 
         if(is_numeric($id)){
             if(in_array((int)$id, $rta_stages, true)){
@@ -31,7 +31,7 @@ class Func extends Facade
         return ['score','DESC'];
     }
     // 対象ステージ群のうち最大参加者数を求める
-    public static function memberCount ($total = 0, $option = [0, 0, 2023]): array
+    public static function memberCount ($total = 0, $option = [0, 0, 2024]): array
     {
         [$console, , $year] = $option;
 
