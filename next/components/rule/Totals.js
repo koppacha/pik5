@@ -34,16 +34,18 @@ export default function Totals(props){
     }
 
     return (
-        <Grid className="rule-wrapper" container>
-        {
-            totals.map(val =>
-                <Grid item key={val} className={`rule-box ${(Number(series) === val)&&"active"}`}
-                     component={Link}
-                     href={'/total/'+val+'/'+consoles+'/'+val+'/'+year}>
-                    {(info.series === 4) ? t.ru[val] : t.rule[val]}
-                </Grid>
-            )
-        }
-        </Grid>
+        <Box style={{overflowX: 'auto', whiteSpace: 'nowrap'}}>
+            <Grid container className="rule-wrapper" wrap="nowrap">
+            {
+                totals.map(val =>
+                    <Grid item key={val} className={`rule-box ${(Number(series) === val)&&"active"}`}
+                         component={Link}
+                         href={'/total/'+val+'/'+consoles+'/'+val+'/'+year}>
+                        {(info.series === 4) ? t.ru[val] : t.rule[val]}
+                    </Grid>
+                )
+            }
+            </Grid>
+        </Box>
     )
 }

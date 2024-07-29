@@ -23,6 +23,7 @@ import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
 import {useRouter} from "next/router";
+import {Swiper} from "./Swiper";
 
 export default function Record({mini, parent, data, stages, series, consoles, year, prevUser}) {
 
@@ -53,72 +54,6 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const stageUrl = stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
     const stageLink = (stageUrl) ? '/stage/'+stageUrl : ""
 
-    const SwiperTooltip = ({ message }) => (
-        <div style={{ position: 'absolute', top: '-65px', left: '15px', background: '#e0e0e0', color: '#444444', padding: '10px', borderRadius: '8px' }}>
-            {message ?? ""}
-        </div>
-    )
-
-    // スワイプメニュー
-    const Swiper = ({ children }) => {
-        const [{x, bg, scale, justifySelf}, api] = useSpring(() => ({
-            x: 0,
-            scale: 1,
-            justifySelf: 'center',
-        }))
-        const [showTooltip, setShowTooltip] = useState(false);
-        const [tooltipMessage, setTooltipMessage] = useState('');
-        const bind = useDrag(({ active, movement: [mx], direction: [xDir] }) => {
-            if(!active){
-                if(mx > 100){
-                    setTimeout(() => {
-                        router.push(userPageUrl).then(setShowTooltip(false))
-                    }, 1000)
-                } else if(mx < -100){
-                    setTimeout(() => {
-                        if(stageLink){
-                            router.push(stageLink).then(setShowTooltip(false))
-                        }
-                    }, 1000)
-                } else {
-                    api.start({x: 0, scale: 1})
-                }
-            } else {
-                if (Math.abs(mx) > 0 && Math.abs(mx) < 100) {
-                    setTooltipMessage(mx > 0 ? `${data.user_name}さんのページへ→` : stageLink ? `←${t.stage[data.stage_id]}のページへ` : "移動できません！");
-                    setShowTooltip(true);
-                    setTimeout(() => {
-                        setShowTooltip(false);
-                    }, 1000)
-                } else {
-                    setShowTooltip(false);
-                }
-                api.start({
-                    x: mx,
-                    scale: active ? 1.1 : 1,
-                    immediate: name => active && name === 'x',
-                });
-            }
-        })
-        const aSize = x.to({
-            map: Math.abs,
-            range: [50, 300],
-            output: [0.5, 1],
-            extrapolate: 'clamp',
-        })
-        return (
-            <animated.div {...bind()} style={{
-                touchAction: 'none',
-                position: 'relative'
-            }}>
-                <animated.div style={{scale: aSize, justifySelf}}/>
-                <animated.div style={{x, scale}}>
-                    {children}
-                </animated.div>
-                {showTooltip && <SwiperTooltip message={tooltipMessage}/>}
-            </animated.div>
-        )
-    }
     // 比較値を整形する
     let compare;
     if (!Number.isNaN(data.compare)) {
@@ -143,7 +78,8 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                              data?.post_rank <  11 ? "rank4" :
                              data?.post_rank <  21 ? "rank11": "rank21"
     return (
-        <Swiper>
+        // <Swiper userPageUrl={userPageUrl} stageLink={stageLink} router={router}>
+        <>
             <RecordContainer className={`record-container ${className}`} container rank={data?.post_rank ?? 20} team={data?.team ?? 0}
                 style={{borderLeft:      `10px solid ${currentRankFrontColor}`,
                         borderBottom:    `1px solid ${currentRankFrontColor}`,
@@ -254,6 +190,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                     </Grid>
                 </Grid>
             </RecordContainer>
-        </Swiper>
+        {/*</Swiper>*/}
+        </>
     )
 }

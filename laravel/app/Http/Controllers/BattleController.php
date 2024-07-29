@@ -27,37 +27,25 @@ class BattleController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        // 結果に基づいてレートを計算する
-        $p1_rate = $request['1p_rate'] ?: 1500;
-        $p2_rate = $request['2p_rate'] ?: 1500;
-
-        $rating = new Rating($p1_rate, $p2_rate, Rating::LOST, Rating::WIN);
-        $result = $rating->getNewRatings();
-
-        $p1_rate = $result['a'];
-        $p2_rate = $result['b'];
+        // 結果に基づいてレート計算する
+        // TODO: データがここに来た段階ではプレイヤーごとに行を分割しない方がいいかも
+        // TODO: プレイヤー数が不定なのでカラムが一定にならない問題
 
         try {
             $posts = new Battle();
             $posts->fill([
-                'stage_id' => $request['stage_id'],
+                'stage_id' => null,
+                'battle_id' => null,
+                'player' => null,
                 'rule' => 34,
-                'result' => 2, // 無効試合＝0、1P勝利＝1、2P勝利＝2、引き分け＝3
-                '1p_user_id' => $request['1p_user_id'],
-                '1p_conf' => $request['1p_conf'],
-                '1p_score' => $request['1p_score'],
-                '1p_rate' => $p1_rate,
-                '2p_user_id' => $request['2p_user_id'],
-                '2p_conf' => $request['2p_conf'],
-                '2p_score' => $request['2p_score'],
-                '2p_rate' => $p2_rate,
-                'unique_id' => "301".sprintf('%06d',random_int(0, 999999)),
-                'user_ip' => $request->ip(),
-                'user_host' => $request->host(),
-                'user_agent' => $request->header('User-Agent'),
-                'img_url' => null,
-                'video_url' => $request['video_url'] ?: "",
-                'flag' => 0
+                'point' => null,
+                'result_point' => null,
+                'rank' => null,
+                'pikmin' => null,
+                'user_id' => null,
+                'dandori_pts' => null,
+                'com_dandori_pts' => null,
+                'flg' => 0,
             ]);
             $posts->save();
 

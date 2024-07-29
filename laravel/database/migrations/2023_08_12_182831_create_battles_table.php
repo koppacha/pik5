@@ -15,19 +15,19 @@ return new class extends Migration
     {
         Schema::create('battles', static function (Blueprint $table) {
             $table->id();
-            $table->string('unique_id');
-            $table->string('stage_id');
-            $table->integer('flag');
+            $table->string('session_id');
+            $table->integer('battle_id');
+            $table->integer('player');
             $table->integer('rule');
-            $table->integer('winner');
-            $table->string('1p_user_id');
-            $table->integer('1p_conf');
-            $table->integer('1p_score');
-            $table->integer('1p_rate');
-            $table->string('2p_user_id');
-            $table->integer('2p_conf');
-            $table->integer('2p_score');
-            $table->integer('2p_rate');
+            $table->float('point');
+            $table->float('result_point');
+            $table->integer('rank');
+            $table->integer('stage_id');
+            $table->integer('pikmin');
+            $table->string('user_id');
+            $table->integer('dandori_pts');
+            $table->integer('com_dandori_pts');
+            $table->integer('flg');
             $table->timestamps();
         });
     }

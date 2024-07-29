@@ -1,7 +1,5 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from "next-auth/providers/credentials"
-import DiscordCastomProvider from "next-auth/providers/discord"
-import TwitterProvider from "next-auth/providers/twitter"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"

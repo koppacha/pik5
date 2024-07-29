@@ -8,10 +8,9 @@ import prisma from "../../lib/prisma";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faPaperPlane, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
-import {getSession, useSession} from "next-auth/react";
+import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
-import {logger} from "../../lib/logger";
 
 export async function getStaticPaths(){
     return {

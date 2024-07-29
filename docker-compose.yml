@@ -33,24 +33,6 @@ services:
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
 
-  wiki:
-    image: ghcr.io/requarks/wiki:2.5
-    container_name: wiki
-    depends_on:
-      - mysql
-    environment:
-      - DB_HOST=mysql
-      - DB_TYPE='mysql'
-      - DB_PORT=3306
-      - DB_USER=root
-      - DB_PASS=${DB_ROOT_PASS}
-      - DB_NAME='wiki'
-    restart: unless-stopped
-    ports:
-      - "3006:3000"
-    volumes:
-      - ./wiki:/wiki
-
   mysql:
     container_name: mysql
     image: mysql:8.0
@@ -93,6 +75,7 @@ services:
       - ./next:/var/www/next
     ports:
       - "3005:3000"
+      - "5555:5555"
     restart:
       always
     logging:

@@ -7,9 +7,7 @@ export default async function handle(req, res) {
     if (req.method === "POST") {
         await handlePOST(res, req);
     } else {
-        throw new Error(
-            `The HTTP ${req.method} method is not supported at this route.`,
-        );
+        return res.status(400).json({error: "不正なリクエストです。"})
     }
 }
 
@@ -20,6 +18,9 @@ const hashPassword = (password) => {
 
 async function handlePOST(res, req) {
 
+    if(!req.body.userId){
+        return res.status(400).json({error: "ユーザーIDが入力されていません。"})
+    }
     const userSearch = await prisma.user.findFirst({
         where: {
             userId: req.body.userId
@@ -27,12 +28,11 @@ async function handlePOST(res, req) {
     })
     if(userSearch){
         // ユーザーIDの重複は弾く
-        res.status(500).end()
-
+        return res.status(400).json({error: "ユーザーIDが重複しています。"})
     } else {
         const user = await prisma.user.create({
             data: {...req.body, password: hashPassword(req.body.password)},
-        });
+        })
         res.status(200).json(user);
     }
 }
