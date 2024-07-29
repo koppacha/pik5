@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\ArenaController;
+use App\Http\Controllers\BattleController;
 use App\Http\Controllers\GetImageController;
-use App\Http\Controllers\GetPasswordController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\NewRecordController;
 use App\Http\Controllers\PostCountController;
@@ -110,7 +110,10 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('arena', [ArenaController::class, 'index']);
     Route:: get('arena/update/{team}/{stage?}/{time?}', [ArenaController::class, 'update']);
 });
-
+// バトル大会記録用API
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route:: post('battle', [BattleController::class, 'create']);
+});
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('max', [Func::class, 'memberCount']);

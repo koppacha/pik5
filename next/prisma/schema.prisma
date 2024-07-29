@@ -11,18 +11,18 @@ datasource db {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -38,25 +38,26 @@ model Session {
 }
 
 model User {
-  id               String    @id @default(cuid())
-  name             String?
-  role             String?
-  image            String?
-  userId           String?   @unique
-  email            String?   @unique
-  emailVerified    DateTime?
-  password         String?   @db.VarChar(255)
-  accounts         Account[]
-  sessions         Session[]
+  id            String    @id @default(cuid())
+  name          String?
+  role          String?
+  image         String?
+  userId        String?   @unique
+  email         String?   @unique
+  emailVerified DateTime?
+  password      String?   @db.VarChar(255)
+  accounts      Account[]
+  sessions      Session[]
+  date          DateTime  @default(now())
 }
 
 model Log {
-  id               Int       @id @default(autoincrement())
-  userId           String?
-  page             String?
-  query            String?   @db.MediumText
-  ip               String?
-  date             DateTime  @default(now())
+  id     Int      @id @default(autoincrement())
+  userId String?
+  page   String?
+  query  String?  @db.MediumText
+  ip     String?
+  date   DateTime @default(now())
 }
 
 model VerificationToken {
