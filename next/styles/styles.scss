@@ -134,16 +134,16 @@ body {
     }
 }
 
-.info-box {
-    border: 1px solid $light-back;
-    padding: 2em;
-    margin: 2em;
-    border-radius: 8px;
-
-    [data-theme='dark'] & {
-        border: 1px solid $dark-back;
-    }
-}
+//.info-box {
+//    border: 1px solid $light-back;
+//    padding: 2em;
+//    margin: 2em;
+//    border-radius: 8px;
+//
+//    [data-theme='dark'] & {
+//        border: 1px solid $dark-back;
+//    }
+//}
 
 .form-helper-text {
     color: $light-front;
@@ -317,6 +317,8 @@ body {
 .rule-wrapper {
     margin-bottom: 10px;
     margin-top: 14px;
+    overflow-x: scroll;
+    white-space: nowrap;
 
     @media(max-width: 600px) {
         margin-bottom: 15px;
@@ -324,6 +326,7 @@ body {
 
 }
 .rule-box {
+    display: inline-block;
     border-radius: 4px;
     padding: 12px 6px;
     margin-right: 6px;
@@ -534,20 +537,6 @@ body {
 .stage-list-wrapper {
     margin-bottom: 2em;
     width: 100%;
-
-//    ${
-//      function (props) {
-//          // ステージ数が17個以上なら1200px以下表示時オーバーフロー領域をスクロール表示する
-//          if (props.$count > 16) {
-//              return css`
-//                  @media (max-width: 1200px) {
-//                      overflow: scroll;
-//                      white-space: nowrap;
-//                  }
-//    `
-//}
-//}
-//}
 }
 .render-stages-wrapper {
     width: 100%;
@@ -602,6 +591,9 @@ body {
 .page-header {
     margin-top: 80px;
     margin-bottom: 20px;
+    @media(max-width: 600px) {
+        margin-top: 4px;
+    }
 }
 .mobile-footer-menu {
     @media(min-width: 601px) {

@@ -314,6 +314,7 @@ export const StyledTextField = styled(TextField)`
     border-radius: 4px;
     input {
         color: ${colors.light.front};
+        padding: 6px;
     }
     label {
         color: ${colors.light.front};
@@ -384,6 +385,9 @@ export const InfoBox = styled(Box)`
 `
 export const RuleWrapper = styled(Grid)`
   margin-bottom: 10px;
+  min-width: 1200px;
+  overflow: scroll;
+  white-space: nowrap;
   
   ${sp`margin-bottom: 15px;`}
 `
@@ -592,6 +596,9 @@ export const AuthWindow = styled(Grid)`
     color: ${colors.dark.front};
     background-color: ${colors.dark.back};
   }
+`
+export const BattleUserContainer = styled(Grid).attrs(props => ({$rank: props.rank}))`
+    border-bottom: 4px solid ${props => rankCellColor(props.$rank)};
 `
 export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
 

@@ -64,23 +64,25 @@ export default function Register() {
     });
 
     async function onSubmit(values) {
-        const body = { ...values };
+        if(!values.userId){
+            setMessage("ユーザーIDが入力されていません。")
+            return
+        }
+        const body = { ...values }
         const res = await fetch(`/api/user/create`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(body),
-        });
-        reset();
+        })
         if(res.status < 300) {
-            router.push(
+            await router.push(
                 `login${
                     router.query.callbackUrl
                         ? `?callbackUrl=${router.query.callbackUrl}`
-                        : ""
-                }`,
-            )
+                        : ""}`)
         } else {
-            setMessage("すでに登録されているユーザーIDです。");
+            const error = await res.json()
+            setMessage(error.error ||"不明なエラーが発生しています。");
         }
     }
     return (
@@ -93,8 +95,8 @@ export default function Register() {
                     <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
                 </Box>
                 <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
-                    <AuthWindow item>
-                        <Typography variant="strong">ピクチャレ大会へようこそ</Typography><br/>
+                    <AuthWindow className="auth-window" item>
+                        <Typography variant="strong" style={{margin:"10px",fontSize:"2em",lineHeight:"2em"}}>ピクチャレ大会へようこそ</Typography><br/>
                         <Box className="form-helper-text">
                             <TextField
                                 {...register('name')}
@@ -125,8 +127,8 @@ export default function Register() {
                             /><br/>
                             <AuthButton onClick={handleSubmit(onSubmit)}>{t.g.submit}</AuthButton>
                         </Box>
-                        <Box style={{marginTop:"30px",width:"100%"}}>
-                            {message && <>{message}</>}
+                        <Box style={{margin:"30px",color:"red"}}>
+                            {message && <>＊{message}</>}
                         </Box>
                         <Box style={{border:"1px solid #fff",borderRadius:"8px",padding:"10px",width:"100%"}}>
                             ユーザー名はランキングに表示される名前です。今後変更できるようになる予定です。<br/>

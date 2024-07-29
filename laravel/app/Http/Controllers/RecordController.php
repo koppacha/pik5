@@ -220,6 +220,7 @@ class RecordController extends Controller
             $rule = [40, 41, 42, 43];
 
         } elseif(!$rule && $where === "stage_id") {
+            // TODO: 一部のページ読み込み時にparentが存在しないエラーを吐いている
             $rule = [Stage::where('stage_id', $request['id'])->first()->parent];
 
         } elseif(!$rule && $where === "user_id") {

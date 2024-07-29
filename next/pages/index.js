@@ -120,7 +120,7 @@ export default function Home({users, prev}) {
                               {
                                   quickLinks.map(i =>
                                       (
-                                          <Grid item key={i} xs={3} sm={2} component={Link} href={i[1]}>
+                                          <Grid item key={i} xs={i ? 3 : 6} sm={2} component={Link} href={i[1]}>
                                               <CellBox style={{padding: "10px 0"}}>
                                                   {i[0]}
                                               </CellBox>
