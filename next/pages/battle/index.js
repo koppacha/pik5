@@ -51,6 +51,7 @@ export default function Battle() {
             return selectedStages
         }
     }
+    // セッションを追加するボタン
     const handleButtonClick = () => {
         const [selectedItemA, selectedItemB] = getRandomStages(arrayA, arrayB, history, setHistory, historyA, setHistoryA, historyB, setHistoryB)
         const battleId = generateRandomHex(9)
@@ -71,6 +72,7 @@ export default function Battle() {
         }
         setGrids([newGrid, ...grids])
         setCount(count + 1)
+        // TODO: 取得内容はAPIのリクエストに基づく
     }
     const handleScoreChange = (gridId, playerName, field, value) => {
         setGrids(prevGrids => {
@@ -109,31 +111,28 @@ export default function Battle() {
             const latestGrid = prevGrids[0]
             let currentPool = 0
 
-            // プレイヤーごとのレートを計算
             const updatedPlayers = latestGrid.players.map(player => {
                 const contribution = Math.round(player.initialRate / 10)
                 currentPool += contribution
                 return { ...player, rate: player.initialRate - contribution }
             })
-
             setPool(currentPool)
 
             const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC)
             const rewardRates = [0.4, 0.3, 0.2, 0.1];
 
-            // Calculate rewards based on ranks
-            let currentIndex = 0
-            while (currentIndex < sortedPlayers.length && currentIndex < 4) {
-                const sameRankCount = sortedPlayers.filter(p => p.rank === sortedPlayers[currentIndex].rank).length
-                const totalRewardRate = rewardRates.slice(currentIndex, currentIndex + sameRankCount).reduce((acc, rate) => acc + rate, 0)
+            let idx = 0
+            while (idx < sortedPlayers.length && idx < 4) {
+                const sameRankCount = sortedPlayers.filter(p => p.rank === sortedPlayers[idx].rank).length
+                const totalRewardRate = rewardRates.slice(idx, idx + sameRankCount).reduce((acc, rate) => acc + rate, 0)
                 const reward = Math.round(currentPool * totalRewardRate / sameRankCount)
 
                 sortedPlayers.forEach((player) => {
-                    if (player.rank === sortedPlayers[currentIndex].rank) {
+                    if (player.rank === sortedPlayers[idx].rank) {
                         player.rate += reward
                     }
                 })
-                currentIndex += sameRankCount
+                idx += sameRankCount
             }
 
             const finalPlayers = updatedPlayers.map(player => ({
@@ -141,15 +140,12 @@ export default function Battle() {
                 rate: sortedPlayers.find(p => p.name === player.name).rate,
                 rank: sortedPlayers.find(p => p.name === player.name).rank,
             }));
-
-            // Update player rates in the global state
             const newRates = { ...rates }
             finalPlayers.forEach(player => {
                 newRates[player.name] = player.rate
             })
             setRates(newRates)
 
-            // 更新されたグリッドを戻す
             return prevGrids.map((grid, index) => {
                 if (index === 0) {
                     return { ...latestGrid, players: finalPlayers }
@@ -157,15 +153,21 @@ export default function Battle() {
                 return grid
             })
         })
+        // TODO: 直上のsetGridが成功していたらAPIへ計算結果を送信する
     }
+    // TODO: APIへ送信する処理
     const onSubmit = async (grid) => {
         for (const player of grid.players) {
             const payload = {
+                sessionId: sessionId,
                 battleId: grid.battleId,
+                stageId: grid.itemA,
+                itemB: grid.itemB,
                 scoreA: player.scoreA,
                 scoreB: player.scoreA,
-                scoreC: player.scoreA,
-                rank: player.rank
+                rank: player.rank,
+                initialRate: player.initialRate,
+                rate: player.rate,
             }
             try {
                 await fetch('/api/battle', {

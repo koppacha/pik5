@@ -315,15 +315,10 @@ body {
     }
 }
 .rule-wrapper {
-    margin-bottom: 10px;
-    margin-top: 14px;
+    margin-top: 8px;
+    margin-bottom: 8px;
     overflow-x: scroll;
     white-space: nowrap;
-
-    @media(max-width: 600px) {
-        margin-bottom: 15px;
-    }
-
 }
 .rule-box {
     display: inline-block;
