@@ -245,12 +245,12 @@ export default function Stage(param){
             </Grid>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
-            <Grid container style={{marginBottom:'0.25em'}}>
+            <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6} style={{paddingLeft:'0.5em'}}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
-                <RuleWrapper container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+                <Grid container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                     {
                         // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
                         (isEvent(param.parent)) &&
@@ -264,7 +264,7 @@ export default function Stage(param){
                              href="#">
                         <span>{t.g.rule}</span>
                     </Box>
-                </RuleWrapper>
+                </Grid>
             </Grid>
             <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
             <ModalKeyword open={open} uniqueId={param.uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
