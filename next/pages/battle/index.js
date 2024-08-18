@@ -1,25 +1,78 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {Box, Button, Container, Grid, Typography} from '@mui/material';
 import {StyledTextField} from "../../styles/pik5.css";
-import {rankColor} from "../../lib/pik5";
+import {id2name, rankColor, range, useLocale} from "../../lib/pik5";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import TextField from "@mui/material/TextField";
+import DialogActions from "@mui/material/DialogActions";
+import prisma from "../../lib/prisma";
 
-const arrayA = ["こてしらべの戦い", "戦場のおもちゃ箱", "風雲ダンドリ城", "決戦のオアシス", "熱砂の決闘場", "最果ての闘技場"];
-const arrayB = ["赤ピクミン", "黄ピクミン", "青ピクミン", "岩ピクミン", "羽ピクミン", "紫ピクミン", "白ピクミン", "氷ピクミン"]
-const players = ["こっぱちゃ", "こばちのうどん", "mercysnow", "リーヌァ", "エープリル", "albut3"]
+const arrayA = range(413, 418)
+const arrayB = range(1, 8)
 
 function generateRandomHex(length){
     return Math.floor(Math.random() * Math.pow(16, length).toString(16).padStart(length, "0"))
 }
 const sessionId = generateRandomHex(9)
 
-export default function Battle() {
+export async function getStaticProps() {
+    // 最新レートを取得
+    const res = await fetch(`http://laravel:8000/api/battle/rate`)
+    const rate = await res.json()
+
+    // 最新スコアを取得
+    const scoreRes = await fetch(`http://laravel:8000/api/battle/score`)
+    const score = await scoreRes.json()
+
+    // スクリーンネームをリクエスト
+    const users = await prisma.user.findMany({
+        select: {
+            userId: true,
+            name: true
+        }
+    })
+
+    return {props: {rate, users, score} }
+}
+
+export default function Battle(props) {
+
+    console.log(props.rate)
+
+    const {t} = useLocale()
+
     const [grids, setGrids] = useState([])
     const [history, setHistory] = useState([])
     const [historyA, setHistoryA] = useState([])
     const [historyB, setHistoryB] = useState([])
     const [count, setCount] = useState(0)
-    const [rates, setRates] = useState(players.reduce((acc, player) => ({...acc, [player]: 1000}), {}))
+    const [players, setPlayers] = useState([])
+    const [rates, setRates] = useState({})
     const [pool, setPool] = useState(0)
+    const [open, setOpen] = useState(false)
+    const [newPlayerName, setNewPlayerName] = useState('')
+
+    useEffect(() => {
+        const fetchPlayerData = async () => {
+            try {
+                const newPlayers = Object.values(props.rate).map(player => player.user_id)
+                const newPlayerRates = Object.values(props.rate).reduce((acc, player) => {
+                    acc[player.user_id] = player.result_point
+                    return acc
+                }, {})
+
+                setPlayers(newPlayers)
+                setRates(newPlayerRates)
+
+            } catch (error) {
+                console.error('Error fetching player data:', error);
+            }
+        };
+
+        fetchPlayerData()
+    }, [])
 
     const getRandomStages = (arrayA, arrayB, history, setHistory, historyA, setHistoryA, historyB, setHistoryB) => {
         const allStages = []
@@ -72,7 +125,6 @@ export default function Battle() {
         }
         setGrids([newGrid, ...grids])
         setCount(count + 1)
-        // TODO: 取得内容はAPIのリクエストに基づく
     }
     const handleScoreChange = (gridId, playerName, field, value) => {
         setGrids(prevGrids => {
@@ -183,6 +235,31 @@ export default function Battle() {
             }
         }
     }
+    const handlePlayerClick = (playerName) => {
+        setPlayers(players.filter(player => player !== playerName))
+        setRates(prevRates => {
+            const newRates = {...prevRates}
+            delete newRates[playerName]
+            return newRates
+        })
+    }
+    const handleAddPlayer = () => {
+        setOpen(true)
+    }
+    const handleClose = () => {
+        setOpen(false)
+        setNewPlayerName('')
+    }
+    const handleSavePlayer = () => {
+        const trimmedName = newPlayerName.trim()
+        if (trimmedName && !players.includes(trimmedName)) {
+            const existingPlayer = Object.values(props.rate).find(player => player.user_id === trimmedName)
+            const initialRate = existingPlayer ? existingPlayer.result_point : 1000
+            setPlayers([...players, trimmedName])
+            setRates({ ...rates, [trimmedName]: initialRate })
+        }
+        handleClose()
+    }
     return (
         <Container>
             <Typography variant="" className="title">ダンドリバトル大会戦績表</Typography><br/>
@@ -215,13 +292,22 @@ export default function Battle() {
             {grids.map((grid, gridIndex) => (
                 <Box key={grid.id} sx={{ mt: 2, p: 2, border: '1px solid grey' }}>
                     <Typography variant="span">#{grid.id + 1}</Typography><br/>
-                    <Typography variant="span" style={{fontSize:"2em"}}>{grid.itemA} × {grid.itemB}</Typography>
-                    <Grid container spacing={2} columns={players.length}>
+                    <Typography variant="span" style={{fontSize:"2em"}}>{t.stage[grid.itemA]} × {t.pikmin[grid.itemB]}</Typography>
+                    {(() => {
+                        const hiScore = props.score?.find(score => score.stage_id === grid.itemA && score.pikmin === grid.itemB);
+                        return hiScore ? (
+                            <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: {hiScore.dandori_score} pts （{id2name(props.users, hiScore.user_id)} さん）</Typography>
+                        ) : (
+                            <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: -</Typography>
+                        );
+                    })()}
+                    <hr style={{margin:"1em"}}/>
+                    <Grid container spacing={2} columns={6}>
                         {grid.players.map(function(player, playerIndex) {
                                 const rankColorStr = rankColor(player.rank < 4 ? player.rank : 4, 0, 1)
                                 return (
                                     <Grid item xs={1} key={player.name}>
-                                        <Typography variant="span">{player.name}</Typography><br/>
+                                        <Typography variant="span">{id2name(props.users, player.name)}</Typography><br/>
                                         <StyledTextField
                                             type="number"
                                             value={player.scoreA || ""}
@@ -261,15 +347,42 @@ export default function Battle() {
                 backgroundColor: 'white',
                 color: '#000'
             }}>
-                <Grid container spacing={2} columns={players.length}>
+                <Grid container spacing={2} columns={players.length + 1}>
                     {players.map(player => (
                         <Grid item xs={1} key={player}>
-                            <Typography variant="h6">{player}</Typography>
+                            <Typography variant="h6" onClick={() => handlePlayerClick(player)} style={{ cursor:'pointer'}}>{id2name(props.users, player)}</Typography>
                             <Typography variant="body1">{rates[player]} pts.</Typography>
                         </Grid>
                     ))}
+                    <Grid item xs={1} key="button">
+                        <Button variant="contained" color="secondary" onClick={handleAddPlayer} style={{ marginLeft: 16 }}>
+                            プレイヤーを追加する
+                        </Button>
+                    </Grid>
                 </Grid>
             </Box>
+            <Dialog open={open} onClose={handleClose}>
+                <DialogTitle>追加するプレイヤーのIDを入力してください</DialogTitle>
+                <DialogContent>
+                    <TextField
+                        autoFocus
+                        margin="dense"
+                        label="Player Name"
+                        type="text"
+                        fullWidth
+                        value={newPlayerName}
+                        onChange={(e) => setNewPlayerName(e.target.value)}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Cancel
+                    </Button>
+                    <Button onClick={handleSavePlayer} color="primary">
+                        Save
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Container>
     );
 }
