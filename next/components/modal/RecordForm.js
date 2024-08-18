@@ -210,7 +210,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // タイム表示判定
     const isTime = () => {
-        return [11, 33, 43, 91].includes(Number(rule)) || [338, 341, 343].includes(info?.stage_id)
+        return [11, 33, 43, 46, 91].includes(Number(rule)) || [338, 341, 343].includes(info?.stage_id)
     }
 
     // リージョン違い判定
