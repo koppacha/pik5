@@ -113,6 +113,8 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 // バトル大会記録用API
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: post('battle', [BattleController::class, 'create']);
+    Route:: get('battle/rate', [BattleController::class, 'getRate']);
+    Route:: get('battle/score', [BattleController::class, 'getScore']);
 });
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
