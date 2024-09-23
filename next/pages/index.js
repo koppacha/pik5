@@ -87,15 +87,20 @@ export default function Home({users, prev}) {
         [t.title[4], "/total/40"],
         [t.g.key, "/keyword"],
     ]
+    // 初めての人向けダッシュボード
+    const WelcomeBlock = (!session)
+        ? <><hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
+          <div style={{textAlign: "right"}}>初めての方はまず<Link href="/auth/register">アカウント作成</Link>！</div></>
+        : <></>
     // 先月のトレンド
     const PrevTrend = (prev?.trend[0]?.cnt)
-                    ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
-                    : <></>
+        ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
+        : <></>
 
     // 去年の最多投稿者
     const PrevPost = (prev?.post[0]?.cnt)
-                   ? <>前年TOP: {id2name(users, prev.post[0]["user_id"])} ({prev.post[0]["cnt"]} 回）</>
-                   : <></>
+        ? <>前年TOP: {id2name(users, prev.post[0]["user_id"])} ({prev.post[0]["cnt"]} 回）</>
+        : <></>
 
   return (
       <>
@@ -104,24 +109,23 @@ export default function Home({users, prev}) {
           </Head>
           <Typography variant="" className="title">{t.title[0]}</Typography><br/>
           <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
-          <InfoBox>
+          <InfoBox className="info-box">
               {t.t.welcome}
-              <hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
-              <div style={{textAlign:"right"}}>初めての方はまず<Link href="/auth/register">アカウント作成</Link>！</div>
+              {WelcomeBlock}
           </InfoBox>
           <Grid container>
               <WrapTopBox item xs={12}>
                   <TopBox>
-                      <TopBoxHeader>
+                      <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faCircleInfo} /> ダッシュボード</span>
                       </TopBoxHeader>
-                      <TopBoxContent>
+                      <TopBoxContent className="top-box-content">
                           <Grid container style={{marginBottom:"8px"}}>
                               {
                                   quickLinks.map(i =>
                                       (
                                           <Grid item key={i} xs={i ? 3 : 6} sm={2} component={Link} href={i[1]}>
-                                              <CellBox style={{padding: "10px 0"}}>
+                                              <CellBox className="cell-box" style={{padding: "10px 0"}}>
                                                   {i[0]}
                                               </CellBox>
                                           </Grid>
@@ -173,32 +177,32 @@ export default function Home({users, prev}) {
               </WrapTopBox>
               <WrapTopBox item xs={12}>
                   <TopBox>
-                      <TopBoxHeader>
+                      <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faArrowTrendUp}/> {t.g.trend}</span>
                           <span style={{fontSize: "0.8em"}}>{PrevTrend}</span>
                       </TopBoxHeader>
-                      <TopBoxContent>
+                      <TopBoxContent className="top-box-content">
                           <TrendRanking/>
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>
               <WrapTopBox item xs={12}>
                   <TopBox>
-                      <TopBoxHeader>
+                      <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faFlag}/> {t.g.countRanking}</span>
                           <span style={{fontSize: "0.8em"}}>{PrevPost}</span>
                       </TopBoxHeader>
-                      <TopBoxContent>
+                      <TopBoxContent className="top-box-content">
                           <PostCountRanking users={users}/>
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>
               <WrapTopBox item xs={12}>
                   <TopBox>
-                      <TopBoxHeader>
+                      <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faCertificate}/> {t.g.newRecord}</span>
                       </TopBoxHeader>
-                      <TopBoxContent>
+                      <TopBoxContent className="top-box-content">
                           <NewRecords users={users}/>
                       </TopBoxContent>
                   </TopBox>

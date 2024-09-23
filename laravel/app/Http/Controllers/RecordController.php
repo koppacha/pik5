@@ -39,7 +39,9 @@ class RecordController extends Controller
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $data = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first();
+        $data = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first()->toArray();
+        $data["stage"] = $data["stage_id"];
+        $data["post_rank"] = $this->getRankArray($data);
 
         if(!$data){
             $data = collect(['message' => "Record Not Found"]);
@@ -47,6 +49,32 @@ class RecordController extends Controller
 
         return response()->json(
             $data
+        );
+    }
+    // 単一記録と同じ組み合わせのデータを取得する関数
+    public function getRecordHistory(Request $request): JsonResponse
+    {
+        $record = new Record();
+        $data = $record::select(config('const.selected'))
+            ->where('stage_id', $request['stage_id'])
+            ->where('rule', $request['rule'])
+            ->where('user_id', $request['user_id'])
+            ->where('flg','<', 2)
+            ->orderBy('created_at', 'DESC')
+            ->get()
+            ->toArray();
+
+        $new_data = [];
+
+        // 当時の順位を追加
+        foreach($data as $record){
+            $record["stage"] = $record["stage_id"];
+            $record["post_rank"] = $this->getRankArray($record);
+            $new_data[] = $record;
+        }
+
+        return response()->json(
+            $new_data
         );
     }
 
@@ -78,6 +106,7 @@ class RecordController extends Controller
             ->where('rule', $request['rule'])
             ->where('score', $inequality, (int)$request['score'])
             ->where('flg','<', 2)
+            ->where('created_at','<', $request['created_at'])
             ->get()
             ->unique('user_id')
             ->count();

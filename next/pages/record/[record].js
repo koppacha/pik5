@@ -1,16 +1,17 @@
 import * as React from "react";
 import {Typography} from "@mui/material";
-import {useLocale} from "../../lib/pik5";
-import {PageHeader, RuleBox, StairIcon} from "../../styles/pik5.css";
+import {addName2posts, useLocale} from "../../lib/pik5";
+import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import Link from "next/link";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faHouseChimney, faPaperPlane, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
+import {faArrowTrendUp, faHouseChimney, faPaperPlane, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
+import TrendRanking from "../../components/top/TrendRanking";
 
 export async function getStaticPaths(){
     return {
@@ -32,9 +33,9 @@ export async function getStaticProps({params}){
     const res = await fetch(`http://laravel:8000/api/record/id/${record}`)
     let data = await res.json()
 
-    // 該当ステージの情報を取得する
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${data.stage_id}`)
-    const info = await stage_res.json()
+    // 過去の投稿履歴を取得する
+    const stage_res = await fetch(`http://laravel:8000/api/record/history/${data.stage_id}/${data.rule}/${data.user_id}`)
+    let history = await stage_res.json()
 
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
@@ -49,14 +50,17 @@ export async function getStaticProps({params}){
         return e.userId === data.user_id
     })?.name
 
+    // 過去記録にスクリーンネームを注入
+    history = addName2posts(history, users)
+
     return {
         props: {
-            users, data
+            users, data, history
         },
         revalidate: 86400,
     }
 }
-export default function RecordPage({users, data}){
+export default function RecordPage({users, data, history}){
 
     const {t, r} = useLocale()
     const {data: session } = useSession()
@@ -139,6 +143,22 @@ export default function RecordPage({users, data}){
                                     <FontAwesomeIcon style={{color:"#868686"}} icon={faTrashCan} /> この記録を削除する
                                 </RuleBox>
                         }
+                        <TopBox style={{marginTop:"4em"}} >
+                            <TopBoxHeader className="top-box-header">
+                                <span><FontAwesomeIcon icon={faArrowTrendUp}/> 過去の記録</span>
+                            </TopBoxHeader>
+                            <TopBoxContent className="top-box-content">
+                                {
+                                    history?.map(function(post){
+                                        return (
+                                            <React.Fragment key={post.unique_id}>
+                                                <Record key={post.unique_id} data={post} />
+                                            </React.Fragment>
+                                        )
+                                    })
+                                }
+                            </TopBoxContent>
+                        </TopBox>
                     </>
             }
         </>
