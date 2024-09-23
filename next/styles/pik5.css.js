@@ -371,8 +371,8 @@ export const StyledMenuItem = styled(MenuItem)`
 `
 export const InfoBox = styled(Box)`
   border :1px solid ${colors.light.border};
-  padding :2em;
-  margin :2em;
+  padding :1em;
+  margin :1em;
   border-radius :8px;
   
   a {
