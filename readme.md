@@ -203,21 +203,35 @@ sudo ufw allow 3005 # ←フロントエンドのポート
 
 # ネットワーク設定の実体ファイルを編集
 vi /etc/nginx/sites-available/pik5.conf
+```
 
-# とりあえず以下のようになっていればOK
-# server {
-#        server_name pik5.net;
-#        location / {
-#                   proxy_pass http://localhost:3005;
-#        }
-# }
+nginx設定ファイル（certbotが勝手に書き換えるので最小限で良い）
+```text
+server {
+    listen 80;
+    server_name pik5.net;
 
+    location / {
+        proxy_pass http://localhost:3005; // フロントエンドのポート
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```shell
 # sites-enabledにシンボリックリンクを貼る
 sudo ln -s /etc/nginx/sites-available/pik5.conf /etc/nginx/sites-enabled/
+sudo systemctl reload nginx
 
 # 証明書（Let's Crypto）のインストール
 sudo certbot --nginx -d pik5.net
 sudo cartbot renew --dry-run
+
+# 自動更新が有効になっているかチェック
+sudo systemctl status certbot.timer
 ```
 ---
 ## 備忘録
@@ -236,11 +250,6 @@ $ git clean -d -f .
 
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
-```
-Module build failed: UnhandledSchemeError: Reading from "node:fs" is not handled by plugins (Unhandled scheme).
-というエラーが出た場合、おそらくサーバーサイドからfetch()を含むコードをコピペした際の自動インポートが原因。以下のコードを削除で直る。
-```javascript
-import fetch from "node-fetch";
 ```
 
 ---

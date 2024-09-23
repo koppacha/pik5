@@ -21,7 +21,6 @@ class BattleController extends Controller
     {
         //
     }
-
     /**
      * すべてのステージの大会記録を取得する
      *

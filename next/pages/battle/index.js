@@ -8,6 +8,9 @@ import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import prisma from "../../lib/prisma";
+import Image from "next/image";
+import LightBoxImage from "../../components/modal/LightBoxImage";
+import Lightbox from "yet-another-react-lightbox";
 
 const arrayA = range(413, 418)
 const arrayB = range(1, 8)
@@ -38,8 +41,6 @@ export async function getStaticProps() {
 }
 
 export default function Battle(props) {
-
-    console.log(props.rate)
 
     const {t} = useLocale()
 
@@ -163,41 +164,43 @@ export default function Battle(props) {
             const latestGrid = prevGrids[0]
             let currentPool = 0
 
+            // ポットに貢献するためのレートの合計を計算
             const updatedPlayers = latestGrid.players.map(player => {
-                const contribution = Math.round(player.initialRate / 10)
+                const contribution = Math.round(player.initialRate / 10) // 各参加者のレートの1/10をポットに追加
                 currentPool += contribution
-                return { ...player, rate: player.initialRate - contribution }
+                return { ...player, rate: player.initialRate - contribution } // レートからポット分を引く
             })
-            setPool(currentPool)
+            setPool(currentPool) // ポットの合計をセット
 
+            // 順位に基づいてプレイヤーをソート
             const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC)
-            const rewardRates = [0.4, 0.3, 0.2, 0.1];
 
-            let idx = 0
-            while (idx < sortedPlayers.length && idx < 4) {
-                const sameRankCount = sortedPlayers.filter(p => p.rank === sortedPlayers[idx].rank).length
-                const totalRewardRate = rewardRates.slice(idx, idx + sameRankCount).reduce((acc, rate) => acc + rate, 0)
-                const reward = Math.round(currentPool * totalRewardRate / sameRankCount)
+            // 自然数の和 t を計算 (1から参加者数 n までの和)
+            const n = sortedPlayers.length // 参加者数
+            const t = (n * (n + 1)) / 2   // 自然数の和
 
-                sortedPlayers.forEach((player) => {
-                    if (player.rank === sortedPlayers[idx].rank) {
-                        player.rate += reward
-                    }
-                })
-                idx += sameRankCount
-            }
+            // 各プレイヤーの順位に基づいて報酬を計算
+            sortedPlayers.forEach((player, index) => {
+                const rank = index + 1 // 順位 (1位が最上位)
+                const reward = Math.round(((n - rank + 1) / t) * currentPool) // 新しい計算式
+                player.rate += reward  // プレイヤーに報酬を加算
+            })
 
+            // 各プレイヤーの最終レートと順位を設定
             const finalPlayers = updatedPlayers.map(player => ({
                 ...player,
                 rate: sortedPlayers.find(p => p.name === player.name).rate,
                 rank: sortedPlayers.find(p => p.name === player.name).rank,
-            }));
+            }))
+
+            // 新しいレートをセット
             const newRates = { ...rates }
             finalPlayers.forEach(player => {
                 newRates[player.name] = player.rate
             })
             setRates(newRates)
 
+            // 最新のグリッドを更新
             return prevGrids.map((grid, index) => {
                 if (index === 0) {
                     return { ...latestGrid, players: finalPlayers }
@@ -205,7 +208,6 @@ export default function Battle(props) {
                 return grid
             })
         })
-        // TODO: 直上のsetGridが成功していたらAPIへ計算結果を送信する
     }
     // TODO: APIへ送信する処理
     const onSubmit = async (grid) => {
@@ -275,8 +277,8 @@ export default function Battle(props) {
                     <li>ステージとピクミンは毎回ランダム。ただし、同じ組み合わせは同一セッションの中で一度しか出現しない。セッションは主催が終了処理を行うか48回対戦するとリセットする。</li>
                     <li>各参加者は初参加時に1000点支給され、各対戦開始前に所持ポイントの10分の１をポットに支払う。（小数は四捨五入する。四捨五入の結果が０点でも参加は可能）</li>
                     <li>対戦後、[（自分のダンドリP）-（COMのダンドリP）]をプレイヤーの得点とし、それによって順位づけを行う。</li>
-                    <li>１〜４位はそれぞれポットの４割、３割、２割、１割に相当するポイントを獲得する。５位以下はもらえない。</li>
-                    <li>同点の場合は該当者がもらえるポイントを等分する。例えば２位が２名いる場合、ポットの５割を２等分する。</li>
+                    <li>各参加者は順位に応じて次の計算によってポイントが還元される。［（参加者数-順位+1) / (1から参加者数までの整数の和) * ポット］</li>
+                    <li>同点の場合は該当者がもらえるポイントを等分する。</li>
                 </ul>
                 <Box style={{margin:"2em 1em",padding:"2em",fontSize:"0.9em",border:"1px solid red"}}>
                     <ul>
