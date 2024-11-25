@@ -54,9 +54,9 @@ export default function PostCountRanking({users}){
                     return (
                         <Grid item key={i} xs={4} sm={2} component={Link} href={"/user/"+post.user_id}>
                             <CellBox length={post.user_name.length}>
-                                {t.g.rankHead}{i+1} {t.g.rankTail}<br/>
+                                <span className="cell-box-caption">{t.g.rankHead}{i+1} {t.g.rankTail}</span><br/>
                                 {nameOmission(post.user_name)}<br/>
-                                {post.cnt} {t.g.countTail}
+                                <span className="cell-box-caption">{post.cnt} {t.g.countTail}</span>
                             </CellBox>
                         </Grid>
                     )

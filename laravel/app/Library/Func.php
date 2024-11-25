@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
 use Predis\Command\Argument\Server\To;
+use Random\RandomException;
 
 class Func extends Facade
 {
@@ -43,7 +44,7 @@ class Func extends Facade
         if(is_array($total)){
             // あらかじめ配列が指定されている場合はそれを流用する
             $rule = $total;
-            $stages = [$total];
+            $stages = TotalController::stage_list("2");
             $ttl = 1800;
         } elseif($total) {
             // 期間限定などで総合IDが指定されている場合はそれだけを指定する
@@ -59,9 +60,10 @@ class Func extends Facade
         }
 
         $console_operation = $console ? "=" : ">";
+        $memory_string = is_array($total) ? implode("_", $total) : $total;
 
         try {
-            $Model = Cache::remember("memCount_{$total}", $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
+            $Model = Cache::remember("memCount_{$memory_string}", $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
                 return Record::whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
@@ -112,6 +114,27 @@ class Func extends Facade
             }
         }
         return $data;
+    }
+
+    /**
+     * @throws RandomException
+     */
+    public function simulate_rank_point_calc($num_stages = 210, $max = 86): JsonResponse
+    {
+        $total_points = 0;
+
+        for ($i = 0; $i < $num_stages; $i++) {
+            // ランダムな$memberを1〜86の間で生成
+            $member = random_int(1, $max);
+            // $memberの半分の順位を計算（小数点切り上げ）
+            $rank = 3;
+
+            // ランクポイント計算
+            $total_points += self::rankPoint_calc(0, $rank, $member, $max);
+        }
+        return response()->json(
+            $total_points
+        );
     }
     public static function rankPoint_calc($stage, $rank, $member, $max): float
     {

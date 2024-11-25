@@ -41,6 +41,7 @@ export default function MobileFooter({users}){
 
     return (
         <>
+            <div className="footer-space"></div>
             <Grid className="mobile-footer-menu" container columns={{xs: 5}}>
                 <Grid className="mobile-footer-item" item xs={1}>
                     <Link href="/">

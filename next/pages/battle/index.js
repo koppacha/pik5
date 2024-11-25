@@ -55,6 +55,7 @@ export default function Battle(props) {
     const [open, setOpen] = useState(false)
     const [newPlayerName, setNewPlayerName] = useState('')
 
+    // 最初に実行するレート取得
     useEffect(() => {
         const fetchPlayerData = async () => {
             try {

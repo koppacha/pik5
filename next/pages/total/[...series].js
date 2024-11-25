@@ -5,7 +5,7 @@ import PullDownConsole from "../../components/form/PullDownConsole";
 import PullDownYear from "../../components/form/PullDownYear";
 import * as React from "react";
 import Totals from "../../components/rule/Totals";
-import {createContext, useState} from "react";
+import {createContext, useEffect, useState} from "react";
 import Rules from "../../components/rule/Rules";
 import {currentYear, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
@@ -20,6 +20,7 @@ import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
+import {useFetchToken} from "../../hooks/useFetchToken";
 
 export async function getStaticPaths(){
     return {
@@ -101,10 +102,13 @@ export default function Series(param){
     const handleClose = () => setOpen(false)
     const handleOpen = () => setOpen(true)
 
+    // トークンを取得
+    const token = useFetchToken()
+
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
         setIsProcessing(true)
-        purgeCache("total", param.series).then(r => setIsProcessing(false))
+        purgeCache("total", param.series, param.consoles, param.rule, param.year, token).then(r => setIsProcessing(false))
     }
 
     return (

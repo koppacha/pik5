@@ -304,6 +304,7 @@ body {
     border :1px solid $light-border;
     padding :1em;
     margin :1em;
+    font-size: 0.9em;
     border-radius :8px;
 
     a {
@@ -334,13 +335,22 @@ body {
 }
 .cell-box {
     margin :4px;
-    padding :2px;
+    padding :4px;
+    height: 68px;
     background-color: $light-sub-back;
     border-radius :8px;
     text-align :center;
 
     [data-theme="dark"] & {
         background-color: $dark-sub-back;
+    }
+}
+.cell-box-caption {
+    font-size: 0.9em;
+    color: $light-sub-title;
+
+    [data-theme="dark"] & {
+        color: $dark-sub-title;
     }
 }
 .stair-icon {
@@ -353,7 +363,7 @@ body {
 
 }
 .wrap-top-box {
-    padding :10px;
+    margin-bottom :10px;
 }
 .top-box {
     border: 1px solid $light-border;
@@ -590,6 +600,13 @@ body {
         margin-top: 4px;
     }
 }
+.footer-space {
+    @media(min-width: 601px) {
+        display: none;
+    }
+    width: 100vw;
+    height: 62px;
+}
 .mobile-footer-menu {
     @media(min-width: 601px) {
         display: none;
@@ -764,5 +781,29 @@ body {
     }
     @media(max-width: 600px) {
         font-size: 2em;
+    }
+}
+.footer-container {
+    background-color:#111;
+    width:100%;
+    padding:10px 20px;
+}
+.dashboard-tooltip-list li {
+    font-size: 1.1em;
+    padding: 8px;
+    list-style: none;
+    border-bottom: 1px solid $light-border;
+
+    [data-theme='dark'] & {
+        border-bottom: 1px solid $dark-border;
+    }
+}
+.complete-star {
+    font-size: 0.8em;
+    color: $light-front;
+    padding-left: 0.25em;
+
+    [data-theme='dark'] & {
+        color: $dark-front;
     }
 }

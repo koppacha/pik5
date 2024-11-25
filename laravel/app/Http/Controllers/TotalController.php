@@ -24,7 +24,7 @@ class TotalController extends Controller
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
-            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428), range(901, 908)), // 全総合
+            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428), range(901, 915)), // 全総合
             2 => array_merge(range(101, 105), range(201, 230), range(301, 350), range(401, 428)), // 通常総合
             3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(351, 362)), // 特殊総合
             4 => range(1001, 1299), // 期間限定総合
@@ -54,7 +54,7 @@ class TotalController extends Controller
             44 => range(401, 412), // ゲキカラチャレンジ
             45 => range(413, 418), // ゲキカラバトル
             46 => range(419, 428), // ゲキカラ仙人の挑戦状
-            91 => range(901, 914), // 複合・その他
+            91 => [901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915], // 複合・その他（903は除外）
 
             // TODO: 個別のイベント総合に相当する配列は将来的にデータベースに基づいて読み込むようにする
 
@@ -152,7 +152,7 @@ class TotalController extends Controller
         // ルールの強制置換
         // 全総合ランキング
         if ($request['id'] === "1") {
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43, 11, 23, 24, 25, 29, 35, 91];
+            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46];
             $ttl = 1800;
         // 通常総合ランキング
         } elseif ($request['id'] === "2") {
