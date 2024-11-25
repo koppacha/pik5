@@ -31,6 +31,7 @@ import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
 import {mutate} from "swr";
 import ModalIdeaPost from "../components/modal/ModalIdeaPost";
 import PostButton from "../components/PostButton";
+import DashBoard from "../components/top/DashBoard";
 
 export async function getServerSideProps(context) {
 
@@ -56,12 +57,6 @@ export default function Home({users, prev}) {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
-
-    // モーダル制御関連
-    const [editOpen, setEditOpen] = useState(false)
-    const [uniqueId, setUniqueId] = useState("")
-    const handleEditOpen = () => setEditOpen(true)
-    const handleEditClose = () => setEditOpen(false)
 
     // ログイン判定によって表示を変更
     const loginName = () => {
@@ -90,16 +85,16 @@ export default function Home({users, prev}) {
     // 初めての人向けダッシュボード
     const WelcomeBlock = (!session)
         ? <><hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
-          <div style={{textAlign: "right"}}>初めての方はまず<Link href="/auth/register">アカウント作成</Link>！</div></>
+          <div style={{textAlign: "right"}}>{t.g.firstTime1}<Link href="/auth/register">{t.g.firstTime2}</Link></div></>
         : <></>
-    // 先月のトレンド
-    const PrevTrend = (prev?.trend[0]?.cnt)
-        ? <>先月同時期TOP: {t.stage[prev.trend[0]["stage_id"]]} ({prev.trend[0]["cnt"]} 回）</>
+    // 年初来の最多投稿ステージ
+    const PrevTrend = (prev?.stage?.cnt)
+        ? <>{t.g.trendYear}: {t.stage[prev.stage["stage_id"]]} ({prev.stage["cnt"]} {t.g.countTail}）</>
         : <></>
 
-    // 去年の最多投稿者
-    const PrevPost = (prev?.post[0]?.cnt)
-        ? <>前年TOP: {id2name(users, prev.post[0]["user_id"])} ({prev.post[0]["cnt"]} 回）</>
+    // 年初来の参加者数
+    const PrevPost = (prev?.posts)
+        ? <>{t.g.countAll}: {prev.posts} {t.g.countTail}</>
         : <></>
 
   return (
@@ -114,69 +109,13 @@ export default function Home({users, prev}) {
               {WelcomeBlock}
           </InfoBox>
           <Grid container>
-              <WrapTopBox item xs={12}>
-                  <TopBox>
-                      <TopBoxHeader className="top-box-header">
-                          <span><FontAwesomeIcon icon={faCircleInfo} /> ダッシュボード</span>
-                      </TopBoxHeader>
-                      <TopBoxContent className="top-box-content">
-                          <Grid container style={{marginBottom:"8px"}}>
-                              {
-                                  quickLinks.map(i =>
-                                      (
-                                          <Grid item key={i} xs={i ? 3 : 6} sm={2} component={Link} href={i[1]}>
-                                              <CellBox className="cell-box" style={{padding: "10px 0"}}>
-                                                  {i[0]}
-                                              </CellBox>
-                                          </Grid>
-                                      )
-                                  )
-                              }
-                          </Grid>
-                          <EventContainer>
-                              <EventContent>
-                                  <Link href="#" onClick={handleEditOpen}>
-                                      <EventContent style={{
-                                          textDecoration: "underline",
-                                          float: "left",
-                                          width: "50%",
-                                          backgroundColor: "#333",
-                                          borderRadius: "4px",
-                                          padding: "8px",
-                                          textAlign: "center"
-                                      }}>
-                                          期間限定ルールを投稿する<br/>
-                                      </EventContent>
-                                  </Link>
-                                  <Link href="/keyword?c=idea">
-                                      <EventContent style={{
-                                          textDecoration: "underline",
-                                          float: "right",
-                                          width: "48%",
-                                          backgroundColor: "#333",
-                                          borderRadius: "4px",
-                                          padding: "8px",
-                                          textAlign: "center"
-                                      }}>
-                                          ルールを確認・編集する
-                                      </EventContent>
-                                  </Link>
-                              </EventContent>
-                          </EventContainer>
-                          <Box style={{
-                              borderTop: "1px solid #777",
-                              fontSize: "0.8em",
-                              color: "#999",
-                              textAlign: "right",
-                              display: "none"
-                          }}>
-                              <FontAwesomeIcon icon={faBullhorn}/> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
-                          </Box>
-                      </TopBoxContent>
+              <WrapTopBox item xs={12} className="wrap-top-box">
+                  <TopBox className="top-box">
+                      <DashBoard user={session?.user} />
                   </TopBox>
               </WrapTopBox>
-              <WrapTopBox item xs={12}>
-                  <TopBox>
+              <WrapTopBox item xs={12} className="wrap-top-box">
+                  <TopBox className="top-box">
                       <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faArrowTrendUp}/> {t.g.trend}</span>
                           <span style={{fontSize: "0.8em"}}>{PrevTrend}</span>
@@ -186,8 +125,8 @@ export default function Home({users, prev}) {
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>
-              <WrapTopBox item xs={12}>
-                  <TopBox>
+              <WrapTopBox item xs={12} className="wrap-top-box">
+                  <TopBox className="top-box">
                       <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faFlag}/> {t.g.countRanking}</span>
                           <span style={{fontSize: "0.8em"}}>{PrevPost}</span>
@@ -197,7 +136,7 @@ export default function Home({users, prev}) {
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>
-              <WrapTopBox item xs={12}>
+              <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox>
                       <TopBoxHeader className="top-box-header">
                           <span><FontAwesomeIcon icon={faCertificate}/> {t.g.newRecord}</span>
@@ -210,8 +149,6 @@ export default function Home({users, prev}) {
           </Grid>
           <br/>
           <button onClick={() => signOut()}>{t.g.logout}</button>
-          <ModalIdeaPost editOpen={editOpen} uniqueId={uniqueId} handleEditClose={handleEditClose}
-                         handleEditOpen={handleEditOpen}/>
       </>
   )
 }

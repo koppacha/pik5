@@ -21,6 +21,7 @@ import Score from "../../components/record/Score";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useState} from "react";
+import {useFetchToken} from "../../hooks/useFetchToken";
 
 export async function getStaticPaths(){
     return {
@@ -88,10 +89,13 @@ export default function Stage(param){
 
     const [isProcessing, setIsProcessing] = useState(false)
 
+    // トークンを取得
+    const token = useFetchToken()
+
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
         setIsProcessing(true)
-        purgeCache("user", param.user).then(r => setIsProcessing(false))
+        purgeCache("user", param.user,0 ,0,2024, token).then(r => setIsProcessing(false))
     }
 
     // マーカーテーブルに出力するルール一覧

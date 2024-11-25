@@ -16,6 +16,9 @@ class RecordCsvSeeder extends Seeder
      */
     public function run(): void
     {
+        // 実行前にテーブルを空にする
+        Record::truncate();
+
         $object = new \SplFileObject(__DIR__ . '/data/records.csv');
         $object->setFlags(
             \SplFileObject::READ_CSV |

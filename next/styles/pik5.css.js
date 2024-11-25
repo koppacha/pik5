@@ -147,18 +147,7 @@ export const GlobalStyle = createGlobalStyle`
       color: ${colors.dark.back} !important;
     }
   }
-
-  .info-box {
-    border: 1px solid ${colors.light.back};
-    padding: 2em;
-    margin: 2em;
-    border-radius: 8px;
-
-    [data-theme='dark'] & {
-      border: 1px solid ${colors.dark.back};
-    }
-  }
-
+  
   .form-helper-text {
     color: ${colors.light.front};
 
@@ -373,12 +362,11 @@ export const InfoBox = styled(Box)`
   border :1px solid ${colors.light.border};
   padding :1em;
   margin :1em;
+  font-size: 0.9em;
   border-radius :8px;
-  
   a {
       text-decoration: underline;
   }
-  
   [data-theme='dark'] & {
     border :1px solid ${colors.dark.border};
   }
@@ -405,7 +393,8 @@ export const RuleBox = styled(Grid)`
 `
 export const CellBox = styled(Box)`
   margin :4px;
-  padding :2px;
+  padding :4px;
+  height: 68px;
   background-color: ${colors.light.subBack};
   border-radius :8px;
   text-align :center;
@@ -421,7 +410,7 @@ export const StairIcon = styled(FontAwesomeIcon)`
   ${sp`font-size: 0.7em;`}
 `
 export const WrapTopBox = styled(Grid)`
-  padding :10px;
+  margin-bottom: 10px;
 `
 export const TopBox = styled(Box)`
   border: 1px solid ${colors.light.border};

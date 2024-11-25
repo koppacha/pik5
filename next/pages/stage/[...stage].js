@@ -24,6 +24,7 @@ import remarkGfm from "remark-gfm";
 import {token} from "stylis";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
+import {useFetchToken} from "../../hooks/useFetchToken";
 
 export async function getStaticPaths(){
     return {
@@ -189,27 +190,12 @@ export default function Stage(param){
         : param.info?.time
 
     // トークンを取得
-    const [token, setToken] = useState('')
-    useEffect(() => {
-        const fetchToken = async () => {
-            try {
-                const res = await fetch('/api/token')
-                if (!res.ok) {
-                    console.error('Token fetch failed')
-                }
-                const {token} = await res.json()
-                setToken(token)
-            } catch (e) {
-                console.error(e)
-            }
-        }
-        fetchToken().then(r => null)
-    }, []);
+    const token = useFetchToken()
 
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
         setIsProcessing(true)
-        purgeCache("stage", param.stage, token).then(r => setIsProcessing(false))
+        purgeCache("stage", param.stage, param.consoles, param.rule, param.year, token).then(r => setIsProcessing(false))
     }
     return (
         <>

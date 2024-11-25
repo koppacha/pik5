@@ -18,6 +18,7 @@ import {CustomMenuButton, LeftAppBar, ThinAppBar} from "../../styles/pik5.css";
 import {useEffect, useRef, useState} from "react";
 import ModalSearch from "../modal/ModalSearch";
 import {p0} from "../../lib/const";
+import TranslateIcon from '@mui/icons-material/Translate';
 
 export default function HeaderMenu({users}){
     const [mounted, setMounted] = useState(false)
@@ -122,7 +123,7 @@ export default function HeaderMenu({users}){
                             locale={r}
                             id="translate-button"
                             className="icon-button">
-                            <FontAwesomeIcon icon={faGlobe} />
+                            <TranslateIcon />
                         </IconButton>
                     </Tooltip>
                 </Toolbar>

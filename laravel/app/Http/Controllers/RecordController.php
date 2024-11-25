@@ -40,8 +40,7 @@ class RecordController extends Controller
     public function getRecord(Request $request): JsonResponse
     {
         $data = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first()->toArray();
-        $data["stage"] = $data["stage_id"];
-        $data["post_rank"] = $this->getRankArray($data);
+        $data["post_rank"] = $this->getRankArray($data, false);
 
         if(!$data){
             $data = collect(['message' => "Record Not Found"]);
@@ -68,8 +67,9 @@ class RecordController extends Controller
 
         // 当時の順位を追加
         foreach($data as $record){
-            $record["stage"] = $record["stage_id"];
-            $record["post_rank"] = $this->getRankArray($record);
+            $history = $this->getRankArray($record, true);
+            $record["post_rank"] = $history[0];
+            $record["rps"] = $history[1];
             $new_data[] = $record;
         }
 
@@ -96,23 +96,38 @@ class RecordController extends Controller
             $data
         );
     }
-    // 暫定順位を取得する関数バックエンド版
-    public function getRankArray(array $request): int
+    // 暫定順位を取得する関数バックエンド版：第２引数がtrueの場合は投稿時点の順位を取得、falseの場合は現在時刻
+    public function getRankArray(array $request, bool $history): int|array
     {
-        $orderBy = Func::orderByRule($request['stage'], $request['rule']);
+        $orderBy = Func::orderByRule($request['stage_id'], $request['rule']);
         $inequality = ($orderBy[1] === 'ASC') ? '<' : '>';
+        $data = Record::query();
 
-        $data = Record::select('user_id')->where('stage_id', $request['stage'])
+        $data->when($history, function ($query) use ($request) {
+            return $query->where('created_at', '<', $request['created_at']);
+        });
+
+        $data->select('user_id')
+            ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
-            ->where('score', $inequality, (int)$request['score'])
-            ->where('flg','<', 2)
-            ->where('created_at','<', $request['created_at'])
-            ->get()
-            ->unique('user_id')
-            ->count();
-        $data++;
+            ->where('flg','<', 2);
 
-        return $data;
+        // ヒストリーモードの場合、ここで処理をぶった斬ってクローンし、別プロセスで当時の参加者数も取得する
+        if($history){
+            $dataClone = clone $data;
+            $countAll = $dataClone->distinct('user_id')->count('user_id');
+        }
+
+        // 順位取得の後続処理
+        $count = $data->where('score', $inequality, (int)$request['score'])
+            ->distinct('user_id')
+            ->count('user_id');
+        $count++;
+
+        if($history){
+            return [$count, $countAll];
+        }
+        return $count;
     }
 
     /**
