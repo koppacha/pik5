@@ -55,7 +55,7 @@ import RecordPost from "../../components/modal/RecordPost";
 
 export async function getServerSideProps(context){
 
-    const limited = 240421
+    const limited = 241123
 
     // イベント情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${limited}`)
@@ -133,10 +133,11 @@ export default function Limited(param){
 
     // アリーナ情報を取得する
     const {data:arenaData, error: arenaError} = useSWR(`/api/server/arena`, fetcher)
+
     // アリーナ情報から各チームの現在ステージ情報を取得
     const stage = [
         Object.values(arenaData?.data ?? {}).find(p => p.flag === 1),
-        Object.values(arenaData?.data ?? {}).find(p => p.flag === 2)
+        Object.values(arenaData?.data ?? {}).find(p => p.flag === 1)
     ]
     // ステージ情報から左チームが着手中のランキングとステージ情報を取得
     const {data:recordLeftData, error: recordLeftError} = useSWR(`/api/server/record/1049`, fetcher)
@@ -203,15 +204,15 @@ export default function Limited(param){
     return (
         <>
             <Head>
-                <title>第19回期間限定ランキング - ピクチャレ大会</title>
+                <title>第1回期間限定ランキングミニ - ピクチャレ大会</title>
             </Head>
             <PageHeader>
                 #{param.limited}<br/>
                 <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                 <StairIcon icon={faStairs}/>
                 期間限定ランキング<br/>
-                <Typography variant="" className="title">第19回期間限定ランキング</Typography><br/>
-                <Typography variant="" className="subtitle">The 19th Special Limited Tournament</Typography><br/>
+                <Typography variant="" className="title">第1回ミニ期間限定ランキング</Typography><br/>
+                <Typography variant="" className="subtitle">The 1st Mini Limited Tournament</Typography><br/>
                 <br/>
                 <Typography variant="span" style={{fontSize:"1.25em"}}>
                     アリーナ戦<FontAwesomeIcon style={{padding:"0 0.3em"}} icon={faXmark} />チーム対抗制
@@ -273,7 +274,6 @@ export default function Limited(param){
                                 return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
                             })
                         }
-
                     </div>
                 </Grid>
                 <Grid container alignItems="flex-start" item xs={12} md={6}>

@@ -24,7 +24,7 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
     return (
         <StageListWrapper className="stage-list-wrapper" count={stages?.length}>
             <Grid container style={{minWidth:(stages?.length > 16) ? "1200px" : "100%"}}
-                  columns={{xs:(stages?.length > 16) ? 10 : 4, lg : 10}}>
+                  columns={{xs:(stages?.length > 16) ? 10 : 4, md:(stages?.length > 16) ? 10 : 6, lg : 10}}>
                 {
                     stages?.map(function(stage){
                         return (

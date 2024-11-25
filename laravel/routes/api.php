@@ -120,5 +120,9 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: get('max', [Func::class, 'memberCount']);
+    Route:: get('simulate', [Func::class, 'simulate_rank_point_calc']);
+//    Route:: get('/phpinfo', static function (){
+//        phpinfo();
+//    });
 });
 

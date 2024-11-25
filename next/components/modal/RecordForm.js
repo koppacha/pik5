@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {convertToSeconds, rule2consoles, useLocale} from "../../lib/pik5";
+import {convertToSeconds, currentYear, rule2consoles, useLocale} from "../../lib/pik5";
 import {Box, MenuItem, ToggleButton} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -154,17 +154,15 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 // キャッシュクリア用のトークンをリクエスト
                 const tokenRes = await fetch('/api/token')
                 const { token } = await tokenRes.json()
+                const getYear = currentYear()
 
                 // ステージ別ページのキャッシュをクリア
-                const resStage = await fetch(`/api/revalidate?page=stage&id=${info.stage_id}`, {
+                const resStage = await fetch(`/api/revalidate?page=stage&id=${info.stage_id}&console=${consoles}&rule=${rule}&year=${getYear}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,
                     },
                 })
-                if(resStage.ok){
-                    window.location.reload()
-                }
                 // 総合ページのキャッシュをクリア
                 const resTotal = await fetch(`/api/revalidate?page=total&id=${rule}`, {
                     method: 'POST',
@@ -179,8 +177,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         'Authorization': `Bearer ${token}`,
                     },
                 })
-                if(!resTotal.ok || !resUser.ok){
-                    console.error("User or Total Page Cache Clear Failed")
+                if(resStage.ok){
+                    window.location.reload()
+                }
+                if(!resStage.ok || !resTotal.ok || !resUser.ok){
+                    console.error("Page Cache Clear Failed")
                 }
             }
         }
@@ -215,7 +216,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // リージョン違い判定
     const isRegion = () => {
-        return (Number(consoles) === 7 && [203, 213, 228].includes(info?.stage_id)) || regionSelected
+        return (Number(consoles) === 4 && [203, 213, 228].includes(info?.stage_id)) || regionSelected
     }
 
     // タイムからスコアに変換
@@ -258,7 +259,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 <Dialog open={open} onClose={handleClose}>
                     <Box style={{width: '600px'}}>
                         <DialogContent>
-                            <Link href="/auth/login">投稿にはログインが必要です。</Link>
+                            <Link href="/auth/login">{t.g.pleaseLogin}</Link>
                         </DialogContent>
                     </Box>
                 </Dialog>
@@ -309,7 +310,6 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         fullWidth
                         variant="standard"
                         defaultValue={consoleList[0]}
-                        helperText={"スタンダードとは、Wii U Proコン/Nintendo Switch Proコン/Wii U GamePad両手持ち/Joy-Con 2本持ち/Nintendo Switch Liteのいずれかのことです。"}
                         margin="normal"
                     >
                         {

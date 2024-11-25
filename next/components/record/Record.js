@@ -25,7 +25,7 @@ import { useDrag } from '@use-gesture/react';
 import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
 
-export default function Record({mini, parent, data, stages, series, consoles, year, prevUser}) {
+export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history}) {
 
     const router = useRouter()
     const {t} = useLocale()
@@ -90,7 +90,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} rps]</RankPointType>}
+                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : "rps"}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>

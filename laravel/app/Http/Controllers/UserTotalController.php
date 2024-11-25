@@ -32,7 +32,6 @@ class UserTotalController extends Controller
     {
         //
     }
-
     /**
      * Display the specified resource.
      *
@@ -44,11 +43,14 @@ class UserTotalController extends Controller
         // モデルを定義
         $record = new Record();
 
+        // 計算対象とするルール
+        $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46];
+
         // 当該ユーザーの通常ランキング全記録をリクエスト
         $dataset = $record::select(config('const.selected'))
             ->where("user_id", $request['id'])
             ->where('flg','<', 2)
-            ->where('rule','<', 100) // 期間限定はとりあえず対象外
+            ->whereIn('rule', $rules)
             ->orderBy('score', 'DESC')
             ->get()
             ->toArray();
@@ -56,15 +58,37 @@ class UserTotalController extends Controller
         // 操作方法・ルール・ステージすべて同じ記録は最新のみ残して削除する
         $tmp = [];
         $records = [];
+        $sp_stages = [23, 24, 44, 45, 46];
+        $RecordController = new RecordController();
+        $Func = new Func();
+        // 通常＋独立した特殊ランキングの参加者数
+        $member = $Func::memberCount();
+
+        // 通常ランキングにもステージがあるルール違いの参加者数
+        $spMember = $Func::memberCount($sp_stages);
+
+        $max = max($member);
+
         foreach($dataset as $record) {
             $concatName = implode("_", [$record["stage_id"], $record["rule"]]);
             if(!in_array($concatName, $tmp, true)) {
+                // 暫定順位とランクポイントを取得
+                $record["post_rank"] = $RecordController->getRankArray($record, false);
+
+                if(isset($member[$record["stage_id"]])) {
+                    $count = in_array($record["rule"], $sp_stages, true) ? $spMember[$record["stage_id"]] : $member[$record["stage_id"]];
+                    $record["rps"] = $Func::rankPoint_calc($record["stage_id"], $record["post_rank"], $count, $max);
+                } else {
+                    $record["rps"] = 0;
+                }
+                // 後続処理の対象を配列へ代入
                 $tmp[] = $concatName;
                 $records[] = $record;
             }
         }
         // 各ルールごとにスコアを足し合わせる
         $new_data["scores"] = $this->aggregateScores($records);
+        $new_data["rps"] = $this->aggregateScores($records, "rps");
 
         // 投稿数をカウント
         $new_data["marks"] = [];
@@ -93,18 +117,27 @@ class UserTotalController extends Controller
                 $new_data["marks"]["40"]++;
             }
         }
+
+        // 各キーの合計値を取得（あらかじめ２総合と３総合を配列から除外
+        unset($new_data["scores"][20], $new_data["scores"][30], $new_data["scores"][40],
+              $new_data["rps"][20], $new_data["rps"][30], $new_data["rps"][40],
+              $new_data["marks"][20], $new_data["marks"][30], $new_data["marks"][40]);
+        $new_data["totals"]["score"] = array_sum($new_data["scores"]);
+        $new_data["totals"]["rps"] = array_sum($new_data["rps"]);
+        $new_data["totals"]["mark"] = array_sum($new_data["marks"]);
+
         return response()->json(
             $new_data
         );
     }
 
-    public function aggregateScores($array): array
+    public function aggregateScores($array, $mode = "score"): array
     {
         $output = [];
 
         foreach ($array as $data) {
             $rule = $data["rule"];
-            $score = $data["score"];
+            $score = ($mode === "score") ? $data["score"] : $data["rps"];
 
             // 各ruleごとに初期化
             if (!isset($output[$rule])) {

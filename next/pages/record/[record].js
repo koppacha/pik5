@@ -152,7 +152,7 @@ export default function RecordPage({users, data, history}){
                                     history?.map(function(post){
                                         return (
                                             <React.Fragment key={post.unique_id}>
-                                                <Record key={post.unique_id} data={post} />
+                                                <Record key={post.unique_id} data={post} history={true} />
                                             </React.Fragment>
                                         )
                                     })

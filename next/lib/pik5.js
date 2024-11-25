@@ -168,25 +168,23 @@ export function stageUrlOutput(stage, consoles, rule, year, parent){
 
 // ルールIDを対象操作方法配列に変換
 export function rule2consoles(rule){
-    const ruleNum = Number(rule ?? 0)
-    if(!ruleNum) return [1, 2, 3, 4, 5, 6, 7]
+    const ruleNum = Number(rule) ?? 0
+    if(!ruleNum) return [1, 2, 3, 4]
 
     // ピクミン1・2はNGC、Wii、Switch
-    if(ruleNum < 30) return [1, 2, 7]
+    if(ruleNum < 30) return [1, 2, 4]
 
-    // ピクミン4はジャイロあり・なし
-    if(ruleNum > 39 && ruleNum < 50) return [3, 4]
+    // ピクミン4はSwitchのみ
+    if(ruleNum > 39 && ruleNum < 50) return [4]
 
-    // ピクミン3ソロビンゴはWii、ジャイロあり、ジャイロなし、Wii Uタッチペン、おすそわけ
-    if(ruleNum === 35) return [2, 3, 4, 5, 6]
+    // ピクミン3サイドストーリーはSwitchのみ
+    if(ruleNum === 36) return [4]
 
-    // ピクミン3サイドストーリーはジャイロあり、ジャイロなし
-    if(ruleNum === 36) return [3, 4]
+    // 上記以外のピクミン3はWii、Wii U、Switch（3DX）
+    if(ruleNum > 29 && ruleNum < 35) return [2, 3, 4]
 
-    // 上記以外のピクミン3はWii、ジャイロあり、ジャイロなし、Wii Uタッチペン
-    if(ruleNum > 29 && ruleNum < 35) return [2, 3, 4, 5]
-
-    return [1, 2, 3, 4, 5, 6, 7]
+    // 上記のどれにも当てはまらない
+    return [1, 2, 3, 4]
 }
 
 // 記録オブジェクトに対してスクリーンネームを追加する関数
@@ -200,8 +198,8 @@ export function addName2posts(posts, users){
     }) : []
 }
 // キャッシュ再作成をNext.js APIに指示する関数
-export const purgeCache = async (page, id, token) => {
-    const res = await fetch(`/api/revalidate?page=${page}&id=${id}`, {
+export const purgeCache = async (page, id, console, rule, year, token) => {
+    const res = await fetch(`/api/revalidate?page=${page}&id=${id}&console=${console}&rule=${rule}&year=${year}`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,
