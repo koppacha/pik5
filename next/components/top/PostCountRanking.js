@@ -14,7 +14,15 @@ export default function PostCountRanking({users}){
 
     if(!counter){
         return (
-            <NowLoading/>
+            <Grid container>
+                {Array.from({ length: 12 }).map((_, index) => (
+                    <Grid item xs={4} sm={2} key={index}>
+                        <CellBox>
+                            {index === 0 && <NowLoading />}
+                        </CellBox>
+                    </Grid>
+                ))}
+            </Grid>
         )
     }
 

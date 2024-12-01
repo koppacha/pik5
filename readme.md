@@ -250,6 +250,18 @@ $ git clean -d -f .
 
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
+
+# やるたびに忘れているので記録データベースのまるごとバックアップ手順の備忘録
+# ①本番環境でdumpする。dumpしたファイルはコンテナ外の`pik5/log/mysql`へ格納される
+$ mysqldump --single-transaction -u root -p bowsprit records > /var/log/recordsYYMMDD.sql;
+
+# ②開発環境でimportする前にデータを綺麗にする。
+$ mysql> truncate records;
+
+# ③開発環境へimport。import時はテーブル名の指定は必要ない
+$ cd /var/log/
+$ mysql -u root -p bowsprit < recordsYYMMDD.sql
+
 ```
 
 ---

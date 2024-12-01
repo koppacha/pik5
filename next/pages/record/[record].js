@@ -47,7 +47,7 @@ export async function getStaticProps({params}){
     })
     // 表示中のユーザー名を取り出す
     data.user_name = users.find(function(e){
-        return e.userId === data.user_id
+        return e.userId === data?.user_id
     })?.name
 
     // 過去記録にスクリーンネームを注入

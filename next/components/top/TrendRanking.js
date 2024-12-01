@@ -29,7 +29,15 @@ export default function TrendRanking(){
 
     if(!trends){
         return (
-            <NowLoading/>
+            <Grid container>
+                {Array.from({ length: 12 }).map((_, index) => (
+                    <Grid item xs={4} sm={2} key={index}>
+                        <CellBox>
+                            {index === 0 && <NowLoading />}
+                        </CellBox>
+                    </Grid>
+                ))}
+            </Grid>
         )
     }
     return (
