@@ -72,21 +72,29 @@ export default function Home({users, prev}) {
             }
         }
     }
-
-    // クイックアクセス
-    const quickLinks = [
-        [loginName().name, loginName().url],
-        [t.title[1], "/total/10"],
-        [t.title[2], "/total/20"],
-        [t.title[3], "/total/30"],
-        [t.title[4], "/total/40"],
-        [t.g.key, "/keyword"],
-    ]
-    // 初めての人向けダッシュボード
-    const WelcomeBlock = (!session)
-        ? <><hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
-          <div style={{textAlign: "right"}}>{t.g.firstTime1}<Link href="/auth/register">{t.g.firstTime2}</Link></div></>
-        : <></>
+    // ウェルカムメッセージ直下のリンク
+    const WelcomeBlock =
+        <>
+            <hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
+            <div style={{textAlign: "right"}}>
+                <Link href="/total/10">{t.title[1]}</Link>　|　
+                <Link href="/total/20">{t.title[2]}</Link>　|　
+                <Link href="/total/30">{t.title[3]}</Link>　|　
+                <Link href="/total/40">{t.title[4]}</Link>　|　
+                <Link href="/keyword">{t.g.key}</Link>　|　
+                <Link href="/keyword/rules">{t.g.ru}</Link>　|　
+                <Link href="https://discord.gg/rQEBJQa">Discord</Link>　|　
+                {(!session)
+                    ?
+                    <>
+                        <Link href="/auth/register">{t.g.register}</Link>　|　
+                        <Link href="/auth/login">{t.g.login}</Link>
+                    </>
+                    :
+                    <Link href="#" onClick={() => signOut()}>{t.g.logout}</Link>
+                }
+            </div>
+        </>
     // 年初来の最多投稿ステージ
     const PrevTrend = (prev?.stage?.cnt)
         ? <>{t.g.trendYear}: {t.stage[prev.stage["stage_id"]]} ({prev.stage["cnt"]} {t.g.countTail}）</>
@@ -109,11 +117,13 @@ export default function Home({users, prev}) {
               {WelcomeBlock}
           </InfoBox>
           <Grid container>
-              <WrapTopBox item xs={12} className="wrap-top-box">
-                  <TopBox className="top-box">
-                      <DashBoard user={session?.user} />
-                  </TopBox>
-              </WrapTopBox>
+              {(session) &&
+                  <WrapTopBox item xs={12} className="wrap-top-box">
+                      <TopBox className="top-box">
+                          <DashBoard user={session.user} />
+                      </TopBox>
+                  </WrapTopBox>
+              }
               <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox className="top-box">
                       <TopBoxHeader className="top-box-header">
@@ -147,8 +157,6 @@ export default function Home({users, prev}) {
                   </TopBox>
               </WrapTopBox>
           </Grid>
-          <br/>
-          <button onClick={() => signOut()}>{t.g.logout}</button>
       </>
   )
 }

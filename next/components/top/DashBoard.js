@@ -25,7 +25,22 @@ export default function DashBoard({user}){
 
     if(!data){
         return (
-            <NowLoading/>
+            <>
+                <TopBoxHeader className="top-box-header">
+                    <span><FontAwesomeIcon icon={faCircleInfo} />{user?.name || "不明な葉っぱ人"}さんのダッシュボード</span>
+                </TopBoxHeader>
+                <TopBoxContent className="top-box-content">
+                    <Grid container>
+                        {Array.from({ length: 12 }).map((_, index) => (
+                            <Grid item xs={4} sm={2} key={index}>
+                                <CellBox>
+                                    {index === 0 && <NowLoading />}
+                                </CellBox>
+                            </Grid>
+                        ))}
+                    </Grid>
+                </TopBoxContent>
+            </>
         )
     }
     // 暫定段位認定システム（15段階）
@@ -93,7 +108,7 @@ export default function DashBoard({user}){
                                         <ul className="dashboard-tooltip-list">
                                             {
                                                 notPostCategory.map((series) => (
-                                                    <Link href={`./total/${series}`}><li>{t.stage[series]}</li></Link>
+                                                    <Link key={series} href={`./total/${series}`}><li>{t.stage[series]}</li></Link>
                                                 ))
                                             }
                                         </ul>
