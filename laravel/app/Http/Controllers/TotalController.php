@@ -276,7 +276,6 @@ class TotalController extends Controller
             $totals
         );
     }
-
     /**
      * Show the form for editing the specified resource.
      *
