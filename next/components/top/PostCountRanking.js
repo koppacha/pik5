@@ -16,7 +16,7 @@ export default function PostCountRanking({users}){
         return (
             <Grid container>
                 {Array.from({ length: 12 }).map((_, index) => (
-                    <Grid item xs={4} sm={2} key={index}>
+                    <Grid item xs={4} sm={3} md={2} key={index}>
                         <CellBox>
                             {index === 0 && <NowLoading />}
                         </CellBox>
@@ -60,7 +60,7 @@ export default function PostCountRanking({users}){
                 data.map(function(post, i){
 
                     return (
-                        <Grid item key={i} xs={4} sm={2} component={Link} href={"/user/"+post.user_id}>
+                        <Grid item key={i} xs={4} sm={3} md={2} component={Link} href={"/user/"+post.user_id}>
                             <CellBox length={post.user_name.length}>
                                 <span className="cell-box-caption">{t.g.rankHead}{i+1} {t.g.rankTail}</span><br/>
                                 {nameOmission(post.user_name)}<br/>

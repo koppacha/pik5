@@ -31,7 +31,7 @@ export default function TrendRanking(){
         return (
             <Grid container>
                 {Array.from({ length: 12 }).map((_, index) => (
-                    <Grid item xs={4} sm={2} key={index}>
+                    <Grid item xs={4} sm={3} md={2} key={index}>
                         <CellBox>
                             {index === 0 && <NowLoading />}
                         </CellBox>
@@ -47,7 +47,7 @@ export default function TrendRanking(){
                 trends?.data?.map(function(post, i){
 
                     return (
-                        <Grid item key={i} xs={4} sm={2} component={Link} href={"/stage/"+post.stage_id}>
+                        <Grid item key={i} xs={4} sm={3} md={2} component={Link} href={"/stage/"+post.stage_id}>
                             <CellBox length={t.stage[post.stage_id].length}>
                                 <span className="cell-box-caption">{post.month}</span><br/>
                                 {t.stage[post.stage_id].length > 10 ? t.stage[post.stage_id].substring(0, 9)+".." : t.stage[post.stage_id]}<br/>

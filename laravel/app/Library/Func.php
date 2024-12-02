@@ -21,7 +21,7 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362), range(901, 914));
+        $rta_stages = array_merge(range(245, 254), range(351, 362), range(901, 915));
 
         if(is_numeric($id)){
             if(in_array((int)$id, $rta_stages, true)){
