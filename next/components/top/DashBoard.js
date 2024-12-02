@@ -32,7 +32,7 @@ export default function DashBoard({user}){
                 <TopBoxContent className="top-box-content">
                     <Grid container>
                         {Array.from({ length: 12 }).map((_, index) => (
-                            <Grid item xs={4} sm={2} key={index}>
+                            <Grid item xs={4} sm={3} md={2} key={index}>
                                 <CellBox>
                                     {index === 0 && <NowLoading />}
                                 </CellBox>
@@ -67,7 +67,7 @@ export default function DashBoard({user}){
             </TopBoxHeader>
             <TopBoxContent className="top-box-content">
             <Grid container>
-                <Grid item xs={4}>
+                <Grid item xs={8} sm={6} md={4}>
                     <CellBox>
                         <span className="cell-box-caption">全総合ランキング・段位認定</span><br/>
                         {classes[cls]}<br/>
@@ -76,7 +76,7 @@ export default function DashBoard({user}){
                 </Grid>
                 {
                     Object.keys(data.data.scores).map((series) =>
-                        <Grid item xs={2} key={series}>
+                        <Grid item xs={4} sm={3} md={2} key={series}>
                             <Link href={`./total/${series}`}>
                                 <CellBox>
                                     <span className="cell-box-caption">{t.subtitle[series]}</span><br/>
