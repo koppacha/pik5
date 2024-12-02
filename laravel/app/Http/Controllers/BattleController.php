@@ -78,7 +78,7 @@ class BattleController extends Controller
         try {
             $posts = new Battle();
             $posts->fill([
-                'id' => "309".sprintf('%06d',random_int(0, 999999)),
+                'id' => "310".sprintf('%06d',random_int(0, 999999)),
                 'session_id' => $request["session_id"],
                 'stage_id' => $request["stage_id"],
                 'battle_id' => $request["battle_id"],
