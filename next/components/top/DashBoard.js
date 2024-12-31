@@ -44,8 +44,8 @@ export default function DashBoard({user}){
         )
     }
     // 暫定段位認定システム（15段階）
-    const classes = ["6級 (D-)", "5級 (D)", "4級 (D+)", "3級 (C-)", "2級 (C)", "1級 (C+)",
-        "初段 (B-)", "二段 (B)", "三段 (B+)", "四段 (A-)", "五段 (A)", "六段 (A+)", "七段 (S-)", "八段 (S)", "九段 (S+)"]
+    const classes = ["6級 (D1)", "5級 (D2)", "4級 (D3)", "3級 (C1)", "2級 (C2)", "1級 (C3)",
+        "初段 (B1)", "二段 (B2)", "三段 (B3)", "四段 (A1)", "五段 (A2)", "六段 (A3)", "七段 (S1)", "八段 (S2)", "九段 (S3)"]
     const stageCounts = 210;
     const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000]
     const cls = basePoints.findLastIndex(base => data.data.totals.rps > stageCounts * base)
