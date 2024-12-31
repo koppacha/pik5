@@ -327,7 +327,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                             setRegionSelected(!regionSelected);
                         }}
                     >
-                        <FontAwesomeIcon icon={faCheck} />　Not Japanese Edition（日本語版でない場合はチェック）
+                        <FontAwesomeIcon icon={faCheck} />　For Nintendo Switch or non-Japanese（スイッチ版または海外版の場合はチェック）
                     </ToggleButton>
                     <TextField
                         {...register('region-score')}
