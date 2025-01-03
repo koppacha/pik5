@@ -352,6 +352,10 @@ body {
     [data-theme="dark"] & {
         color: $dark-sub-title;
     }
+
+    .active & {
+        color: $dark-sub-back !important;
+    }
 }
 .stair-icon {
     font-size :0.8em;

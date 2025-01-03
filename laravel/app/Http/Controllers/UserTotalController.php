@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Library\Func;
 use App\Models\Record;
+use App\Models\Total;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -126,11 +127,73 @@ class UserTotalController extends Controller
         $new_data["totals"]["rps"] = array_sum($new_data["rps"]);
         $new_data["totals"]["mark"] = array_sum($new_data["marks"]);
 
+        // ここまでの計算結果をデータベースへ書き込む
+        $this->updateTotalsTable($request['id'], $new_data);
+
         return response()->json(
             $new_data
         );
     }
+    public function updateTotalsTable(string $userName, array $data): void
+    {
+        $now = now(); // 現在時刻を取得
+        $scores = $data['scores'];
+        $rps = $data['rps'];
+        $totals = $data['totals'];
 
+        foreach ($scores as $ruleId => $score) {
+            if (!isset($rps[$ruleId])) {
+                continue; // 対応するrpsがない場合はスキップ
+            }
+            // ルール別スコア
+            DB::table('totals')->updateOrInsert(
+                // 検索条件
+                ['user' => $userName, 'rule' => $ruleId],
+
+                // 更新または挿入するデータ
+                [
+                    'score' => $score,
+                    'rps' => $rps[$ruleId],
+                    'flg' => 0,
+                    'updated_at' => $now,
+                ]
+            );
+            // 合計スコア
+            DB::table('totals')->updateOrInsert(
+                ['user' => $userName, 'rule' => 0],
+                ['score' => $totals["score"], 'rps' => $totals["rps"], 'flg' => 0,'updated_at' => $now]
+            );
+        }
+    }
+    public function getTotalsTables(Request $request): JsonResponse
+    {
+        // リクエストからルールIDを取得
+        $ruleId = $request['id'];
+
+        // ルールIDが一致し、flgが0のデータを取得し、rpsで降順に並び替え
+        $totals = Total::where('rule', $ruleId)
+            ->where('flg', 0)
+            ->orderByDesc('rps')
+            ->get();
+
+        // 順位を付ける
+        $rank = 1;
+        $previousRps = null;
+        $rankedTotals = $totals->map(function ($total, $index) use (&$rank, &$previousRps) {
+            if ($previousRps !== null && $total->rps !== $previousRps) {
+                $rank = $index + 1; // 同じrpsの場合は順位を変えない
+            }
+
+            // 順位を付与
+            $total->rank = $rank;
+            $previousRps = $total->rps;
+
+            return $total;
+        });
+
+        // 結果をJSON形式で返す
+        return response()->json($rankedTotals);
+    }
     public function aggregateScores($array, $mode = "score"): array
     {
         $output = [];

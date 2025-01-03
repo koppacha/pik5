@@ -10,4 +10,9 @@ class Total extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'score',
+        'rps',
+        'flg'
+    ];
 }
