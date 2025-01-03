@@ -113,7 +113,7 @@ export function id2name(users, target){
     const result = users.find(function(user){
         return user.userId === target
     })
-    return result.name
+    return result?.name || "名無し"
 }
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
 export const rankColor = (rank, team = 0, target = 0) => {

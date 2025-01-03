@@ -251,6 +251,9 @@ $ git clean -d -f .
 # Windows環境でVMが異常にメモリを食っている場合は以下を実行でキャッシュを破棄
 $ sudo sh -c "/usr/bin/echo 3 > /proc/sys/vm/drop_caches"
 
+# なんらかのコマンドで no space left on device というエラーが出たらDockerをお掃除しよう
+$ docker system prune -a --volumes
+
 # やるたびに忘れているので記録データベースのまるごとバックアップ手順の備忘録
 # ①本番環境でdumpする。dumpしたファイルはコンテナ外の`pik5/log/mysql`へ格納される
 $ mysqldump --single-transaction -u root -p bowsprit records > /var/log/recordsYYMMDD.sql;

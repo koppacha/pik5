@@ -77,12 +77,13 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 
 // ユーザーIDからユーザー名を取得する
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route:: get('user/name/{id}', [UserNameController::class, 'requestName']);
+    Route::get('user/name/{id}', [UserNameController::class, 'requestName']);
 });
 
 // ユーザーIDから全順位を取得する
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
-    Route:: get('user/total/{id}', [UserTotalController::class, 'show']);
+    Route::get('user/total/{id}', [UserTotalController::class, 'show'])->name('user.total');
+    Route::get('user/rank/{id}', [UserTotalController::class, 'getTotalsTables']);
 });
 
 // キーワード関連API
