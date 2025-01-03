@@ -22,6 +22,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useState} from "react";
 import {useFetchToken} from "../../hooks/useFetchToken";
+import DashBoard from "../../components/top/DashBoard";
 
 export async function getStaticPaths(){
     return {
@@ -91,6 +92,9 @@ export default function Stage(param){
 
     // トークンを取得
     const token = useFetchToken()
+
+    // ダッシュボードに渡すための変数
+    const userId = {id: param.user, name: param.userName}
 
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
@@ -185,6 +189,7 @@ export default function Stage(param){
                     </UserInfoBox>
                 </Grid>
             </Box>
+            <DashBoard user={userId} users={param.users} />
             <TotalScoreTable/>
             <Grid container marginBottom="20px">
                 <Grid item xs={12}>
