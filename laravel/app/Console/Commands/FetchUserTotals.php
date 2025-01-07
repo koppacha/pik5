@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Record;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -31,19 +32,17 @@ class FetchUserTotals extends Command
     public function handle(): int
     {
         // 全ユーザーを取得
-        $users = User::all(); // ユーザー一覧（例: usersテーブル）
+        $users = Record::distinct()->pluck('user_id'); // ユーザー一覧
 
         foreach ($users as $user) {
-            $userName = $user->user_id; // ユーザー名を取得
-
             // APIを実行
-            $response = Http::get(route('user.total', ['id' => $userName]));
+            $response = Http::get(route('user.total', ['id' => $user]));
 
             if ($response->ok()) {
                 $response->json();
-                $this->info("Updated totals for user: $userName");
+                $this->info("Updated totals for user: $user");
             } else {
-                $this->error("Failed to fetch totals for user: $userName");
+                $this->error("Failed to fetch totals for user: $user");
             }
         }
         $this->info('All users processed successfully.');

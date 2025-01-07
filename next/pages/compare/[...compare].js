@@ -143,26 +143,34 @@ export default function Compare(param){
                     </div>
                 </Grid>
                 <Grid item xs={4} style={{paddingTop:"1em"}}>
-                    <TeamScoreType style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
+                    <TeamScoreType className="team-score-type" style={{color:"#e31ca9"}}>{param.totals[2]}</TeamScoreType>
                     <TeamRpsType className="team-rps-type">{param.totals[0].toLocaleString()}</TeamRpsType>
                 </Grid>
                 <Grid item xs={4} style={{paddingTop:"1em",textAlign:"center"}}>
-                    <TeamScoreType style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
+                    <TeamScoreType className="team-score-type" style={{color:"#777"}}>{param.totals[4]}</TeamScoreType>
                     <TeamRpsType className="team-rps-type">{param.totals[6].toLocaleString()}</TeamRpsType>
                 </Grid>
                 <Grid item xs={4} style={{paddingTop:"1em",textAlign: "right"}}>
-                    <TeamScoreType style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
+                    <TeamScoreType className="team-score-type" style={{color: "#1ce356"}}>{param.totals[3]}</TeamScoreType>
                     <TeamRpsType className="team-rps-type">{param.totals[1].toLocaleString()}</TeamRpsType>
                 </Grid>
             </Grid>
-            <RuleWrapper container>
-                <RuleBox component={Link}
+            <RuleWrapper className="rule-wrapper" container>
+                <RuleBox component={Link} className="rule-box active"
                          href="#" onClick={handleOpen}>
                     条件を変更する
                 </RuleBox>
-                <RuleBox component={Link}
+                <RuleBox component={Link} className="rule-box"
                          href={`/total/${param.rule1}`}>
-                    総合ランキングへ戻る
+                    総合ランキング
+                </RuleBox>
+                <RuleBox component={Link} className="rule-box"
+                         href={`/user/${param.user1}`}>
+                    {param.userName}さんのページ
+                </RuleBox>
+                <RuleBox component={Link} className="rule-box"
+                         href={`/user/${param.user2}`}>
+                    {param.userName2}さんのページ
                 </RuleBox>
             </RuleWrapper>
             <ModalCompare open={open} param={param} handleClose={handleClose}/>

@@ -160,7 +160,7 @@ class TotalController extends Controller
             $ttl = 1800;
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別は対象外）
         } elseif($request['id'] === "3"){
-            $rule = [11, 23, 24, 25, 29, 35, 91];
+            $rule = [11, 23, 24, 25, 29, 35, 91, 44, 45, 46];
             $ttl = 1800;
         // 期間限定ランキング（終了済みの大会のみ対象）
         } elseif($request['id'] === "4"){
@@ -200,13 +200,13 @@ class TotalController extends Controller
         // 全ステージのいずれかに１つ以上投稿しているユーザーのリスト
         $users = [];
 
-        // 対象ステージの数だけループ処理
+        // 対象ステージの数だけループ処理 TODO:全総合では全ステージをループしている
         foreach(self::stage_list($request['id']) as $stage) {
 
             // 各ループごとに初期化する値
             $temp = [];
 
-            // 有効データのみ抽出するクエリ
+            // 有効データのみ抽出するクエリ TODO:各ステージに対し、有効記録をリクエストしている
             $testModel[(int)$stage] = Cache::remember('total-'.$stage.'-'.$console.'-'.$reqRule.'-'.$reqYear, $ttl, static function() use ($stage, $console_operation, $console, $rule, $date) {
                 return Record::where('stage_id', $stage)
                     ->where('console', $console_operation, $console)
@@ -219,6 +219,7 @@ class TotalController extends Controller
                     ->toArray();
                 });
 
+            // TODO:有効記録に対し、ユーザーの重複を削除している
             // ステージごとにユーザーごとのフィルタ条件別の自己ベストを抽出してステージごとに順位・ランクポイントを計算
             $filter = [];
             foreach($testModel[$stage] as $value){
@@ -231,7 +232,12 @@ class TotalController extends Controller
             }
 
             // 順位とランクポイント計算に渡す値
-            $ranking[$stage] = Func::rank_calc("stage", $temp, [$console, $rule, $date]);
+            if(in_array($stage, array_merge(range(245, 254), range(351, 362)), true)){
+                $mode = "reverse";
+            } else {
+                $mode = "stage";
+            }
+            $ranking[$stage] = Func::rank_calc($mode, $temp, [$console, $rule, $date]);
         }
         $totals = [];
         // 対象の記録群からユーザー配列を作成し、値を初期化
@@ -245,19 +251,20 @@ class TotalController extends Controller
         }
         // 各ステージからユーザー情報を抽出する
         foreach($users as $user){
-            foreach($ranking as $stage){
-                $scoreData = $stage[$user]["score"] ?? 0;
-                if(in_array($stage, array_merge(range(245, 254), range(351, 362)), true)){
-                    // ソロビンゴ・ビンゴバトルは10分からRTを引いた秒数をスコアとする
-                    $totals[$user]["score"] += 600 - ($stage[$user]["score"] ?? 0);
-                } else {
-                    // 上記以外
-                    $totals[$user]["score"] += ($stage[$user]["score"] ?? 0);
+            foreach($ranking as $record){
+                if(isset($record[$user]["stage_id"])) {
+                    if (in_array($record[$user]["stage_id"], array_merge(range(245, 254), range(351, 362)), true)) {
+                        // ソロビンゴ・ビンゴバトルは10分からRTを引いた秒数をスコアとする
+                        $totals[$user]["score"] += 600 - ($record[$user]["score"] ?? 0);
+                    } else {
+                        // 上記以外
+                        $totals[$user]["score"] += ($record[$user]["score"] ?? 0);
+                    }
                 }
-                $totals[$user]["rps"] += $stage[$user]["rps"] ?? 0;
-                $totals[$user]["ranks"][] = $stage[$user]["post_rank"] ?? null;
-                if($totals[$user]["created_at"] < ($stage[$user]["created_at"] ?? 0)){
-                    $totals[$user]["created_at"] = $stage[$user]["created_at"];
+                $totals[$user]["rps"] += $record[$user]["rps"] ?? 0;
+                $totals[$user]["ranks"][] = $record[$user]["post_rank"] ?? null;
+                if($totals[$user]["created_at"] < ($record[$user]["created_at"] ?? 0)){
+                    $totals[$user]["created_at"] = $record[$user]["created_at"];
                 }
             }
         }
