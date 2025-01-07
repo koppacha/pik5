@@ -161,7 +161,6 @@ body {
 
     }
 }
-
 .sp-hidden {
     display: none;
 }
@@ -233,6 +232,9 @@ body {
         background-color: #2d4448;
     }
 }
+.welcome-block {
+    text-align: center;
+}
 .record-post-button {
     border-radius: 4px;
     padding: 12px;
@@ -251,6 +253,7 @@ body {
     }
 }
 .styled-select {
+    margin-left: 0.5em;
     max-width: 200px;
     max-height: 42px;
     border: 1px solid $light-front;
@@ -334,15 +337,19 @@ body {
     }
 }
 .cell-box {
-    margin :4px;
-    padding :4px;
-    height: 68px;
+    margin: 4px;
+    padding: 4px;
     background-color: $light-sub-back;
-    border-radius :8px;
-    text-align :center;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 
     [data-theme="dark"] & {
         background-color: $dark-sub-back;
+    }
+    &:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
     }
 }
 .cell-box-caption {
@@ -403,6 +410,15 @@ body {
     padding-top :4px;
     padding-bottom :12px;
     border-bottom: 1px solid #777;
+}
+.top-box-caption {
+    font-size: 0.8em;
+    padding-left: 1em;
+    border-bottom: 1px solid $light-border;
+
+    [data-theme="dark"] & {
+        border-bottom: 1px solid $dark-border;
+    }
 }
 .styled-grid {
     border-bottom: 1px solid $light-border;

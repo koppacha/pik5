@@ -14,8 +14,8 @@ export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3
 
 // ルールIDから配列に変換する関数
 export function rule2array(rule){
-    const number = [10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43]
-    const arrays    = [p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex]
+    const number = [1, 10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46]
+    const arrays    = [p0, p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex, dc, dd, ex]
     const flg = number.indexOf(Number(rule))
     if(flg === -1){
         return []
