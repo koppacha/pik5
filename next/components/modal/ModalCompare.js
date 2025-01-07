@@ -21,7 +21,7 @@ export default function ModalCompare({open, handleClose, param}) {
 
     const {t} = useLocale()
     const {data: session } = useSession()
-    const consoleList = [0, 1, 2, 3, 4, 5, 6, 7]
+    const consoleList = [0, 1, 2, 3, 4]
     const years = range(2014, currentYear()).reverse()
 
     const [rule, setRule] = useState(0)

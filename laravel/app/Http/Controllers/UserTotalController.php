@@ -118,20 +118,23 @@ class UserTotalController extends Controller
                 $new_data["marks"]["40"]++;
             }
         }
+        // 最終的に返す配列
+        $result = $new_data;
 
         // 各キーの合計値を取得（あらかじめ２総合と３総合を配列から除外
         unset($new_data["scores"][20], $new_data["scores"][30], $new_data["scores"][40],
               $new_data["rps"][20], $new_data["rps"][30], $new_data["rps"][40],
               $new_data["marks"][20], $new_data["marks"][30], $new_data["marks"][40]);
-        $new_data["totals"]["score"] = array_sum($new_data["scores"]);
-        $new_data["totals"]["rps"] = array_sum($new_data["rps"]);
-        $new_data["totals"]["mark"] = array_sum($new_data["marks"]);
+
+        $result["totals"]["score"] = array_sum($new_data["scores"]);
+        $result["totals"]["rps"] = array_sum($new_data["rps"]);
+        $result["totals"]["mark"] = array_sum($new_data["marks"]);
 
         // ここまでの計算結果をデータベースへ書き込む
-        $this->updateTotalsTable($request['id'], $new_data);
+        $this->updateTotalsTable($request['id'], $result);
 
         return response()->json(
-            $new_data
+            $result
         );
     }
     public function updateTotalsTable(string $userName, array $data): void

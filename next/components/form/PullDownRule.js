@@ -21,6 +21,7 @@ export default function PullDownRule(props){
         <FormControl>
             <FormHelperText className="form-helper-text">{t.g.category}</FormHelperText>
             <StyledSelect
+                className="styled-select"
                 defaultValue={rule}
                 id="select-rule"
                 MenuProps={{disableScrollLock: true}}

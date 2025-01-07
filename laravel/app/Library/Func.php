@@ -46,7 +46,7 @@ class Func extends Facade
             $rule = $total;
             $stages = TotalController::stage_list("2");
             $ttl = 1800;
-        } elseif($total) {
+        } elseif($total > 100000) {
             // 期間限定などで総合IDが指定されている場合はそれだけを指定する
             $rule = [$total];
             $stages = TotalController::stage_list((string)$total);
@@ -99,6 +99,9 @@ class Func extends Facade
         // 最大の参加者数データを取得（取得に失敗した場合は当該ランキングの参加者数を最大値とする）
         $max = ($memberCount = self::memberCount($totals, $option)) ? max($memberCount) : $member;
 
+        if($mode === "reverse") {
+            $data = array_reverse($data);
+        }
         foreach($data as $key => $value){
             if($mode !== "user") {
                 // 順位を一括計算

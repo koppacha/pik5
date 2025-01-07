@@ -394,7 +394,6 @@ export const RuleBox = styled(Grid)`
 export const CellBox = styled(Box)`
   margin :4px;
   padding :4px;
-  height: 68px;
   background-color: ${colors.light.subBack};
   border-radius :8px;
   text-align :center;

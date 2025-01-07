@@ -1,13 +1,13 @@
 import React, {useState} from "react";
 import useSWR from "swr";
-import {fetcher, id2name, useLocale} from "../../lib/pik5";
+import {currentYear, fetcher, id2name, rankColor, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import {Box, ClickAwayListener, Grid, Tooltip} from "@mui/material";
 import {CellBox, EventContainer, EventContent, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import {rule2array, selectable} from "../../lib/const";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBullhorn, faCircleInfo, faFlag, faSplotch} from "@fortawesome/free-solid-svg-icons";
+import {faBullhorn, faCircleInfo, faCircleQuestion, faFlag, faSplotch} from "@fortawesome/free-solid-svg-icons";
 import ModalIdeaPost from "../modal/ModalIdeaPost";
 
 export default function DashBoard({user, users}){
@@ -15,20 +15,14 @@ export default function DashBoard({user, users}){
     const {t} = useLocale()
     const [open, setOpen] = useState(false)
 
-    // 期間限定ルール投稿モーダル制御関連
-    const [editOpen, setEditOpen] = useState(false)
-    const [uniqueId, setUniqueId] = useState("")
-    const handleEditOpen = () => setEditOpen(true)
-    const handleEditClose = () => setEditOpen(false)
-
     const {data} = useSWR(`/api/server/user/total/${user?.id}`, fetcher)
     const {data:totalRanking} = useSWR(`/api/server/user/rank/0`, fetcher)
 
-    if(!data){
+    if(!data || !totalRanking){
         return (
             <>
                 <TopBoxHeader className="top-box-header">
-                    <span><FontAwesomeIcon icon={faCircleInfo} />{user?.name || "不明な葉っぱ人"}さんのダッシュボード</span>
+                    <span><FontAwesomeIcon icon={faCircleInfo} />ダッシュボード</span>
                 </TopBoxHeader>
                 <TopBoxContent className="top-box-content">
                     <Grid container>
@@ -44,9 +38,7 @@ export default function DashBoard({user, users}){
             </>
         )
     }
-    // 暫定段位認定システム（15段階）
-    const classes = ["6級 (D1)", "5級 (D2)", "4級 (D3)", "3級 (C1)", "2級 (C2)", "1級 (C3)",
-        "初段 (B1)", "二段 (B2)", "三段 (B3)", "四段 (A1)", "五段 (A2)", "六段 (A3)", "七段 (S1)", "八段 (S2)", "九段 (S3)", "理論値（Lim.）"]
+    // 暫定段位認定システム
     const stageCounts = 210;
     const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 20000]
     const cls = basePoints.findLastIndex(base => data.data.totals.rps > stageCounts * base)
@@ -61,7 +53,7 @@ export default function DashBoard({user, users}){
         const userIndex = totalRanking.findIndex(item => item.rps === userRps);
 
         if (userIndex === -1) {
-            throw new Error("User not found in the ranking.");
+            return []
         }
 
         const totalCount = totalRanking.length;
@@ -112,34 +104,74 @@ export default function DashBoard({user, users}){
     return (
         <>
             <TopBoxHeader className="top-box-header">
-                <span><FontAwesomeIcon icon={faCircleInfo} />{user?.name || "不明な葉っぱ人"}さんのダッシュボード</span>
+                <span><FontAwesomeIcon icon={faCircleInfo} />ダッシュボード</span>
                 {
-                    (cls < classes.length - 2) ?
-                        <span style={{fontSize: "0.8em"}}>{classes[cls + 1]} まであと {nextPoints.toLocaleString()} 点</span>
+                    (cls < 14) ?
+                        <span style={{fontSize: "0.8em"}}>{t.classes[cls + 1]} まであと {nextPoints.toLocaleString()} 点</span>
                         :
                         <span style={{fontSize: "0.8em"}}>最高段位に到達しました！</span>
                 }
-
-
             </TopBoxHeader>
             <TopBoxContent className="top-box-content">
+                <Box className="top-box-caption">総合ランキング / ライバルリスト <Tooltip title={`ランクポイントは投稿ステージの順位に応じてもらえるポイントです。より人気なステージで上位なほど得点が多くもらえます。段位はステージ数に特定の係数を掛けることで算出されるポイントを超えると認定されます。最高段位（九段）に到達したプレイヤーのうち最高点数保持者には「名人」タイトルが授与されます。現在の対象ステージは210ステージです。`}><FontAwesomeIcon icon={faCircleQuestion} /></Tooltip></Box>
             <Grid container>
                 {
-                    rivals.map(player =>
-                        <Grid item xs={2}>
-                            <CellBox className={player?.user === user?.id && "active"}>
-                                <span className="cell-box-caption">{player?.rank && <>{player?.rank}位 / {classes[clas(player?.rps)]}</>}</span><br/>
-                                {player?.user !== "checkPoint" ? id2name(users, player?.user) : (cls < classes.length - 2) ? classes[cls + 1] : <FontAwesomeIcon icon={faFlag} />}<br/>
-                                <span className="cell-box-caption">{(player?.rps < 4200000) && <>{Number(player?.rps).toLocaleString()} rps.</>}</span>
+                    rivals.map(player => {
+                        const isActive = player?.user === user?.id;
+                        const isCheckPoint = player?.user === "checkPoint";
+                        const cellContent = (
+                            <CellBox className={`cell-box ${isActive ? "active" : ""}`}>
+                                {/* 1行目: 順位とクラス */}
+                                <span className="cell-box-caption">
+                                {player?.rank ? (
+                                    <>
+                                        {player?.rank}位 / {clas(player?.rps) === 14 && player?.rank === 1 ? t.classes[15] : t.classes[clas(player?.rps)]}
+                                    </>
+                                ) : (<><FontAwesomeIcon icon={faFlag}/></>)}
+                                    </span><br/>
+                                    {/* 2行目: ユーザー名または特別な表示 */}
+                                    {!isCheckPoint ? (
+                                        id2name(users, player?.user)
+                                    ) : cls < 14 ? (
+                                        t.classes[cls + 1]
+                                    ) : ""}
+                                    <br/>
+                                    {/* 3行目: RPS表示 */}
+                                    <span className="cell-box-caption">
+                    {player?.rps < 4200000 && (
+                        <>{Number(player?.rps).toLocaleString()} rps.</>
+                    )}
+                </span>
                             </CellBox>
-                        </Grid>
-                    )
+                    );
+
+                    return (
+                            <Grid item
+                                  xs={4}
+                                  lg={isCheckPoint ? 1.5 : isActive ? 2.5 : 2}
+                                  key={player?.user}>
+                                {/* 条件に応じて<Link>を出力 */}
+                                {isActive || isCheckPoint ? (
+                                    cellContent
+                                ) : (
+                                    <Link
+                                        href={`/compare/${user?.id}/0/1/${currentYear()}/${player?.user}/0/1/${currentYear()}`}
+                                    >
+                                        {cellContent}
+                                    </Link>
+                                )}
+                            </Grid>
+                        );
+                    })
                 }
+                </Grid>
+                <Box className="top-box-caption" style={{paddingTop:"1.5em"}}>カテゴリ別総合点 / 投稿数</Box>
+                <Grid container>
                 {
                     Object.keys(data.data.scores).map((series) =>
                         <Grid item xs={4} sm={3} md={2} key={series}>
                             <Link href={`/total/${series}`}>
-                                <CellBox>
+                                <CellBox className="cell-box">
                                     <span className="cell-box-caption">{t.subtitle[series]}</span><br/>
                                     {Number(data.data.scores[series]).toLocaleString()} <span className=".score-tail" style={{fontSize:"0.8em"}}>pts.</span><br/>
                                     <span className="cell-box-caption">
@@ -175,7 +207,7 @@ export default function DashBoard({user, users}){
                                         </ul>
                                     </>
                                 }>
-                                    <CellBox onClick={handleTooltipOpen} style={{cursor: "pointer"}}>
+                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer"}}>
                                         <br/>
                                         その他<br/>
                                     </CellBox>
@@ -185,48 +217,7 @@ export default function DashBoard({user, users}){
                     )
                 }
             </Grid>
-                <EventContainer>
-                    <EventContent>
-                        <Link href="#" onClick={handleEditOpen}>
-                            <EventContent style={{
-                                textDecoration: "underline",
-                                float: "left",
-                                width: "50%",
-                                backgroundColor: "#333",
-                                borderRadius: "4px",
-                                padding: "8px",
-                                textAlign: "center"
-                            }}>
-                                期間限定ルールを投稿する<br/>
-                            </EventContent>
-                        </Link>
-                        <Link href="/keyword?c=idea">
-                            <EventContent style={{
-                                textDecoration: "underline",
-                                float: "right",
-                                width: "48%",
-                                backgroundColor: "#333",
-                                borderRadius: "4px",
-                                padding: "8px",
-                                textAlign: "center"
-                            }}>
-                                ルールを確認・編集する
-                            </EventContent>
-                        </Link>
-                    </EventContent>
-                </EventContainer>
-                <Box style={{
-                    borderTop: "1px solid #777",
-                    fontSize: "0.8em",
-                    color: "#999",
-                    textAlign: "right",
-                    display: "none"
-                }}>
-                    <FontAwesomeIcon icon={faBullhorn}/> イベント告知チャンネルに投稿されたイベントは順次掲載していきます。
-                </Box>
             </TopBoxContent>
-            <ModalIdeaPost editOpen={editOpen} uniqueId={uniqueId} handleEditClose={handleEditClose} handleEditOpen={handleEditOpen}/>
-
         </>
     )
 }

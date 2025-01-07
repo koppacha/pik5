@@ -120,7 +120,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         {mini || <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                             {data.stage_id &&
                                 <Link href={stageLink}>{data.stage_id + '#' + t.stage[data.stage_id]}
-                                    {hideRuleNames.includes(data.rule) || <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
+                                    {(!hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
                                 </Link>
                             }
                             {// シリーズ別総合ランキングは星取表へのリンクを表示する
