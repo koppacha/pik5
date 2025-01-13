@@ -41,98 +41,66 @@ class UserTotalController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
-        // モデルを定義
-        $record = new Record();
+        // 該当ユーザーの全総合ランキングデータをリクエスト
+        $req = new Request(['id' => 1, 'rule' => 1, 'console' => 0, 'year' => date('Y')]);
+        $totalController = new TotalController();
+        $totals = $totalController->getTotals($req);
 
-        // 計算対象とするルール
-        $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46];
+        $records = array_filter($totals, static function ($item) use ($request) {
+            return $item['user_id'] === $request['id'];
+        });
+        if($records) {
+            // インデックスをリセットする
+            $records = array_values($records)[0];
 
-        // 当該ユーザーの通常ランキング全記録をリクエスト
-        $dataset = $record::select(config('const.selected'))
-            ->where("user_id", $request['id'])
-            ->where('flg','<', 2)
-            ->whereIn('rule', $rules)
-            ->orderBy('score', 'DESC')
-            ->get()
-            ->toArray();
+            // 各ルールごとにスコアを足し合わせる
+            $records["scores"] = $this->aggregateScores($records["ranks"]);
+            $records["rps"] = $this->aggregateScores($records["ranks"], "rps");
 
-        // 操作方法・ルール・ステージすべて同じ記録は最新のみ残して削除する
-        $tmp = [];
-        $records = [];
-        $sp_stages = [23, 24, 44, 45, 46];
-        $RecordController = new RecordController();
-        $Func = new Func();
-        // 通常＋独立した特殊ランキングの参加者数
-        $member = $Func::memberCount();
-
-        // 通常ランキングにもステージがあるルール違いの参加者数
-        $spMember = $Func::memberCount($sp_stages);
-
-        $max = max($member);
-
-        foreach($dataset as $record) {
-            $concatName = implode("_", [$record["stage_id"], $record["rule"]]);
-            if(!in_array($concatName, $tmp, true)) {
-                // 暫定順位とランクポイントを取得
-                $record["post_rank"] = $RecordController->getRankArray($record, false);
-
-                if(isset($member[$record["stage_id"]])) {
-                    $count = in_array($record["rule"], $sp_stages, true) ? $spMember[$record["stage_id"]] : $member[$record["stage_id"]];
-                    $record["rps"] = $Func::rankPoint_calc($record["stage_id"], $record["post_rank"], $count, $max);
-                } else {
-                    $record["rps"] = 0;
+            // 投稿数をカウント
+            foreach ($records["ranks"] as $value){
+                if(!isset($records["marks"][$value["rule"]])){
+                    $records["marks"][$value["rule"]] = 0;
                 }
-                // 後続処理の対象を配列へ代入
-                $tmp[] = $concatName;
-                $records[] = $record;
+                $records["marks"][$value["rule"]]++;
+
+                if($value["rule"] === 21 || $value["rule"] === 22){
+                    if(!isset($records["marks"]["20"])){
+                        $records["marks"]["20"] = 0;
+                    }
+                    $records["marks"]["20"]++;
+                }
+                if($value["rule"] === 31 || $value["rule"] === 32 || $value["rule"] === 33 || $value["rule"] === 36){
+                    if(!isset($records["marks"]["30"])){
+                        $records["marks"]["30"] = 0;
+                    }
+                    $records["marks"]["30"]++;
+                }
+                if($value["rule"] === 41 || $value["rule"] === 42 || $value["rule"] === 43){
+                    if(!isset($records["marks"]["40"])){
+                        $records["marks"]["40"] = 0;
+                    }
+                    $records["marks"]["40"]++;
+                }
             }
+            // 最終的に返す配列
+            $result = $records;
+
+            // 各キーの合計値を取得（あらかじめ２総合と３総合を配列から除外
+            unset($records["scores"][20], $records["scores"][30], $records["scores"][40],
+                  $records["rps"][20], $records["rps"][30], $records["rps"][40],
+                  $records["marks"][20], $records["marks"][30], $records["marks"][40]);
+
+            $result["totals"]["score"] = array_sum($records["scores"]);
+            $result["totals"]["rps"] = array_sum($records["rps"]);
+            $result["totals"]["mark"] = array_sum($records["marks"]);
+
+            // ここまでの計算結果をデータベースへ書き込む
+            $this->updateTotalsTable($request['id'], $result);
+        } else {
+            // 総合ランキングを取得できなかった場合
+            $result = ["error" => "Totals Not Found"];
         }
-        // 各ルールごとにスコアを足し合わせる
-        $new_data["scores"] = $this->aggregateScores($records);
-        $new_data["rps"] = $this->aggregateScores($records, "rps");
-
-        // 投稿数をカウント
-        $new_data["marks"] = [];
-        foreach ($records as $value){
-            if(!isset($new_data["marks"][$value["rule"]])){
-                $new_data["marks"][$value["rule"]] = 0;
-            }
-            $new_data["marks"][$value["rule"]]++;
-
-            if($value["rule"] === 21 || $value["rule"] === 22){
-                if(!isset($new_data["marks"]["20"])){
-                    $new_data["marks"]["20"] = 0;
-                }
-                $new_data["marks"]["20"]++;
-            }
-            if($value["rule"] === 31 || $value["rule"] === 32 || $value["rule"] === 33 || $value["rule"] === 36){
-                if(!isset($new_data["marks"]["30"])){
-                    $new_data["marks"]["30"] = 0;
-                }
-                $new_data["marks"]["30"]++;
-            }
-            if($value["rule"] === 41 || $value["rule"] === 42 || $value["rule"] === 43){
-                if(!isset($new_data["marks"]["40"])){
-                    $new_data["marks"]["40"] = 0;
-                }
-                $new_data["marks"]["40"]++;
-            }
-        }
-        // 最終的に返す配列
-        $result = $new_data;
-
-        // 各キーの合計値を取得（あらかじめ２総合と３総合を配列から除外
-        unset($new_data["scores"][20], $new_data["scores"][30], $new_data["scores"][40],
-              $new_data["rps"][20], $new_data["rps"][30], $new_data["rps"][40],
-              $new_data["marks"][20], $new_data["marks"][30], $new_data["marks"][40]);
-
-        $result["totals"]["score"] = array_sum($new_data["scores"]);
-        $result["totals"]["rps"] = array_sum($new_data["rps"]);
-        $result["totals"]["mark"] = array_sum($new_data["marks"]);
-
-        // ここまでの計算結果をデータベースへ書き込む
-        $this->updateTotalsTable($request['id'], $result);
-
         return response()->json(
             $result
         );
