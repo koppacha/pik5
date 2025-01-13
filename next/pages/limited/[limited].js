@@ -50,6 +50,8 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
+    // ランキングをリクエスト
+    const posts = await fetch(`http://laravel:8000/api/server/total/${limited}`).then(res => res.json())
 
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
@@ -68,7 +70,7 @@ export async function getStaticProps({params}){
 
     return {
         props: {
-            stages, limited, info, users
+            stages, limited, info, users, posts
         },
         revalidate: 1,
     }
@@ -112,7 +114,7 @@ export default function Limited(param){
                 </RuleBox>
             </RuleWrapper>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
+            <RankingTotal posts={param.posts} stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
         </>
     )
 }

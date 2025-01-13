@@ -75,14 +75,6 @@ const shadow = () => {
             -2px   0 2px ${shadowColor},    0 -2px 2px ${shadowColor}
             `
 }
-// 順位セル用のカラー生成関数
-const rankCellColor = (rank) => {
-    const hue = rank === 1 ? 58 : rank === 2 ? 125 : rank === 3 ? 190 : 0
-    const saturation = rank === 1 ? "35%" : rank === 2 ? "25%" : rank === 3 ? "15%" : "0%"
-    const lightness = !rank ? "15%" : rank < 4 ? "65%" : rank < 11 ? "55%" : rank < 21 ? "35%" : "25%"
-    const transparent = !rank ? 0 : 1
-    return `hsl(${hue}, ${saturation}, ${lightness}, ${transparent})`
-}
 // スマホとPCのブレイクポイントを定義（TODO:MUIv4で使えない場合は専用クラスを使う）
 const sp = (first, ...interpolations) => css`
   @media (max-width: 600px) {
@@ -585,9 +577,6 @@ export const AuthWindow = styled(Grid)`
     background-color: ${colors.dark.back};
   }
 `
-export const BattleUserContainer = styled(Grid).attrs(props => ({$rank: props.rank}))`
-    border-bottom: 4px solid ${props => rankCellColor(props.$rank)};
-`
 export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
 
   margin-bottom: 2em;
@@ -756,7 +745,6 @@ export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.
   }
 `
 export const RankCell = styled(Grid).attrs(props => ({$rank: props.rank, $series: props.series}))`
-  background-color: ${props => rankCellColor(props.$rank)};
   width: ${props => props.$series < 10 ? "7px" : "14px"};
   height: ${props => props.$series < 10 ? "7px" : "14px"};
   margin-right: 1px;

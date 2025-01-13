@@ -1,6 +1,14 @@
 import {Box, Grid, Tooltip, Typography} from "@mui/material";
 import Link from "next/link";
-import {faComment, faImage, faScaleUnbalanced, faScaleUnbalancedFlip, faTag} from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowDownUpAcrossLine,
+    faComment,
+    faImage, faPeopleArrows,
+    faScaleUnbalanced,
+    faScaleUnbalancedFlip,
+    faTag,
+    faUser
+} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
 import {currentYear, dateFormat, fetcher, rankColor, sec2time, stageUrlOutput, useLocale} from "../../lib/pik5";
@@ -54,6 +62,10 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const stageUrl = stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
     const stageLink = (stageUrl) ? '/stage/'+stageUrl : ""
 
+    // 全総合を表示する場合、二重カウント対象分のステージ数を加算
+    // 全回収TA 5＋新チャレ 26＋ゲキカラ 28
+    const addStageCount = (Number(series) === 1) ? 59 : 0
+
     // 比較値を整形する
     let compare;
     if (!Number.isNaN(data.compare)) {
@@ -77,6 +89,15 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                              data?.post_rank === 3 ? "rank3" :
                              data?.post_rank <  11 ? "rank4" :
                              data?.post_rank <  21 ? "rank11": "rank21"
+
+    // 順位セル用のカラー生成関数
+    const rankCellColor = (rank) => {
+        const hue = rank === 1 ? 58 : rank === 2 ? 125 : rank === 3 ? 190 : 0
+        const saturation = rank === 1 ? "70%" : rank === 2 ? "70%" : rank === 3 ? "50%" : "0%"
+        const lightness = !rank ? "15%" : rank < 4 ? "65%" : rank < 11 ? "55%" : rank < 21 ? "35%" : "25%"
+        const transparent = !rank ? 0 : 1
+        return `hsl(${hue}, ${saturation}, ${lightness}, ${transparent})`
+    }
     return (
         // <Swiper userPageUrl={userPageUrl} stageLink={stageLink} router={router}>
         <>
@@ -102,7 +123,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                     <CompareType className="compare-type" as="span"> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
-                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.filter(v => v).length} / {data.ranks.length}</ScoreType></>
+                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stages.length + addStageCount}</ScoreType></>
                     }
                     </div>
                 </RecordGridWrapper>
@@ -125,18 +146,18 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                             }
                             {// シリーズ別総合ランキングは星取表へのリンクを表示する
                                 (data.ranks && series < 100 && series > 9) &&
-                                <>
+                                <div style={{padding:"0 4px"}}>
                                 {(session && session.user.id !== data.user_id) &&
                                     <Link href={`/compare/${session.user.id}/${consoles}/${series}/${year}/${data.user_id}/${consoles}/${series}/${year}`}>
-                                        <CompareIcon><FontAwesomeIcon icon={faScaleUnbalancedFlip} /><span style={{fontSize:"0.8em"}}>自分と比較</span></CompareIcon>
+                                        <Tooltip title="自分と比較"><FontAwesomeIcon icon={faPeopleArrows} style={{paddingRight:"4px"}} /></Tooltip>
                                     </Link>
                                 }
                                 {prevUser &&
                                     <Link href={`/compare/${data.user_id}/${consoles}/${series}/${year}/${prevUser}/${consoles}/${series}/${year}`}>
-                                        <CompareIcon><FontAwesomeIcon icon={faScaleUnbalanced} /><span style={{fontSize:"0.8em"}}>上位と比較</span></CompareIcon>
+                                        <Tooltip title="上位と比較"><FontAwesomeIcon icon={faArrowDownUpAcrossLine} style={{paddingRight:"4px"}}/></Tooltip>
                                     </Link>
                                 }
-                                </>
+                                </div>
                             }
                         </Grid>}
                         <Grid item xs={12} sm={12} style={{
@@ -180,8 +201,16 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                     <Grid container>
                                         {
                                             data.ranks.map(function(r, i){
-                                                const title = t.stage[stages[i]] + " " + (!r ? "未投稿" : `${r} 位`)
-                                                return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item rank={r} series={series}/></Tooltip>
+                                                const title =
+                                                    <>
+                                                        <div style={{fontWeight:'bold'}}>
+                                                            {t.stage[r.stage] + " " + (!hideRuleNames.includes(r.rule) ? `（${t.rule[r.rule]})` : "")}
+                                                        </div>
+                                                        <div>
+                                                            {(!r.post_rank ? "未投稿" : `${r.post_rank} 位 / ${r.rps.toLocaleString()} RPS`)}
+                                                        </div>
+                                                    </>
+                                                return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item style={{backgroundColor:rankCellColor(r.post_rank)}} className={`rank-cell ${series < 10 && "mini-cell"}`}/></Tooltip>
                                             })
                                         }
                                     </Grid>
