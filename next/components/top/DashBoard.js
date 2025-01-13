@@ -39,7 +39,7 @@ export default function DashBoard({user, users}){
         )
     }
     // 暫定段位認定システム
-    const stageCounts = 210;
+    const stageCounts = 208;
     const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 20000]
     const cls = basePoints.findLastIndex(base => data.data.totals.rps > stageCounts * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCounts * base)

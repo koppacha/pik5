@@ -7,7 +7,7 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useEffect, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {currentYear, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
+import {currentYear, fetcher, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
@@ -21,6 +21,7 @@ import RuleList from "../../components/record/RuleList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
+import useSWR from "swr";
 
 export async function getStaticPaths(){
     return {
@@ -48,41 +49,36 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
+    try {
+        const [stage_res, posts_res, stages_res] = await Promise.all([
+            fetch(`http://laravel:8000/api/stage/${series}`),
+            fetch(`http://laravel:8000/api/total/${series}/${consoles}/${rule}/${year}`),
+            fetch(`http://laravel:8000/api/stages/${series}`)
+        ]);
 
-    let info
-    // ステージ情報をリクエスト
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${series}`)
-    if(stage_res.status < 300) {
-        info = await stage_res.json()
-    }
-
-    // 総合ランキングの総合ランキングにアクセスする場合はルールフィルターを無効にする
-    if(series % 10 === 0 || series < 10){
-        rule = 0
-    }
-
-    let stages = []
-    // シリーズ番号に基づくステージ群の配列をリクエスト
-    const res = await fetch(`http://laravel:8000/api/stages/${series}`)
-    if(res.status < 300) {
-        stages = await res.json()
-    }
-
-    // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
+        if (!stage_res.ok || !posts_res.ok || !stages_res.ok) {
+            console.error('One or more API requests failed');
+            return { notFound: true };
         }
-    })
-    // キャッシュ時間をリクエスト
-    const fDate = formattedDate()
 
-    return {
-        props: {
-            stages, series, rule, consoles, year, info, users, fDate
-        },
-        revalidate: 604800,
+        const [info, posts, stages] = await Promise.all([
+            stage_res.json(),
+            posts_res.json(),
+            stages_res.json()
+        ]);
+
+        const users = await prisma.user.findMany({
+            select: { userId: true, name: true }
+        });
+
+        const fDate = formattedDate();
+        return {
+            props: { stages, series, rule, consoles, year, info, users, fDate, posts },
+            revalidate: 604800
+        };
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        return { notFound: true };
     }
 }
 
@@ -147,7 +143,7 @@ export default function Series(param){
                 </Grid>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>
+            <RankingTotal posts={param.posts} users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>
         </>
     )
 }
