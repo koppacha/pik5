@@ -256,15 +256,15 @@ class RecordController extends Controller
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
         if($rule === "1"){
             // 全総合（2P、TAS、無差別級を除く）
-            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 91];
+            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46];
 
         } elseif($rule === "2"){
             // 通常総合
-            $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
+            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
 
         } elseif($rule === "3"){
             // 特殊総合（期間限定を除く）
-            $rule = [11, 23, 24, 25, 29, 35, 44, 45, 46, 91];
+            $rule = [11, 23, 24, 25, 29, 35, 44, 45, 46];
 
         } elseif($rule === "20"){
             // ピクミン2総合
@@ -284,7 +284,7 @@ class RecordController extends Controller
 
         } elseif(!$rule && $where === "user_id") {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
-            $rule = [10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
+            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
 
         } else {
             // 上記すべてに当てはまらない場合
@@ -301,18 +301,18 @@ class RecordController extends Controller
         $date = $datetime->format("Y-m-d H:i:s");
 
         // 記録をリクエスト
-        $dataset = Record::select(config('const.selected'))
+        $new_data = Record::select(config('const.selected'))
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
                 ->whereIn('rule', $rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
                 ->orderBy($orderBy[0],$orderBy[1])
-                ->orderBy('created_at')
+                ->orderBy('created_at', 'DESC')
             ->get()
             ->toArray();
 
-        $new_data = Func::duplicates_cleaner($dataset, $group);
+        $new_data = Func::duplicates_cleaner($new_data, $group);
 
         if($where === "stage_id") {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する

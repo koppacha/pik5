@@ -39,13 +39,13 @@ export async function getStaticProps({params}){
     if(
         !user1 ||
         !user2 ||
-        consoles1 > 7 ||
+        consoles1 > 4 ||
         consoles1 < 0 ||
-        consoles2 > 7 ||
+        consoles2 > 4 ||
         consoles2 < 0 ||
-        rule1 > 43 ||
+        rule1 > 46 ||
         rule1 < 0 ||
-        rule2 > 43 ||
+        rule2 > 46 ||
         rule1 < 0 ||
         year1 < 2014 ||
         year1 > currentYear() ||
@@ -71,14 +71,31 @@ export async function getStaticProps({params}){
         return e.userId === user2
     })?.name
 
-    // 左側の記録を取得
-    const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`)
-    const posts1 = await recordRes.json()
+    // 全総合の場合は特殊処理
+    let posts1, posts2, posts3, posts4
+    if(rule1 === "1" && rule2 === "1") {
+        // 左側の通常総合・特殊総合を取得
+        [posts1, posts3] = await Promise.all([
+            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`).then(res => res.json()),
+            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`).then(res => res.json())
+        ]);
 
-    // 右側の記録を取得
-    const recordResR = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`)
-    const posts2 = await recordResR.json()
+        // 右側の通常総合・特殊総合を取得
+        [posts2, posts4] = await Promise.all([
+            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`).then(res => res.json()),
+            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`).then(res => res.json())
+        ]);
 
+    // 全総合以外の通常処理
+    } else {
+        // 左側の記録を取得
+        const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`)
+        posts1 = await recordRes.json()
+
+        // 右側の記録を取得
+        const recordResR = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`)
+        posts2 = await recordResR.json()
+    }
     // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け、総合点差）
     let totals = [0, 0, 0, 0, 0, 0, 0], tempScore = [0, 0]
 
@@ -99,7 +116,7 @@ export async function getStaticProps({params}){
             users, userName, userName2,
             user1, consoles1, rule1, year1,
             user2, consoles2, rule2, year2,
-            posts1, posts2, totals
+            posts1, posts2, posts3, posts4, totals
         },
         revalidate: 43200,
     }
@@ -175,6 +192,18 @@ export default function Compare(param){
             </RuleWrapper>
             <ModalCompare open={open} param={param} handleClose={handleClose}/>
             <RankingCompare posts2={param.posts2} posts1={param.posts1} userName={param.userName} rule={param.rule1} userName2={param.userName2}/>
+            {
+                param.rule1 === "1" &&
+                <>
+                    <Box style={{
+                        color:"#e81fc1",
+                        borderBottom:"2px dotted #e81fc1",
+                        textAlign:"center",
+                        margin:"8px 0"
+                    }}>◆特殊ランキング◆</Box>
+                    <RankingCompare posts2={param.posts4} posts1={param.posts3} userName={param.userName} rule={"3"} userName2={param.userName2}/>
+                </>
+            }
         </>
     )
 }

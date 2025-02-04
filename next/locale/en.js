@@ -252,7 +252,7 @@ export const en = {
         399: "Sandbox Tundra",
         400: "Pikmin 4 Story Mode",
         401: "Dandori Day Care",
-        402: "Hotschock Canyon",
+        402: "Hotshock Canyon",
         403: "Rockaway Cellars",
         404: "Test Tubs",
         405: "Ice-Cross Course",

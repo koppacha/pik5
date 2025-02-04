@@ -4,11 +4,10 @@ import {currentYear, fetcher, id2name, rankColor, useLocale} from "../../lib/pik
 import NowLoading from "../NowLoading";
 import {Box, ClickAwayListener, Grid, Tooltip} from "@mui/material";
 import {CellBox, EventContainer, EventContent, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
-import {rule2array, selectable} from "../../lib/const";
+import {basePoints, rule2array, selectable, stageCounts} from "../../lib/const";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faBullhorn, faCircleInfo, faCircleQuestion, faFlag, faSplotch} from "@fortawesome/free-solid-svg-icons";
-import ModalIdeaPost from "../modal/ModalIdeaPost";
+import {faCircleInfo, faCircleQuestion, faFlag, faSplotch} from "@fortawesome/free-solid-svg-icons";
 
 export default function DashBoard({user, users}){
 
@@ -38,9 +37,6 @@ export default function DashBoard({user, users}){
             </>
         )
     }
-    // 暫定段位認定システム
-    const stageCounts = 208;
-    const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 20000]
     const cls = basePoints.findLastIndex(base => data.data.totals.rps > stageCounts * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCounts * base)
     const nextPoints = (basePoints[cls + 1] * stageCounts) - data.data.totals.rps
@@ -106,7 +102,7 @@ export default function DashBoard({user, users}){
             <TopBoxHeader className="top-box-header">
                 <span><FontAwesomeIcon icon={faCircleInfo} />ダッシュボード</span>
                 {
-                    (cls < 14) ?
+                    (cls < (basePoints.length - 2)) ?
                         <span style={{fontSize: "0.8em"}}>{t.classes[cls + 1]} まであと {nextPoints.toLocaleString()} 点</span>
                         :
                         <span style={{fontSize: "0.8em"}}>最高段位に到達しました！</span>
@@ -117,8 +113,10 @@ export default function DashBoard({user, users}){
             <Grid container>
                 {
                     rivals.map(player => {
-                        const isActive = player?.user === user?.id;
-                        const isCheckPoint = player?.user === "checkPoint";
+                        const isActive = player?.user === user?.id
+                        const isCheckPoint = player?.user === "checkPoint"
+                        const cellLink = (isActive || isCheckPoint) ? `/user/${user?.id}` : `/compare/${user?.id}/0/1/${currentYear()}/${player?.user}/0/1/${currentYear()}`
+
                         const cellContent = (
                             <CellBox className={`cell-box ${isActive ? "active" : ""}`}>
                                 {/* 1行目: 順位とクラス */}
@@ -138,10 +136,10 @@ export default function DashBoard({user, users}){
                                     <br/>
                                     {/* 3行目: RPS表示 */}
                                     <span className="cell-box-caption">
-                    {player?.rps < 4200000 && (
-                        <>{Number(player?.rps).toLocaleString()} rps.</>
-                    )}
-                </span>
+                                        {player?.rps < (stageCounts * basePoints.at(-1)) && (
+                                            <>{Number(player?.rps).toLocaleString()} rps.</>
+                                        )}
+                                    </span>
                             </CellBox>
                     );
 
@@ -150,16 +148,7 @@ export default function DashBoard({user, users}){
                                   xs={4}
                                   lg={isCheckPoint ? 1.5 : isActive ? 2.5 : 2}
                                   key={player?.user}>
-                                {/* 条件に応じて<Link>を出力 */}
-                                {isActive || isCheckPoint ? (
-                                    cellContent
-                                ) : (
-                                    <Link
-                                        href={`/compare/${user?.id}/0/1/${currentYear()}/${player?.user}/0/1/${currentYear()}`}
-                                    >
-                                        {cellContent}
-                                    </Link>
-                                )}
+                                    <Link href={cellLink}>{cellContent}</Link>
                             </Grid>
                         );
                     })
@@ -207,7 +196,7 @@ export default function DashBoard({user, users}){
                                         </ul>
                                     </>
                                 }>
-                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer"}}>
+                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "68px"}}>
                                         <br/>
                                         その他<br/>
                                     </CellBox>
