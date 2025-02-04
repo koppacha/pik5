@@ -12,8 +12,8 @@ import Image from "next/image";
 import LightBoxImage from "../../components/modal/LightBoxImage";
 import Lightbox from "yet-another-react-lightbox";
 
-const arrayA = range(413, 418)
-const arrayB = range(1, 8)
+const dandoriStages = range(413, 418)
+const dandoriPikmins = range(1, 8) // 赤、青、黄、白、紫、羽、岩、氷
 
 function generateRandomHex(length){
     return Math.floor(Math.random() * Math.pow(16, length).toString(16).padStart(length, "0"))
@@ -51,6 +51,8 @@ export default function Battle(props) {
     const [count, setCount] = useState(0)
     const [players, setPlayers] = useState([])
     const [rates, setRates] = useState({})
+    const [prevRates, setPrevRates] = useState({})
+    const [borders, setBorders] = useState({})
     const [pool, setPool] = useState(0)
     const [open, setOpen] = useState(false)
     const [newPlayerName, setNewPlayerName] = useState('')
@@ -76,10 +78,10 @@ export default function Battle(props) {
         fetchPlayerData()
     }, [])
 
-    const getRandomStages = (arrayA, arrayB, history, setHistory, historyA, setHistoryA, historyB, setHistoryB) => {
+    const getRandomStages = (stages, pikmins, history, setHistory, historyA, setHistoryA, historyB, setHistoryB) => {
         const allStages = []
-        arrayA.forEach(a => {
-            arrayB.forEach(b => {
+        stages.forEach(a => {
+            pikmins.forEach(b => {
                 allStages.push([a, b])
             })
         })
@@ -88,7 +90,7 @@ export default function Battle(props) {
         })
         if (availableStages.length === 0) {
             setHistory([])
-            return getRandomStages(arrayA, arrayB, [], setHistory, historyA, setHistoryA, historyB, setHistoryB)
+            return getRandomStages(stages, pikmins, [], setHistory, historyA, setHistoryA, historyB, setHistoryB)
         } else {
             const recentA = historyA.slice(0, 3)
             const recentB = historyB.slice(0, 3)
@@ -108,7 +110,7 @@ export default function Battle(props) {
     }
     // セッションを追加するボタン
     const handleButtonClick = () => {
-        const [selectedItemA, selectedItemB] = getRandomStages(arrayA, arrayB, history, setHistory, historyA, setHistoryA, historyB, setHistoryB)
+        const [selectedItemA, selectedItemB] = getRandomStages(dandoriStages, dandoriPikmins, history, setHistory, historyA, setHistoryA, historyB, setHistoryB)
         const battleId = generateRandomHex(9)
         const newGrid = {
             id: count,
@@ -165,48 +167,75 @@ export default function Battle(props) {
             const latestGrid = prevGrids[0]
             let currentPool = 0
 
-            // ポットに貢献するためのレートの合計を計算
-            const updatedPlayers = latestGrid.players.map(player => {
-                const contribution = Math.round(player.initialRate / 10) // 各参加者のレートの1/10をポットに追加
-                currentPool += contribution
-                return { ...player, rate: player.initialRate - contribution } // レートからポット分を引く
-            })
-            setPool(currentPool) // ポットの合計をセット
+            // 現在のレートを保存（計算前の状態を保存する）
+            const currentRates = latestGrid.players.reduce((acc, player) => {
+                acc[player.name] = player.initialRate // 初期レートを保存
+                return acc
+            }, {})
+            setPrevRates(currentRates) // prevRatesに保存
 
-            // 順位に基づいてプレイヤーをソート
-            const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC)
+            // 各プレイヤーの貢献度を計算し、プールを更新
+            const updatedPlayers = latestGrid.players.map((player) => {
+                const contribution = Math.round(player.initialRate / 10); // プールへの支払い
+                currentPool += contribution;
+                return { ...player, rate: player.initialRate - contribution };
+            });
+            setPool(currentPool);
 
-            // 自然数の和 t を計算 (1から参加者数 n までの和)
-            const n = sortedPlayers.length // 参加者数
-            const t = (n * (n + 1)) / 2   // 自然数の和
+            // 順位計算と自然数の和を計算
+            const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC);
+            const n = sortedPlayers.length;
+            const t = (n * (n + 1)) / 2; // 自然数の和
 
-            // 各プレイヤーの順位に基づいて報酬を計算
+            // ボーダーラインを計算するためのリストを初期化
+            const newBorders = {};
+
+            // 各プレイヤーにおけるリワードと順位のボーダーラインを計算
+            updatedPlayers.forEach((player) => {
+                const contribution = Math.round(player.initialRate / 10); // 支払い点数
+                let borderRank = n + 1; // 初期値として最低順位を設定
+
+                // 各順位でリワードを計算し、比較
+                for (let rank = n; rank >= 0; rank--) {
+                    const reward = Math.round(((n - rank + 1) / t) * currentPool); // リワード計算
+                    if (reward > contribution) {
+                        borderRank = rank; // 支払いよりリワードが多ければボーダーラインを更新
+                        break; // 最小順位が決まったら終了
+                    }
+                }
+                // 各プレイヤーのボーダーラインを保存
+                newBorders[player.name] = borderRank <= n ? borderRank : null; // 有効な順位のみ保存
+            });
+            // ボーダーラインを保存
+            setBorders(newBorders);
+
+            // 各プレイヤーの順位に基づいて報酬を更新
             sortedPlayers.forEach((player, index) => {
-                const rank = index + 1 // 順位 (1位が最上位)
-                const reward = Math.round(((n - rank + 1) / t) * currentPool) // 新しい計算式
-                player.rate += reward  // プレイヤーに報酬を加算
-            })
+                const rank = index + 1; // 順位 (1位が最上位)
+                const reward = Math.round(((n - rank + 1) / t) * currentPool); // 新しい計算式
+                player.rate += reward; // 報酬を追加
+            });
 
             // 各プレイヤーの最終レートと順位を設定
-            const finalPlayers = updatedPlayers.map(player => ({
+            const finalPlayers = updatedPlayers.map((player) => ({
                 ...player,
-                rate: sortedPlayers.find(p => p.name === player.name).rate,
-                rank: sortedPlayers.find(p => p.name === player.name).rank,
-            }))
+                rate: sortedPlayers.find((p) => p.name === player.name).rate,
+                rank: sortedPlayers.find((p) => p.name === player.name).rank,
+            }));
 
             // 新しいレートをセット
-            const newRates = { ...rates }
-            finalPlayers.forEach(player => {
-                newRates[player.name] = player.rate
-            })
-            setRates(newRates)
+            const newRates = { ...rates };
+            finalPlayers.forEach((player) => {
+                newRates[player.name] = player.rate;
+            });
+            setRates(newRates);
 
             // 最新のグリッドを更新
             return prevGrids.map((grid, index) => {
                 if (index === 0) {
-                    return { ...latestGrid, players: finalPlayers }
+                    return { ...latestGrid, players: finalPlayers };
                 }
-                return grid
+                return grid;
             })
         })
     }
@@ -351,12 +380,18 @@ export default function Battle(props) {
                 color: '#000'
             }}>
                 <Grid container spacing={2} columns={players.length + 1}>
-                    {players.map(player => (
+                    {players.map(function(player) {
+                        // 前回レートと今回レートから増減値を計算
+                        const prevReward = prevRates[player] ? (rates[player] - prevRates[player]) : 0
+                        const prevRewardStr = prevReward > 0 ? `+${prevReward}` : `${prevReward}`
+                        return (
                         <Grid item xs={1} key={player}>
                             <Typography variant="h6" onClick={() => handlePlayerClick(player)} style={{ cursor:'pointer'}}>{id2name(props.users, player)}</Typography>
                             <Typography variant="body1">{rates[player]} pts.</Typography>
+                            <Typography style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""}</Typography>
+                            <Typography style={{fontSize:"0.85em"}}>{borders[player] ? `黒字ボーダー：${borders[player]}位` : ""}</Typography>
                         </Grid>
-                    ))}
+                    )})}
                     <Grid item xs={1} key="button">
                         <Button variant="contained" color="secondary" onClick={handleAddPlayer} style={{ marginLeft: 16 }}>
                             プレイヤーを追加する
