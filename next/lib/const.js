@@ -14,8 +14,8 @@ export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3
 
 // ルールIDから配列に変換する関数
 export function rule2array(rule){
-    const number = [1, 10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46]
-    const arrays    = [p0, p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex, dc, dd, ex]
+    const number = [1, 2, 3, 10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46]
+    const arrays    = [p0, p0, sr, p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex, dc, dd, ex]
     const flg = number.indexOf(Number(rule))
     if(flg === -1){
         return []
@@ -80,9 +80,6 @@ export const dd = range(413, 418)
 // 葉っぱ仙人
 export const ex = range(419, 428)
 
-// 通常ステージ全部
-export const p0 = [].concat(p1, p2, p3, p4)
-
 // 本編RTA（Speedrun.com）
 export const sp = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403, 404, 405]
 
@@ -91,6 +88,18 @@ export const lm = [151101, 160306, 160319, 160423, 160430, 160806, 170101, 17021
 
 // その他
 export const ot = [901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 912, 912, 913, 914, 915]
+
+// 通常総合
+export const p0 = [].concat(p1, p2, p3, p4)
+
+// 特殊総合
+export const sr = [].concat(p1, eg, ns, du, p4)
+
+// 全総合で集計対象のステージ数
+export const stageCounts = 208;
+
+// 昇段・昇級に必要なポイント（6級〜九段・理論値）
+export const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 20000]
 
 // カウントダウン系ステージの初期時間
 export const timeStageList = [
