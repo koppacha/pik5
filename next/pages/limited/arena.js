@@ -40,7 +40,7 @@ import {faChevronLeft, faHouseChimney, faSquare, faStairs, faXmark} from "@forta
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RankingTeam from "../../components/record/RankingTeam";
 import {useTheme} from "next-themes";
-import CountDown from "../../components/CountDown";
+import CountDownTimer from "../../components/CountDownTimer";
 import {hydrate} from "react-dom";
 import PostButton from "../../components/PostButton";
 import {useSession} from "next-auth/react";
@@ -52,10 +52,16 @@ import useSWR from "swr";
 import remarkGfm from "remark-gfm";
 import ReactMarkdown from "react-markdown";
 import RecordPost from "../../components/modal/RecordPost";
+import CardGrid from "../../components/limited/CardGrid";
 
 export async function getServerSideProps(context){
 
-    const limited = 241123
+    const limited = 221008
+
+    // 閉鎖中
+    return {
+        notFound: true
+    }
 
     // イベント情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${limited}`)
@@ -171,64 +177,49 @@ export default function Limited(param){
             console.log(res.status)
         }
     }
-    
-    function CountdownDisplay() {
-        const now = new Date();
-        const start = new Date("2023/12/12 19:00:00");
-        const end = new Date("2023/12/12 23:00:00");
-
-        if (now < start) {
-            return (
-                <>
-                    <span>開始まで残り： </span>
-                    <CountDown endTime={start} />
-                </>
-            );
-        }
-
-        if (now < end) {
-            return (
-                <>
-                    <span>終了まで残り： </span>
-                    <CountDown endTime={end} />
-                </>
-            );
-        }
-
-        return <></>;
-    }
 
     const handleClose = () => setOpen(false)
     const handleOpen = () => setOpen(true)
 
+    const cards = [
+        { id: "1301", title: "コンクリート迷路", subtitle: "タマゴなし", premium: true, level: 3, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレ" },
+        { id: "1302", title: "土とんの洞窟", subtitle: "140秒", level: 3, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。。" },
+        { id: "1303", title: "巨人のトイレ", subtitle: "１セット縛り", level: 2, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。。" },
+        { id: "1304", title: "切磋琢磨のオアシス", subtitle: "交代禁止", level: 4, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。。" },
+        { id: "1305", title: "戦場のおもちゃ箱", subtitle: "オッチン禁止", level: 1, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。。" },
+        { id: "1306", title: "大水源", subtitle: "半日縛り", level: 5, user:4, topScore:20345, inventor:"koppacha", description: "これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。これは期間限定チャレンジの説明文です。。" },
+    ];
+
     return (
         <>
             <Head>
-                <title>第1回期間限定ランキングミニ - ピクチャレ大会</title>
+                <title>第19回期間限定ランキング - ピクチャレ大会</title>
             </Head>
             <PageHeader>
                 #{param.limited}<br/>
                 <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
                 <StairIcon icon={faStairs}/>
                 期間限定ランキング<br/>
-                <Typography variant="" className="title">第1回ミニ期間限定ランキング</Typography><br/>
-                <Typography variant="" className="subtitle">The 1st Mini Limited Tournament</Typography><br/>
+                <Typography variant="" className="title">第19回期間限定ランキング</Typography><br/>
+                <Typography variant="" className="subtitle">The 19th Special Limited Ranking</Typography><br/>
                 <br/>
-                <Typography variant="span" style={{fontSize:"1.25em"}}>
-                    アリーナ戦<FontAwesomeIcon style={{padding:"0 0.3em"}} icon={faXmark} />チーム対抗制
+                <Typography variant="span" style={{fontSize: "1.25em"}}>
+                    アリーナ制<FontAwesomeIcon style={{padding: "0 0.5em"}} icon={faXmark}/>スタンダード
                 </Typography>
                 <br/>
-                <Box style={{padding:"2em"}}>
+                <Box style={{padding: "2em"}}>
                     <ul>
                         <li>今大会の縛りルール採用倍率：5.75倍（エクストラ枠除く）</li>
-                    </ul><br/>
+                    </ul>
+                    <br/>
                     <ul>
                         <li>参加ボタン押下後、反映されない場合は少し待ってから再読み込みしてください。</li>
                     </ul>
                 </Box>
             </PageHeader>
             {/*<StageList stages={stages} />*/}
-            <RuleWrapper container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+            <RuleWrapper container item xs={12}
+                         style={{marginTop: "24px", justifyContent: 'flex-end', alignContent: 'center'}}>
                 <RuleBox className={"active"}
                          onClick={handleOpen}
                          component={Link}
@@ -240,70 +231,26 @@ export default function Limited(param){
             {
                 // チーム別総合点を計算して表示する部分（合計ランクポイント、参加者、参加者別ランクポイント、投稿済みステージ数）
                 //
-                currentTeam ? "あなたの所属チームは "+t.limited.team[currentTeam]+" です。" :
+                currentTeam ? "あなたの所属チームは " + t.limited.team[currentTeam] + " です。" :
                     <>
                         <PostButton voteId={20231216}/>
                     </>
             }
-            {/*<CountdownDisplay suppressHydrationWarning/>*/}
-            <LimitedTotal/>
 
-            <Grid container alignItems="flex-start" style={{marginTop:"1em"}}>
-                <Grid container alignItems="flex-start" item xs={12} md={6}>
-                    <div style={{
-                        width: "98%",
-                        border: "1px solid #fff",
-                        color: "#fff",
-                        textAlign: "center",
-                        padding: "8px",
-                        borderRadius: "4px"
-                    }}>
-                        {t.stage[stage[0].stage]}<br/>
-                        <ReactMarkdown className="markdown-content mini-content" remarkPlugins={[remarkGfm]}>
-                            {t.info[stage[0].stage]}
-                        </ReactMarkdown>
-                        <br/>
-                        残り 34:21<br/>
-                        <RecordPost
-                            style={{alignItems: "center"}}
-                            info={infoLeftData.data} rule={240421} console={0}/>
-                        <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
-                        <LinearProgress variant="determinate" style={{height:"12px", margin:"8px 0",borderRadius:"8px"}} value={50} />
-                        {
-                            Object.values(left).map(function(post){
-                                return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
-                            })
-                        }
-                    </div>
-                </Grid>
-                <Grid container alignItems="flex-start" item xs={12} md={6}>
-                    <div style={{
-                        width: "98%",
-                        border: "1px solid #fff",
-                        color: "#fff",
-                        textAlign: "center",
-                        padding: "8px",
-                        borderRadius: "4px"
-                    }}>
-                        {t.stage[stage[1].stage]}<br/>
-                        <ReactMarkdown className="markdown-content mini-content" remarkPlugins={[remarkGfm]}>
-                            {t.info[stage[1].stage]}
-                        </ReactMarkdown>
+            <Box style={{
+                fontSize: "3.5em",
+                color: "#fff",
+                textAlign: "center",
+                padding: "8px",
+                borderRadius: "4px",
+                margin: "1em 0",
+                background: "#444",
+                border: "1px solid #fff"
+            }}>
+                <CountDownTimer startTime="2025-02-08T19:00:00" endTime="2025-02-15T23:00:00" />
+            </Box>
+            <CardGrid cards={cards} users={param.users}/>
 
-                        <br/>
-                        残り 34:21<br/>
-                        <RecordPost
-                            style={{alignItems: "center"}}
-                            info={infoRightData.data} rule={240421} console={0}/>
-                        <CustomButton onClick={arenaSubmit}>スタート</CustomButton>
-                        {
-                            Object.values(right).map(function (post) {
-                                return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
-                            })
-                        }
-                    </div>
-                </Grid>
-            </Grid>
             {
                 // ステージ別スコア表示コンポーネント
                 // param.stages.map(s => <RankingTeam key={s} team={param.teams} stage={s} users={param.users}/>)
@@ -313,7 +260,7 @@ export default function Limited(param){
                 // 大会が終わったら表示
             }
             {/*<br/>*/}
-            {/*<RankingTotal stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>*/}
+            <RankingTotal posts={param.total} stages={stages} users={param.users} series={param.limited} console={0} rule={0} year={0}/>
         </>
     )
 }

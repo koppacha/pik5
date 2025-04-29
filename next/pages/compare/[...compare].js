@@ -200,7 +200,7 @@ export default function Compare(param){
                         borderBottom:"2px dotted #e81fc1",
                         textAlign:"center",
                         margin:"8px 0"
-                    }}>◆特殊ランキング◆</Box>
+                    }}>◆特殊ランキング（全回収TA・タマゴムシ縛り・スプレー縛り・本編地下・ゲキカラダンドリ）◆</Box>
                     <RankingCompare posts2={param.posts4} posts1={param.posts3} userName={param.userName} rule={"3"} userName2={param.userName2}/>
                 </>
             }

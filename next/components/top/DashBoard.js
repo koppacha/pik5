@@ -37,12 +37,12 @@ export default function DashBoard({user, users}){
             </>
         )
     }
-    const cls = basePoints.findLastIndex(base => data.data.totals.rps > stageCounts * base)
+    const cls = basePoints.findLastIndex(base => data.data?.totals?.rps > stageCounts * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCounts * base)
-    const nextPoints = (basePoints[cls + 1] * stageCounts) - data.data.totals.rps
-    const notPostCategory = selectable.filter(value => !Object.keys(data.data.scores).map(Number).includes(value))
+    const nextPoints = (basePoints[cls + 1] * stageCounts) - data.data?.totals?.rps
+    const notPostCategory = selectable.filter(value => !Object.keys(data.data?.scores ?? {}).map(Number).includes(value))
 
-    const rivals = getSurroundingRanking(totalRanking?.data, data.data.totals.rps, (basePoints[cls + 1] * stageCounts))
+    const rivals = getSurroundingRanking(totalRanking?.data, data.data?.totals?.rps, (basePoints[cls + 1] * stageCounts))
 
     // 前後プレイヤー５名を抽出する関数
     function getSurroundingRanking(totalRanking, userRps, checkPoint = 0) {
@@ -157,7 +157,7 @@ export default function DashBoard({user, users}){
                 <Box className="top-box-caption" style={{paddingTop:"1.5em"}}>カテゴリ別総合点 / 投稿数</Box>
                 <Grid container>
                 {
-                    Object.keys(data.data.scores).map((series) =>
+                    Object.keys(data.data?.scores ?? {}).map((series) =>
                         <Grid item xs={4} sm={3} md={2} key={series}>
                             <Link href={`/total/${series}`}>
                                 <CellBox className="cell-box">
