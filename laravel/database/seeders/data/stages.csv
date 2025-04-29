@@ -152,7 +152,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 362,積み木の迷路,Jigsaw Closseum,ピクミン3 ビンゴバトルモード,stage,speedrun,3,35,0,0,0,0,0,0,0
 399,試しの砂浜,Sandbox,テスト用,stage,int,9,99,0,0,0,0,0,0,0
 401,ダンドリ養成所,Dandori Day Care,ピクミン4 ダンドリチャレンジ,stage,int,4,41,300,140,0,0,0,0,0
-402,炎と電気の実験室,Hotshock Canyon,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,160,0,0,0,0,0
+402,炎と電気の実験室,Hotschock Canyon,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,160,0,0,0,0,0
 403,石つぶて研究所,Rockaway Cellars,ピクミン4 ダンドリチャレンジ,stage,int,4,41,420,240,0,0,0,0,0
 404,バスルーム演習場,Test Tubs,ピクミン4 ダンドリチャレンジ,stage,int,4,41,360,170,0,0,0,0,0
 405,水わたりスクール,Ice-Cross Course,ピクミン4 ダンドリチャレンジ,stage,int,4,41,360,170,0,0,0,0,0
@@ -194,6 +194,7 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 913,ピクミン3 本編1000匹タイムアタック,Pikmin 3 Story Mode 1000 Pikmin RTA,その他,stage,time,3,91,0,0,0,0,0,0,0
 914,ピクミン4 本編1000匹タイムアタック,Pikmin 4 Story Mode 1000 Pikmin RTA,その他,stage,time,4,91,0,0,0,0,0,0,0
 915,ピクミン2 チャレンジ総合35万点超え,Pikmin 2 Challenge Mode All Levels RTA (Over the 350k pts),その他,stage,time,2,91,0,0,0,0,0,0,0
+916,ピクミン2 チャレンジ総合70万点超え（タマゴなし）,Pikmin 2 Challenge Mode All Levels RTA (Over the 700k pts & No Mitites),その他,stage,time,2,91,0,0,0,0,0,0,0
 1001,コンクリート迷路（タマゴなし）,Concrete Maze,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1002,どっすん迷路（タマゴなし）,Bully Den,第1回期間限定ランキング,stage,int,2,151101,0,0,0,0,0,0,0
 1003,地底警備室（スプレーなし）,Subtettanean Lair,第2回期間限定ランキング,stage,int,2,160306,0,0,0,0,0,0,0
