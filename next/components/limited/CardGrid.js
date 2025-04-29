@@ -67,7 +67,14 @@ const CardItem = ({ id, title, subtitle, premium, level, description, users, use
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
-    const {data, error} = useSWR(`/api/server/record/1049`, fetcher)
+    const {data, error} = useSWR(`/api/server/record/${id}`, fetcher)
+
+    useEffect(() => {
+        // 1度〜10度の範囲でランダムな値を生成（0度は除外）
+        let angle = Math.floor(Math.random() * 2) + 2; // 1〜10のランダム整数
+        if (Math.random() > 0.5) angle *= -1; // ±をランダム化
+        setRotation(angle);
+    }, []);
 
     if(!data || error) return <NowLoading/>
 
@@ -85,13 +92,6 @@ const CardItem = ({ id, title, subtitle, premium, level, description, users, use
         px: 4,
         pb: 3,
     };
-
-    useEffect(() => {
-        // 1度〜10度の範囲でランダムな値を生成（0度は除外）
-        let angle = Math.floor(Math.random() * 2) + 2; // 1〜10のランダム整数
-        if (Math.random() > 0.5) angle *= -1; // ±をランダム化
-        setRotation(angle);
-    }, []);
 
     return (
         <>
@@ -141,7 +141,7 @@ const CardItem = ({ id, title, subtitle, premium, level, description, users, use
                             info={data.data} rule={240421} console={0}/>
                         {
                             Object.values(datas).map(function (post) {
-                                return <Record mini={true} key={post.unique_id} data={post} parent={parent}/>
+                                return <Record mini={true} key={post.unique_id} data={post}/>
                             })
                         }
                     </div>
