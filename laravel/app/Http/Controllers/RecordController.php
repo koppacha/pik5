@@ -81,9 +81,19 @@ class RecordController extends Controller
     // 暫定順位を取得する関数
     public function getRank(Request $request): JsonResponse
     {
+        // RecordForm.jsと共通
+        function isTime($rule, $stage): bool
+        {
+            $ruleArray = [11, 29, 33, 35, 43, 46, 91];
+            $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
+            return in_array((int)$rule, $ruleArray, true) ||
+                in_array((int)$stage, $stageArray, true);
+        }
+        $operator = isTime($request["rule"], $request["stage"]) ? "<" : ">";
+
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
-            ->where('score', '>', (int)$request['score'])
+            ->where('score', $operator, (int)$request['score'])
             ->where('flg','<', 2)
             ->get()
             ->unique('user_id')

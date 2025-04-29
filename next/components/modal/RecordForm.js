@@ -209,9 +209,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         })
     }
 
-    // タイム表示判定
+    // タイム表示判定（RecordController.phpと共通）
     const isTime = () => {
-        return [11, 33, 43, 46, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
+        return [11, 29, 33, 35, 43, 46, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
     }
 
     // リージョン違い判定

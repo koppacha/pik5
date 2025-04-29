@@ -51,6 +51,7 @@ export default function Battle(props) {
     const [count, setCount] = useState(0)
     const [players, setPlayers] = useState([])
     const [rates, setRates] = useState({})
+    const [iniRates, setIniRates] = useState({})
     const [prevRates, setPrevRates] = useState({})
     const [borders, setBorders] = useState({})
     const [pool, setPool] = useState(0)
@@ -68,7 +69,8 @@ export default function Battle(props) {
                 }, {})
 
                 setPlayers(newPlayers)
-                setRates(newPlayerRates)
+                setRates(newPlayerRates) // レートをセット
+                setIniRates(newPlayerRates) // 読み込み時のレートを保存
 
             } catch (error) {
                 console.error('Error fetching player data:', error);
@@ -292,6 +294,36 @@ export default function Battle(props) {
         }
         handleClose()
     }
+    const copyToClipboard = async () => {
+        const allTextFields = document.querySelectorAll("input[data-grid-id]");
+        const gridData = {};
+
+        allTextFields.forEach((input) => {
+            const gridId = input.dataset.gridId;
+            const scoreType = input.dataset.scoreType;
+            const value = input.value || "0";
+
+            if (!gridData[gridId]) {
+                gridData[gridId] = {scoreA: [], scoreB: []};
+            }
+
+            gridData[gridId][scoreType].push(value);
+        });
+
+        // スコアA → スコアB の順に並べる
+        const stageIds = Object.keys(gridData).sort((a, b) => a - b); // ステージ順にソート
+        const scoreAList = stageIds.map(id => gridData[id].scoreA.join("\t")).join("\n");
+        const scoreBList = stageIds.map(id => gridData[id].scoreB.join("\t")).join("\n");
+
+        const outputText = `${scoreAList}\n\n${scoreBList}`;
+        try {
+            await navigator.clipboard.writeText(outputText).then(() => {
+                alert("スコアをクリップボードにコピーしました！");
+            });
+        } catch (error) {
+            console.error("Failed to copy text: ", error);
+        }
+    }
     return (
         <Container>
             <Typography variant="" className="title">ダンドリバトル大会戦績表</Typography><br/>
@@ -305,14 +337,15 @@ export default function Battle(props) {
                     <li>みまわしドローンは使用禁止。</li>
                     <li>ハンデ設定は常にノーマル（COMもノーマル）</li>
                     <li>ステージとピクミンは毎回ランダム。ただし、同じ組み合わせは同一セッションの中で一度しか出現しない。セッションは主催が終了処理を行うか48回対戦するとリセットする。</li>
-                    <li>各参加者は初参加時に1000点支給され、各対戦開始前に所持ポイントの10分の１をポットに支払う。（小数は四捨五入する。四捨五入の結果が０点でも参加は可能）</li>
+                    <li>「風雲ダンドリ城」で城スタートの場合のみ、開始後10秒以内なら１回までのリスタート（ダンドリバトルを中断→再入場）が許される。</li>
+                    <li>各参加者は初参加時に1000点（全総合ランキング初段未満は原則500点。ただし特に希望する場合は1000点）支給され、各対戦開始前に所持ポイントの10分の１をポットに支払う。（小数は四捨五入する。四捨五入の結果が０点でも参加は可能）</li>
                     <li>対戦後、[（自分のダンドリP）-（COMのダンドリP）]をプレイヤーの得点とし、それによって順位づけを行う。</li>
                     <li>各参加者は順位に応じて次の計算によってポイントが還元される。［（参加者数-順位+1) / (1から参加者数までの整数の和) * ポット］</li>
                     <li>同点の場合は該当者がもらえるポイントを等分する。</li>
                 </ul>
-                <Box style={{margin:"2em 1em",padding:"2em",fontSize:"0.9em",border:"1px solid red"}}>
+                <Box style={{margin:"1em",padding:"1.5em",fontSize:"0.9em",border:"1px solid red"}}>
                     <ul>
-                        <li>当面の間システムはローカル運用のため、スコア入力は主催が行います。お手数ですが、ゲームが終了したら合図を送るまでリザルト画面を表示したまま待機してください。</li>
+                        <li>スコア入力は主催が行います。お手数ですが、ゲームが終了したら合図を送るまでリザルト画面を表示したまま待機してください。</li>
                         <li>画面共有時、可能であれば自身のハンドルネームを画面内に表示してください。</li>
                         <li>初参加の場合は、あらかじめローカル対戦用のダンドリバトルを全開放（熱砂の闘技場まで１回ずつプレイ）しておいてください。</li>
                     </ul>
@@ -320,6 +353,12 @@ export default function Battle(props) {
             </Box>
             <Button variant="contained" color="primary" onClick={handleButtonClick}>
                 セッションを追加
+            </Button>
+            <Button variant="contained" color="primary" onClick={handleAddPlayer} style={{ marginLeft: 16 }}>
+                プレイヤーを追加する
+            </Button>
+            <Button variant="contained" color="primary" onClick={copyToClipboard} style={{ marginLeft: 16 }}>
+                スコアをエクスポート
             </Button>
             {grids.map((grid, gridIndex) => (
                 <Box key={grid.id} sx={{ mt: 2, p: 2, border: '1px solid grey' }}>
@@ -333,8 +372,14 @@ export default function Battle(props) {
                             <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: -</Typography>
                         );
                     })()}
+                    <Button
+                        variant="contained"
+                        style={{marginLeft:"2em"}}
+                        onClick={() => handleScoreSubmit(grid.id)}>
+                        レートを計算する
+                    </Button>
                     <hr style={{margin:"1em"}}/>
-                    <Grid container spacing={2} columns={6}>
+                    <Grid container spacing={2} columns={7} key={grid.id}>
                         {grid.players.map(function(player, playerIndex) {
                                 const rankColorStr = rankColor(player.rank < 4 ? player.rank : 4, 0, 1)
                                 return (
@@ -343,6 +388,7 @@ export default function Battle(props) {
                                         <StyledTextField
                                             type="number"
                                             value={player.scoreA || ""}
+                                            inputProps={{ "data-grid-id": grid.id, "data-player-name": player.name, "data-score-type": "scoreA" }}
                                             style={{minWidth: "100px", marginBottom: "10px"}}
                                             onChange={(e) => handleScoreChange(grid.id, player.name, 'scoreA', parseInt(e.target.value, 10) || 0)}
                                             flilWidth
@@ -350,6 +396,7 @@ export default function Battle(props) {
                                         <StyledTextField
                                             type="number"
                                             value={player.scoreB || ""}
+                                            inputProps={{ "data-grid-id": grid.id, "data-player-name": player.name, "data-score-type": "scoreB" }}
                                             style={{minWidth: "100px", marginBottom: "20px"}}
                                             onChange={(e) => handleScoreChange(grid.id, player.name, 'scoreB', parseInt(e.target.value, 10) || 0)}
                                             flilWidth
@@ -360,12 +407,6 @@ export default function Battle(props) {
                             }
                         )}
                     </Grid>
-                    <Button
-                        variant="contained"
-                        style={{marginTop:"10px"}}
-                        onClick={() => handleScoreSubmit(grid.id)}>
-                        レートを計算する
-                    </Button>
                 </Box>
             ))}
             <Box style={{height:"100px"}}> </Box>
@@ -379,24 +420,18 @@ export default function Battle(props) {
                 backgroundColor: 'white',
                 color: '#000'
             }}>
-                <Grid container spacing={2} columns={players.length + 1}>
+                <Grid container spacing={2} columns={players.length}>
                     {players.map(function(player) {
                         // 前回レートと今回レートから増減値を計算
                         const prevReward = prevRates[player] ? (rates[player] - prevRates[player]) : 0
                         const prevRewardStr = prevReward > 0 ? `+${prevReward}` : `${prevReward}`
                         return (
-                        <Grid item xs={1} key={player}>
-                            <Typography variant="h6" onClick={() => handlePlayerClick(player)} style={{ cursor:'pointer'}}>{id2name(props.users, player)}</Typography>
-                            <Typography variant="body1">{rates[player]} pts.</Typography>
-                            <Typography style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""}</Typography>
-                            <Typography style={{fontSize:"0.85em"}}>{borders[player] ? `黒字ボーダー：${borders[player]}位` : ""}</Typography>
+                        <Grid item xs={1} key={player} style={{textAlign:"center"}}>
+                            <div style={{backgroundColor:"#333",color:"#eee",borderRadius:"12px",padding:"4px 0",fontSize:"1.1em",cursor:'pointer',fontFamily:"M PLUS 1 CODE !important"}} onClick={() => handlePlayerClick(player)}>{id2name(props.users, player)}</div>
+                            <div style={{marginTop:"4px",fontFamily:"Proza Libre"}}>{rates[player]}<span style={{fontSize:"0.8em",color:"#777"}}> / {iniRates[player]}</span></div>
+                            <div style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""} {borders[player] ? `→BEP：${borders[player]}位` : ""}</div>
                         </Grid>
                     )})}
-                    <Grid item xs={1} key="button">
-                        <Button variant="contained" color="secondary" onClick={handleAddPlayer} style={{ marginLeft: 16 }}>
-                            プレイヤーを追加する
-                        </Button>
-                    </Grid>
                 </Grid>
             </Box>
             <Dialog open={open} onClose={handleClose}>
