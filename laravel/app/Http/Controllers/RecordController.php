@@ -197,7 +197,7 @@ class RecordController extends Controller
                 'console' => $request['console'] ?: 0,
                 'region' => 0,
                 'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
-                'unique_id' => "310".sprintf('%06d',random_int(0, 999999)),
+                'unique_id' => "311".sprintf('%06d',random_int(0, 999999)),
                 'post_comment' => $comment,
                 'user_ip' => $request['user_ip'],
                 'user_host' => gethostbyaddr($request['user_ip']) ?: "",
@@ -318,7 +318,7 @@ class RecordController extends Controller
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)
                 ->orderBy($orderBy[0],$orderBy[1])
-                ->orderBy('created_at', 'DESC')
+                ->orderBy('created_at', 'ASC')
             ->get()
             ->toArray();
 
