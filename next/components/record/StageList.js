@@ -2,7 +2,8 @@ import {Box, Grid} from "@mui/material";
 import Link from "next/link";
 import {StageListBox, StageListWrapper} from "../../styles/pik5.css";
 import * as React from "react";
-import {currentYear, stageUrlOutput, useLocale} from "../../lib/pik5";
+import {currentYear, useLocale} from "../../lib/pik5";
+import {stageUrlOutput} from "../../lib/factory";
 
 export default function StageList({parent, currentStage, stages, consoles, rule, year}){
 

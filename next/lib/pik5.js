@@ -146,25 +146,6 @@ export const rankColor = (rank, team = 0, target = 0) => {
         return teamColor[t]
     }
 }
-// パラメータからURLを生成する関数
-export function stageUrlOutput(stage, consoles, rule, year, parent){
-    // 期間限定以外
-    if(rule > 0 && rule < 100){
-        // parentを読み込めない場合（新着順一覧など）
-        if(parent === undefined){
-            if([10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43, 91].includes(rule)){
-                return stage
-            }
-        }
-        // すべてのパラメータがデフォルトならパラメータは付与しない
-        if(Number(consoles) === 0 && Number(year) === currentYear() && Number(rule) === parent){
-            return stage
-        }
-        return `${stage}/${consoles}/${rule}/${year}`
-    }
-    // 期間限定と例外
-    return stage
-}
 
 // ルールIDを対象操作方法配列に変換
 export function rule2consoles(rule){

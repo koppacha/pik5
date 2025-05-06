@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {currentYear, dateFormat, fetcher, rankColor, sec2time, stageUrlOutput, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, rankColor, sec2time, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -32,6 +32,7 @@ import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
 import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
+import {stageUrlOutput} from "../../lib/factory";
 
 export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history}) {
 
