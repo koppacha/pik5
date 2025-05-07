@@ -291,7 +291,7 @@ class RecordController extends Controller
 
         } elseif(!$rule && $where === "stage_id") {
             // TODO: 一部のページ読み込み時にparentが存在しないエラーを吐いている
-            $rule = [Stage::where('stage_id', $request['id'])->first()->parent];
+            $rule = [Stage::where('stage_id', $request['id'])->first()?->parent];
 
         } elseif(!$rule && $where === "user_id") {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
