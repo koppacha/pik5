@@ -39,7 +39,8 @@ class RecordController extends Controller
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $data = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first()->toArray();
+        $record = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first();
+        $data = $record ? $record->toArray() : [];
         $data["post_rank"] = $this->getRankArray($data, false);
 
         if(!$data){
