@@ -110,7 +110,7 @@ class RecordController extends Controller
     // 暫定順位を取得する関数バックエンド版：第２引数がtrueの場合は投稿時点の順位を取得、falseの場合は現在時刻
     public function getRankArray(array $request, bool $history): int|array
     {
-        if (empty($request['stage_id'])) {
+        if (!$request) {
             return 0;
         }
         $orderBy = Func::orderByRule($request['stage_id'], $request['rule']);
