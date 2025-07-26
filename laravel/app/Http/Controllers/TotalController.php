@@ -80,7 +80,7 @@ class TotalController extends Controller
             210829 => range(1257, 1269), // ムシ取り
             211105 => range(1163, 1184), // エリア踏破戦
             221008 => range(1185, 1196), // エリア踏破戦
-            231216 => range(1300, 1308), // チーム対抗戦
+            250726 => range(1300, 1312), // ムシ取り
         ];
         if(!isset($request) || !$request){
             return [];
