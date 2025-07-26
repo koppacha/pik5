@@ -3,11 +3,12 @@ import useSWR from "swr";
 import {currentYear, fetcher, id2name, rankColor, useLocale} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import {Box, ClickAwayListener, Grid, Tooltip} from "@mui/material";
-import {CellBox, EventContainer, EventContent, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
+import {CellBox, EventContainer, EventContent, SeriesTheme, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import {basePoints, rule2array, selectable, stageCounts} from "../../lib/const";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCircleInfo, faCircleQuestion, faFlag, faSplotch} from "@fortawesome/free-solid-svg-icons";
+import GradientLine from "./GradientLine";
 
 export default function DashBoard({user, users}){
 
@@ -109,7 +110,7 @@ export default function DashBoard({user, users}){
                 }
             </TopBoxHeader>
             <TopBoxContent className="top-box-content">
-                <Box className="top-box-caption">総合ランキング / ライバルリスト <Tooltip title={`ランクポイントは投稿ステージの順位に応じてもらえるポイントです。より人気なステージで上位なほど得点が多くもらえます。段位はステージ数に特定の係数を掛けることで算出されるポイントを超えると認定されます。最高段位（九段）に到達したプレイヤーのうち最高点数保持者には「名人」タイトルが授与されます。現在の対象ステージは210ステージです。`}><FontAwesomeIcon icon={faCircleQuestion} /></Tooltip></Box>
+            <Box className="top-box-caption">総合ランキング / ライバルリスト <Tooltip title={`ランクポイントは投稿ステージの順位に応じてもらえるポイントです。より人気なステージで上位なほど得点が多くもらえます。段位はステージ数に特定の係数を掛けることで算出されるポイントを超えると認定されます。最高段位（九段）に到達したプレイヤーのうち最高点数保持者には「名人」タイトルが授与されます。現在の対象ステージは210ステージです。`}><FontAwesomeIcon icon={faCircleQuestion} /></Tooltip></Box>
             <Grid container>
                 {
                     rivals.map(player => {
@@ -120,6 +121,7 @@ export default function DashBoard({user, users}){
                         const cellContent = (
                             <CellBox className={`cell-box ${isActive ? "active" : ""}`}>
                                 {/* 1行目: 順位とクラス */}
+                                <GradientLine rps={player?.rps} rps1={player?.rps1} rps2={player?.rps2} rps3={player?.rps3} rps4={player?.rps4} />
                                 <span className="cell-box-caption">
                                 {player?.rank ? (
                                     <>
@@ -161,6 +163,7 @@ export default function DashBoard({user, users}){
                         <Grid item xs={4} sm={3} md={2} key={series}>
                             <Link href={`/total/${series}`}>
                                 <CellBox className="cell-box">
+                                    <GradientLine color={SeriesTheme(Number(series.at(0)))} />
                                     <span className="cell-box-caption">{t.subtitle[series]}</span><br/>
                                     {Number(data.data.scores[series]).toLocaleString()} <span className=".score-tail" style={{fontSize:"0.8em"}}>pts.</span><br/>
                                     <span className="cell-box-caption">
@@ -197,6 +200,7 @@ export default function DashBoard({user, users}){
                                     </>
                                 }>
                                     <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "68px"}}>
+                                        <GradientLine color={"#ccc"} />
                                         <br/>
                                         その他<br/>
                                     </CellBox>

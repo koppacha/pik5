@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>ステージタイマー</title>
+    <style>
+        body{
+            font-family: sans-serif;
+            padding: 20px;
+            background-color: #000000;
+            color: #ffffff;
+        }
+        table{
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 860px;
+        }
+        th, td{
+            border: 1px solid #ccc;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        /* 手動入力可能なセルは背景をわずかに変えて分かりやすく */
+        .stage-title {
+            background: #838383;
+        }
+        .button-row{
+            margin-top: 16px;
+        }
+        button{
+            padding: 10px 24px;
+            font-size: 16px;
+            margin-right: 12px;
+            cursor: pointer;
+        }
+        button:disabled{
+            opacity: .4;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+<h1>簡易ステージタイマー</h1>
+
+<table id="timerTable">
+    <thead>
+    <tr>
+        <th>プレイヤー名</th>
+        <th>タイム</th>
+        <th>プレイヤー名</th>
+        <th>タイム</th>
+    </tr>
+    </thead>
+    <tbody>
+    <!-- 1〜9行目 -->
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">かくしもちの洞窟（通常ルール）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">エープリル</td>
+        <td id="aTime0">00:00</td>
+        <td contenteditable="true">リーヌァ</td>
+        <td id="bTime0">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">天罰の穴（残１匹）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">mercysnow</td>
+        <td id="aTime1">00:00</td>
+        <td contenteditable="true">albut3</td>
+        <td id="bTime1">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">コンクリート迷路（カメラ操作禁止）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">ごれい</td>
+        <td id="aTime2">00:00</td>
+        <td contenteditable="true">すぱ〜く</td>
+        <td id="bTime2">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">天罰の穴（近視縛り）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">エープリル</td>
+        <td id="aTime3">00:00</td>
+        <td contenteditable="true">リーヌァ</td>
+        <td id="bTime3">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">巨人のトイレ（交代禁止）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">mercysnow</td>
+        <td id="aTime4">00:00</td>
+        <td contenteditable="true">albut3</td>
+        <td id="bTime4">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">赤の洞窟（投げ縛り）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">ごれい</td>
+        <td id="aTime5">00:00</td>
+        <td contenteditable="true">すぱ〜く</td>
+        <td id="bTime5">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">地底警備室（クマ占い）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">エープリル</td>
+        <td id="aTime6">00:00</td>
+        <td contenteditable="true">リーヌァ</td>
+        <td id="bTime6">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">鼻息の洞穴（葉縛り脱出）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">mercysnow</td>
+        <td id="aTime7">00:00</td>
+        <td contenteditable="true">albut3</td>
+        <td id="bTime7">00:00</td>
+    </tr>
+    <tr>
+        <td colspan="4" class="stage-title" contenteditable="true">デメマダラの巣窟（カギのみ）</td>
+    </tr>
+    <tr>
+        <td contenteditable="true">ごれい</td>
+        <td id="aTime8">00:00</td>
+        <td contenteditable="true">すぱ〜く</td>
+        <td id="bTime8">00:00</td>
+    </tr>
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">花園を荒らすもの（通常ルール）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">エープリル</td>-->
+<!--        <td id="aTime0">00:00</td>-->
+<!--        <td contenteditable="true">リーヌァ</td>-->
+<!--        <td id="bTime0">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">秘密兵器実験場（ゲキニガ禁止）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">mercysnow</td>-->
+<!--        <td id="aTime1">00:00</td>-->
+<!--        <td contenteditable="true">albut3</td>-->
+<!--        <td id="bTime1">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">どっすん迷路（１セット以上）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">ごれい</td>-->
+<!--        <td id="aTime2">00:00</td>-->
+<!--        <td contenteditable="true">すぱ〜く</td>-->
+<!--        <td id="bTime2">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">炎と水の試練場（4109ポコ）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">エープリル</td>-->
+<!--        <td id="aTime3">00:00</td>-->
+<!--        <td contenteditable="true">リーヌァ</td>-->
+<!--        <td id="bTime3">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">コレクタールーム（残35匹）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">mercysnow</td>-->
+<!--        <td id="aTime4">00:00</td>-->
+<!--        <td contenteditable="true">albut3</td>-->
+<!--        <td id="bTime4">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">土とんの洞窟（3000ポコ以上）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">ごれい</td>-->
+<!--        <td id="aTime5">00:00</td>-->
+<!--        <td contenteditable="true">すぱ〜く</td>-->
+<!--        <td id="bTime5">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">コンクリート迷路（2F残110以上）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">エープリル</td>-->
+<!--        <td id="aTime6">00:00</td>-->
+<!--        <td contenteditable="true">リーヌァ</td>-->
+<!--        <td id="bTime6">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">スナイパールーム（タマ2キル）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">mercysnow</td>-->
+<!--        <td id="aTime7">00:00</td>-->
+<!--        <td contenteditable="true">albut3</td>-->
+<!--        <td id="bTime7">00:00</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td colspan="4" class="stage-title" contenteditable="true">倍々ゲームの穴（空騒ぎ）</td>-->
+<!--    </tr>-->
+<!--    <tr>-->
+<!--        <td contenteditable="true">ごれい</td>-->
+<!--        <td id="aTime8">00:00</td>-->
+<!--        <td contenteditable="true">すぱ〜く</td>-->
+<!--        <td id="bTime8">00:00</td>-->
+<!--    </tr>-->
+    <!-- 10行目: 合計タイム (2セルのみ) -->
+    <tr>
+        <td colspan="2">チームA: <span id="aTotal">00:00</span></td>
+        <td colspan="2">チームB: <span id="bTotal">00:00</span></td>
+    </tr>
+    </tbody>
+</table>
+
+<div class="button-row">
+    <button id="btnA">Aチーム用ボタン</button>
+    <button id="btnB">Bチーム用ボタン</button>
+</div>
+
+<script>
+    // ===== ユーティリティ =====
+    /**
+     * 経過ミリ秒を mm:ss あるいは h:mm:ss 形式の文字列に変換する
+     * @param {number} ms
+     * @returns {string}
+     */
+    function formatTime(ms){
+        const totalSec = Math.floor(ms/1000)
+        const h   = Math.floor(totalSec/3600)
+        const min = Math.floor((totalSec%3600)/60)
+        const sec = totalSec%60
+        const pad = n => n.toString().padStart(2,'0')
+        if(h>0){
+            return `${h}:${pad(min)}:${pad(sec)}`
+        }
+        return `${pad(min)}:${pad(sec)}`
+    }
+
+    // ===== タイマー管理クラス =====
+    class TeamTimer{
+        constructor(teamPrefix){
+            this.prefix = teamPrefix // 'a' or 'b'
+            this.currentStage = -1 // -1 = 未開始, 0〜8 = ステージ番号
+            this.stageStartAt = null // Date.now() で記録
+            this.totalStartAt = null
+            this.elapsedStages = new Array(9).fill(0) // ms
+            this.intervalId = null
+            // ボタン要素
+            this.button = document.getElementById(teamPrefix==='a' ? 'btnA' : 'btnB')
+            this.button.addEventListener('click', ()=>this.handleClick())
+        }
+
+        /** ボタンが押されたときの処理 */
+        handleClick(){
+            // 未開始 → スタート
+            if(this.currentStage === -1){
+                this.startStage(0)
+                return
+            }
+            // 進行中ステージを停止
+            this.stopCurrentStage()
+            // 次のステージが存在すれば開始, なければ終了
+            if(this.currentStage < 8){
+                this.startStage(this.currentStage + 1)
+            }else{
+                // 全ステージ終了
+                clearInterval(this.intervalId)
+                this.intervalId = null
+                this.button.disabled = true
+            }
+        }
+
+        /** 特定ステージの計測を開始 */
+        startStage(stageIndex){
+            this.currentStage = stageIndex
+            this.stageStartAt = Date.now()
+            if(this.totalStartAt === null){
+                this.totalStartAt = this.stageStartAt
+            }
+            // タイマー更新用インターバルをまだ持っていなければ設定
+            if(!this.intervalId){
+                this.intervalId = setInterval(()=>this.updateRunningTime(), 500)
+            }
+        }
+
+        /** 現在計測中ステージを停止し、経過を保存 */
+        stopCurrentStage(){
+            if(this.currentStage === -1) return
+            const now = Date.now()
+            const diff = now - this.stageStartAt
+            this.elapsedStages[this.currentStage] += diff
+            this.stageStartAt = null
+            // 最終表示更新
+            this.updateRunningTime() // 直ちに更新
+        }
+
+        /** 計測中の時間を画面へ反映 */
+        updateRunningTime(){
+            const now = Date.now()
+            let runningTotal = 0
+
+            // 各ステージの表示更新
+            for(let i=0; i<9; i++){
+                let elapsed = this.elapsedStages[i]
+                // 計測中ステージには現在差分を加算
+                if(i === this.currentStage && this.stageStartAt !== null){
+                    elapsed += (now - this.stageStartAt)
+                }
+                document.getElementById(`${this.prefix}Time${i}`).textContent = formatTime(elapsed)
+                runningTotal += elapsed
+            }
+            // 合計タイム更新
+            document.getElementById(`${this.prefix}Total`).textContent = formatTime(runningTotal)
+        }
+    }
+
+    // ===== アプリ初期化 =====
+    const teamA = new TeamTimer('a')
+    const teamB = new TeamTimer('b')
+</script>
+</body>
+</html>
