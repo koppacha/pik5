@@ -51,7 +51,7 @@ export async function getStaticProps({params}){
         }
     }
     // ランキングをリクエスト
-    const posts = await fetch(`http://laravel:8000/api/server/total/${limited}`).then(res => res.json())
+    const posts = await fetch(`http://laravel:8000/api/total/${limited}`).then(res => res.json())
 
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
@@ -96,14 +96,15 @@ export default function Limited(param){
             <Head>
                 <title>{t.limited[param.limited]+" - "+t.title[0]}</title>
             </Head>
-            <PageHeader>
-                #{param.limited}<br/>
-                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
-                <StairIcon icon={faStairs}/>
-                {t.limited.type[param.info.type]}<br/>
-                <Typography variant="" className="title">{param.info.name}</Typography><br/>
+            <Box className="page-header">
+                <Box style={{marginBottom:"0.5em"}}>
+                    <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                    <StairIcon icon={faStairs}/>各種イベント・期間限定ランキング<br/>
+                </Box>
+                <Typography variant="" className="subtitle">#{param.limited}</Typography><br/>
+                <Typography variant="" className="title">{t.limited[param.limited]}</Typography><br/>
                 <Typography variant="" className="subtitle">{param.info.eng}</Typography>
-            </PageHeader>
+            </Box>
             <StageList stages={stages} />
             <RuleWrapper container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                 <RuleBox className={"active"}

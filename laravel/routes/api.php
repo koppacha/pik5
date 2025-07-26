@@ -2,13 +2,17 @@
 
 use App\Http\Controllers\ArenaController;
 use App\Http\Controllers\BattleController;
+use App\Http\Controllers\CardController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\NewRecordController;
+use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PostCountController;
 use App\Http\Controllers\RecordController;
+use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
+use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\VoteController;
@@ -125,5 +129,22 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 //    Route:: get('/phpinfo', static function (){
 //        phpinfo();
 //    });
+});
+// 第19回期間限定
+// Route::middleware('auth:api')->group(function () {
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route::get('players', [PlayerController::class, 'index']);
+    Route::get('players/me', [PlayerController::class ,'me']);
+    Route::post('join', [PlayerController::class, 'join']);
+
+    Route::post('draw', [CardController::class, 'draw']);
+    Route::get('hand', [CardController::class, 'hand']);
+    Route::get('field-cards', [CardController::class, 'fieldCards']);
+    Route::post('cards/{id}/take', [CardController::class, 'take']);
+
+    Route::get('cards/{id}/scores', [ScoreController::class, 'index']);
+    Route::post('cards/{id}/scores', [ScoreController::class, 'store']);
+
+    Route::get('tournament', [TournamentController::class, 'info']);
 });
 

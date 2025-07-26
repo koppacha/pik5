@@ -35,13 +35,20 @@ export default async function handle(req, res){
             }
             case "GET": {
 
-                const query = req.query.query.join("/")
+                const path = req.query.query.join('/')
 
-                // URLパラメータが存在する場合の処理
-                const urlParam = req.query.c ? `?c=${htmlSpecialChars(req.query.c)}` :
-                    req.query.t ? `?t=${htmlSpecialChars(req.query.t)}` : '';
-
-                const get = await fetch(`http://laravel:8000/api/${query+urlParam}`)
+                // Build full URL with all query parameters
+                const params = { ...req.query }
+                delete params.query
+                const searchParams = new URLSearchParams()
+                Object.entries(params).forEach(([key, val]) => {
+                  const values = Array.isArray(val) ? val : [val]
+                  values.forEach(v => {
+                    searchParams.append(key, htmlSpecialChars(v))
+                  })
+                })
+                const url = `http://laravel:8000/api/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
+                const get = await fetch(url)
                 let data
 
                 if(!get.ok) {

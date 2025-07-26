@@ -1,0 +1,14 @@
+stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,treasure,pikmin,border1,border2,border3,border4
+1300,こてしらべの洞窟（ムシ取り2）,Explorer's Cave,参加者企画,stage,int,2,250726,200,3442,50,0,0,0,0
+1301,新参者の試練場（ムシ取り2）,Novice Training,参加者企画,stage,int,2,250726,340,3715,30,0,0,0,0
+1302,グリーンホール（ムシ取り2）,Green Hole,参加者企画,stage,int,2,250726,185,1087,50,0,0,0,0
+1303,地下の温室（ムシ取り2）,Hot House,参加者企画,stage,int,2,250726,200,891,35,0,0,0,0
+1304,鉄人の穴（ムシ取り2）,Brawny Abyss,参加者企画,stage,int,2,250726,230,1423,50,0,0,0,0
+1305,コンクリート迷路（ムシ取り2）,Concrete Maze,参加者企画,stage,int,2,250726,220,460,18,0,0,0,0
+1306,三色試練場（ムシ取り2）,Three Color Training,参加者企画,stage,int,2,250726,230,1564,60,0,0,0,0
+1307,炎と水の試練場（ムシ取り2）,Hazard Training,参加者企画,stage,int,2,250726,400,5317,50,0,0,0,0
+1308,巨人のトイレ（ムシ取り2）,The Giant's Bath,参加者企画,stage,int,2,250726,350,1470,50,0,0,0,0
+1309,倍々ゲームの穴（ムシ取り2）,Breeding Ground,参加者企画,stage,int,2,250726,430,3144,100,0,0,0,0
+1310,どっすん迷路（ムシ取り2）,Bully Den,参加者企画,stage,int,2,250726,300,3200,25,0,0,0,0
+1311,スナイパールーム（ムシ取り2）,Sniper Room,参加者企画,stage,int,2,250726,255,3252,50,0,0,0,0
+1312,デメマダラの巣窟（ムシ取り2）,Emperor's Realm,参加者企画,stage,int,2,250726,500,3097,74,0,0,0,0
