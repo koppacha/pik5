@@ -1,4 +1,4 @@
-import {eg, ne} from "./const";
+import {be, ce, db, dc, dd, eg, ex, ne, ss} from "./const";
 import {currentYear} from "./pik5";
 
 /*
@@ -7,27 +7,30 @@ import {currentYear} from "./pik5";
 
 // パラメータからURLを生成する関数
 export function stageUrlOutput(stage, consoles, rule, year, parent){
-    // 期間限定以外
-    if(rule > 0 && rule < 100){
-        // parentを読み込めない場合（新着順一覧など）
-        if(parent === undefined){
-            if([10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43, 91].includes(rule)){
-                return stage
-            }
-        }
-        // すべてのパラメータがデフォルトならパラメータは付与しない
-        if(Number(consoles) === 0 && Number(year) === currentYear() && Number(rule) === parent){
-            return stage
-        }
-        // ピクミン2総合が指定されている場合はタマゴあり・なしに強制置換
-        if(Number(rule) === 20 && eg.includes(Number(stage))){
-            return `${stage}/${consoles}/21/${year}`
-        }
-        if(Number(rule) === 20 && ne.includes(Number(stage))){
-            return `${stage}/${consoles}/22/${year}`
-        }
-        return `${stage}/${consoles}/${rule}/${year}`
+
+    // 数値変換
+    const s = Number(stage)
+    const c = Number(consoles)
+    const r = Number(rule)
+    const y = Number(year)
+
+    // 期間限定
+    if(r >= 100) return stage
+
+    // parentが読み込めない場合（新着順一覧など）
+    if(parent === undefined && [90, 91].includes(r)) return stage
+
+    // すべてデフォルトならパラメータは付与しない
+    if(c === 0 && y === currentYear() && r === parent) return stage
+
+    // ルール差し替え判定テーブル
+    const map = {
+        20: [[eg, 21], [ne, 22]],
+        30: [[ce, 31], [be, 32], [db, 33], [ss, 36]],
+        40: [[dc, 41], [dd, 42], [ex, 43]]
     }
-    // 期間限定と例外
-    return stage
+    for(const [arr, newRule] of map[r] ?? []){
+        if(arr.includes(s)) return `${stage}/${consoles}/${newRule}/${year}`
+    }
+    return `${stage}/${consoles}/${rule}/${year}`
 }
