@@ -54,6 +54,7 @@ class TotalController extends Controller
             44 => range(401, 412), // ゲキカラチャレンジ◆
             45 => range(413, 418), // ゲキカラバトル◆
             46 => range(419, 428), // ゲキカラ仙人の挑戦状◆
+            47 => range(429, 444), // 夜の探検
             91 => [901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916], // 複合・その他（903は除外）
 
             // TODO: 個別のイベント総合に相当する配列は将来的にデータベースに基づいて読み込むようにする
@@ -81,6 +82,7 @@ class TotalController extends Controller
             211105 => range(1163, 1184), // エリア踏破戦
             221008 => range(1185, 1196), // エリア踏破戦
             250726 => range(1300, 1312), // ムシ取り
+            250905 => range(1313, 1342)  // トリックテイキング（仮）
         ];
         if(!isset($request) || !$request){
             return [];
@@ -152,7 +154,7 @@ class TotalController extends Controller
             $rules = [10, 20, 21, 22, 31, 32, 33, 36, 41, 42, 43];
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別、その他は対象外）
         } elseif($req["rule"] === 3){
-            $rules = [11, 23, 24, 25, 29, 35, 44, 45, 46];
+            $rules = [11, 23, 24, 25, 29, 35, 44, 45, 46, 47];
         // 期間限定ランキング（終了済みの大会のみ対象）
         } elseif($req["rule"] === 4){
             $rules = [151101, 160306, 160319, 160423, 160430, 160806, 170101, 170211, 170325, 170429, 171013, 180101, 180901, 190802, 200723, 200918, 211105, 221008];
@@ -209,8 +211,8 @@ class TotalController extends Controller
                 })
                 ->toArray();
 
-            // 順位とランクポイント計算に渡す値
-            if(in_array($rule, [29, 35], true)){
+            // 順位とランクポイント計算に渡す値（Speedrun系は反転）
+            if(in_array($rule, [29, 35, 47], true)){
                 $mode = "reverse";
             } else {
                 $mode = "stage";
@@ -225,8 +227,8 @@ class TotalController extends Controller
                 foreach ($records as $record) {
                     $user_id = $record['user_id'];
 
-                    // スコア計算（ルールIDが29または35の場合の特別処理を含む）
-                    $score = $rule_id === 29 || $rule_id === 35
+                    // スコア計算（ルールIDがSpeedrun系の場合の特別処理を含む）
+                    $score = $rule_id === 29 || $rule_id === 35 || $rule_id === 47
                         ? max(0, 600 - $record['score'])
                         : $record['score'];
 

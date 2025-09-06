@@ -46,6 +46,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'record/rank/{stage}/{rule}/{score?}' , [ RecordController::class, 'getRank' ]);
     Route::get ('record/id/{id}', [RecordController::class, 'getRecord']);
     Route::get ( 'record/history/{stage_id}/{rule}/{user_id}' , [ RecordController::class, 'getRecordHistory' ]);
+    Route::get ( 'record/top/{stage_id}/{console}/{rule}' , [ RecordController::class, 'getTopRecord' ]);
     Route::get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController::class, 'show' ]);
     Route::post ( 'record' , [ RecordController::class, 'create' ]);
     Route::patch ( 'record/{id}' , [ RecordController::class, 'update' ]);

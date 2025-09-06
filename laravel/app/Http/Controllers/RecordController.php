@@ -35,7 +35,14 @@ class RecordController extends Controller
             $data
         );
     }
-
+    // スコア比較時の条件分岐（RecordForm.jsと共通）
+    public function isTime($rule, $stage): bool
+    {
+        $ruleArray = [11, 29, 33, 35, 43, 46, 91];
+        $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
+        return in_array((int)$rule, $ruleArray, true) ||
+            in_array((int)$stage, $stageArray, true);
+    }
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
@@ -46,7 +53,29 @@ class RecordController extends Controller
         if(!$data){
             $data = collect(['message' => "Record Not Found"]);
         }
+        return response()->json(
+            $data
+        );
+    }
+    // ステージID・ルール・コンソールの組み合わせでトップ記録を取得する関数
+    public function getTopRecord(Request $request): JsonResponse
+    {
+        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35], true) ? 'ASC' : 'DESC';
 
+        $record = Record::select(config('const.selected'))
+            ->where('stage_id', $request['stage_id'])
+            ->where('rule', $request['rule'])
+            ->where('console', $request['console'] ?: 0)
+            ->where('flg','<', 2)
+            ->orderBy('score', $scoreOrder)
+            ->orderBy('created_at', 'ASC')
+            ->first();
+
+        $data = $record ? $record->toArray() : [];
+        $data["post_rank"] = 1; // トップ記録なので順位は1
+        if(!$data){
+            $data = collect(['message' => "Record Not Found"]);
+        }
         return response()->json(
             $data
         );
@@ -78,19 +107,10 @@ class RecordController extends Controller
             $new_data
         );
     }
-
     // 暫定順位を取得する関数
     public function getRank(Request $request): JsonResponse
     {
-        // RecordForm.jsと共通
-        function isTime($rule, $stage): bool
-        {
-            $ruleArray = [11, 29, 33, 35, 43, 46, 91];
-            $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
-            return in_array((int)$rule, $ruleArray, true) ||
-                in_array((int)$stage, $stageArray, true);
-        }
-        $operator = isTime($request["rule"], $request["stage"]) ? "<" : ">";
+        $operator = $this->isTime($request["rule"], $request["stage"]) ? "<" : ">";
 
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
@@ -270,7 +290,7 @@ class RecordController extends Controller
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
         if($rule === "1"){
             // 全総合（2P、TAS、無差別級を除く）
-            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46];
+            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
 
         } elseif($rule === "2"){
             // 通常総合
@@ -278,7 +298,7 @@ class RecordController extends Controller
 
         } elseif($rule === "3"){
             // 特殊総合（期間限定を除く）
-            $rule = [11, 23, 24, 25, 29, 35, 44, 45, 46];
+            $rule = [11, 23, 24, 25, 29, 35, 44, 45, 46, 47];
 
         } elseif($rule === "20"){
             // ピクミン2総合

@@ -19,12 +19,15 @@ export default function Hand() {
     }
 
     return (
-        <Grid container spacing={2}>
-            {Object.values(cards.data).map(c => (
-                <Grid item key={c.id} xs={4}>
-                    <CardItem card={c} region="hand" session={session} />
-                </Grid>
-            ))}
-        </Grid>
+        <>
+        手札<br/>
+            <Grid container spacing={2}>
+                {Object.values(cards.data).map(c => (
+                    <Grid item key={c.id} xs={4}>
+                        <CardItem card={c} region="hand" session={session} />
+                    </Grid>
+                ))}
+            </Grid>
+        </>
     )
 }

@@ -25,6 +25,7 @@ import {token} from "stylis";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
+import ConsoleList from "../../components/record/ConsoleList";
 
 export async function getStaticPaths(){
     return {
@@ -182,7 +183,11 @@ export default function Stage(param){
     const ruleName = hideRuleNames.includes(Number(param.rule))
         || Number(param.rule) > 100
         ? <></>
-        : <Link href={"/total/"+param.rule} className="mini-title"><span>（{t.rule?.[param.rule]}）</span></Link>
+        : Number(param.rule) !== 47
+        ? <Link href={"/total/"+param.rule} className="mini-title"><span>（{t.rule?.[param.rule]}）</span></Link>
+
+        // 「夜の探索」の場合はエリア名を表示
+        : <span className="mini-title">（{t.nightAreas?.[param.stage]}）</span>
 
     // 制限時間を計算する（ピクミン２チャレンジモードのみ２倍）
     const countdown = (Number(param.rule === 21) || Number(param.rule === 22))
@@ -231,6 +236,7 @@ export default function Stage(param){
             </Grid>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+            <ConsoleList param={param}/>
             <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6} style={{paddingLeft:'0.5em'}}>
                     <PullDownConsole props={param}/>

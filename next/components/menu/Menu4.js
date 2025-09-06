@@ -13,11 +13,12 @@ import * as React from "react";
 import Link from "next/link";
 import {HeaderPopMenu, StyledMenuItem} from "../../styles/pik5.css";
 import {useLocale} from "../../lib/pik5";
-import {dc, dd, ex} from "../../lib/const";
+import {dc, dd, ex, ni} from "../../lib/const";
 
 const dcColor = "#ffde5b"
 const ddColor = "#d7b842"
 const exColor = "#ccb868"
+const niColor = "#bfcc68"
 
 export default function Menu4(props){
 
@@ -66,6 +67,18 @@ export default function Menu4(props){
                                 ex.map(n=>
                                     <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+exColor,
+                                    }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
+                                )
+                            }
+                        </Grid>
+                        <Grid item xs={3}>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+niColor,
+                            }} component={Link} href="/total/47" onClick={props.handleClose}>夜の探検総合</StyledMenuItem>
+                            {
+                                ni.map(n=>
+                                    <StyledMenuItem key={n} style={{
+                                        borderLeft:"solid 10px "+niColor,
                                     }} component={Link} href={"/stage/"+n} onClick={props.handleClose}>#{n} {t.stage[n]}</StyledMenuItem>
                                 )
                             }
