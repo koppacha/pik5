@@ -42,36 +42,38 @@ export default function MobileFooter({users}){
     return (
         <>
             <div className="footer-space"></div>
-            <Grid className="mobile-footer-menu" container columns={{xs: 5}}>
-                <Grid className="mobile-footer-item" item xs={1}>
-                    <Link href="/">
-                        <span>
-                            <FontAwesomeIcon icon={faHome}/>
-                            <Typography>Home</Typography>
-                        </span>
-                    </Link>
+            <div className="mobile-footer-container">
+                <Grid className="mobile-footer-menu" container columns={{xs: 5}}>
+                    <Grid className="mobile-footer-item" item xs={1}>
+                        <Link href="/">
+                            <span>
+                                <FontAwesomeIcon icon={faHome}/>
+                                <Typography>Home</Typography>
+                            </span>
+                        </Link>
+                    </Grid>
+                    <Grid className="mobile-footer-item" item xs={1}>
+                        <Link href="https://discord.gg/rQEBJQa" target="_blank">
+                            <span>
+                                <FontAwesomeIcon icon={faDiscord}/>
+                                <Typography>Discord</Typography>
+                            </span>
+                        </Link>
+                    </Grid>
+                    <Grid className="mobile-footer-item" item xs={1} onClick={handleSearchClick} style={{cursor:"pointer"}}>
+                        <FontAwesomeIcon icon={faMagnifyingGlass}/>
+                        <Typography>Search</Typography>
+                    </Grid>
+                    <Grid className="mobile-footer-item" item xs={1} onClick={scrollToTop} style={{cursor:"pointer"}}>
+                        <FontAwesomeIcon icon={faAngleUp}/>
+                        <Typography>PageTop</Typography>
+                    </Grid>
+                    <Grid className="mobile-footer-item" item xs={1} onClick={toggleDrawer} style={{cursor:"pointer"}}>
+                        <FontAwesomeIcon icon={faAnglesLeft}/>
+                        <Typography>Menu</Typography>
+                    </Grid>
                 </Grid>
-                <Grid className="mobile-footer-item" item xs={1}>
-                    <Link href="https://discord.gg/rQEBJQa" target="_blank">
-                        <span>
-                            <FontAwesomeIcon icon={faDiscord}/>
-                            <Typography>Discord</Typography>
-                        </span>
-                    </Link>
-                </Grid>
-                <Grid className="mobile-footer-item" item xs={1} onClick={handleSearchClick} style={{cursor:"pointer"}}>
-                    <FontAwesomeIcon icon={faMagnifyingGlass}/>
-                    <Typography>Search</Typography>
-                </Grid>
-                <Grid className="mobile-footer-item" item xs={1} onClick={scrollToTop} style={{cursor:"pointer"}}>
-                    <FontAwesomeIcon icon={faAngleUp}/>
-                    <Typography>PageTop</Typography>
-                </Grid>
-                <Grid className="mobile-footer-item" item xs={1} onClick={toggleDrawer} style={{cursor:"pointer"}}>
-                    <FontAwesomeIcon icon={faAnglesLeft}/>
-                    <Typography>Menu</Typography>
-                </Grid>
-            </Grid>
+            </div>
             <MobileMenu users={users} open={drawerOpen} toggleHandle={toggleDrawer}/>
             <ModalSearch users={users} open={searchOpen} handleClose={handleSearchClose} searchRef={searchRef}/>
         </>

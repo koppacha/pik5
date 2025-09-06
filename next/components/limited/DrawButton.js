@@ -17,7 +17,6 @@ export default function DrawButton({ session }) {
         mutate(`/api/server/players/me?userId=${session.user.id}`)
         mutate('/api/server/hand?userId=' + session.user.id)
     }
-    console.log(player)
     const disabled = !session || !player || player.draw_points < 3
 
     return (

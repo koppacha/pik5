@@ -4,18 +4,16 @@
 
 import {range} from "./pik5";
 
-// ステージリスト
-
 // 有効な操作方法ID、ステージID、ルールID
-export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 91]
+export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 91]
 
 // ユーザーページ等で選択可能なルールID
-export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 91]
+export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 91]
 
 // ルールIDから配列に変換する関数
 export function rule2array(rule){
-    const number = [1, 2, 3, 10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46]
-    const arrays    = [p0, p0, sr, p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex, dc, dd, ex]
+    const number = [1, 2, 3, 10, 11, 20, 21, 22, 23, 24, 25, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
+    const arrays    = [p0, p0, sr, p1, p1, p2, eg, ne, eg, ns, du, ot, p3, ce, be, db, sb, ss, p4, dc, dd, ex, dc, dd, ex, ni]
     const flg = number.indexOf(Number(rule))
     if(flg === -1){
         return []
@@ -80,6 +78,9 @@ export const dd = range(413, 418)
 // 葉っぱ仙人
 export const ex = range(419, 428)
 
+// 夜の探検
+export const ni = range(429, 444)
+
 // 本編RTA（Speedrun.com）
 export const sp = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403, 404, 405]
 
@@ -96,7 +97,7 @@ export const p0 = [].concat(p1, p2, p3, p4)
 export const sr = [].concat(p1, eg, ns, du, p4)
 
 // 全総合で集計対象のステージ数
-export const stageCounts = 208;
+export const stageCounts = 224;
 
 // 昇段・昇級に必要なポイント（6級〜九段・理論値）
 export const basePoints = [0, 50, 100, 150, 200, 250, 300, 500, 750, 1000, 1500, 2000, 3000, 4000, 5000, 20000]

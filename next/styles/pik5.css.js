@@ -579,7 +579,6 @@ export const AuthWindow = styled(Grid)`
 `
 export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
 
-  margin-bottom: 2em;
   width: 100%;
   
   ${
