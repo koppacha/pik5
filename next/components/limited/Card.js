@@ -12,7 +12,7 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import {Tooltip} from "@mui/material";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faLightbulb, faRankingStar, faUsers} from "@fortawesome/free-solid-svg-icons";
+import {faArrowUpFromBracket, faLightbulb, faRankingStar, faUsers} from "@fortawesome/free-solid-svg-icons";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import {addName2posts, fetcher} from "../../lib/pik5";
@@ -73,12 +73,17 @@ export default function CardItem({ session, card, region, users }) {
         fetcher,
         { refreshInterval: region === 'field' ? 10000 : 0 }
     )
-    const {data, error} = useSWR(`/api/server/record/${card.id}`, fetcher)
+    const {data: info, error: stageError, isLoading: loadingStage} = useSWR(`/api/server/stage/${card.stageId}`, fetcher)
+    const {data: record, error: recordError, isLoading: loadingRecord} = useSWR(`/api/server/record/${card.stageId}`, fetcher)
+
+    const isLoading = loadingStage || loadingRecord
+    const error = stageError || recordError
 
     // カードのランキングを取得中の場合、ローディング表示
-    if(!data || error) return <NowLoading/>
+    if(isLoading) return <NowLoading/>
+    if(error) return <div>取得エラー: {error.message}</div>
 
-    const datas = addName2posts(data.data, users)
+    const datas = addName2posts(record.data, users)
 
     const handleTake = async () => {
         await fetch(`/api/server/cards/${card.id}/take?userId=${session.user.id}`, { method: 'POST' })
@@ -108,18 +113,18 @@ export default function CardItem({ session, card, region, users }) {
                     <CardWrapper premium={card.rarity > 4 ? gradientColor : "#777"}>
                         <div style={{background:"#fff",height:"100%",borderRadius:"16px",padding:"12px",display: "flex", flexDirection: "column"}}>
                             <Grid container style={{fontSize: 12, color: "#4b4b4b"}}>
-                                <Grid item xs={3}>#{card.id}</Grid>
-                                <Grid item xs={9} style={{textAlign:"right",color:level2color(card.difficulty)}}>{"★".repeat(card.difficulty)}</Grid>
+                                <Grid item xs={3}>#{card.stageId}</Grid>
+                                <Grid item xs={8} style={{textAlign:"right",color:level2color(card.difficulty)}}>{"★".repeat(card.difficulty)}</Grid>
+                                <Grid item xs={1}><div className={"reward-icon"}>{card.rewards ?? 0}</div></Grid>
                             </Grid>
-                            <div style={{fontSize: 20, fontWeight: "bold"}}>{card.name}</div>
-                            <div style={{fontSize: 16, color: "#666", marginTop: 4}}>{card.rule}</div>
-                            <div style={{fontSize: 14, color: "#333", marginTop: 8, marginBottom: 8}}>{card.rule_text}</div>
+                            <div style={{fontSize: 20, fontWeight: "bold"}}>{card.title}</div>
+                            <div style={{fontSize: 16, color: "#666", marginTop: 4}}>{card.ruleName}</div>
+                            <div style={{fontSize: 14, color: "#333", marginTop: 8, marginBottom: 8}}>{card.text}</div>
                             <div style={{ marginTop: "auto" }}>
                                 <hr/>
                                 <Grid container style={{fontSize: 14, marginTop: 8}}>
-                                    <Grid item xs={2}><Tooltip title={"参加者数"}><FontAwesomeIcon icon={faUsers} /> {card.user}</Tooltip></Grid>
-                                    <Grid item xs={4}><Tooltip title={"トッププレイヤー"}><FontAwesomeIcon icon={faRankingStar} /> {card.top_player}</Tooltip></Grid>
-                                    <Grid item xs={6} style={{textAlign:"right"}}><Tooltip title={"考案者"}><FontAwesomeIcon icon={faLightbulb} /> {card.creator}</Tooltip></Grid>
+                                    <Grid item xs={6}><Tooltip title={"テイカー"}><FontAwesomeIcon icon={faArrowUpFromBracket} /> {card.taker ?? "-"}</Tooltip></Grid>
+                                    <Grid item xs={6} style={{textAlign:"right"}}><Tooltip title={"考案者"}>{card.creator ?? "-"} <FontAwesomeIcon icon={faLightbulb} /></Tooltip></Grid>
                                 </Grid>
                             </div>
                         </div>
@@ -139,10 +144,10 @@ export default function CardItem({ session, card, region, users }) {
                 ) : (
                     <>
                         <DialogTitle>{card.title}</DialogTitle>
-                        <DialogContent>
+                        <DialogContent style={{backgroundColor: "#333", color: "#fff"}}>
                             <RecordPost
                                 style={{alignItems: "center"}}
-                                info={data.data} rule={240421} console={0}/>
+                                info={info.data} rule={250905} console={0}/>
                             {
                                 Object.values(datas).map(function (post) {
                                     return <Record mini={true} key={post.unique_id} data={post}/>
@@ -151,7 +156,6 @@ export default function CardItem({ session, card, region, users }) {
                         </DialogContent>
                         <DialogActions>
                             <Button onClick={() => setOpen(false)}>閉じる</Button>
-                            <Button disabled={!ranking || ranking.length === 0}>投稿</Button>
                         </DialogActions>
                     </>
                 )}

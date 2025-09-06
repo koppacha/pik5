@@ -78,7 +78,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
             }
         }
         if(data.compare < 0) compare = `(${data.compare})`
-        if([29, 35].includes(Number(data.rule))){
+        if([29, 35, 47].includes(Number(data.rule))){
             compare = ""
         }
     } else {
