@@ -20,8 +20,6 @@ export function stageUrlOutput(stage, consoles, rule, year, parent){
     // parentが読み込めない場合（新着順一覧など）
     if(parent === undefined && [90, 91].includes(r)) return stage
 
-    console.log({stage, consoles, rule, year, parent})
-
     // すべてデフォルトならパラメータは付与しない
     if(c === 0 && y === currentYear() && (r === parent || parent === undefined)) return stage
 
