@@ -24,9 +24,9 @@ class TotalController extends Controller
     {
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
-            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428)), // 全総合
+            1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428), range(429, 444)), // 全総合
             2 => array_merge(range(101, 105), range(201, 230), range(301, 350), range(401, 428)), // 通常総合
-            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(351, 362), range(401, 428)), // 特殊総合
+            3 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(351, 362), range(401, 428), range(429, 444)), // 特殊総合
             4 => range(1001, 1299), // 期間限定総合
             10 => [101, 102, 103, 104, 105],
             11 => [101, 102, 103, 104, 105], // ◆
@@ -58,7 +58,6 @@ class TotalController extends Controller
             91 => [901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916], // 複合・その他（903は除外）
 
             // TODO: 個別のイベント総合に相当する配列は将来的にデータベースに基づいて読み込むようにする
-
             151101 => range(1001, 1002), // スタンダード
             160306 => range(1003, 1004), // スタンダード
             160319 => range(1005, 1006), // スタンダード
@@ -148,7 +147,7 @@ class TotalController extends Controller
 
         // 全総合ランキング
         if ($req["rule"] === 1) {
-            $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46];
+            $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47];
         // 通常総合ランキング
         } elseif ($req["rule"] === 2) {
             $rules = [10, 20, 21, 22, 31, 32, 33, 36, 41, 42, 43];
@@ -189,13 +188,23 @@ class TotalController extends Controller
 
         // ルールごとにループする
         foreach($rules as $rule) {
+            // スコアの並べ替え設定
+            if(in_array($rule, [29, 35, 47], true)){
+                // Speedrun系
+                $orderBy = "ASC";
+                $mode = "reverse";
+            } else {
+                // それ以外
+                $orderBy = "DESC";
+                $mode = "stage";
+            }
             // 有効データのみ抽出するクエリ
             $records = Record::whereIn('stage_id', self::stage_list($rule))
                 ->where('console', $console_operation, $req["console"])
                 ->where('rule', $rule)
                 ->where('created_at', '<', $date)
                 ->where('flg', '<', 2)
-                ->orderBy('score', 'DESC') // スコア順に並べた後
+                ->orderBy('score', $orderBy) // スコア順に並べた後
                 ->orderBy('created_at')   // 作成日時順に並べ
                 ->get()
                 ->unique(function ($item) { // 重複削除
@@ -211,12 +220,6 @@ class TotalController extends Controller
                 })
                 ->toArray();
 
-            // 順位とランクポイント計算に渡す値（Speedrun系は反転）
-            if(in_array($rule, [29, 35, 47], true)){
-                $mode = "reverse";
-            } else {
-                $mode = "stage";
-            }
             foreach($dataset[$rule] as $stage => $stageRecords) {
                 $ranking[$rule][$stage] = Func::rank_calc($mode, $stageRecords, [$req["console"], [$rule], $date]);
             }

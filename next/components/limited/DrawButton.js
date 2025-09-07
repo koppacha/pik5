@@ -6,7 +6,10 @@ const fetcher = url => fetch(url).then(res => res.json())
 
 export default function DrawButton({ session }) {
     if(!session) return null
-    const { data: player } = useSWR(`/api/server/players/me?userId=${session.user.id}`, fetcher)
+
+    // TODO: ビルドエラーになる
+    // const { data: player } = useSWR(`/api/server/players/me?userId=${session.user.id}`, fetcher)
+    const player = []
 
     const handleDraw = async () => {
         await fetch('/api/server/draw', {
