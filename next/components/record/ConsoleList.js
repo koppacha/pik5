@@ -24,7 +24,7 @@ export default function ConsoleList({param}){
                 <Grid container>
                     {
                         consoleList.map((console, index) => (
-                            <Consoles users={param.users} console={console} stage={param.stage} rule={param.rule} year={param.year}/>
+                            <Consoles key={index} users={param.users} console={console} stage={param.stage} rule={param.rule} year={param.year}/>
                         ))
                     }
                 </Grid>
