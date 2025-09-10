@@ -38,7 +38,7 @@ class RecordController extends Controller
     // スコア比較時の条件分岐（RecordForm.jsと共通）
     public function isTime($rule, $stage): bool
     {
-        $ruleArray = [11, 29, 33, 35, 43, 46, 91];
+        $ruleArray = [11, 29, 33, 35, 43, 46, 47, 91];
         $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
         return in_array((int)$rule, $ruleArray, true) ||
             in_array((int)$stage, $stageArray, true);

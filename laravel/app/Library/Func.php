@@ -21,10 +21,13 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = [29, 35, 47, 91];
+        $rta_stages = array_merge(range(245, 254), range(351, 362), range(429, 444));
 
-        if(is_numeric($rule)){
-            if(in_array((int)$rule, $rta_stages, true)){
+        // カウントアップRTAのルールリスト
+        $rta_rules = [29, 35, 47, 91];
+
+        if(is_numeric($rule) || is_numeric($id)){
+            if(in_array((int)$rule, $rta_rules, true) || in_array((int)$id, $rta_stages, true)){
                 return ['score', 'ASC'];
             }
             return ['score', 'DESC'];
