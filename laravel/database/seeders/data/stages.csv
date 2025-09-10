@@ -26,9 +26,9 @@ stage_id,stage_name,eng_stage_name,stage_sub,type,display,series,parent,time,tre
 41,ピクミン4 ダンドリチャレンジ総合ランキング,Pikmin 4 Dandori Challenge Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
 42,ピクミン4 ダンドリバトル総合ランキング,Pikmin 4 Dandori Battle Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
 43,ピクミン4 葉っぱ仙人の挑戦状総合ランキング,Pikmin 4 Trial of the Sage Leaf Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
-44,ピクミン4 ゲキカラチャレンジ総合ランキング,Pikmin 4 Ultra-Spicy Challenge Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
-45,ピクミン4 ゲキカラバトル総合ランキング,Pikmin 4 Ultra-Spicy Battle Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
-46,ピクミン4 ゲキカラ仙人の挑戦状総合ランキング,Pikmin 4 Trial of the Ultra-Spicy Sage Overall ranking,総合ランキング,total,int,4,2,0,0,0,0,0,0,0
+44,ピクミン4 ゲキカラチャレンジ総合ランキング,Pikmin 4 Ultra-Spicy Challenge Overall ranking,総合ランキング,total,int,4,3,0,0,0,0,0,0,0
+45,ピクミン4 ゲキカラバトル総合ランキング,Pikmin 4 Ultra-Spicy Battle Overall ranking,総合ランキング,total,int,4,3,0,0,0,0,0,0,0
+46,ピクミン4 ゲキカラ仙人の挑戦状総合ランキング,Pikmin 4 Trial of the Ultra-Spicy Sage Overall ranking,総合ランキング,total,int,4,3,0,0,0,0,0,0,0
 101,遭難地点,The Impact Site,ピクミン チャレンジモード,stage,int,1,10,648,278,9,0,0,0,0
 102,希望の森,The Forest of Hope,ピクミン チャレンジモード,stage,int,1,10,1134,569,9,0,0,0,0
 103,樹海のヘソ,The Forest Navel,ピクミン チャレンジモード,stage,int,1,10,972,482,15,0,0,0,0

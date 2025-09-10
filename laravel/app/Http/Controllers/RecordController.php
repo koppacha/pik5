@@ -354,7 +354,12 @@ class RecordController extends Controller
 
         } else {
             // セット単位ではない場合は個別に計算する（ユーザー別、総合ランキング）
-            $max = max(Func::memberCount($rule, [$console, $rule, $date]));
+            $member_count_map = Func::memberCount($rule, [$console, $rule, $date]);
+            $max = 1;
+            if (!empty($member_count_map)) {
+                // If associative array like [stage_id => count], take the maximum value
+                $max = max($member_count_map);
+            }
 
             foreach($new_data as $key => $value){
 
