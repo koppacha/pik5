@@ -32,25 +32,41 @@ export async function getStaticPaths(){
 }
 export async function getStaticProps({params}){
 
-    let [user1, consoles1, rule1, year1, user2, consoles2, rule2, year2] = params.compare
+    let [user1, consoles1Str, rule1Str, year1Str, user2, consoles2Str, rule2Str, year2Str] = params.compare
+
+    // Keep original strings for URLs/props
+    const consoles1 = consoles1Str
+    const consoles2 = consoles2Str
+    const rule1 = rule1Str
+    const rule2 = rule2Str
+    const year1 = year1Str
+    const year2 = year2Str
+
+    // Numeric versions for validation/comparisons
+    const nConsoles1 = Number(consoles1Str)
+    const nConsoles2 = Number(consoles2Str)
+    const nRule1 = Number(rule1Str)
+    const nRule2 = Number(rule2Str)
+    const nYear1 = Number(year1Str)
+    const nYear2 = Number(year2Str)
 
     const rules = rule2array(rule1)
 
-    if(
+    if (
         !user1 ||
         !user2 ||
-        consoles1 > 4 ||
-        consoles1 < 0 ||
-        consoles2 > 4 ||
-        consoles2 < 0 ||
-        rule1 > 46 ||
-        rule1 < 0 ||
-        rule2 > 46 ||
-        rule1 < 0 ||
-        year1 < 2014 ||
-        year1 > currentYear() ||
-        year2 < 2014 ||
-        year2 > currentYear()
+        nConsoles1 > 4 ||
+        nConsoles1 < 0 ||
+        nConsoles2 > 4 ||
+        nConsoles2 < 0 ||
+        nRule1 > 47 ||
+        nRule1 < 0 ||
+        nRule2 > 47 ||
+        nRule2 < 0 ||
+        nYear1 < 2014 ||
+        nYear1 > currentYear() ||
+        nYear2 < 2014 ||
+        nYear2 > currentYear()
     ){
         return {
             notFound: true,
@@ -71,30 +87,40 @@ export async function getStaticProps({params}){
         return e.userId === user2
     })?.name
 
-    // 全総合の場合は特殊処理
-    let posts1, posts2, posts3, posts4
-    if(rule1 === "1" && rule2 === "1") {
-        // 左側の通常総合・特殊総合を取得
-        [posts1, posts3] = await Promise.all([
+    // 全総合(= "1")の扱いに応じて各サイドを取得（posts3/posts4 は常に定義）
+    let posts1 = {}, posts2 = {}, posts3 = {}, posts4 = {}
+    if (rule1 === "1" && rule2 === "1") {
+        // 左右とも通常総合(2)と特殊総合(3)を取得
+        ;[posts1, posts3] = await Promise.all([
             fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`).then(res => res.json()),
             fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`).then(res => res.json())
-        ]);
-
-        // 右側の通常総合・特殊総合を取得
-        [posts2, posts4] = await Promise.all([
+        ])
+        ;[posts2, posts4] = await Promise.all([
             fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`).then(res => res.json()),
             fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`).then(res => res.json())
-        ]);
-
-    // 全総合以外の通常処理
+        ])
     } else {
-        // 左側の記録を取得
-        const recordRes = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`)
-        posts1 = await recordRes.json()
+        // 左側
+        if (rule1 === "1") {
+            ;[posts1, posts3] = await Promise.all([
+                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`).then(res => res.json()),
+                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`).then(res => res.json())
+            ])
+        } else {
+            posts1 = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`).then(r => r.json())
+            // posts3 は空のまま（{}）
+        }
 
-        // 右側の記録を取得
-        const recordResR = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`)
-        posts2 = await recordResR.json()
+        // 右側
+        if (rule2 === "1") {
+            ;[posts2, posts4] = await Promise.all([
+                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`).then(res => res.json()),
+                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`).then(res => res.json())
+            ])
+        } else {
+            posts2 = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`).then(r => r.json())
+            // posts4 は空のまま（{}）
+        }
     }
     // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け、総合点差）
     let totals = [0, 0, 0, 0, 0, 0, 0], tempScore = [0, 0]
@@ -200,7 +226,7 @@ export default function Compare(param){
                         borderBottom:"2px dotted #e81fc1",
                         textAlign:"center",
                         margin:"8px 0"
-                    }}>◆特殊ランキング（全回収TA・タマゴムシ縛り・スプレー縛り・本編地下・ゲキカラダンドリ）◆</Box>
+                    }}>◆特殊ランキング（全回収TA・タマゴムシ縛り・スプレー縛り・本編地下・ゲキカラダンドリ・夜の探索）◆</Box>
                     <RankingCompare posts2={param.posts4} posts1={param.posts3} userName={param.userName} rule={"3"} userName2={param.userName2}/>
                 </>
             }
