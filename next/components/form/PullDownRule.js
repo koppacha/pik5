@@ -13,7 +13,7 @@ export default function PullDownRule(props){
 
     const rules = [0]
 
-    rules.push(10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43)
+    rules.push(10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47)
     const type = "user"
     const id   = user
 
