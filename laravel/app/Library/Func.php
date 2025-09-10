@@ -21,10 +21,10 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362), range(429, 444), range(901, 916));
+        $rta_stages = [29, 35, 47, 91];
 
-        if(is_numeric($id)){
-            if(in_array((int)$id, $rta_stages, true)){
+        if(is_numeric($rule)){
+            if(in_array((int)$rule, $rta_stages, true)){
                 return ['score', 'ASC'];
             }
             return ['score', 'DESC'];
@@ -44,7 +44,7 @@ class Func extends Facade
         if(is_array($total)){
             // あらかじめ配列が指定されている場合はそれを流用する
             $rule = $total;
-            $stages = TotalController::stage_list("2");
+            $stages = TotalController::stage_list("1");
             $ttl = 1800;
         } elseif($total > 100000) {
             // 期間限定などで総合IDが指定されている場合はそれだけを指定する
@@ -63,8 +63,7 @@ class Func extends Facade
         $memory_string = is_array($total) ? implode("_", $total) : $total;
 
         try {
-            $Model = Cache::remember("memCount_{$memory_string}", $ttl, static function() use ($console_operation, $stages, $console, $rule, $date) {
-                return Record::whereIn('stage_id', $stages)
+            $Model = Record::whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
                     ->where('created_at', '<', $date)
@@ -74,7 +73,6 @@ class Func extends Facade
                     ->map(function($g){
                         return $g->count();
                     });
-                });
         } catch (Exception $e){
             Log::debug("Error", [$e->getMessage()]);
             return [999];
