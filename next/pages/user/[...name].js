@@ -14,8 +14,7 @@ import {
     RankCell,
     RenderStagesWrapper,
     StageListBox,
-    UserInfoBox, UserInfoSeriesHeader,
-    UserInfoTotalBox
+    UserInfoBox, UserInfoTotalBox
 } from "../../styles/pik5.css";
 import Score from "../../components/record/Score";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";

@@ -8,7 +8,7 @@ import RankingCompare from "../../components/record/RankingCompare";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
 import prisma from "../../lib/prisma";
-import {available, rule2array} from "../../lib/const";
+import {available, reverseStages, rule2array} from "../../lib/const";
 import {
     CompareType,
     MarkerTableCell,
@@ -23,6 +23,7 @@ import Button from "@mui/material/Button";
 import Score from "../../components/record/Score";
 import ModalCompare from "../../components/modal/ModalCompare";
 import {useState} from "react";
+import {range} from "../../lib/pik5";
 
 export async function getStaticPaths(){
     return {
@@ -130,10 +131,21 @@ export async function getStaticProps({params}){
         tempScore[1] = Object.values(posts2).find(i => i.stage_id === stageId)?.score ?? 0
         totals[0] += tempScore[0]
         totals[1] += tempScore[1]
-        if(tempScore[0] >   tempScore[1]) totals[2]++
-        if(tempScore[0] <   tempScore[1]) totals[3]++
-        if(tempScore[0] === tempScore[1]) totals[4]++
 
+        // 勝っている方に加点
+        if (tempScore[0] !== tempScore[1]) {
+            const leftWins = tempScore[0] > tempScore[1]
+            const isReverse = reverseStages.includes(Number(stageId))
+
+            // 排他的論理和（XOR）で加算対象を決定
+            const winner = leftWins ^ isReverse ? 2 : 3
+            totals[winner]++
+        } else {
+            // 同点もしくは両者とも未投稿の場合
+            totals[4]++
+        }
+
+        // 総合点差
         totals[6] = Math.abs(totals[0] - totals[1])
     })
 

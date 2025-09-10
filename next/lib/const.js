@@ -24,6 +24,9 @@ export function rule2array(rule){
 // ルールを表示しないルールID
 export const hideRuleNames = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91]
 
+// 昇順でソートするステージID（ソロバトル、ソロビンゴ、夜の探検）
+export const reverseStages = [ ...range(245, 254), ...range(351, 362), ...range(429, 444)]
+
 // 本編
 export const st = [100, 200, 300, 400]
 

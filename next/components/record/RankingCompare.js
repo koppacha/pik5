@@ -7,7 +7,7 @@ import React, {useEffect, useState} from 'react'
 import {CompareType, UserType} from "../../styles/pik5.css";
 import Score from "./Score";
 import Link from "next/link";
-import {rule2array} from "../../lib/const";
+import {reverseStages, rule2array} from "../../lib/const";
 
 export default function RankingCompare({rule, posts1, posts2, userName, userName2}){
 
@@ -26,6 +26,7 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
         const date1 = new Date(post1?.created_at ?? "2006-09-01 00:00:00")
         const date2 = new Date(post2?.created_at ?? "2006-09-01 00:00:00")
 
+        // スコア差分表示
         const Compare = ({side}) => {
             if(post1?.score > 0 && post2?.score > 0 && post1?.score !== post2?.score){
                 const abs = Math.abs(post1?.score - post2?.score)
@@ -35,6 +36,10 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
             }
             return <></>
         }
+
+        // 逆に処理するかどうか
+        const isReverse = reverseStages.includes(Number(stageId))
+
         return (
             <React.Fragment key={stageId}>
                 <Grid container style={{width:"100%",border:"1px solid #000"}}>
@@ -55,9 +60,17 @@ export default function RankingCompare({rule, posts1, posts2, userName, userName
                     <Grid item xs={3} sm={2} style={{
                         position: "relative",
                         backgroundColor: "#444444",
-                        borderLeft: `10px solid ${(post1?.score ?? 0) > (post2?.score ?? 0) ? '#e31ca9' : '#555'}`,
-                        borderRight: `10px solid ${(post1?.score ?? 0) < (post2?.score ?? 0) ? '#1ce356' : '#555'}`,
-                    }}>
+                        borderLeft: `10px solid ${
+                            isReverse
+                                ? (post1?.score ?? 0) < (post2?.score ?? 0) ? '#e31ca9' : '#555'
+                                : (post1?.score ?? 0) > (post2?.score ?? 0) ? '#e31ca9' : '#555'
+                        }`,
+                        borderRight: `10px solid ${
+                            isReverse
+                                ? (post1?.score ?? 0) > (post2?.score ?? 0) ? '#1ce356' : '#555'
+                                : (post1?.score ?? 0) < (post2?.score ?? 0) ? '#1ce356' : '#555'
+                        }`,
+                    }} >
                         <Link href={"/stage/" + stageId} style={{
                             display: "flex",
                             alignItems: "center",
