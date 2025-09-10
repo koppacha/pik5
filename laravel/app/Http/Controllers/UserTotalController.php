@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class UserTotalController extends Controller
 {
@@ -112,27 +113,48 @@ class UserTotalController extends Controller
         $rps = $data['rps'];
         $totals = $data['totals'];
 
+        // 数値のサニタイズ（非数/無限/想定外の巨大値を除去して上限で丸める）
+        $sanitizeInt = static function ($value, string $label, int $max = 999999): int {
+            $f = is_numeric($value) ? (float)$value : 0.0;
+            if (is_infinite($f) || is_nan($f)) {
+                Log::warning('UserTotalController sanitize: non-finite value', ['label' => $label, 'value' => $value]);
+                $f = 0.0;
+            }
+            if ($f > $max) {
+                Log::warning('UserTotalController sanitize: value clamped (too large)', ['label' => $label, 'value' => $value, 'max' => $max]);
+                $f = (float)$max;
+            }
+            if ($f < 0) {
+                $f = 0.0;
+            }
+            return (int) round($f);
+        };
+
         foreach ($scores as $ruleId => $score) {
             if (!isset($rps[$ruleId])) {
                 continue; // 対応するrpsがない場合はスキップ
             }
+
+            $scoreVal = $sanitizeInt($score, "score[$ruleId]");
+            $rpsVal   = $sanitizeInt($rps[$ruleId], "rps[$ruleId]");
+
             // ルール別スコア
             DB::table('totals')->updateOrInsert(
-                // 検索条件
                 ['user' => $userName, 'rule' => $ruleId],
-
-                // 更新または挿入するデータ
                 [
-                    'score' => $score,
-                    'rps' => $rps[$ruleId],
+                    'score' => $scoreVal,
+                    'rps' => $rpsVal,
                     'flg' => 0,
                     'updated_at' => $now,
                 ]
             );
-            // 合計スコア
+
+            // 合計スコア（都度同じ値を書き直すが問題なし）
+            $totScore = $sanitizeInt($totals['score'] ?? 0, 'totals.score');
+            $totRps   = $sanitizeInt($totals['rps'] ?? 0, 'totals.rps');
             DB::table('totals')->updateOrInsert(
                 ['user' => $userName, 'rule' => 0],
-                ['score' => $totals["score"], 'rps' => $totals["rps"], 'flg' => 0,'updated_at' => $now]
+                ['score' => $totScore, 'rps' => $totRps, 'flg' => 0, 'updated_at' => $now]
             );
         }
     }
