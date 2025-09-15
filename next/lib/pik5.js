@@ -110,7 +110,7 @@ export function sliceObject(obj, start, end) {
 }
 // 特定ユーザーのIDを入力してユーザー名を返す
 export function id2name(users, target){
-    const result = users.find(function(user){
+    const result = users?.find(function(user){
         return user.userId === target
     })
     return result?.name || "名無し"

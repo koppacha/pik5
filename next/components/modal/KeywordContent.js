@@ -9,7 +9,7 @@ import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import {StairIcon} from "../../styles/pik5.css";
-import {dateFormat, useLocale} from "../../lib/pik5";
+import {dateFormat, id2name, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 
 function extractYouTubeId(urlStr) {
@@ -59,7 +59,7 @@ function linkifyWikiLinks(text) {
   return replaceYouTubeUrlsWithEmbed(withWiki)
 }
 
-export function KeywordContent({data}){
+export function KeywordContent({data, users}){
 
     const {t} = useLocale()
 
@@ -101,9 +101,9 @@ export function KeywordContent({data}){
                     </ReactMarkdown>
                 </Box>
             </Box>
+            <Button type="button" variant="contained" onClick={handleOpen}>{t.g.edit}</Button>
             <Box style={{textAlign:"right"}}>
-                <Button onClick={handleOpen}>{t.g.edit}</Button>
-                <Typography variant="span" className="subtitle">{data.last_editor} (<time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>)</Typography>
+                <Typography variant="span" className="subtitle">{id2name(users,data.last_editor)} (<time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>)</Typography>
             </Box>
             <ModalKeywordEdit uniqueId={data.unique_id} editOpen={open} handleEditClose={handleClose}/>
         </>

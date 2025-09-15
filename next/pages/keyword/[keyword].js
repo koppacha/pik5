@@ -51,7 +51,7 @@ export async function getStaticProps({ params }) {
     }
 }
 
-export default function Keyword({payload, notfound, id}) {
+export default function Keyword({payload, users, notfound, id}) {
 
     const [open, setOpen] = React.useState(false)
     const handleOpen = () => setOpen(true)
@@ -106,6 +106,8 @@ export default function Keyword({payload, notfound, id}) {
             ? (parent?.keyword ?? `${children[0]?.tag}`)
             : parent?.keyword
 
+    console.log(users)
+
     return (
         <>
             <Head>
@@ -121,14 +123,14 @@ export default function Keyword({payload, notfound, id}) {
                 {/* 親（unique_id === id が存在するなら最初に表示） */}
                 {parent && (
                   canView(parent)
-                    ? <KeywordContent data={parent} />
+                    ? <KeywordContent data={parent} users={users} />
                     : <Box style={{margin:"10px"}}>閲覧権限がありません</Box>
                 )}
 
                 {/* 親モードの時は子を列挙表示 */}
                 {mode === 'parent' && children.map(row => (
                   canView(row)
-                    ? <KeywordContent key={row.unique_id} data={row} />
+                    ? <KeywordContent key={row.unique_id} data={row} users={users} />
                     : <Box style={{margin:"10px"}} key={row.unique_id}>閲覧権限がありません</Box>
                 ))}
 

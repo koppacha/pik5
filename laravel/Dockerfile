@@ -29,4 +29,12 @@ COPY ./laravel/php/php.ini /usr/local/etc/php/php.ini
 
 WORKDIR /var/www/laravel/
 
+# Install Laravel Telescope at build time if a project is present
+RUN if [ -f composer.json ]; then \
+      composer require laravel/telescope --no-interaction --prefer-dist && \
+      ( [ -f artisan ] && php artisan telescope:install || true ); \
+    else \
+      echo "composer.json not found; skipping telescope install"; \
+    fi
+
 CMD ["php","artisan","serve","--host","0.0.0.0"]
