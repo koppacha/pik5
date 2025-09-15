@@ -48,7 +48,7 @@ async function fetchJson(url, init) {
     return (payload && typeof payload === 'object' && 'data' in payload) ? payload.data : payload
 }
 
-export default function KeywordIndex(){
+export default function KeywordIndex({users}) {
 
     const {t:tl,r} = useLocale()
     const {data: session } = useSession()
@@ -206,7 +206,7 @@ export default function KeywordIndex(){
                                     <Card key={item.unique_id} variant="outlined" className={"cards"}>
                                         <CardContent>
                                             {/* KeywordContent は data 1件をそのまま表示する想定 */}
-                                            <KeywordContent data={item} />
+                                            <KeywordContent data={item} users={users} />
                                         </CardContent>
                                     </Card>
                                 ))}
