@@ -12,8 +12,10 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Facades\Log;
+use JsonException;
 use Predis\Command\Argument\Server\To;
 use Random\RandomException;
+use Throwable;
 
 class Func extends Facade
 {
@@ -43,6 +45,7 @@ class Func extends Facade
         $year = (int)$year + 1;
         $datetime = new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
+        $console_operation = $console ? "=" : ">";
 
         if(is_array($total)){
             // あらかじめ配列が指定されている場合はそれを流用する
@@ -59,28 +62,42 @@ class Func extends Facade
             $rule = [10, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43];
             $stages = TotalController::stage_list("2");
             $ttl = 1800; // 計算結果は１日保持する
-            $total = 0;
         }
 
-        $console_operation = $console ? "=" : ">";
-        $memory_string = is_array($total) ? implode("_", $total) : $total;
-
         try {
-            $Model = Record::whereIn('stage_id', $stages)
+            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
+        } catch (JsonException) {
+            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
+        }
+        static $memo = [];
+        if (isset($memo[$cacheKey])) {
+            return $memo[$cacheKey];
+        }
+        // 小さなジッタで同時更新集中を緩和
+        try {
+            $ttlSeconds = max(1, $ttl + random_int(0, 30));
+        } catch (Throwable) {
+            $ttlSeconds = max(1, $ttl);
+        }
+
+        // ---- Backend cache ----
+        $result = Cache::remember($cacheKey, $ttlSeconds, static function () use ($stages, $console_operation, $console, $rule, $date) {
+            try {
+                $rows = Record::whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
                     ->where('created_at', '<', $date)
                     ->where('flg', '<', 2)
-                    ->get()
-                    ->groupBy(['stage_id', 'user_id'])
-                    ->map(function($g){
-                        return $g->count();
-                    });
-        } catch (Exception $e){
-            Log::debug("Error", [$e->getMessage()]);
-            return [999];
-        }
-        return $Model->toArray();
+                    ->selectRaw('stage_id, COUNT(DISTINCT user_id) AS member_cnt')
+                    ->groupBy('stage_id')
+                    ->pluck('member_cnt', 'stage_id');
+                return $rows->toArray();
+            } catch (Exception $e) {
+                Log::debug("memberCount query Error", [$e->getMessage()]);
+                return [999];
+            }
+        });
+        return $memo[$cacheKey] = (array)$result;
     }
     // 順位とランクポイントを入力された配列内で再計算する（スコア降順であることが前提）
     public static function rank_calc (string $mode, array $data, array $option): array

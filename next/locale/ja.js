@@ -37,6 +37,7 @@ export const ja = {
         firstTime1: "初めての方は、",
         firstTime2: "アカウント作成！",
         newRecord: "新着記録",
+        newEntry: "新着記事",
         userName: "ユーザー名",
         password: "パスワード",
         confirm: "送信していいですか？",
@@ -872,6 +873,7 @@ export const ja = {
             4: "Switch",
             5: "NTSC-U/PAL",
             6: "NTSC-J",
+            7: "3DS",
         },
     },
     keyword: {
@@ -879,8 +881,8 @@ export const ja = {
             newTitle: "キーワードを新規作成",
             editTitle: "キーワードを作成・編集する",
             editIdea: "期間限定チャレンジルールを投稿する",
-            tag: "タグ",
-            category: "カテゴリ",
+            tag: "カテゴリ", // 新カテゴリ
+            category: "カテゴリ", // 旧カテゴリ
             keyword: "キーワード名",
             yomi: "よみがな",
             content: "本文",

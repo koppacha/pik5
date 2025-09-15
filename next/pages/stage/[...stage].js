@@ -65,7 +65,7 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
-    let info = null, parent = null, stages = [], uniqueId = null
+    let info = null, parent = null, stages = [], ruleId = null
 
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
@@ -93,16 +93,22 @@ export async function getStaticProps({params}){
         rule = info?.parent
     }
     // 呼び出すレギュレーションは期間限定ならステージ別ルール、通常ランキングならカテゴリ別ルール
-    uniqueId = (stage > 900) ? stage : (rule) ? rule : 0
+    ruleId = (stage > 900) ? stage : (rule) ? rule : 0
 
     // タマゴあり・タマゴなしの場合はピクミン２の通常ルールの表示を強制する
     if(Number(rule) === 21 || Number(rule) === 22){
-        uniqueId = 20
+        ruleId = 20
     }
     // ルール本文をリクエスト
-    const keyword_res = await fetch(`http://laravel:8000/api/keyword/${uniqueId}`)
-    const keyword = (keyword_res.status < 300) ? await keyword_res.json() : ""
+    const keyword_res = await fetch(`http://laravel:8000/api/keyword/${ruleId}`)
+    const keyword = (keyword_res.status < 300) ? await keyword_res.json() : {}
 
+    // 通常・特殊ランキングに該当する場合は攻略情報をリクエスト
+    let guide = {}
+    if(stage < 901) {
+        const guide_res = await fetch(`http://laravel:8000/api/keyword/${stage}`)
+        guide = (guide_res.status < 300) ? await guide_res.json() : {}
+    }
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
@@ -114,7 +120,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            stages, stage, rule, consoles, year, info, users, parent, posts, uniqueId, keyword, fDate
+            stages, stage, rule, consoles, year, info, users, parent, posts, ruleId, keyword, fDate, guide
         },
         revalidate: 86400,
     }
@@ -136,8 +142,11 @@ export default function Stage(param){
         setOpen(false)
         setEditOpen(true)
     }
-    const handleOpen = () => setOpen(true)
-
+    const [keywordId, setKeywordId] = useState(null)
+    const handleOpen = (id) => {
+        setKeywordId(id)
+        setOpen(true)
+    }
     function isEvent(info){
         const currentTime = new Date()
         const start = new Date(info?.start)
@@ -251,15 +260,23 @@ export default function Stage(param){
                                 info={param.info} rule={param.rule} console={param.consoles}/>
                     }
                     <Box className={"rule-box active"}
-                             onClick={handleOpen}
-                             component={Link}
-                             href="#">
+                         onClick={() => handleOpen(param.ruleId)}
+                         component={Link}
+                         href="#">
                         <span>{t.g.rule}</span>
                     </Box>
+                    {param.guide && (
+                      <Box className={"rule-box active"}
+                           onClick={() => handleOpen(param.stage)}
+                           component={Link}
+                           href="#">
+                        <span>攻略情報</span>
+                      </Box>
+                    )}
                 </Grid>
             </Grid>
             <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
-            <ModalKeyword open={open} uniqueId={param.uniqueId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
+            <ModalKeyword open={open} uniqueId={keywordId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
 }

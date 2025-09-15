@@ -30,7 +30,7 @@ export default function Menu1(props){
                     disablePadding
                 >
                     <Grid container onClick={props.handleClose}>
-                        <Grid item xs={3} style={{position:"relative",left:"200px"}}>
+                        <Grid item xs={3} style={{position:"relative",left:"179px"}}>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+SeriesTheme(1),
                             }} component={Link} href="/total/10" onClick={props.handleClose}>ピクミン1総合</StyledMenuItem>

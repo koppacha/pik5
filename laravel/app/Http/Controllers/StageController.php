@@ -8,6 +8,7 @@ use App\Models\Stage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 
 class StageController extends Controller
 {
@@ -45,7 +46,15 @@ class StageController extends Controller
     }
     public function maxMember(): int
     {
-        return max($this->allStageMember());
+        return Cache::remember('maxMember', 300, static function () {
+            return (int)(Record::where('stage_id', '<', 10000)
+                ->where('flg', '<', 2)
+                ->selectRaw('COUNT(DISTINCT user_id) AS members')
+                ->groupBy('stage_id')
+                ->orderByDesc('members')
+                ->limit(1)
+                ->value('members') ?? 0);
+        });
     }
     /**
      * Display the specified resource.

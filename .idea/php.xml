@@ -145,6 +145,7 @@
       <path value="$PROJECT_DIR$/laravel/vendor/laravel/sanctum" />
       <path value="$PROJECT_DIR$/laravel/vendor/predis/predis" />
       <path value="$PROJECT_DIR$/laravel/vendor/chovanec/elo-rating" />
+      <path value="$PROJECT_DIR$/laravel/vendor/laravel/telescope" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="8.2">

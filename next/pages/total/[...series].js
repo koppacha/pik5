@@ -19,9 +19,10 @@ import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRotate} from "@fortawesome/free-solid-svg-icons";
+import {faRotate, faStopwatch} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import useSWR from "swr";
+import {faTwitch} from "@fortawesome/free-brands-svg-icons";
 
 export async function getStaticPaths(){
     return {
@@ -107,6 +108,31 @@ export default function Series(param){
         purgeCache("total", param.series, param.consoles, param.rule, param.year, token).then(r => setIsProcessing(false))
     }
 
+    // 外部リンク生成
+    let speedrunUrl = "", twitchUrl = ""
+    console.log(param.series)
+    switch (param.series) {
+        case '10':
+            speedrunUrl = "https://www.speedrun.com/pikmin1";
+            twitchUrl = "https://www.twitch.tv/directory/category/pikmin-2001";
+            break;
+        case '20':
+            speedrunUrl = "https://www.speedrun.com/pikmin2";
+            twitchUrl = "https://www.twitch.tv/directory/category/pikmin-2-2004";
+            break;
+        case '30':
+            speedrunUrl = "https://www.speedrun.com/pikmin3dx";
+            twitchUrl = "https://www.twitch.tv/directory/category/pikmin-3-deluxe";
+            break;
+        case '40':
+            speedrunUrl = "https://www.speedrun.com/pikmin4";
+            twitchUrl = "https://www.twitch.tv/directory/category/pikmin-4";
+            break;
+        default:
+            speedrunUrl = "";
+            twitchUrl = "";
+    }
+
     return (
         <>
             <Head>
@@ -122,6 +148,16 @@ export default function Series(param){
                 <Grid className="user-info-box" item>
                     <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </Grid>
+                {speedrunUrl && <Link href={speedrunUrl} target="_blank">
+                    <Grid className="user-info-box" item>
+                        <FontAwesomeIcon icon={faStopwatch} /> Speedrun.com
+                    </Grid>
+                </Link>}
+                {twitchUrl && <Link href={twitchUrl} target="_blank">
+                    <Grid className="user-info-box" item>
+                        <FontAwesomeIcon icon={faTwitch} /> Twitch
+                    </Grid>
+                </Link>}
             </Grid>
             <Totals props={param}/>
             {

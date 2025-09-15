@@ -34,7 +34,7 @@ export async function getStaticProps({params}){
         // パーツ全回収
         case 101:
             q += "m1zyjx60/category/9kv9y02g"
-            consoles.push(1, 2)
+            consoles.push(1, 2, 4)
             switch (Number(console)){
                 case 1:
                     q += "?var-onv29rml=klr0dpjl"
@@ -42,18 +42,24 @@ export async function getStaticProps({params}){
                 case 2:
                     q += "?var-onv29rml=21dynz41"
                     break
+                case 4:
+                    q += "?var-onv29rml=q8kkmnkq"
+                    break
             }
             break
         // ピクミン最小限パーツ全回収
         case 102:
             q += "m1zyjx60/category/zd3g682n"
-            consoles.push(5, 6)
+            consoles.push(1, 2, 4)
             switch (Number(console)){
                 case 1:
                     q += "?var-jlz6mx82=9qj74p3q"
                     break
                 case 2:
                     q += "?var-jlz6mx82=jq65x8jl"
+                    break
+                case 4:
+                    q += "?var-jlz6mx82=qoxj872q"
                     break
             }
             break
@@ -96,9 +102,11 @@ export async function getStaticProps({params}){
             }
             break
         case 203:
+            consoles.push(1)
             q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=9qj3noel"
             break
         case 204:
+            consoles.push(1)
             q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=jq6drw31"
             break
         case 301:
@@ -144,27 +152,35 @@ export async function getStaticProps({params}){
             }
             break
         case 311:
+            consoles.push(7)
             q += "268e3x56/category/z276730d"
             break
         case 312:
+            consoles.push(7)
             q += "268e3x56/category/5dw845nd"
             break
         case 313:
+            consoles.push(7)
             q += "268e3x56/category/ndx9rovd"
             break
         case 401:
+            consoles.push(4)
             q += "m1zk9901/category/rkl8xe62"
             break
         case 402:
+            consoles.push(4)
             q += "m1zk9901/category/wk6gn0od"
             break
         case 403:
+            consoles.push(4)
             q += "m1zk9901/category/zd3mxpv2"
             break
         case 404:
+            consoles.push(4)
             q += "m1zk9901/category/n2y6oe7d"
             break
         case 405:
+            consoles.push(4)
             q += "m1zk9901/category/n2y69pmd"
             break
     }
