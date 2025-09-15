@@ -686,12 +686,15 @@ body {
         background-color: $dark-back;
     }
 }
-.styled-dialog-content {
+.styled-dialog-content,
+.cards {
     color: $light-front;
+    border: 1px solid $light-border;
     background-color: $light-back;
 
     [data-theme='dark'] & {
         color: $dark-front;
+        border: 1px solid $dark-border;
         background-color: $dark-back;
     }
     div:before {
@@ -920,4 +923,16 @@ body {
     background-color: #3a3a3a;
     color: #fff;
     z-index: 0;
+}
+.top-series-mini-box {
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin: 3px 3px;
+    cursor: pointer;
+    text-decoration: none !important;
+    border: 1px solid $light-border;
+
+    [data-theme='dark'] & {
+        color: $dark-border;
+    }
 }

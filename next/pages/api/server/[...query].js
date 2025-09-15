@@ -1,9 +1,23 @@
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 import {logger} from "../../../lib/logger";
 import fetch from "node-fetch";
 import prisma from "../../../lib/prisma";
 import {networkInterfaces} from "os";
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "../auth/[...nextauth]";
+
+async function readRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    req.on('data', (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)))
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
 
 export default async function handle(req, res){
 
@@ -14,22 +28,63 @@ export default async function handle(req, res){
             case "POST": {
                 try {
                     const query = req.query.query.join("/")
-                    await prismaLogging(session?.user?.id ?? "guest", "queryPost", req.body)
+                    await prismaLogging(session?.user?.id ?? "guest", "queryPost", { headers: req.headers, length: req.headers['content-length'] })
 
-                    const post = await fetch(`http://laravel:8000/api/${query}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(req.body)
-                    })
-                    const data = await post.json()
-                    res.status(200).json({data})
+                    const contentType = (req.headers['content-type'] || '').toLowerCase()
+                    let upstreamRes
+
+                    if (contentType.startsWith('multipart/form-data')) {
+                        // Pass through the original stream and headers (including boundary)
+                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                            method: 'POST',
+                            // Preserve content-type (with boundary) and content-length if present
+                            headers: {
+                                'content-type': req.headers['content-type'] || '',
+                                ...(req.headers['content-length'] ? { 'content-length': req.headers['content-length'] } : {})
+                            },
+                            body: req
+                        })
+                    } else if (contentType.includes('application/json')) {
+                        // bodyParser is disabled, so req.body is undefined. Read raw JSON and forward as-is.
+                        const raw = await readRawBody(req)
+                        // Optional: try to log a tiny preview to ensure 'keyword' exists without leaking full content
+                        let preview = null
+                        try { preview = JSON.parse(raw.toString('utf8')) } catch {}
+                        await prismaLogging(session?.user?.id ?? "guest", "queryPostJsonPreview", {
+                          hasKeyword: preview && typeof preview === 'object' && Object.prototype.hasOwnProperty.call(preview, 'keyword'),
+                          keys: preview && typeof preview === 'object' ? Object.keys(preview).slice(0, 10) : []
+                        })
+
+                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                            method: 'POST',
+                            headers: { 'content-type': req.headers['content-type'] || 'application/json' },
+                            body: raw
+                        })
+                    } else {
+                        // Fallback: forward as-is without forcing JSON
+                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                            method: 'POST',
+                            headers: { 'content-type': req.headers['content-type'] || 'application/octet-stream' },
+                            body: req
+                        })
+                    }
+
+                    const text = await upstreamRes.text()
+                    let data
+                    try { data = JSON.parse(text) } catch { data = text }
+
+                    if (!upstreamRes.ok) {
+                        await prismaLogging(session?.user?.id ?? "guest", "queryPostErrorUpstream", { status: upstreamRes.status, body: text?.slice?.(0, 2000) })
+                        res.status(upstreamRes.status).json({ error: true, status: upstreamRes.status, data })
+                        return resolve()
+                    }
+
+                    res.status(200).json({ data })
                     return resolve()
 
                 } catch (e) {
-                    await prismaLogging(session?.user?.id ?? "guest", "queryPostError", e)
-                    res.status(404).json(e)
+                    await prismaLogging(session?.user?.id ?? "guest", "queryPostError", String(e))
+                    res.status(500).json({ error: true, message: 'proxy error' })
                     return resolve()
                 }
             }
@@ -52,7 +107,7 @@ export default async function handle(req, res){
                 let data
 
                 if(!get.ok) {
-                    const resText = get.text()
+                    const resText = await get.text()
                     await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", resText)
                     console.log(resText)
                     res.status(500).end()

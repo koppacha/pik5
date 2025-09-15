@@ -171,7 +171,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                     <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
                                     <Lightbox open={imgOpen} close={() => setImgOpen(false)}
                                               slides={[{src:"/api/file/"+data.img_url}]}
-                                              rendar={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
+                                              render={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
                                               controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
                                 </>}
                             {data.video_url &&
