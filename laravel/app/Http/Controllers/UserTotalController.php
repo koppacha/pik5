@@ -9,6 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -163,68 +164,71 @@ class UserTotalController extends Controller
         // リクエストからルールIDを取得
         $ruleId = (int)$request['id'];
 
-        // ルールIDが一致し、flgが0のデータを取得し、rpsで降順に並び替え
-        $totals = Total::where('rule', $ruleId)
-            ->where('flg', 0)
-            ->orderByDesc('rps')
-            ->get();
+        // キャッシュキーを発行
+        $cacheKey = 'getTotalsTables:v1:rule=' . $ruleId;
 
-        // ruleId が 0 のときは、$totals に含まれるユーザー全員分の
-        // 「ルール 0,20,30,40 以外」の rps を一括で取得しておく
-        $subTotals = collect();
-        if ($ruleId === 0) {
-            // $totals で得たユーザー名を一意に取り出す
-            $userNames = $totals->pluck('user')->unique();
+        $payload = Cache::remember($cacheKey, 1800, static function () use ($ruleId) {
 
-            $subTotals = Total::whereIn('user', $userNames)
+            // ルールIDが一致し、flgが0のデータを取得し、rpsで降順に並び替え
+            $totals = Total::where('rule', $ruleId)
                 ->where('flg', 0)
-                ->whereNotIn('rule', [0, 20, 30, 40])   // 0,20,30,40 を除外
-                ->get()
-                ->groupBy('user');            // user => Collection< Total >
-        }
+                ->orderByDesc('rps')
+                ->get();
 
-        // 順位を付ける
-        $rank = 1;
-        $previousRps = null;
-        $rankedTotals = $totals->map(function ($total, $index) use (&$rank, &$previousRps, $ruleId, $subTotals){
-            if ($previousRps !== null && $total->rps !== $previousRps) {
-                $rank = $index + 1; // 同じrpsの場合は順位を変えない
+            // ruleId が 0 のときは、$totals に含まれるユーザー全員分の
+            // 「ルール 0,20,30,40 以外」の rps を一括で取得しておく
+            $subTotals = collect();
+            if ($ruleId === 0) {
+                // $totals で得たユーザー名を一意に取り出す
+                $userNames = $totals->pluck('user')->unique();
+
+                $subTotals = Total::whereIn('user', $userNames)
+                    ->where('flg', 0)
+                    ->whereNotIn('rule', [0, 20, 30, 40])   // 0,20,30,40 を除外
+                    ->get()
+                    ->groupBy('user');
             }
-
-            // 順位を付与
-            $total->rank = $rank;
-            $previousRps = $total->rps;
-
-            // ruleId = 0 の場合は取得済みのサブルール rpsXX をすべて付与し、さらに rpsX の集計も行う
-            if ($ruleId === 0 && $subTotals->has($total->user)) {
-                // まず個別 rpsXY (例: rps21) を付与
-                foreach ($subTotals[$total->user] as $sub) {
-                    $prop = 'rps' . $sub->rule;   // 例: rps21
-                    $total->{$prop} = $sub->rps;
+            // 順位を付ける
+            $rank = 1;
+            $previousRps = null;
+            $rankedTotals = $totals->map(function ($total, $index) use (&$rank, &$previousRps, $ruleId, $subTotals){
+                if ($previousRps !== null && $total->rps !== $previousRps) {
+                    $rank = $index + 1; // 同じrpsの場合は順位を変えない
                 }
 
-                // つづいて rpsXY → rpsX の集計を行う (X = 1,2,3,4)
-                for ($grp = 1; $grp <= 4; $grp++) {
-                    $sum = 0;
-                    // `$total` は Eloquent モデルなので、属性は `$total->getAttributes()` で取得する
-                    foreach ($total->getAttributes() as $k => $v) {
-                        // rpsXY 形式 (rps + X + 1 文字以上の数字) が対象
-                        if (preg_match('/^rps' . $grp . '\d+$/', $k) && is_numeric($v)) {
-                            $sum += $v;
+                // 順位を付与
+                $total->rank = $rank;
+                $previousRps = $total->rps;
+
+                // ruleId = 0 の場合は取得済みのサブルール rpsXX をすべて付与し、さらに rpsX の集計も行う
+                if ($ruleId === 0 && $subTotals->has($total->user)) {
+                    // まず個別 rpsXY (例: rps21) を付与
+                    foreach ($subTotals[$total->user] as $sub) {
+                        $prop = 'rps' . $sub->rule;   // 例: rps21
+                        $total->{$prop} = $sub->rps;
+                    }
+                    // つづいて rpsXY → rpsX の集計を行う (X = 1,2,3,4)
+                    for ($grp = 1; $grp <= 4; $grp++) {
+                        $sum = 0;
+                        // `$total` は Eloquent モデルなので、属性は `$total->getAttributes()` で取得する
+                        foreach ($total->getAttributes() as $k => $v) {
+                            // rpsXY 形式 (rps + X + 1 文字以上の数字) が対象
+                            if (preg_match('/^rps' . $grp . '\d+$/', $k) && is_numeric($v)) {
+                                $sum += $v;
+                            }
+                        }
+                        // 該当データがあった場合のみ rpsX を追加
+                        if ($sum > 0) {
+                            $total->{'rps' . $grp} = $sum;
                         }
                     }
-                    // 該当データがあった場合のみ rpsX を追加
-                    if ($sum > 0) {
-                        $total->{'rps' . $grp} = $sum;
-                    }
                 }
-            }
-
-            return $total;
+                return $total;
+            });
+            return $rankedTotals->toArray();
         });
-
         // 結果をJSON形式で返す
-        return response()->json($rankedTotals);
+        return response()->json($payload);
     }
     public function aggregateScores($array, $mode = "score"): array
     {
