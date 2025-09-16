@@ -106,8 +106,6 @@ export default function Keyword({payload, users, notfound, id}) {
             ? (parent?.keyword ?? `${children[0]?.tag}`)
             : parent?.keyword
 
-    console.log(users)
-
     return (
         <>
             <Head>
