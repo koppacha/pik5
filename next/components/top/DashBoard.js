@@ -12,7 +12,7 @@ import GradientLine from "./GradientLine";
 
 export default function DashBoard({user, users}){
 
-    const {t} = useLocale()
+    const {t, locale} = useLocale()
     const [open, setOpen] = useState(false)
 
     const {data} = useSWR(`/api/server/user/total/${user?.id}`, fetcher)
@@ -101,16 +101,19 @@ export default function DashBoard({user, users}){
     return (
         <>
             <TopBoxHeader className="top-box-header">
-                <span><FontAwesomeIcon icon={faCircleInfo} />ダッシュボード</span>
+                <span><FontAwesomeIcon icon={faCircleInfo} />{t.g.dashBoard}</span>
                 {
                     (cls < (basePoints.length - 2)) ?
-                        <span style={{fontSize: "0.8em"}}>{t.classes[cls + 1]} まであと {nextPoints.toLocaleString()} 点</span>
+                        (locale === "ja") ?
+                            <span style={{fontSize: "0.8em"}}>{t.classes[cls + 1]} まであと {nextPoints.toLocaleString()} 点</span>
+                            :
+                            <span style={{fontSize: "0.8em"}}>Points required for {t.classes[cls + 1]}: {nextPoints.toLocaleString()} rps.</span>
                         :
-                        <span style={{fontSize: "0.8em"}}>最高段位に到達しました！</span>
+                        <span style={{fontSize: "0.8em"}}>{t.g.maxClass}</span>
                 }
             </TopBoxHeader>
             <TopBoxContent className="top-box-content">
-            <Box className="top-box-caption">総合ランキング / ライバルリスト <Tooltip title={`ランクポイントは投稿ステージの順位に応じてもらえるポイントです。より人気なステージで上位なほど得点が多くもらえます。段位はステージ数に特定の係数を掛けることで算出されるポイントを超えると認定されます。最高段位（九段）に到達したプレイヤーのうち最高点数保持者には「名人」タイトルが授与されます。現在の対象ステージは210ステージです。`}><FontAwesomeIcon icon={faCircleQuestion} /></Tooltip></Box>
+                <Box className="top-box-caption">{t.g.totalAndRival}<Tooltip title={`ランクポイントは投稿ステージの順位に応じてもらえるポイントです。より人気なステージで上位なほど得点が多くもらえます。段位はステージ数に特定の係数を掛けることで算出されるポイントを超えると認定されます。最高段位（九段）に到達したプレイヤーのうち最高点数保持者には「名人」タイトルが授与されます。現在の対象ステージは210ステージです。`}><FontAwesomeIcon icon={faCircleQuestion} /></Tooltip></Box>
             <Grid container>
                 {
                     rivals.map(player => {
@@ -156,7 +159,7 @@ export default function DashBoard({user, users}){
                     })
                 }
                 </Grid>
-                <Box className="top-box-caption" style={{paddingTop:"1.5em"}}>カテゴリ別総合点 / 投稿数</Box>
+                <Box className="top-box-caption" style={{paddingTop:"1.5em"}}>{t.g.categoryAndPosts}</Box>
                 <Grid container>
                 {
                     Object.keys(data.data?.scores ?? {}).map((series) =>
@@ -202,7 +205,7 @@ export default function DashBoard({user, users}){
                                     <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "68px"}}>
                                         <GradientLine color={"#ccc"} />
                                         <br/>
-                                        その他<br/>
+                                        {t.title[9]}<br/>
                                     </CellBox>
                                 </Tooltip>
                             </Grid>
