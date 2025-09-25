@@ -273,7 +273,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 <DialogContent>
                     <TextField
                         id="stage"
-                        label="ステージ"
+                        label={t.g.stageName}
                         type="text"
                         fullWidth
                         disabled={!!info}
@@ -283,7 +283,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     />
                     <TextField
                         id="rule"
-                        label="ルール/カテゴリ"
+                        label={t.g.category}
                         type="text"
                         fullWidth
                         disabled
@@ -293,7 +293,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     />
                     <TextField
                         id="userId"
-                        label="プレイヤー名"
+                        label={t.g.userName}
                         type="text"
                         fullWidth
                         disabled
@@ -305,7 +305,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         {...register('console')}
                         select
                         id="console"
-                        label="操作方法"
+                        label={t.g.console}
                         onChange={(e) => setConsole(e.target.value)}
                         fullWidth
                         variant="standard"
@@ -332,7 +332,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('region-score')}
                         id="region-score"
-                        label="元々のスコア"
+                        label={t.g.originalScore}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
@@ -352,7 +352,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('pikmin')}
                         id="pikmin"
-                        label="脱出時ピクミン数"
+                        label={t.g.NumOfPikmin}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
@@ -372,7 +372,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('treasure')}
                         id="treasure"
-                        label="回収したお宝価値"
+                        label={t.g.value}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
@@ -392,7 +392,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('caveTime')}
                         id="caveTime"
-                        label="経過時間（リアルタイム）"
+                        label={t.g.realTime}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
@@ -412,7 +412,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('time')}
                         id="time"
-                        label="タイム"
+                        label={t.g.time}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
@@ -431,7 +431,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('score')}
                         id="score"
-                        label="スコア"
+                        label={t.g.score}
                         type="text"
                         inputProps={{inputMode: 'numeric', pattern: '[0-9]*'}}
                         onChange={(e) => setScore(e.target.value)}
@@ -448,7 +448,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('img')}
                         id="img"
-                        label="証拠画像"
+                        label={t.g.evidenceImage}
                         type="file"
                         onChange={e => handleFileClick(e)}
                         fullWidth
@@ -460,7 +460,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('videoUrl')}
                         id="videoUrl"
-                        label="証拠動画URL"
+                        label={t.g.evidenceVideoUrl}
                         type="url"
                         onChange={(e) => setVideoUrl(e.target.value)}
                         fullWidth
@@ -473,7 +473,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('comment')}
                         id="comment"
-                        label="ひとことコメント"
+                        label={t.g.comment}
                         type="text"
                         onChange={(e) => setComment(e.target.value)}
                         fullWidth

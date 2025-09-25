@@ -115,7 +115,7 @@ class UserTotalController extends Controller
         $totals = $data['totals'];
 
         // 数値のサニタイズ（非数/無限/想定外の巨大値を除去して上限で丸める）
-        $sanitizeInt = static function ($value, string $label, int $max = 999999): int {
+        $sanitizeInt = static function ($value, string $label, int $max = 9999999): int {
             $f = is_numeric($value) ? (float)$value : 0.0;
             if (is_infinite($f) || is_nan($f)) {
                 Log::warning('UserTotalController sanitize: non-finite value', ['label' => $label, 'value' => $value]);

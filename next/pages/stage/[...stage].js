@@ -226,21 +226,21 @@ export default function Stage(param){
             <Grid className="rule-wrapper" container item xs={12}>
                 {countdown > 0 &&
                     <Grid className="user-info-box" item>
-                        <span>制限時間：</span>{sec2time(countdown)}
+                        <span>{t.g.time}：</span>{sec2time(countdown)}
                     </Grid>
                 }
                 {param.info?.pikmin > 0 &&
                     <Grid className="user-info-box" item>
-                        <span>ピクミン：</span>{param.info?.pikmin}
+                        <span>{t.g.pikmin}：</span>{param.info?.pikmin}
                     </Grid>
                 }
                 {param.info?.treasure > 0 &&
                     <Grid className="user-info-box" item>
-                        <span>お宝価値：</span>{param.info?.treasure}
+                        <span>{t.g.value}：</span>{param.info?.treasure}
                     </Grid>
                 }
                 <Grid className="user-info-box" item>
-                    <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                    <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </Grid>
             </Grid>
             <RuleList param={param}/>
@@ -270,7 +270,7 @@ export default function Stage(param){
                            onClick={() => handleOpen(param.stage)}
                            component={Link}
                            href="#">
-                        <span>攻略情報</span>
+                        <span>{t.g.guide}</span>
                       </Box>
                     )}
                 </Grid>
