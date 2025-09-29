@@ -60,7 +60,7 @@ class RecordController extends Controller
     // ステージID・ルール・コンソールの組み合わせでトップ記録を取得する関数
     public function getTopRecord(Request $request): JsonResponse
     {
-        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35], true) ? 'ASC' : 'DESC';
+        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35, 91], true) ? 'ASC' : 'DESC';
 
         $record = Record::select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
