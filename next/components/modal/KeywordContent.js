@@ -1,5 +1,5 @@
 import Button from "@mui/material/Button";
-import {Box, Typography} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from 'rehype-raw';
@@ -84,7 +84,8 @@ export function KeywordContent({data, users}){
             </Typography><br/>
             <Box style={{
                 borderTop: "1px solid #555",
-                borderBottom: "1px solid #555"
+                borderBottom: "1px solid #555",
+                marginBottom: "1em"
             }}>
                 <Button variant="outlined" style={{margin:"8px",padding:"2px"}}>
                     <Link href={`/keyword/${data.tag}`}>{data.tag}</Link>
@@ -101,10 +102,14 @@ export function KeywordContent({data, users}){
                     </ReactMarkdown>
                 </Box>
             </Box>
-            <Button type="button" variant="contained" onClick={handleOpen}>{t.g.edit}</Button>
-            <Box style={{textAlign:"right"}}>
-                <Typography variant="span" className="subtitle">{id2name(users,data.last_editor)} (<time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>)</Typography>
-            </Box>
+            <Grid container spacing={1.5} style={{marginBottom:"2em"}}>
+                <Grid item xs={6}>
+                    <Button type="button" variant="contained" onClick={handleOpen}>{t.g.edit}</Button>
+                </Grid>
+                <Grid item xs={6} style={{textAlign:"right"}}>
+                    <Typography variant="span" className="subtitle">{id2name(users, data.last_editor)} (<time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>)</Typography>
+                </Grid>
+            </Grid>
             <ModalKeywordEdit uniqueId={data.unique_id} editOpen={open} handleEditClose={handleClose}/>
         </>
     )

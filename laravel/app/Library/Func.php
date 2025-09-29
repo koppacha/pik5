@@ -23,7 +23,7 @@ class Func extends Facade
     public static function orderByRule($id, $rule): array
     {
         // カウントアップRTAのステージリスト
-        $rta_stages = array_merge(range(245, 254), range(351, 362), range(429, 444));
+        $rta_stages = array_merge(range(245, 254), range(351, 362), range(429, 444),  range(901, 916));
 
         // カウントアップRTAのルールリスト
         $rta_rules = [29, 35, 47, 91];

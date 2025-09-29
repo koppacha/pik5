@@ -276,7 +276,7 @@ export default function Stage(param){
                 </Grid>
             </Grid>
             <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
-            <ModalKeyword open={open} uniqueId={keywordId} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
+            <ModalKeyword open={open} uniqueId={keywordId} users={param.users} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
 }
