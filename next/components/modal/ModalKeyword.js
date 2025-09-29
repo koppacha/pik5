@@ -11,7 +11,7 @@ import NowLoading from "../NowLoading";
 import {KeywordContent} from "./KeywordContent";
 import {StyledDialogContent} from "../../styles/pik5.css";
 
-export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpen}) {
+export default function ModalKeyword({uniqueId, open, users, handleClose, handleEditOpen}) {
 
     const {t} = useLocale()
 
@@ -28,9 +28,9 @@ export default function ModalKeyword({uniqueId, open, handleClose, handleEditOpe
         <>
             <Dialog open={open} onClose={handleClose} disableScrollLock>
                 <StyledDialogContent>
-                    <KeywordContent data={data.data}/>
+                    <KeywordContent data={data.data} users={users} />
                 <DialogActions>
-                    <Button type="button" variant="contained" href={"/keyword/"+uniqueId} style={{marginRight:"10px"}}><span>全画面表示</span></Button>
+                    <Button type="button" variant="contained" href={"/keyword/"+data.data.keyword} style={{marginRight:"10px"}}><span>全画面表示</span></Button>
                     <Button type="button" variant="contained" onClick={handleClose}>{t.g.close}</Button>
                 </DialogActions>
                 </StyledDialogContent>
