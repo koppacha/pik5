@@ -245,8 +245,16 @@ export default function ModalKeywordEdit({uniqueId, editOpen = false, handleEdit
             >
                 <StyledDialogContent sx={{ height: '100vh', maxHeight: '100vh', overflowY: 'auto' }}>
                     <DialogTitle>{t.keyword.g.editTitle}</DialogTitle>
-                    <Grid container spacing={2} sx={{ mt: 0 }}>
-                        <Grid item xs={12} sm={6} md={4.8}>
+                    <Box style={{border:"1px solid #555", padding:"5px 20px", marginLeft:"20px", fontSize: "0.9em"}}>
+                        <ul>
+                            <li>キーワード名に半角スペースを含む場合は「_」(アンダーバー) を入力してください。実際の表示で半角スペースに置換されます。
+                            </li>
+                            <li>アンダーバーを表示させたい場合は「__」(アンダーバー２つ) を入力してください。実際の表示で「_」(アンダーバー1つ)に置換されます。
+                            </li>
+                        </ul>
+                    </Box>
+                    <Grid container spacing={2} sx={{mt: 0}}>
+                    <Grid item xs={12} sm={6} md={4.8}>
                             <TextField
                                 {...register('keyword')}
                                 id="keyword"

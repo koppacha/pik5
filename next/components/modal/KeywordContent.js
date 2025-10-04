@@ -32,7 +32,6 @@ function extractYouTubeId(urlStr) {
 
 function replaceYouTubeUrlsWithEmbed(text) {
   if (!text) return ''
-  // Match bare YouTube URLs, including youtu.be, shorts, watch, embed (stop before whitespace or markdown delimiters)
   const urlRe = /(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[\w\-?=&%#/.]+)(?=\s|$|\)|\]|>)/g
   return text.replace(urlRe, (match) => {
     const vid = extractYouTubeId(match)
@@ -76,11 +75,16 @@ export function KeywordContent({data, users}){
 
     const mdContent = React.useMemo(() => linkifyWikiLinks(data.content), [data.content])
 
+    // アンダーバーや下線をスペースに置換する関数
+    const customReplace = str => str.replace(/＿＿|__|＿|_/g, m => ({'__': '_', '＿＿': '＿', '_': ' ', '＿': '　'}[m]))
+
+    const displayKeyword = customReplace(data.keyword)
+
     return (
         <>
             <Typography variant="" style={{fontSize:"0.8em",color:"#777"}}>{data.yomi}</Typography><br/>
             <Typography variant="" className="mini-title">
-                <Link href={`/keyword/${data.keyword}`}>{data.keyword}</Link>
+                <Link href={`/keyword/${data.keyword}`}>{displayKeyword}</Link>
             </Typography><br/>
             <Box style={{
                 borderTop: "1px solid #555",

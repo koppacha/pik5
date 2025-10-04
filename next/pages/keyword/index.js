@@ -138,12 +138,12 @@ export default function KeywordIndex({users}) {
                     <ul>
                         <li>Sorry, this content is Japanese only.</li>
                         <li>登録できるのはピクミン界隈にある程度受け入れられている概念に限ります。作成者以外に認知されていない概念等は削除対象です。</li>
-                        <li>本文にはMarkdownを使用できます。YouTubeリンクを貼ると埋め込みコードに変換されます。</li>
+                        <li>本文には<Link style={{textDecoration:"underline"}} href="https://docs.github.com/ja/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax" target="_blank">Markdown</Link>を使用できます。YouTubeリンクを貼ると埋め込みコードに変換されます。</li>
                         <li>キーワード名及び本文はピクミン初心者にもなるべくわかりやすい表現を心がけてください。</li>
                         <li>キーワード名単独でどのシリーズやステージの用語か分かりにくい場合は（）でステージ名等を付け加えてください。その際、よみがなにカッコ及びカッコ内を含める必要はありません。</li>
                         <li>本文中のゲームタイトルは『』で囲んでください。強調したい言葉は「」で囲んでください。（キーワード名に含まれる場合は不要）</li>
                         <li>本文にプレイヤー名を記述する場合は末尾に「氏」をつけてください。（キーワード名にプレイヤー名が含まれる場合は敬称略としてください）</li>
-                        <li><Link href="https://docs.google.com/document/d/1-qK5yTcy4SlcK_1sgUT0rLfA0ORXJ8cqR9-pAkLuL3U/edit?usp=sharing" target="_blank">やり込み用語についてはalbut3氏がまとめたスプレッドシートを引用元としています。画像付きで読みたい方はこちらも参照してください。</Link></li>
+                        <li><Link style={{textDecoration:"underline"}} href="https://docs.google.com/document/d/1-qK5yTcy4SlcK_1sgUT0rLfA0ORXJ8cqR9-pAkLuL3U/edit?usp=sharing" target="_blank">やり込み用語についてはalbut3氏がまとめたスプレッドシートを引用元としています。画像付きで読みたい方はこちらも参照してください。</Link></li>
                         <li>カテゴリに「期間限定チャレンジ」と入力して送信すると管理人と投稿者本人以外には表示されません。</li>
                     </ul>
                 </Box>
