@@ -58,12 +58,12 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
 
     const handleKeyDown = (e) => {
         if(e.key === 'Enter'){
-            const {userId, unique_id, stage_id, type} = fuse.search(search)[0]?.item
+            const {userId, unique_id, stage_id, type, keyword} = fuse.search(search)[0]?.item
 
             if(userId){
                 router.push(`/user/${userId}`).then(r => handleClose())
             } else if(unique_id){
-                router.push(`/keyword/${unique_id}`).then(r => handleClose())
+                router.push(`/keyword/${keyword}`).then(r => handleClose())
             } else if(stage_id){
                 router.push(`/${type}/${stage_id}`).then(r => handleClose())
             }
@@ -148,11 +148,11 @@ export default function ModalSearch({users, open, handleClose, searchRef}) {
                                 if(post.item?.category === "rule") return null
 
                                 return (
-                                    <Link key={idx} variant="overline" href={"/keyword/"+post.item.unique_id} onClick={handleClose}>
+                                    <Link key={idx} variant="overline" href={"/keyword/"+post.item.keyword} onClick={handleClose}>
                                         <SearchResultItem index={idx}>
                                             <FontAwesomeIcon icon={faBook} />
                                                 {post.item.keyword}
-                                            <SearchResultTag color={color}>{t.keyword.category[post.item?.category]}</SearchResultTag>
+                                            <SearchResultTag color={color}>{post.item?.tag || "その他"}</SearchResultTag>
                                         </SearchResultItem>
                                     </Link>
                                 )

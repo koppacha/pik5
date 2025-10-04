@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Throwable;
 
 class KeywordController extends Controller
@@ -177,14 +178,13 @@ class KeywordController extends Controller
     public function resolve(Request $request, string $id): JsonResponse
     {
         try {
-            // 1) Decode URL-encoded (including multibyte) ID safely
+            // 1) URLエンコード（マルチバイト含む）されたIDを安全にデコード
             $decodedId = rawurldecode($id);
 
-            // Special case: recent keywords (dedup by keyword, latest updated first)
+            // 特別モード: recent（重複キーワードを排除し、更新日の新しい順で最大20件）
             if (strtolower($decodedId) === 'recent') {
-                // Fetch a buffer of latest records, then unique by `keyword` and take top 20
                 $recentItems = Keyword::orderByDesc('updated_at')
-                    ->limit(500)  // buffer to ensure we can dedup and still have 20
+                    ->limit(500) // 重複排除後に十分数が残るようバッファ
                     ->get()
                     ->unique('keyword')
                     ->take(20)
@@ -196,21 +196,192 @@ class KeywordController extends Controller
                 ], 200);
             }
 
-            // 2) Find parent candidates by `tag`
-            $parentCandidates = Keyword::where('tag', $decodedId)
-                ->orderByDesc('created_at')
-                ->get();
+            // 2) 親候補（子記事集合）: tag が一致する行を取得（並びは後段で再ソートするためDB順序は未指定）
+            $children = Keyword::where('tag', $decodedId)->get();
 
-            // 3) Find the parent row (single) by `keyword` (used as the main/parent article)
+            // 3) 親行（単一）: keyword が一致する最新更新の行
             $parentRow = Keyword::where('keyword', $decodedId)
                 ->orderByDesc('updated_at')
                 ->first();
 
-            if ($parentCandidates->isNotEmpty()) {
+            // --- 子記事の並び替えロジック ---------------------------------------
+            // 並び替え規則：
+            //  - 本文が `<!--` で始まる場合のみ、最初の `<!--` ～ 次の `-->` をメタとして解析（内部の前後空白はtrim）
+            //  - メタが数値/日付（メタ番号）：降順。等しい場合は updated_at 降順
+            //  - メタが文字列（メタ文字）：昇順（小文字化して比較）。等しい場合は updated_at 降順
+            //  - 混在時の型優先：番号 → 文字 → コメントなし
+            //
+            // 注意：
+            //  - 日付は yyyymmddhhMMss の14桁数値に正規化し、数値と同一比較軸で扱う
+            //  - 指数表記やマイナスは数値として扱う
+            //  - `<!--` が先頭以外にある or `-->` が無い場合は「コメントなし」
+
+            // 型のランク付け：番号(0) < 文字(1) < なし(2)
+            $TYPE_NUMBER = 0;
+            $TYPE_STRING = 1;
+            $TYPE_NONE   = 2;
+
+            // 数値判定（マイナス・指数を許容）
+            $isNumericExtended = function (string $s): bool {
+                // 前後空白除去
+                $t = trim($s);
+                // PHPの数値表現（+/-、小数、指数）を広く許容
+                // 先頭+はfloatvalが解釈できるが、ここでは許容
+                return preg_match('/^[\+\-]?(?:\d+\.?\d*|\.\d+)(?:[eE][\+\-]?\d+)?$/', $t) === 1;
+            };
+
+            // 日付らしさ判定（YYYY[-/]MM[-/]DD( [T]?hh[:MM][:ss]?) あるいは区切り無しYYYYMMDD[hhMMss]）
+            $isDateLike = static function (string $s): bool {
+                $t = trim($s);
+                // 素直なISO/一般的な区切りあり
+                if (preg_match('/^\d{4}([\-\/]?\d{2}){1,2}([ T]\d{2}:\d{2}(:\d{2})?)?(?:Z)?$/', $t)) {
+                    return true;
+                }
+                // 区切りなし 例: 20250101123456 or 20250101
+                if (preg_match('/^\d{8}(\d{6})?$/', $t)) {
+                    return true;
+                }
+                // ISO拡張 例: 2025-01-01T12:34:56Z
+                if (preg_match('/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[\+\-]\d{2}:\d{2})?$/', $t)) {
+                    return true;
+                }
+                return false;
+            };
+
+            // 日付→数値(yyyymmddhhMMss)に正規化（不足は0埋め、余分は先頭14桁を採用、秒未満は無視）
+            $dateToNumeric14 = static function (string $s): int {
+                $t = trim($s);
+
+                // 1) 区切りや記号を除去しつつ、数字のみ抽出
+                //    ISOの 'T' や 'Z'、'-', '/', ':', '.', '+' などを無視
+                $digits = preg_replace('/\D+/', '', $t) ?? '';
+
+                // 2) 8桁（YYYYMMDD）しか無い場合は時分秒を 000000 で補完
+                if (strlen($digits) === 8) {
+                    $digits .= '000000';
+                }
+
+                // 3) 長さが14未満なら末尾0埋め、14超なら先頭から14桁を使用
+                if (strlen($digits) < 14) {
+                    $digits = str_pad($digits, 14, '0', STR_PAD_RIGHT);
+                } elseif (strlen($digits) > 14) {
+                    $digits = substr($digits, 0, 14);
+                }
+
+                // 4) 整数化（先頭に0があり得るが、数値比較用にintへ）
+                //    桁が大きくintを超える場合があるため、PHP_INT_MAXを超える環境では文字列比較も検討
+                //    ここでは文字列比較回避のため、bcmathが無い前提で安全に扱えるよう、数値として扱うが
+                //    極端に大きいケースは想定外（14桁はint範囲内）とする
+                return (int)$digits;
+            };
+
+            // メタ抽出（先頭が `<!--` のとき、最初の `<!--` ～ 次の `-->` を取り出しtrim）
+            $extractMeta = static function (?string $content): ?string {
+                if (!is_string($content)) {
+                    return null;
+                }
+                if (!Str::startsWith($content, '<!--')) {
+                    return null;
+                }
+
+                $start = strpos($content, '<!--'); // 仕様上ここは0のはず
+                $end   = strpos($content, '-->', $start + 4);
+                if ($start !== 0 || $end === false) {
+                    return null;
+                }
+
+                $inner = substr($content, $start + 4, $end - ($start + 4));
+                return trim($inner ?? '');
+            };
+
+            // 子記事に型と比較値を付与してからソート
+            if ($children->isNotEmpty()) {
+                $enriched = $children->map(function ($row) use (
+                    $TYPE_NUMBER, $TYPE_STRING, $TYPE_NONE,
+                    $extractMeta, $isNumericExtended, $isDateLike, $dateToNumeric14
+                ) {
+                    $meta = $extractMeta($row->content ?? null);
+
+                    if ($meta === null) {
+                        // コメントなし
+                        return [
+                            'type_rank' => $TYPE_NONE,
+                            'key'       => null, // 比較値なし
+                            'row'       => $row,
+                        ];
+                    }
+
+                    // メタ番号（数値 or 日付）
+                    if ($isDateLike($meta)) {
+                        return [
+                            'type_rank' => $TYPE_NUMBER,
+                            'key'       => $dateToNumeric14($meta), // 大きい順
+                            'row'       => $row,
+                        ];
+                    }
+
+                    if ($isNumericExtended($meta)) {
+                        // 指数やマイナスも許容
+                        return [
+                            'type_rank' => $TYPE_NUMBER,
+                            'key'       => (float)$meta, // 大きい順
+                            'row'       => $row,
+                        ];
+                    }
+
+                    // メタ文字（小文字化して昇順）
+                    $normalized = mb_strtolower($meta, 'UTF-8');
+                    return [
+                        'type_rank' => $TYPE_STRING,
+                        'key'       => $normalized,
+                        'row'       => $row,
+                    ];
+                })->all();
+
+                // 安定比較関数
+                usort($enriched, static function ($a, $b) use ($TYPE_NUMBER, $TYPE_STRING, $TYPE_NONE) {
+                    // 1) 型ランク：番号(0) → 文字(1) → なし(2)
+                    if ($a['type_rank'] !== $b['type_rank']) {
+                        return $a['type_rank'] <=> $b['type_rank'];
+                    }
+
+                    // 2) 同型内の比較
+                    //    - 番号: key 降順
+                    //    - 文字: key 昇順
+                    //    - なし: key 無し（次のupdated_at比較へ）
+                    if ($a['type_rank'] === $TYPE_NUMBER) {
+                        if ($a['key'] !== $b['key']) {
+                            // 降順
+                            return ($a['key'] < $b['key']) ? 1 : -1;
+                        }
+                    } elseif ($a['type_rank'] === $TYPE_STRING) {
+                        if ($a['key'] !== $b['key']) {
+                            // 昇順（文字列比較）
+                            return $a['key'] <=> $b['key'];
+                        }
+                    }
+
+                    // 3) タイブレーク：updated_at の新しい順（降順）
+                    $au = strtotime((string)$a['row']->updated_at);
+                    $bu = strtotime((string)$b['row']->updated_at);
+                    if ($au !== $bu) {
+                        return ($au < $bu) ? 1 : -1; // 新しい方が先
+                    }
+
+                    // 4) 最終タイブレーク：id昇順（安定化）
+                    return ($a['row']->id ?? 0) <=> ($b['row']->id ?? 0);
+                });
+
+                // 元のコレクションに並び替えを反映
+                $children = collect($enriched)->map(fn($x) => $x['row'])->values();
+            }
+            // -------------------------------------------------------------------
+
+            if ($children->isNotEmpty()) {
                 return response()->json([
                     'mode'     => 'parent',
-                    'parent'   => $parentRow,        // may be null if there isn't a single parent row with keyword == id
-                    'children' => $parentCandidates, // all rows whose tag == id
+                    'parent'   => $parentRow,  // keyword==id の単一親（存在しない場合はnull）
+                    'children' => $children,   // tag==id の全行（メタ規則で並び替え済み）
                 ], 200);
             }
 
