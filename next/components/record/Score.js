@@ -26,7 +26,7 @@ export default function Score({rule, score, stage, category}){
         )
     }
     // 時間表示するルール一覧
-    else if([11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || category === "speedrun"){
+    else if([11, 29, 35, 43, 46, 47, 91].includes(Number(rule)) || category === "speedrun"){
         // RTAの場合
         const convertScore = (Number(rule) === 11) ? score2time(score, stage) : score
         return (
