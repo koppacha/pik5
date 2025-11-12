@@ -39,7 +39,7 @@ export default function Totals(props){
             <Grid container className="rule-wrapper" wrap="nowrap">
             {
                 totals.map(val =>
-                    <Grid item key={val} className={`rule-box ${(Number(series) === val)&&"active"}`}
+                    <Grid item key={val} className={`rule-box ${(Number(series) === val) ? "active" : "not-active"}`}
                          component={Link}
                          href={'/total/'+stageUrlOutput(val, consoles, val, year, val)}>
                         {(info.series === 4) ? t.ru[val] : t.rule[val]}

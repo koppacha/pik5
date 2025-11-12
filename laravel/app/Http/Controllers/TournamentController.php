@@ -7,7 +7,7 @@ class TournamentController extends Controller
     {
         return [
             'start' => '2025-07-01T00:00:00+09:00',
-            'end'   => '2025-07-30T00:00:00+09:00',
+            'end'   => '2025-11-30T00:00:00+09:00',
             ];
     }
 }

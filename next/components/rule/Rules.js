@@ -53,7 +53,7 @@ export default function Rules(props){
 
                 return (
                     <Grid className="rule-wrapper" item key={val}>
-                        <Box className={`rule-box ${(Number(rule) === val)&&"active"}`}
+                        <Box className={`rule-box ${(Number(rule) === val) ? "active" : "not-active"}`}
                                  component={Link}
                                  href={'/'+info?.type+'/'+info?.stage_id+'/'+console+'/'+val+'/'+year}>
                             {screenName}

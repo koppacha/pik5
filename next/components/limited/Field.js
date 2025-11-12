@@ -11,9 +11,21 @@ export default function Field({users}) {
     return (
         <>
             フィールド領域<br/>
-            <Grid container spacing={2}>
+            <Grid container
+                  wrap="wrap"
+                  justifyContent="center"
+                  columnGap={2}
+                  rowGap={2}
+                  sx={{ m: 0 }}
+            >
                 {Object.values(cards.data).map(c => (
-                    <Grid item key={c.id} xs={6} sm={4} md={3}>
+                    <Grid item
+                          key={c.id}
+                          style={{
+                              flex: '0 0 300px',
+                              width: '300px',
+                          }}
+                    >
                         <CardItem card={c} users={users} region="field" />
                     </Grid>
                 ))}

@@ -76,7 +76,7 @@ export function KeywordContent({data, users}){
     const mdContent = React.useMemo(() => linkifyWikiLinks(data.content), [data.content])
 
     // アンダーバーや下線をスペースに置換する関数
-    const customReplace = str => str.replace(/＿＿|__|＿|_/g, m => ({'__': '_', '＿＿': '＿', '_': ' ', '＿': '　'}[m]))
+    const customReplace = str => str?.replace(/＿＿|__|＿|_/g, m => ({'__': '_', '＿＿': '＿', '_': ' ', '＿': '　'}[m]))
 
     const displayKeyword = customReplace(data.keyword)
 

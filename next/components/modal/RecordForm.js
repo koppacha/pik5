@@ -37,6 +37,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [regionScore, setRegionScore] = useState(0)
     const [regionSelected, setRegionSelected] = useState(false)
     const [consoles, setConsole] = useState(0)
+    const [difficulty, setDifficulty] = useState(0)
     const [videoUrl, setVideoUrl] = useState("")
     const [comment, setComment] = useState("")
     const [img, setImg] = useState(null)
@@ -90,6 +91,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 time: "00:00:00",
                 score: 0,
                 console: consoleList[0],
+                difficulty: "",
                 videoUrl: "",
                 comment: "",
             }
@@ -132,6 +134,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             formData.append('score', score)
             formData.append('user_id', session.user.id)
             formData.append('console', consoles)
+            formData.append('difficulty', difficulty)
             if(img?.name) {
                 formData.append('file', img, img.name)
             }
@@ -212,6 +215,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // タイム表示判定（RecordController.phpと共通）
     const isTime = () => {
         return [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
+    }
+
+    // 難易度追加判定
+    const isPik4 = () => {
+        return [41, 42, 43, 44, 45, 46, 47].includes(Number(rule))
     }
 
     // リージョン違い判定
@@ -315,6 +323,24 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         {
                             consoleList.map((key) =>
                                 <MenuItem key={key} value={key}>{t.console[key]}</MenuItem>
+                            )
+                        }
+                    </TextField>
+                    <TextField
+                        {...register('difficulty')}
+                        select
+                        id="console"
+                        label={t.g.difficulty}
+                        onChange={(e) => setDifficulty(e.target.value)}
+                        fullWidth
+                        variant="standard"
+                        defaultValue={consoleList[0]}
+                        margin="normal"
+                        className={isPik4() || "hidden"}
+                    >
+                        {
+                            [1, 2, 3].map((key) =>
+                                <MenuItem key={key} value={key}>{t.difficulty[key]}</MenuItem>
                             )
                         }
                     </TextField>

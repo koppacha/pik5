@@ -28,6 +28,14 @@ export default async function handle(req, res){
             case "POST": {
                 try {
                     const query = req.query.query.join("/")
+                    const postParams = { ...req.query }
+                    delete postParams.query
+                    const postSearch = new URLSearchParams()
+                    Object.entries(postParams).forEach(([key, val]) => {
+                      const values = Array.isArray(val) ? val : [val]
+                      values.forEach(v => postSearch.append(key, v))
+                    })
+                    const upstreamUrl = `http://laravel:8000/api/${query}` + (postSearch.toString() ? `?${postSearch.toString()}` : '')
                     await prismaLogging(session?.user?.id ?? "guest", "queryPost", { headers: req.headers, length: req.headers['content-length'] })
 
                     const contentType = (req.headers['content-type'] || '').toLowerCase()
@@ -35,7 +43,7 @@ export default async function handle(req, res){
 
                     if (contentType.startsWith('multipart/form-data')) {
                         // Pass through the original stream and headers (including boundary)
-                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                        upstreamRes = await fetch(upstreamUrl, {
                             method: 'POST',
                             // Preserve content-type (with boundary) and content-length if present
                             headers: {
@@ -54,15 +62,15 @@ export default async function handle(req, res){
                           hasKeyword: preview && typeof preview === 'object' && Object.prototype.hasOwnProperty.call(preview, 'keyword'),
                           keys: preview && typeof preview === 'object' ? Object.keys(preview).slice(0, 10) : []
                         })
-
-                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                        console.log(upstreamUrl)
+                        upstreamRes = await fetch(upstreamUrl, {
                             method: 'POST',
                             headers: { 'content-type': req.headers['content-type'] || 'application/json' },
                             body: raw
                         })
                     } else {
                         // Fallback: forward as-is without forcing JSON
-                        upstreamRes = await fetch(`http://laravel:8000/api/${query}`, {
+                        upstreamRes = await fetch(upstreamUrl, {
                             method: 'POST',
                             headers: { 'content-type': req.headers['content-type'] || 'application/octet-stream' },
                             body: req
