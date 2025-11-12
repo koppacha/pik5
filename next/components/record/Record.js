@@ -26,7 +26,7 @@ import {
 import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
-import {hideRuleNames} from "../../lib/const";
+import {displayDifficulty, hideRuleNames} from "../../lib/const";
 import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
@@ -186,10 +186,8 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                         <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                     </Link>
                                 </>}
-                            {data.console &&
-                                <span style={{position:"relative",top:"-2px",fontSize:"0.85em",backgroundColor:"#eee",color:"#111",borderRadius:"4px",padding:"2px 4px",marginRight:"0.5em"}}>
-                                {t.cnsl[data.console]}
-                                </span>}
+                            {(data.console && !displayDifficulty.includes(Number(data.rule))) && <span className="tags">{t.cnsl[data.console]}</span>}
+                            {(data.difficulty && displayDifficulty.includes(Number(data.rule))) && <span className={`tags level-${data.difficulty}`}>{t.difficulty[data.difficulty]}</span>}
                             {data.post_comment &&
                                 mini ?
                                 <Tooltip title={data.post_comment} arrow><FontAwesomeIcon icon={faComment} /></Tooltip>

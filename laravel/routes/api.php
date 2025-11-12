@@ -44,8 +44,8 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'record/rank/{stage}/{rule}/{score?}' , [ RecordController::class, 'getRank' ]);
     Route::get ('record/id/{id}', [RecordController::class, 'getRecord']);
     Route::get ( 'record/history/{stage_id}/{rule}/{user_id}' , [ RecordController::class, 'getRecordHistory' ]);
-    Route::get ( 'record/top/{stage_id}/{console}/{rule}' , [ RecordController::class, 'getTopRecord' ]);
-    Route::get ( 'record/{id}/{console?}/{rule?}/{year?}/{compare?}' , [ RecordController::class, 'show' ]);
+    Route::get ( 'record/top/{stage_id}/{console}/{rule}/{difficulty?}' , [ RecordController::class, 'getTopRecord' ]);
+    Route::get ( 'record/{id}/{console?}/{rule?}/{year?}/{difficulty?}/{compare?}' , [ RecordController::class, 'show' ]);
     Route::post ( 'record' , [ RecordController::class, 'create' ]);
     Route::patch ( 'record/{id}' , [ RecordController::class, 'update' ]);
     Route::delete ( 'record/{id}' , [ RecordController::class, 'destroy' ]);
@@ -125,6 +125,7 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 //        phpinfo();
 //    });
 });
+
 // 第19回期間限定
 // Route::middleware('auth:api')->group(function () {
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
@@ -136,6 +137,7 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route::get('hand', [CardController::class, 'hand']);
     Route::get('field-cards', [CardController::class, 'fieldCards']);
     Route::post('cards/{id}/take', [CardController::class, 'take']);
+    Route::post('cards/{id}/limitOver', [CardController::class, 'limitOver']);
 
     Route::get('cards/{id}/scores', [ScoreController::class, 'index']);
     Route::post('cards/{id}/scores', [ScoreController::class, 'store']);

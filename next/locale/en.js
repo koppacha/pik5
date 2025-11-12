@@ -21,6 +21,7 @@ export const en = {
         comment: "Comments",
         noComment: "No comments",
         console: "Controls",
+        difficulty: "difficulty",
         discord: "Join our Discord!",
         theme: "Change theme",
         language: "Language",
@@ -672,6 +673,12 @@ export const en = {
         2: "Wii Remote+Nunchuk Nunchaku",
         3: "Wii U GamePad/Pro Controller",
         4: "Nintendo Switch",
+    },
+    difficulty: {
+        0: "All",
+        1: "Relaxed",
+        2: "Normal",
+        3: "Fierce",
     },
     cnsl: {
         0: "All",

@@ -123,7 +123,15 @@ body {
 .hidden {
     display: none;
 }
+.not-active {
+    background-color: $light-sub-back !important;
+    color: $light-front !important;
 
+    [data-theme='dark'] & {
+        background-color: $dark-sub-back !important;
+        color: $dark-front !important;
+    }
+}
 .active {
     background-color: $light-front !important;
     color: $light-back !important;
@@ -326,16 +334,13 @@ body {
     white-space: nowrap;
 }
 .rule-box {
+    font-family: "M PLUS 1 CODE", sans-serif;
+    font-weight: normal;
     display: inline-block;
     border-radius: 4px;
     padding: 12px 6px;
-    margin-right: 6px;
+    margin-right: 10px;
     cursor: pointer;
-    background-color: $light-sub-back;
-
-    [data-theme="dark"] & {
-        background-color: $dark-sub-back;
-    }
 }
 .console-box {
     display: inline-block;
@@ -935,4 +940,26 @@ body {
     [data-theme='dark'] & {
         color: $dark-border;
     }
+}
+.tags {
+    position: relative;
+    top: -2px;
+    font-size: 0.85em;
+    background-color: #eee;
+    color: #111;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin-right:0.5em;
+}
+.level-1 {
+    background-color: #99f18f;
+    color: #555;
+}
+.level-2 {
+    background-color: #eee;
+    color: #111;
+}
+.level-3 {
+    background-color: #c21ec7;
+    color: #fff;
 }

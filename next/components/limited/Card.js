@@ -12,10 +12,16 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import {Tooltip} from "@mui/material";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faArrowUpFromBracket, faLightbulb, faRankingStar, faUsers} from "@fortawesome/free-solid-svg-icons";
+import {
+    faArrowUpFromBracket, faChessKing, faChessKnight, faChessPawn, faChessQueen, faChessRook,
+    faHourglassHalf,
+    faLightbulb,
+    faRankingStar,
+    faUsers
+} from "@fortawesome/free-solid-svg-icons";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
-import {addName2posts, fetcher} from "../../lib/pik5";
+import {addName2posts, fetcher, id2name, truncateSmart} from "../../lib/pik5";
 import NowLoading from "../NowLoading";
 import RecordPost from "../modal/RecordPost";
 import Record from "../record/Record";
@@ -65,6 +71,37 @@ const level2color = (level) => {
             return "#777";
     }
 }
+function RarityIcon({ rarity }) {
+    let icon = null
+    let style = {}
+
+    switch (rarity) {
+        case 1:
+            icon = faChessPawn
+            style = { color: '#6c6c6c' }
+            break
+        case 2:
+            icon = faChessKnight
+            style = { color: '#2f2f2f' }
+            break
+        case 3:
+            icon = faChessRook
+            style = { color: '#6ebaef' }
+            break
+        case 4:
+            icon = faChessQueen
+            style = { color: '#33d22e' }
+            break
+        case 5:
+            icon = faChessKing
+            style = { color: '#ecc708' }
+            break
+        default:
+            return <span>-</span>
+    }
+
+    return <span><FontAwesomeIcon icon={icon} style={style} /><span style={style}>{rarity}</span></span>
+}
 
 export default function CardItem({ session, card, region, users }) {
     const [open, setOpen] = useState(false)
@@ -76,8 +113,22 @@ export default function CardItem({ session, card, region, users }) {
     const {data: info, error: stageError, isLoading: loadingStage} = useSWR(`/api/server/stage/${card.stageId}`, fetcher)
     const {data: record, error: recordError, isLoading: loadingRecord} = useSWR(`/api/server/record/${card.stageId}`, fetcher)
 
+    // 現在のプレイヤー情報（手札枚数 card_count を参照）
+    const {
+        data: me,
+        mutate: mutateMe
+    } = useSWR(
+        session?.user?.id ? `/api/server/players/me?userId=${session.user.id}` : null,
+        fetcher,
+        { refreshInterval: 10000, revalidateOnFocus: true }
+    )
+
     const isLoading = loadingStage || loadingRecord
     const error = stageError || recordError
+
+    // 手札枚数とテイク可否
+    const handCount = me?.data.card_count ?? 0
+    const canTake = handCount >= 3
 
     // カードのランキングを取得中の場合、ローディング表示
     if(isLoading) return <NowLoading/>
@@ -85,8 +136,38 @@ export default function CardItem({ session, card, region, users }) {
 
     const datas = addName2posts(record.data, users)
 
+    const init = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: session?.user?.id })
+    }
+
+    const openModal = async () => {
+        if (mutateMe) {
+            await mutateMe()  // 最新の手札枚数を取得してから開く
+        }
+        setOpen(true)
+    }
+
     const handleTake = async () => {
-        await fetch(`/api/server/cards/${card.id}/take?userId=${session.user.id}`, { method: 'POST' })
+        const res = await fetch(`/api/server/cards/${card.id}/take`, init)
+        // サーバ側の手札チェックと一致させるため、必ず me を再取得
+        if (mutateMe) await mutateMe()
+        if (!res.ok) {
+            try {
+                const data = await res.json()
+                alert(data?.message ?? 'テイクに失敗しました')
+            } catch (e) {
+                alert('テイクに失敗しました')
+            }
+            return
+        }
+        mutate()
+        setOpen(false)
+    }
+
+    const handleLimitOver = async () => {
+        await fetch(`/api/server/cards/${card.id}/limitOver`, init)
         mutate()
         setOpen(false)
     }
@@ -107,7 +188,7 @@ export default function CardItem({ session, card, region, users }) {
             {/*    </CardContent>*/}
             {/*</Card>*/}
 
-            <Grid item onClick={() => setOpen(true)} style={{cursor: "pointer"}}>
+            <Grid item onClick={openModal} style={{cursor: "pointer"}}>
                 <Box position="relative">
                     <CardBackground />
                     <CardWrapper premium={card.rarity > 4 ? gradientColor : "#777"}>
@@ -115,7 +196,7 @@ export default function CardItem({ session, card, region, users }) {
                             <Grid container style={{fontSize: 12, color: "#4b4b4b"}}>
                                 <Grid item xs={3}>#{card.stageId}</Grid>
                                 <Grid item xs={8} style={{textAlign:"right",color:level2color(card.difficulty)}}>{"★".repeat(card.difficulty)}</Grid>
-                                <Grid item xs={1}><div className={"reward-icon"}>{card.rewards ?? 0}</div></Grid>
+                                {region === "field" ? <Grid item xs={1}><div className={"reward-icon"}>{card.rewards ?? 0}</div></Grid> : <></>}
                             </Grid>
                             <div style={{fontSize: 20, fontWeight: "bold"}}>{card.title}</div>
                             <div style={{fontSize: 16, color: "#666", marginTop: 4}}>{card.ruleName}</div>
@@ -123,8 +204,10 @@ export default function CardItem({ session, card, region, users }) {
                             <div style={{ marginTop: "auto" }}>
                                 <hr/>
                                 <Grid container style={{fontSize: 14, marginTop: 8}}>
-                                    <Grid item xs={6}><Tooltip title={"テイカー"}><FontAwesomeIcon icon={faArrowUpFromBracket} /> {card.taker ?? "-"}</Tooltip></Grid>
-                                    <Grid item xs={6} style={{textAlign:"right"}}><Tooltip title={"考案者"}>{card.creator ?? "-"} <FontAwesomeIcon icon={faLightbulb} /></Tooltip></Grid>
+                                    <Grid item xs={10}><Tooltip title={"タイムリミット"}><FontAwesomeIcon icon={faHourglassHalf} /> {card.limit ?? "--:--:--"}</Tooltip></Grid>
+                                    <Grid item xs={2} style={{textAlign:"right"}}><Tooltip title={"レア度"}><RarityIcon rarity={card.rarity} /></Tooltip></Grid>
+                                    <Grid item xs={6}><Tooltip title={"テイカー"}><FontAwesomeIcon icon={faArrowUpFromBracket} /> {truncateSmart(id2name(users, card.taker) ?? "-")}</Tooltip></Grid>
+                                    <Grid item xs={6} style={{textAlign:"right"}}><Tooltip title={"考案者"}>{truncateSmart(id2name(users, card.creator) ?? "-")} <FontAwesomeIcon icon={faLightbulb} /></Tooltip></Grid>
                                 </Grid>
                             </div>
                         </div>
@@ -135,10 +218,12 @@ export default function CardItem({ session, card, region, users }) {
             <Dialog open={open} onClose={() => setOpen(false)}>
                 {region === 'hand' ? (
                     <>
-                        <DialogTitle>このカードを場に出しますか？</DialogTitle>
+                        <DialogTitle>
+                            {canTake ? 'このカードを場に出しますか？' : '場に出すには３枚以上の手札が必要です'}
+                        </DialogTitle>
                         <DialogActions>
                             <Button onClick={() => setOpen(false)}>キャンセル</Button>
-                            <Button onClick={handleTake}>場に出す（テイク）</Button>
+                            {canTake && <Button onClick={handleTake}>場に出す（テイク）</Button>}
                         </DialogActions>
                     </>
                 ) : (
@@ -155,6 +240,7 @@ export default function CardItem({ session, card, region, users }) {
                             }
                         </DialogContent>
                         <DialogActions>
+                            <Button onClick={handleLimitOver}>リミットオーバー</Button>
                             <Button onClick={() => setOpen(false)}>閉じる</Button>
                         </DialogActions>
                     </>

@@ -26,6 +26,8 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import ConsoleList from "../../components/record/ConsoleList";
+import DifficultyList from "../../components/record/DifficultyList";
+import PullDownDifficulty from "../../components/form/PullDownDifficulty";
 
 export async function getStaticPaths(){
     return {
@@ -37,11 +39,12 @@ export async function getStaticPaths(){
 // サーバーサイドの処理
 export async function getStaticProps({params}){
 
-    const query   = params.stage
-    const stage   = query[0]
-    const consoles = query[1] || 0
-    let   rule    = query[2] || 0
-    const year    = query[3] || currentYear()
+    const query      = params.stage
+    const stage      = query[0]
+    const consoles   = query[1] || 0
+    let   rule       = query[2] || 0
+    const year       = query[3] || currentYear()
+    const difficulty = query[4] || 0
 
     if(
         stage < 100 ||
@@ -50,7 +53,9 @@ export async function getStaticProps({params}){
         !available.includes(Number(consoles)) ||
         year < 2014 ||
         year > currentYear() ||
-        query[4]
+        difficulty > 3 ||
+        difficulty < 0 ||
+        query[5]
     ){
         return {
             notFound: true,
@@ -58,7 +63,7 @@ export async function getStaticProps({params}){
     }
 
     // 記録をリクエスト
-    const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}`)
+    const res = await fetch(`http://laravel:8000/api/record/${stage}/${consoles}/${rule}/${year}/${difficulty}`)
     const posts = await res.json() ?? [].json()
     if(res.status >= 300){
         return {
@@ -211,6 +216,9 @@ export default function Stage(param){
         setIsProcessing(true)
         purgeCache("stage", param.stage, param.consoles, param.rule, param.year, token).then(r => setIsProcessing(false))
     }
+    // ピクミン４は難易度別トップを表示し、それ以外は操作方法別トップを表示する
+    const pik4range = [41, 42, 43, 44, 45, 46, 47]
+
     return (
         <>
             <Head>
@@ -245,10 +253,12 @@ export default function Stage(param){
             </Grid>
             <RuleList param={param}/>
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
-            <ConsoleList param={param}/>
+            {!pik4range.includes(Number(param.rule)) && <ConsoleList param={param}/>}
+            {pik4range.includes(Number(param.rule)) && <DifficultyList param={param}/>}
             <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6} style={{paddingLeft:'0.5em'}}>
                     <PullDownConsole props={param}/>
+                    <PullDownDifficulty props={param}/>
                     <PullDownYear props={param}/>
                 </Grid>
                 <Grid container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
@@ -259,19 +269,19 @@ export default function Stage(param){
                                 style={{alignItems: "center"}}
                                 info={param.info} rule={param.rule} console={param.consoles}/>
                     }
-                    <Box className={"rule-box active"}
-                         onClick={() => handleOpen(param.ruleId)}
-                         component={Link}
-                         href="#">
+                    <Button
+                        variant="contained"
+                        className={"rule-box active"}
+                        onClick={() => handleOpen(param.ruleId)}>
                         <span>{t.g.rule}</span>
-                    </Box>
+                    </Button>
                     {param.guide && (
-                      <Box className={"rule-box active"}
-                           onClick={() => handleOpen(param.stage)}
-                           component={Link}
-                           href="#">
+                      <Button
+                          variant="contained"
+                          className={"rule-box active"}
+                          onClick={() => handleOpen(param.stage)}>
                         <span>{t.g.guide}</span>
-                      </Box>
+                      </Button>
                     )}
                 </Grid>
             </Grid>

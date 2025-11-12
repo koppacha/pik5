@@ -115,6 +115,21 @@ export function id2name(users, target){
     })
     return result?.name || "名無し"
 }
+// カード表示用に名前を短縮表示する
+export function truncateSmart(str) {
+    if (typeof str !== 'string') return ''
+
+    // 含まれる文字がマルチバイト（全角）かどうかを判定
+    const isMultiByte = /[^\x00-\x7F]/.test(str)
+
+    if (isMultiByte) {
+        // マルチバイト：7文字以上 → 先頭6文字 + …
+        return str.length > 6 ? str.slice(0, 6) + '…' : str
+    } else {
+        // シングルバイト：14文字以上 → 先頭12文字 + …
+        return str.length > 12 ? str.slice(0, 12) + '…' : str
+    }
+}
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
 export const rankColor = (rank, team = 0, target = 0) => {
     const t = Number(team)

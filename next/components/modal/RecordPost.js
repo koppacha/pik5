@@ -24,11 +24,13 @@ export default function RecordPost({info, rule, console, mode}){
 
     return (
         <>
-            <Box
-                className={"rule-box active"}
+            <Button
+                variant="contained"
+                color="primary"
+                className={"rule-box"}
                 onClick={handleClickOpen}>
                 <span><FontAwesomeIcon icon={faPaperPlane} /> {t.g.post}</span>
-            </Box>
+            </Button>
             <RecordForm
                 info={info}
                 rule={rule}
