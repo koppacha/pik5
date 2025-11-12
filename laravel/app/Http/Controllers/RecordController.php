@@ -60,12 +60,15 @@ class RecordController extends Controller
     // ステージID・ルール・コンソールの組み合わせでトップ記録を取得する関数
     public function getTopRecord(Request $request): JsonResponse
     {
-        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35, 91], true) ? 'ASC' : 'DESC';
+        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $diff_operator = $request["difficulty"] ? "=" : ">";
+        $cnsl_operator = $request["console"] ? "=" : ">";
 
         $record = Record::select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
-            ->where('console', $request['console'] ?: 0)
+            ->where('console', $cnsl_operator, $request['console'] ?: 0)
+            ->where('difficulty',$diff_operator, $request['difficulty'] ?: 0)
             ->where('flg','<', 2)
             ->orderBy('score', $scoreOrder)
             ->orderBy('created_at', 'ASC')
@@ -219,6 +222,7 @@ class RecordController extends Controller
                 'stage_id' => $request['stage_id'],
                 'rule' => $request['rule'],
                 'console' => $request['console'] ?: 0,
+                'difficulty' => $request['difficulty'] ?: 2,
                 'region' => 0,
                 'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
                 'unique_id' => "312".sprintf('%06d',random_int(0, 999999)),
@@ -232,6 +236,23 @@ class RecordController extends Controller
                 'flg' => 0
             ]);
             $posts->save();
+
+            // イベントの場合の処理（stage_id が 1000 以上 10000 未満）
+            $stageId = (int) $request['stage_id'];
+            if ($stageId >= 1000 && $stageId < 10000) {
+                try {
+                    // DI コンテナ経由で呼び出し（内部依存があっても安全）
+                    app(CardController::class)->updateStageOnRecord($stageId);
+                    // 成功ログ（必要に応じてコメントアウト可）
+                    Log::info('updateStageOnRecord executed', ['stage_id' => $stageId]);
+                } catch (\Throwable $e) {
+                    // 記録投稿は成功させつつ、イベント更新失敗はログに残す
+                    Log::error('updateStageOnRecord failed', [
+                        'stage_id' => $stageId,
+                        'error'    => $e->getMessage(),
+                    ]);
+                }
+            }
 
         } catch (Exception $e) {
             return response()->json($e);
@@ -266,6 +287,7 @@ class RecordController extends Controller
          * rule: ルール区分（任意）
          * console: 操作方法（任意）
          * year: 集計年（任意）
+         * difficulty: 難易度（任意）
         */
         // ステージIDの種別判定
         $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
@@ -274,10 +296,11 @@ class RecordController extends Controller
         $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
 
         // オプション引数
-        $console = $request['console'] ?: 0;
-        $rule    = $request['rule']    ?: 0;
-        $year    = $request['year']    ?: date("Y");
-        $compare = $request['compare'] ?: 'timebonus';
+        $console = $request['console']    ?: 0;
+        $rule    = $request['rule']       ?: 0;
+        $year    = $request['year']       ?: date("Y");
+        $diff    = $request['difficulty'] ?: 0;
+        $compare = $request['compare']    ?: 'timebonus';
 
         // ステージ情報を取得
         $stage = Stage::where('stage_id', $request['id'])->first();
@@ -325,7 +348,7 @@ class RecordController extends Controller
         // オプション引数を加工する
         $year = (int)$year + 1;
         $console_operation = $console ? "=" : ">";
-//        $rule_operation = $rule ? "=" : ">";
+        $diff_operation    = $diff ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
@@ -335,6 +358,7 @@ class RecordController extends Controller
         $new_data = Record::select(config('const.selected'))
                 ->where($where, $request['id'])
                 ->where('console', $console_operation, $console)
+                ->where('difficulty', $diff_operation, $diff)
                 ->whereIn('rule', $rule)
                 ->where('created_at','<', $date)
                 ->where('flg','<', 2)

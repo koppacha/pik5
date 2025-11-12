@@ -34,6 +34,7 @@ export default async function handler(req, res){
                     formData.append('score', fields.score[0]);
                     formData.append('user_id', fields.user_id[0]);
                     formData.append('console', fields.console[0]);
+                    formData.append('difficulty', fields.difficulty[0]);
                     formData.append('video_url', fields.video_url[0]);
                     formData.append('team', 0);
                     formData.append('post_comment', fields.post_comment[0]);

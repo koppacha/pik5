@@ -8,9 +8,6 @@ import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import prisma from "../../lib/prisma";
-import Image from "next/image";
-import LightBoxImage from "../../components/modal/LightBoxImage";
-import Lightbox from "yet-another-react-lightbox";
 
 const dandoriStages = range(413, 418)
 const dandoriPikmins = range(1, 8) // 赤、青、黄、白、紫、羽、岩、氷
@@ -315,20 +312,52 @@ export default function Battle(props) {
         const scoreAList = stageIds.map(id => gridData[id].scoreA.join("\t")).join("\n");
         const scoreBList = stageIds.map(id => gridData[id].scoreB.join("\t")).join("\n");
 
-        const outputText = `${scoreAList}\n\n${scoreBList}`;
-        try {
-            await navigator.clipboard.writeText(outputText).then(() => {
-                alert("スコアをクリップボードにコピーしました！");
-            });
-        } catch (error) {
-            console.error("Failed to copy text: ", error);
+        const outputText = `${scoreAList}\n\n${scoreBList}`
+
+        async function copyText(text) {
+            if (navigator.clipboard && window.isSecureContext) {
+                // セキュアコンテキストでは clipboard API を使用
+                try {
+                    await navigator.clipboard.writeText(text)
+                    alert('スコアをクリップボードにコピーしました！')
+                    return
+                } catch (err) {
+                    console.warn('Clipboard API に失敗:', err)
+                }
+            }
+
+            // フォールバック: 古い方法でコピー
+            const textarea = document.createElement('textarea')
+            textarea.value = text
+            textarea.style.position = 'fixed' // スクロール防止
+            textarea.style.opacity = '0'
+            document.body.appendChild(textarea)
+            textarea.focus()
+            textarea.select()
+
+            try {
+                const successful = document.execCommand('copy')
+                if (successful) {
+                    alert('スコアをクリップボードにコピーしました！')
+                } else {
+                    throw new Error('execCommand に失敗')
+                }
+            } catch (err) {
+                console.error('コピーに失敗しました:', err)
+                alert('コピーに失敗しました。手動でコピーしてください。')
+            } finally {
+                document.body.removeChild(textarea)
+            }
         }
+
+        await copyText(outputText)
     }
     return (
         <Container>
             <Typography variant="" className="title">ダンドリバトル大会戦績表</Typography><br/>
             <Typography variant="" className="subtitle">Online Dandori Battle</Typography><br/>
-            <Box className="info-box">
+            <details className="info-box">
+                <summary><strong>ルール</strong></summary><br/>
                 ダンドリバトル大会はピクミン４の「ダンドリバトル（vsCOM）」を同条件で同時にプレイし擬似的なオンライン対戦で競うイベントです。<br/>
                 <br/>
                 <ul>
@@ -350,7 +379,7 @@ export default function Battle(props) {
                         <li>初参加の場合は、あらかじめローカル対戦用のダンドリバトルを全開放（熱砂の闘技場まで１回ずつプレイ）しておいてください。</li>
                     </ul>
                 </Box>
-            </Box>
+            </details>
             <Button variant="contained" color="primary" onClick={handleButtonClick}>
                 セッションを追加
             </Button>

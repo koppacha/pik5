@@ -7,10 +7,11 @@ import TableCell from '@mui/material/TableCell'
 import TableHead from '@mui/material/TableHead'
 import TableRow from '@mui/material/TableRow'
 import Paper from '@mui/material/Paper'
+import {id2name} from "../../lib/pik5";
 
 const fetcher = url => fetch(url).then(res => res.json())
 
-export default function Scoreboard() {
+export default function Scoreboard({users}) {
 
     const { data: players } = useSWR('/api/server/players', fetcher)
     if (players === undefined) return null
@@ -33,13 +34,13 @@ export default function Scoreboard() {
                         <TableCell>名前</TableCell>
                         <TableCell>ドローポイント</TableCell>
                         <TableCell>ランクポイント</TableCell>
-                        <TableCell>所持カード枚数</TableCell>
+                        <TableCell>手札</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {list.map(p => (
                         <TableRow key={p.id}>
-                            <TableCell>{p.name}</TableCell>
+                            <TableCell>{id2name(users, p.name)}</TableCell>
                             <TableCell>{p.draw_points}</TableCell>
                             <TableCell>{p.rank_points}</TableCell>
                             <TableCell>{p.card_count}</TableCell>

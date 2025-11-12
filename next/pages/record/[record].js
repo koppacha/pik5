@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Typography} from "@mui/material";
+import {Box, Button, Typography} from "@mui/material";
 import {addName2posts, useLocale} from "../../lib/pik5";
 import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import Link from "next/link";
@@ -133,16 +133,34 @@ export default function RecordPage({users, data, history}){
                             <Typography variant="" className="subtitle">{r.stage[data.stage_id]}</Typography><br/><br/>
                         </PageHeader>
                         <Record key={data.unique_id} data={data}/>
-                        {
-                            (delFlag()) &&
-                                <RuleBox
-                                    className="active"
-                                    href="#"
-                                    style={{width: 200}}
-                                    onClick={handleOpen}>
-                                    <FontAwesomeIcon style={{color:"#868686"}} icon={faTrashCan} /> この記録を削除する
-                                </RuleBox>
-                        }
+
+                        <Box display="flex">
+                            <Button
+                                variant="contained"
+                                className={"rule-box active"}
+                                component={Link}
+                                href={`/user/${data.user_id}`}>
+                                <span>{data.user_name} さん</span>
+                            </Button>
+                            <Button
+                                variant="contained"
+                                className={"rule-box active"}
+                                component={Link}
+                                href={`/stage/${data.stage_id}`}>
+                                <span>{t.stage[data.stage_id]}</span>
+                            </Button>
+                            {
+                                (delFlag()) &&
+                                    <Button
+                                        sx={{marginLeft:"auto"}}
+                                        variant="contained"
+                                        color="primary"
+                                        className={"rule-box"}
+                                        onClick={handleOpen}>
+                                        <FontAwesomeIcon style={{color:"#e0e0e0"}} icon={faTrashCan} /> この記録を削除する
+                                    </Button>
+                            }
+                        </Box>
                         <TopBox style={{marginTop:"4em"}} >
                             <TopBoxHeader className="top-box-header">
                                 <span><FontAwesomeIcon icon={faArrowTrendUp}/> 過去の記録</span>

@@ -171,8 +171,8 @@ class Func extends Facade
     }
     public static function compare_calc (array $data, $compare = 'timebonus') : array
     {
-        // ピクミン3のDLC第２弾全部とDLC第３弾のうちBEは１秒当たり10点（これ以外は１秒当たり30点）
-        $lowBonusStages = [321, 322, 323, 324, 325, 326, 327, 328, 329, 330];
+        // タイムボーナス計算のうち１秒＝10点のステージ（これ以外は１秒＝30点）
+        $lowBonusStages = [321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 336, 337, 339];
 
         // ピクミン3のDBとピクミン3DXサイドストーリーのうち一部ステージは比較値計算対象外
         $countDownStages = [338, 341, 343, 345, 346, 347, 348, 349, 350];

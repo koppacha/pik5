@@ -21,9 +21,21 @@ export default function Hand() {
     return (
         <>
         手札<br/>
-            <Grid container spacing={2}>
+            <Grid container
+                wrap="wrap"
+                justifyContent="center"
+                columnGap={2}
+                rowGap={2}
+                sx={{ m: 0 }}
+            >
                 {Object.values(cards.data).map(c => (
-                    <Grid item key={c.id} xs={4}>
+                    <Grid item
+                          key={c.id}
+                          style={{
+                              flex: '0 0 300px',
+                              width: '300px',
+                          }}
+                    >
                         <CardItem card={c} region="hand" session={session} />
                     </Grid>
                 ))}
