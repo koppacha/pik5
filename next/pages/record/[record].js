@@ -6,36 +6,41 @@ import Link from "next/link";
 import Head from "next/head";
 import prisma from "../../lib/prisma";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faArrowTrendUp, faHouseChimney, faPaperPlane, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
+import {faArrowTrendUp, faHouseChimney, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
-import TrendRanking from "../../components/top/TrendRanking";
 
-export async function getStaticPaths(){
-    return {
-        paths: [],
-        fallback: 'blocking',
-    }
-}
-// サーバーサイドの処理
-export async function getStaticProps({params}){
+// recordsではページキャッシュを作らないようにSSRで動的に生成する
+export async function getServerSideProps(ctx) {
 
-    const record = params.record
+    const { params, res } = ctx
 
-    if(record < 100000000 || record > 400000000){
+    // キャッシュ設定
+    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+
+    const record = Number(params?.record)
+
+    if(!Number.isFinite(record) || record < 100000000 || record > 400000000){
         return {
             notFound: true,
         }
     }
+
     // 記録をリクエスト
-    const res = await fetch(`http://laravel:8000/api/record/id/${record}`)
-    let data = await res.json()
+    const recordRes = await fetch(`http://laravel:8000/api/record/id/${record}`)
+    if(!recordRes.ok){
+        return { notFound: true }
+    }
+    let data = await recordRes.json()
 
     // 過去の投稿履歴を取得する
-    const stage_res = await fetch(`http://laravel:8000/api/record/history/${data.stage_id}/${data.rule}/${data.user_id}`)
-    let history = await stage_res.json()
+    const historyRes = await fetch(`http://laravel:8000/api/record/history/${data.stage_id}/${data.rule}/${data.user_id}`)
+    if(!historyRes.ok){
+        return { notFound: true }
+    }
+    let history = await historyRes.json()
 
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
@@ -45,6 +50,7 @@ export async function getStaticProps({params}){
             role: true
         }
     })
+
     // 表示中のユーザー名を取り出す
     data.user_name = users.find(function(e){
         return e.userId === data?.user_id
@@ -57,7 +63,6 @@ export async function getStaticProps({params}){
         props: {
             users, data, history
         },
-        revalidate: 86400,
     }
 }
 export default function RecordPage({users, data, history}){
