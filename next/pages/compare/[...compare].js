@@ -1,37 +1,22 @@
-import {Box, Grid, Tooltip, Typography} from "@mui/material";
-import PullDownConsole from "../../components/form/PullDownConsole";
-import PullDownYear from "../../components/form/PullDownYear";
+import {Box, Grid, Typography} from "@mui/material";
 import * as React from "react";
-import {currentYear, dateFormat, fetcher, useLocale} from "../../lib/pik5";
+import {currentYear, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import RankingCompare from "../../components/record/RankingCompare";
-import PullDownRule from "../../components/form/PullDownRule";
-import {logger} from "../../lib/logger";
 import prisma from "../../lib/prisma";
-import {available, reverseStages, rule2array} from "../../lib/const";
-import {
-    CompareType,
-    MarkerTableCell,
-    RankCell,
-    RenderStagesWrapper, RuleBox, RuleWrapper, ScoreType,
-    StageListBox, TeamRpsType, TeamScoreType,
-    UserInfoBox,
-    UserType
-} from "../../styles/pik5.css";
+import {reverseStages, rule2array} from "../../lib/const";
+import {RuleBox, RuleWrapper, TeamRpsType, TeamScoreType, UserType} from "../../styles/pik5.css";
 import Link from "next/link";
-import Button from "@mui/material/Button";
-import Score from "../../components/record/Score";
 import ModalCompare from "../../components/modal/ModalCompare";
 import {useState} from "react";
-import {range} from "../../lib/pik5";
 
-export async function getStaticPaths(){
-    return {
-        paths: [],
-        fallback: 'blocking',
-    }
-}
-export async function getStaticProps({params}){
+// サーバーサイドの処理（SSR）
+export async function getServerSideProps(ctx){
+
+    const { params, res } = ctx
+
+    // キャッシュ設定
+    res.setHeader('Cache-Control', 'public, s-maxage=43200, stale-while-revalidate=3600')
 
     let [user1, consoles1Str, rule1Str, year1Str, user2, consoles2Str, rule2Str, year2Str] = params.compare
 
@@ -56,6 +41,12 @@ export async function getStaticProps({params}){
     if (
         !user1 ||
         !user2 ||
+        !Number.isFinite(nConsoles1) ||
+        !Number.isFinite(nConsoles2) ||
+        !Number.isFinite(nRule1) ||
+        !Number.isFinite(nRule2) ||
+        !Number.isFinite(nYear1) ||
+        !Number.isFinite(nYear2) ||
         nConsoles1 > 4 ||
         nConsoles1 < 0 ||
         nConsoles2 > 4 ||
@@ -73,6 +64,7 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
+
     // スクリーンネームをリクエスト
     const users = await prisma.user.findMany({
         select: {
@@ -80,6 +72,7 @@ export async function getStaticProps({params}){
             name: true
         }
     })
+
     // 表示中のユーザー名を取り出す
     const userName = users.find(function(e){
         return e.userId === user1
@@ -90,39 +83,77 @@ export async function getStaticProps({params}){
 
     // 全総合(= "1")の扱いに応じて各サイドを取得（posts3/posts4 は常に定義）
     let posts1 = {}, posts2 = {}, posts3 = {}, posts4 = {}
+
     if (rule1 === "1" && rule2 === "1") {
         // 左右とも通常総合(2)と特殊総合(3)を取得
-        ;[posts1, posts3] = await Promise.all([
-            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`).then(res => res.json()),
-            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`).then(res => res.json())
+        const [a, b, c, d] = await Promise.all([
+            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`),
+            fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`),
+            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`),
+            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`),
         ])
-        ;[posts2, posts4] = await Promise.all([
-            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`).then(res => res.json()),
-            fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`).then(res => res.json())
+
+        if(!a.ok || !b.ok || !c.ok || !d.ok){
+            return { notFound: true }
+        }
+
+        ;[posts1, posts3, posts2, posts4] = await Promise.all([
+            a.json(),
+            b.json(),
+            c.json(),
+            d.json(),
         ])
+
     } else {
         // 左側
         if (rule1 === "1") {
+            const [a, b] = await Promise.all([
+                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`),
+                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`),
+            ])
+
+            if(!a.ok || !b.ok){
+                return { notFound: true }
+            }
+
             ;[posts1, posts3] = await Promise.all([
-                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/2/${year1}`).then(res => res.json()),
-                fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/3/${year1}`).then(res => res.json())
+                a.json(),
+                b.json(),
             ])
         } else {
-            posts1 = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`).then(r => r.json())
+            const a = await fetch(`http://laravel:8000/api/record/${user1}/${consoles1}/${rule1}/${year1}`)
+            if(!a.ok){
+                return { notFound: true }
+            }
+            posts1 = await a.json()
             // posts3 は空のまま（{}）
         }
 
         // 右側
         if (rule2 === "1") {
+            const [c, d] = await Promise.all([
+                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`),
+                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`),
+            ])
+
+            if(!c.ok || !d.ok){
+                return { notFound: true }
+            }
+
             ;[posts2, posts4] = await Promise.all([
-                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/2/${year2}`).then(res => res.json()),
-                fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/3/${year2}`).then(res => res.json())
+                c.json(),
+                d.json(),
             ])
         } else {
-            posts2 = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`).then(r => r.json())
+            const c = await fetch(`http://laravel:8000/api/record/${user2}/${consoles2}/${rule2}/${year2}`)
+            if(!c.ok){
+                return { notFound: true }
+            }
+            posts2 = await c.json()
             // posts4 は空のまま（{}）
         }
     }
+
     // 合計点と勝敗数を取得（格納する配列は順に左総合、右総合、左勝利、右勝利、引き分け、総合点差）
     let totals = [0, 0, 0, 0, 0, 0, 0], tempScore = [0, 0]
 
@@ -156,7 +187,6 @@ export async function getStaticProps({params}){
             user2, consoles2, rule2, year2,
             posts1, posts2, posts3, posts4, totals
         },
-        revalidate: 43200,
     }
 }
 // レンダラー本体（フロントサイド）
