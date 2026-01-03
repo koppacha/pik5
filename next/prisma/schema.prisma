@@ -38,17 +38,47 @@ model Session {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  role          String?
-  image         String?
-  userId        String?   @unique
-  email         String?   @unique
-  emailVerified DateTime?
-  password      String?   @db.VarChar(255)
-  accounts      Account[]
-  sessions      Session[]
-  date          DateTime  @default(now())
+  id                 String               @id @default(cuid())
+  name               String?
+  role               String?
+  image              String?
+  userId             String?              @unique
+  email              String?              @unique
+  emailHash          String?              @unique
+  emailVerified      DateTime?
+  password           String?              @db.VarChar(255)
+  accounts           Account[]
+  sessions           Session[]
+  date               DateTime             @default(now())
+  EmsilOtp           EmailOtp[]
+  PasswordResetToken PasswordResetToken[]
+}
+
+model EmailOtp {
+  id        String   @id @default(cuid())
+  userId    String
+  emailHash String   @unique
+  otpHash   String
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([emailHash])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model Log {

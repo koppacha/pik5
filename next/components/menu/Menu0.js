@@ -43,6 +43,9 @@ export default function Menu0(props){
                             }} component={Link} href="/auth/register" onClick={props.handleClose}>{t.g.register}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
+                            }} component={Link} href="/auth/config" onClick={props.handleClose}>{t.g.config}</StyledMenuItem>
+                            <StyledMenuItem style={{
+                                borderLeft:"solid 10px "+color,
                             }} component={Link} href="/total/1" onClick={props.handleClose}>{t.stage[1]}</StyledMenuItem>
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,

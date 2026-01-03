@@ -74,7 +74,7 @@ export default function Home({users, prev}) {
         } else {
             return {
                 name: session.user.name,
-                url: "/user/"+session.user.id
+                url: "/user/"+session.user.userId
             }
         }
     }

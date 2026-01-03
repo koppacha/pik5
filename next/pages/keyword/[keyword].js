@@ -106,6 +106,9 @@ export default function Keyword({payload, users, notfound, id}) {
             ? (parent?.keyword ?? `${children[0]?.tag}`)
             : parent?.keyword
 
+    // 子ページの重複表示を防ぐ（unique_id 単位）
+    const shownChildUniqueIds = new Set()
+
     return (
         <>
             <Head>
@@ -126,11 +129,15 @@ export default function Keyword({payload, users, notfound, id}) {
                 )}
 
                 {/* 親モードの時は子を列挙表示 */}
-                {mode === 'parent' && children.map(row => (
-                  canView(row)
+                {mode === 'parent' && children.map(row => {
+                  // unique_id が重複している場合は、2つ目以降を完全にスキップ（canView もしない）
+                  if (shownChildUniqueIds.has(row.unique_id)) return null
+                  shownChildUniqueIds.add(row.unique_id)
+
+                  return canView(row)
                     ? <KeywordContent key={row.unique_id} data={row} users={users} />
                     : <Box style={{margin:"10px"}} key={row.unique_id}>閲覧権限がありません</Box>
-                ))}
+                })}
 
                 {/* ユニーク表示モードなら親のみで終わり */}
             </Box>

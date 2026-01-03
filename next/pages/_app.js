@@ -68,8 +68,8 @@ export default function App(props) {
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
                     <ThemeProvider defaultTheme="dark">
-                        {pageLoading && <Loading/>}
                         <Layout>
+                            {pageLoading && <Loading/>}
                             <DevSupport ComponentPreviews={ComponentPreviews}
                                         useInitialHook={useInitial}
                             >

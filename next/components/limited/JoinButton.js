@@ -3,7 +3,7 @@ import Button from '@mui/material/Button'
 export default function JoinButton({ session }) {
     const handleJoin = async () => {
 
-        await fetch(`/api/server/join?userId=${session.user.id}`, {method: 'POST'})
+        await fetch(`/api/server/join?userId=${session.user.userId}`, {method: 'POST'})
         window.location.reload()
     }
 
