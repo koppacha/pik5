@@ -95,7 +95,7 @@ export default function Admin({data, users}){
     if(session) {
         // セッションユーザーの情報を取り出す
         role = Number(users.find(function (e) {
-            return e.userId === session.user.id
+            return e.userId === session.user.userId
         }).role)
     }
     if(Number(role) !== 10) {

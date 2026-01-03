@@ -9,7 +9,7 @@ const fetcher = url => fetch(url).then(res => res.json())
 export default function Hand() {
     const { data: session } = useSession();
     const { data: cards } = useSWR(
-        session ? `/api/server/hand?userId=${encodeURIComponent(session.user.id)}` : null,
+        session ? `/api/server/hand?userId=${encodeURIComponent(session.user.userId)}` : null,
         fetcher
     );
     if (!session) return null;

@@ -20,7 +20,7 @@ export default function PostButton({voteId}){
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    'user': session.user.id ?? "guest",
+                    'user': session.user.userId ?? "guest",
                     'vote': voteId,
                     'select': id,
                     'created_at': now,

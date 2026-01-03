@@ -68,7 +68,7 @@ export default function ModalIdeaPost({uniqueId, editOpen = false, handleEditClo
                     'yomi': "",
                     'content': content,
                     'first_editor':data?.first_editor || 'guest',
-                    'last_editor':session.user.id,
+                    'last_editor':session.user.userId,
                     'created_at': now,
                     'flag': 1,
                 })

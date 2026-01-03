@@ -118,7 +118,7 @@ export default function CardItem({ session, card, region, users }) {
         data: me,
         mutate: mutateMe
     } = useSWR(
-        session?.user?.id ? `/api/server/players/me?userId=${session.user.id}` : null,
+        session?.user?.id ? `/api/server/players/me?userId=${session.user.userId}` : null,
         fetcher,
         { refreshInterval: 10000, revalidateOnFocus: true }
     )

@@ -75,7 +75,7 @@ export default function RecordPage({users, data, history}){
     if(session) {
         // セッションユーザーの情報を取り出す
         role = Number(users.find(function (e) {
-            return e.userId === session.user.id
+            return e.userId === session.user.userId
         }).role)
     }
     // 投稿の経過時間を計算
