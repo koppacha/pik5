@@ -59,6 +59,7 @@ export const en = {
         realTime: "Real Time",
         evidenceImage: "Evidence Image",
         evidenceVideoUrl: "Evidence Video URL",
+        config: "Account Settings",
         week: {
             0: "Sun",
             1: "Mon",

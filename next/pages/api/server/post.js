@@ -23,7 +23,7 @@ export default async function handler(req, res){
         const form = new formidable.IncomingForm()
         await form.parse(req, async (error, fields, files) => {
             if (error) {
-                await prismaLogging(session.user.id, "PostsReqError", error)
+                await prismaLogging(session.user.userId, "PostsReqError", error)
                 res.status(500).json({err: error})
             } else {
                 try {
@@ -59,7 +59,7 @@ export default async function handler(req, res){
 
                 } catch (error) {
                     // エラー処理
-                    await prismaLogging(session.user.id, "PostsResError", error)
+                    await prismaLogging(session.user.userId, "PostsResError", error)
                     return res.status(500).json({error: error})
                 }
             }

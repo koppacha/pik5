@@ -10,16 +10,6 @@ module.exports = {
     defaultLocale: "ja",
     localeDetection: false
   },
-  async redirects() {
-    return [
-      {
-        source: '/ja/:path*',
-        destination: '/:path*',
-        permanent: true,
-        locale: false
-      }
-    ]
-  },
   images: {
     remotePatterns: [
       {

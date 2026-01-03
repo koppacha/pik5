@@ -14,7 +14,7 @@ export default async function handler(req, res){
     if(req.method === "GET"){
 
         const [uniqueId, userId] = req.query.delete
-        await prismaLogging(session.user.id, "delete", uniqueId)
+        await prismaLogging(session.user.userId, "delete", uniqueId)
 
         const del = await fetch(`http://laravel:8000/api/record/${uniqueId}`,
             {method: "DELETE"})

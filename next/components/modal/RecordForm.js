@@ -132,7 +132,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             formData.append('rule', rule)
             formData.append('region', region)
             formData.append('score', score)
-            formData.append('user_id', session.user.id)
+            formData.append('user_id', session.user.userId)
             formData.append('console', consoles)
             formData.append('difficulty', difficulty)
             if(img?.name) {
@@ -174,7 +174,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     },
                 })
                 // ユーザーページのキャッシュをクリア
-                const resUser = await fetch(`/api/revalidate?page=total&id=${session.user.id}`, {
+                const resUser = await fetch(`/api/revalidate?page=total&id=${session.user.userId}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`,

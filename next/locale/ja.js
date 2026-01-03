@@ -60,6 +60,7 @@ export const ja = {
         realTime: "リアル時間",
         evidenceImage: "証拠画像",
         evidenceVideoUrl: "証拠動画URL",
+        config: "アカウント設定",
         week: {
             0: "日",
             1: "月",

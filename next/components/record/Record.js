@@ -148,8 +148,8 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                             {// シリーズ別総合ランキングは星取表へのリンクを表示する
                                 (data.ranks && series < 100 && series > 9) &&
                                 <div style={{padding:"0 4px"}}>
-                                {(session && session.user.id !== data.user_id) &&
-                                    <Link href={`/compare/${session.user.id}/${consoles}/${series}/${year}/${data.user_id}/${consoles}/${series}/${year}`}>
+                                {(session && session.user.userId !== data.user_id) &&
+                                    <Link href={`/compare/${session.user.userId}/${consoles}/${series}/${year}/${data.user_id}/${consoles}/${series}/${year}`}>
                                         <Tooltip title="自分と比較"><FontAwesomeIcon icon={faPeopleArrows} style={{paddingRight:"4px"}} /></Tooltip>
                                     </Link>
                                 }

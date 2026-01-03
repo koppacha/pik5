@@ -30,6 +30,50 @@ function extractYouTubeId(urlStr) {
   return null
 }
 
+function extractTwitchVideoInfo(urlStr) {
+  try {
+    const u = new URL(urlStr)
+    const host = u.hostname.replace(/^www\./, '')
+    if (host !== 'twitch.tv' && host !== 'm.twitch.tv') return null
+
+    // e.g. https://www.twitch.tv/videos/2625545819?t=06h32m19s
+    const m = u.pathname.match(/^\/videos\/(\d+)/)
+    if (!m) return null
+
+    const id = m[1]
+    const t = u.searchParams.get('t')
+
+    // Twitch embed uses `time=` (same format as `t=` share links)
+    const time = t ? String(t) : null
+
+    return {id, time}
+  } catch (_) { /* ignore */ }
+  return null
+}
+
+function replaceTwitchUrlsWithEmbed(text, opts = {}) {
+  if (!text) return ''
+  const parent = opts.twitchParent || 'localhost'
+
+  // Matches: https://www.twitch.tv/videos/2625545819?t=06h32m19s
+  const urlRe = /(https?:\/\/(?:www\.)?(?:twitch\.tv)\/videos\/\d+(?:\?[^\s\)\]>"]+)??)(?=\s|$|\)|\]|>)/g
+
+  return text.replace(urlRe, (match) => {
+    const info = extractTwitchVideoInfo(match)
+    if (!info) return match
+
+    const params = new URLSearchParams()
+    params.set('video', info.id)
+    params.set('parent', parent)
+    params.set('autoplay', 'false')
+    if (info.time) params.set('time', info.time)
+
+    const src = `https://player.twitch.tv/?${params.toString()}`
+
+    return `\n<div class="twitch-embed"><iframe src="${src}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>\n`
+  })
+}
+
 function replaceYouTubeUrlsWithEmbed(text) {
   if (!text) return ''
   const urlRe = /(https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[\w\-?=&%#/.]+)(?=\s|$|\)|\]|>)/g
@@ -37,11 +81,11 @@ function replaceYouTubeUrlsWithEmbed(text) {
     const vid = extractYouTubeId(match)
     if (!vid) return match
     const src = `https://www.youtube-nocookie.com/embed/${vid}`
-    return `\n<div class="yt-embed"><iframe width="560" height="315" src="${src}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe></div>\n`
+    return `\n<div class="yt-embed"><iframe src="${src}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe></div>\n`
   })
 }
 
-function linkifyWikiLinks(text) {
+function linkifyWikiLinks(text, opts = {}) {
   if (!text) return ''
   // 1) ![画像ID] → 画像URLに展開（13桁16進 + 許可拡張子）
   const withImages = text.replace(/!\[([0-9a-fA-F]{13}\.(?:jpg|jpeg|png|gif|webp|avif))]/g, (m, imageId) => {
@@ -55,7 +99,10 @@ function linkifyWikiLinks(text) {
     return `[${label}](${href})`
   })
   // 3) YouTube URL（短縮/shorts/embed含む）→ 埋め込みiframe
-  return replaceYouTubeUrlsWithEmbed(withWiki)
+  const withYouTube = replaceYouTubeUrlsWithEmbed(withWiki)
+
+  // 4) Twitch videos URL → 埋め込みiframe
+  return replaceTwitchUrlsWithEmbed(withYouTube, opts)
 }
 
 export function KeywordContent({data, users}){
@@ -73,7 +120,11 @@ export function KeywordContent({data, users}){
     const [isClient, setIsClient] = useState(false)
     useEffect(() => setIsClient(true), [])
 
-    const mdContent = React.useMemo(() => linkifyWikiLinks(data.content), [data.content])
+    const twitchParent = isClient ? window.location.hostname : null
+    const mdContent = React.useMemo(
+      () => linkifyWikiLinks(data.content, {twitchParent}),
+      [data.content, twitchParent]
+    )
 
     // アンダーバーや下線をスペースに置換する関数
     const customReplace = str => str?.replace(/＿＿|__|＿|_/g, m => ({'__': '_', '＿＿': '＿', '_': ' ', '＿': '　'}[m]))
@@ -82,6 +133,34 @@ export function KeywordContent({data, users}){
 
     return (
         <>
+            <style jsx global>{`
+              .markdown-content .yt-embed,
+              .markdown-content .twitch-embed {
+                position: relative;
+                width: 100%;
+                max-width: 800px;
+                margin: 12px 0;
+                aspect-ratio: 16 / 9;
+              }
+
+              .markdown-content .yt-embed iframe,
+              .markdown-content .twitch-embed iframe {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+              }
+
+              /* Fallback for older browsers */
+              @supports not (aspect-ratio: 16 / 9) {
+                .markdown-content .yt-embed,
+                .markdown-content .twitch-embed {
+                  height: 0;
+                  padding-top: 56.25%;
+                }
+              }
+            `}</style>
             <Typography variant="" style={{fontSize:"0.8em",color:"#777"}}>{data.yomi}</Typography><br/>
             <Typography variant="" className="mini-title">
                 <Link href={`/keyword/${data.keyword}`}>{displayKeyword}</Link>
