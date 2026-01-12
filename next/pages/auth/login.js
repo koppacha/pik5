@@ -94,7 +94,7 @@ export default function Login(){
                 </Box>
                 <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
                     <AuthWindow item>
-                        <Typography variant="strong">{t.g.login}</Typography><br/>
+                        <Typography variant="strong" style={{margin:"10px",fontSize:"2em",lineHeight:"2em"}}>{t.g.login}</Typography><br/>
                         <Box className="form-helper-text">
                             <TextField
                                 {...register('userId')}
@@ -115,20 +115,17 @@ export default function Login(){
                                 helperText={errors.password?.message}
                             /><br/>
                             {loginError &&
-                                <Alert style={{marginTop:"2px"}} variant="outlined" severity="error">ユーザー名またはパスワードが間違っています。</Alert>
+                                <Alert style={{marginTop:"2px"}} variant="outlined" severity="error">{t.g.incorrect}</Alert>
                             }
                             <AuthButton style={{marginTop:"1em"}} onClick={handleSubmit(onSubmit)}>{t.g.login}</AuthButton>
                         </Box>
                         <Box style={{marginTop:"30px",width:"100%"}}>
                             <List>
-                                <ListItem><Link href="/">・トップページへ</Link></ListItem>
-                                <ListItem><Link href="/auth/register">・未登録の方はこちら</Link></ListItem>
-                                {/*<ListItem><Link href="/auth/discord">・Discordでログイン</Link></ListItem>*/}
-                                <ListItem><Link href="/keyword/moving">・旧ピクチャレ大会からの引き継ぎはこちら</Link></ListItem>
+                                <ListItem>・<Link href="/">{t.g.top}</Link></ListItem>
+                                <ListItem>・<Link href="/auth/register">{t.g.unregistered}</Link></ListItem>
+                                <ListItem>・<Link href="/auth/reset">{t.g.passwordReset}</Link></ListItem>
+                                <ListItem>・<Link href="/keyword/moving">{t.g.transferFromOldSite}</Link></ListItem>
                             </List>
-                        </Box>
-                        <Box>
-                            ＊2023/07/21〜2023/07/29の間に登録した方は、お手数ですが再登録をお願いします。
                         </Box>
                     </AuthWindow>
                 </Grid>

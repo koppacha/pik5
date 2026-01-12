@@ -58,8 +58,8 @@ export default async function handler(req, res) {
 
     await sendMail({
         to: email,
-        subject: 'メールアドレス認証コード（10分有効）',
-        text: `認証コード: ${otp}\n\nこのコードは10分で失効します。\n心当たりがない場合はこのメールを破棄してください。`,
+        subject: 'メールアドレス認証コード / Email Address Verification Code',
+        text: `認証コード: ${otp}\n\nこのコードは10分で失効します。\n心当たりがない場合はこのメールを破棄してください。\n\nPlease enter the 6-digit code to verify your email address. If you did not request this email, please ignore it.`,
     })
 
     return res.status(200).json({ ok: true })

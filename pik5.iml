@@ -160,6 +160,34 @@
       <excludeFolder url="file://$MODULE_DIR$/laravel/vendor" />
       <excludeFolder url="file://$MODULE_DIR$/mysql" />
       <excludeFolder url="file://$MODULE_DIR$/next/prisma/data" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/httpRequests" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/database/seeders/archive" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/app/public/keyword" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/app/public/public" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/09" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/1d" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/29" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/50" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/55" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/59" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/65" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/6f" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/7e" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/9d" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/c1" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/cb" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/e2" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/e7" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/f2" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/f3" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/f4" />
+      <excludeFolder url="file://$MODULE_DIR$/laravel/storage/framework/cache/data/f8" />
+      <excludeFolder url="file://$MODULE_DIR$/log" />
+      <excludeFolder url="file://$MODULE_DIR$/redis" />
+      <excludeFolder url="file://$MODULE_DIR$/venv/bin" />
+      <excludeFolder url="file://$MODULE_DIR$/venv/include" />
+      <excludeFolder url="file://$MODULE_DIR$/venv/lib" />
+      <excludeFolder url="file://$MODULE_DIR$/wiki" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Python 3.13 (pik5) interpreter library" level="application" />

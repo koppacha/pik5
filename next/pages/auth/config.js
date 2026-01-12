@@ -1,22 +1,49 @@
-import { useState, useMemo } from 'react'
-import { useSession, signOut } from 'next-auth/react'
+import { useEffect, useMemo, useState } from 'react'
+import { signOut, useSession } from 'next-auth/react'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '../api/auth/[...nextauth]'
 
-// 既存の NowLoading を使う前提（パスは実プロジェクトに合わせてください）
-import NowLoading from '../../components/NowLoading'
+import {
+    Alert,
+    Backdrop,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    Divider,
+    Paper,
+    Stack,
+    TextField,
+    Typography,
+} from '@mui/material'
+import {maskEmailAddress, useLocale} from "../../lib/pik5";
+
+function isValidEmailSimple(rawEmail) {
+    const email = String(rawEmail || '').trim()
+    // 最低限: aaa@bbb.ccc 形式（空白なし、@ が1つ、ドメインに . がある）
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
 
 export default function AuthConfigPage() {
+
+    const {t} = useLocale()
+
     const { data: session, status, update } = useSession()
 
     const [currentPassword, setCurrentPassword] = useState('')
-    const [name, setName] = useState(session?.user?.name ?? '')
+    const [name, setName] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [newPassword2, setNewPassword2] = useState('')
 
     const [submitting, setSubmitting] = useState(false)
     const [message, setMessage] = useState(null)
     const [error, setError] = useState(null)
+
+    useEffect(() => {
+        if (typeof session?.user?.name === 'string') {
+            setName(session.user.name)
+        }
+    }, [session?.user?.name])
 
     const [email, setEmail] = useState('')
     const [otpSent, setOtpSent] = useState(false)
@@ -25,12 +52,30 @@ export default function AuthConfigPage() {
     const [emailMsg, setEmailMsg] = useState(null)
     const [emailErr, setEmailErr] = useState(null)
 
+    // 「もう一度送信」は、少なくとも一度「送信」を押した後に活性化する
+    const [otpSendAttempted, setOtpSendAttempted] = useState(false)
+
+    // 認証が成功した直後にUIへ反映するために保持（ページ再読み込み後は session 側の値が必要）
+    const [verifiedEmail, setVerifiedEmail] = useState(null)
+
     const canSubmit = useMemo(() => {
         if (!currentPassword) return false
         const wantName = typeof name === 'string' && name.trim().length > 0 && name.trim() !== (session?.user?.name ?? '')
         const wantPw = newPassword.length > 0 || newPassword2.length > 0
         return wantName || wantPw
     }, [currentPassword, name, session?.user?.name, newPassword.length, newPassword2.length])
+
+    const maskedEmail = useMemo(() => {
+        const src = verifiedEmail ?? session?.user?.email
+        return src ? maskEmailAddress(src) : null
+    }, [verifiedEmail, session?.user?.email])
+
+    const trimmedEmail = useMemo(() => String(email || '').trim(), [email])
+
+    const emailValid = useMemo(() => {
+        if (!trimmedEmail) return false
+        return isValidEmailSimple(trimmedEmail)
+    }, [trimmedEmail])
 
     const onSubmit = async (e) => {
         e.preventDefault()
@@ -106,14 +151,22 @@ export default function AuthConfigPage() {
         }
     }
     const requestOtp = async () => {
+        // 押下済みとして扱う（成功/失敗に関わらず）
+        setOtpSendAttempted(true)
+
+        if (!emailValid) {
+            setEmailErr('メールアドレスの形式が正しくありません')
+            return
+        }
+
         setEmailBusy(true)
         setEmailMsg(null)
         setEmailErr(null)
         try {
             const res = await fetch('/api/auth/email/request-otp', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: trimmedEmail })
             })
             const data = await res.json().catch(() => null)
             if (!res.ok || !data?.ok) {
@@ -136,7 +189,7 @@ export default function AuthConfigPage() {
             const res = await fetch('/api/auth/email/verify-otp', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, otp })
+                body: JSON.stringify({ email: trimmedEmail, otp })
             })
             const data = await res.json().catch(() => null)
             if (!res.ok || !data?.ok) {
@@ -144,6 +197,7 @@ export default function AuthConfigPage() {
                 return
             }
             setEmailMsg('メールアドレスを登録しました')
+            setVerifiedEmail(trimmedEmail)
             setOtpSent(false)
             setOtp('')
         } catch (e) {
@@ -153,102 +207,217 @@ export default function AuthConfigPage() {
         }
     }
 
-    if (status === 'loading') return <NowLoading />
+    if (status === 'loading') {
+        return (
+            <Container maxWidth="sm" sx={{ py: 6 }}>
+                <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 240 }}>
+                    <CircularProgress />
+                </Stack>
+            </Container>
+        )
+    }
 
     return (
-        <div style={{ maxWidth: 640, margin: '0 auto', padding: 16 }}>
-            <h1>アカウント設定</h1>
+        <Container maxWidth="sm" sx={{ py: 4 }}>
+            <Backdrop
+                open={Boolean(submitting || emailBusy)}
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+            >
+                <CircularProgress color="inherit" />
+            </Backdrop>
 
-            <div style={{ marginBottom: 16 }}>
-                <div>ログインID: <b>{session?.user?.userId}</b></div>
-                <div>スクリーンネーム: <b>{session?.user?.name}</b></div>
-            </div>
+            <Stack spacing={3}>
+                <Typography variant="h4" component="h1">
+                    {t.g.config}
+                </Typography>
 
-            {submitting && <NowLoading />}
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Stack spacing={0.5}>
+                        <Typography variant="body2" color="text.secondary">
+                            {t.g.userId}
+                        </Typography>
+                        <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+                            {session?.user?.userId}
+                        </Typography>
 
-            {!submitting && (
-                <form onSubmit={onSubmit}>
-                    {error && <div style={{ color: 'crimson', marginBottom: 12 }}>{error}</div>}
-                    {message && <div style={{ color: 'seagreen', marginBottom: 12 }}>{message}</div>}
+                        <Divider sx={{ my: 1.5 }} />
 
-                    <div style={{ marginBottom: 12 }}>
-                        <label>現行パスワード（必須）</label><br />
-                        <input
-                            type="password"
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            style={{ width: '100%' }}
-                            autoComplete="current-password"
+                        <Typography variant="body2" color="text.secondary">
+                            {t.g.userName}
+                        </Typography>
+                        <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+                            {session?.user?.name}
+                        </Typography>
+
+                        <Divider sx={{ my: 1.5 }} />
+
+                        <Typography variant="body2" color="text.secondary">
+                            {t.g.email}
+                        </Typography>
+                        <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
+                            {maskedEmail ?? '登録なし'}
+                        </Typography>
+                    </Stack>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        {`${t.g.userName} / ${t.g.password} ${t.g.change}`}
+                    </Typography>
+
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+                    {message && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {message}
+                        </Alert>
+                    )}
+
+                    <Box component="form" onSubmit={onSubmit}>
+                        <Stack spacing={2}>
+                            <TextField
+                                label={t.g.currentPassword}
+                                type="password"
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                fullWidth
+                                autoComplete="current-password"
+                            />
+
+                            <TextField
+                                label={t.g.newUserName}
+                                type="text"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                                fullWidth
+                            />
+
+                            <TextField
+                                label={t.g.newPassword}
+                                type="password"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                fullWidth
+                                autoComplete="new-password"
+                            />
+
+                            <TextField
+                                label={t.g.confirmPassword}
+                                type="password"
+                                value={newPassword2}
+                                onChange={(e) => setNewPassword2(e.target.value)}
+                                fullWidth
+                                autoComplete="new-password"
+                            />
+
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    size="large"
+                                    disabled={!canSubmit}
+                                    fullWidth
+                                >
+                                    {t.g.change}
+                                </Button>
+                                <Button
+                                    type="button"
+                                    variant="outlined"
+                                    size="large"
+                                    onClick={() => signOut({ callbackUrl: '/auth/login' })}
+                                    fullWidth
+                                >
+                                    {t.g.logout}
+                                </Button>
+                            </Stack>
+
+                            <Typography variant="caption" color="text.secondary">
+                                ※ userId（ログインID）は仕様上変更できません
+                            </Typography>
+                        </Stack>
+                    </Box>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        {t.g.registerEmail}
+                    </Typography>
+
+                    {emailErr && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {emailErr}
+                        </Alert>
+                    )}
+                    {emailMsg && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {emailMsg}
+                        </Alert>
+                    )}
+
+                    <Stack spacing={2}>
+                        <TextField
+                            label={t.g.email}
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            fullWidth
+                            autoComplete="email"
+                            error={Boolean(trimmedEmail) && !emailValid}
+                            helperText={Boolean(trimmedEmail) && !emailValid ? '例: aaa@bbb.ccc の形式で入力してください' : ' '}
                         />
-                    </div>
 
-                    <div style={{ marginBottom: 12 }}>
-                        <label>新しいスクリーンネーム</label><br />
-                        <input
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            style={{ width: '100%' }}
-                        />
-                    </div>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                            <Button
+                                type="button"
+                                onClick={requestOtp}
+                                disabled={emailBusy || !emailValid}
+                                variant="contained"
+                                size="large"
+                                fullWidth
+                            >
+                                {t.g.submit}
+                            </Button>
 
-                    <div style={{ marginBottom: 12 }}>
-                        <label>新しいパスワード</label><br />
-                        <input
-                            type="password"
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            style={{ width: '100%' }}
-                            autoComplete="new-password"
-                        />
-                    </div>
+                            <Button
+                                type="button"
+                                onClick={requestOtp}
+                                disabled={emailBusy || !otpSendAttempted || !emailValid}
+                                variant="outlined"
+                                size="large"
+                                fullWidth
+                            >
+                                {t.g.resend}
+                            </Button>
+                        </Stack>
 
-                    <div style={{ marginBottom: 12 }}>
-                        <label>新しいパスワード（確認）</label><br />
-                        <input
-                            type="password"
-                            value={newPassword2}
-                            onChange={(e) => setNewPassword2(e.target.value)}
-                            style={{ width: '100%' }}
-                            autoComplete="new-password"
-                        />
-                    </div>
+                        {otpSent && (
+                            <Stack spacing={2}>
+                                <TextField
+                                    label="6桁コード"
+                                    value={otp}
+                                    onChange={(e) => setOtp(e.target.value)}
+                                    fullWidth
+                                    inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                                />
 
-                    <button type="submit" disabled={!canSubmit}>
-                        変更
-                    </button>
-
-                    <div style={{ marginTop: 12, fontSize: 12, opacity: 0.8 }}>
-                        ※ userId（ログインID）は仕様上変更できません
-                    </div>
-                </form>
-            )}
-            <h2>メールアドレス登録（パスワードリセット用）</h2>
-            {emailBusy && <NowLoading />}
-
-            {emailErr && <div style={{color:'crimson'}}>{emailErr}</div>}
-            {emailMsg && <div style={{color:'seagreen'}}>{emailMsg}</div>}
-
-            <input value={email} onChange={(e)=>setEmail(e.target.value)} placeholder="email" />
-
-            <button type="button" onClick={requestOtp} disabled={emailBusy || !email}>
-                送信
-            </button>
-
-            {otpSent && (
-                <>
-                    <div style={{marginTop: 8}}>
-                        <input value={otp} onChange={(e)=>setOtp(e.target.value)} placeholder="6桁コード" />
-                        <button type="button" onClick={verifyOtp} disabled={emailBusy || otp.length !== 6}>
-                            認証
-                        </button>
-                        <button type="button" onClick={requestOtp} disabled={emailBusy}>
-                            もう一度送信
-                        </button>
-                    </div>
-                </>
-            )}
-        </div>
+                                <Button
+                                    type="button"
+                                    onClick={verifyOtp}
+                                    disabled={emailBusy || otp.length !== 6}
+                                    variant="contained"
+                                    size="large"
+                                    fullWidth
+                                >
+                                    {t.g.authentication}
+                                </Button>
+                            </Stack>
+                        )}
+                    </Stack>
+                </Paper>
+            </Stack>
+        </Container>
     )
 }
 

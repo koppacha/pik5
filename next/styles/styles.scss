@@ -963,3 +963,45 @@ body {
     background-color: #c21ec7;
     color: #fff;
 }
+.embed {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    position: relative;
+}
+
+.embed iframe,
+.embed__btn {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.embed__btn {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    position: relative;
+    cursor: pointer;
+}
+
+.embed__thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.embed__play {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 64px;
+    height: 64px;
+    /* 必要ならアイコン背景などを追加 */
+}
+
+.embed--twitch .embed__meta {
+    padding: 12px;
+    box-sizing: border-box;
+    border: 1px solid #ffffff;
+}

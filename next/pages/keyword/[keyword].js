@@ -1,6 +1,5 @@
 import Button from "@mui/material/Button";
 import {Box, Typography} from "@mui/material";
-import ReactMarkdown from "react-markdown";
 import {KeywordContent} from "../../components/modal/KeywordContent";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
