@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Time + 8 Boxes</title>
+    <style>
+        :root {
+            --bg: #000;
+            --card: #151515;
+            --text: #fff;
+            --rule: rgba(255, 255, 255, 0.22);
+            --gap: 12px;
+            --radius: 14px;
+            --pad: 10px;
+        }
+
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+        }
+
+        .wrap {
+            width: 100%;
+            padding: 12px;
+        }
+
+        /* 9個を等間隔で横幅いっぱいに */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(9, minmax(0, 1fr));
+            gap: var(--gap);
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: var(--pad);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        .name {
+            font-weight: 700;
+            font-size: 14px;
+            line-height: 1.2;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--rule);
+            margin-bottom: 8px;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .row {
+            font-size: 13px;
+            line-height: 1.35;
+            margin: 4px 0;
+            opacity: 0.95;
+            word-break: break-word;
+        }
+
+        .label {
+            opacity: 0.8;
+            margin-right: 6px;
+        }
+
+        /* 時刻ボックスの表示を少し強調（任意） */
+        .clock-time {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            margin: 6px 0 2px;
+        }
+        .clock-date {
+            opacity: 0.85;
+            margin-top: 2px;
+        }
+
+        /* 画面が狭い場合は折り返し（任意：崩れにくくする） */
+        @media (max-width: 1300px) {
+            .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        @media (max-width: 700px) {
+            .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="grid">
+        <!-- 1個目：現在時刻（リアルタイム） -->
+        <div class="card" aria-live="polite">
+            <div class="name">現在時刻</div>
+            <div class="clock-time" id="clockTime">--:--:--</div>
+            <div class="row clock-date" id="clockDate">----/--/-- (---)</div>
+        </div>
+
+        <!-- 2〜9個目：仮のスコア -->
+        <div class="card">
+            <div class="name">Aki</div>
+            <div class="row"><span class="label">目標点数</span>120</div>
+            <div class="row"><span class="label">今日の自己べ</span>88</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Haru</div>
+            <div class="row"><span class="label">目標点数</span>150</div>
+            <div class="row"><span class="label">今日の自己べ</span>102</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Sora</div>
+            <div class="row"><span class="label">目標点数</span>90</div>
+            <div class="row"><span class="label">今日の自己べ</span>74</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Yui</div>
+            <div class="row"><span class="label">目標点数</span>200</div>
+            <div class="row"><span class="label">今日の自己べ</span>141</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Ren</div>
+            <div class="row"><span class="label">目標点数</span>110</div>
+            <div class="row"><span class="label">今日の自己べ</span>95</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Mio</div>
+            <div class="row"><span class="label">目標点数</span>160</div>
+            <div class="row"><span class="label">今日の自己べ</span>123</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Kenta</div>
+            <div class="row"><span class="label">目標点数</span>140</div>
+            <div class="row"><span class="label">今日の自己べ</span>99</div>
+        </div>
+
+        <div class="card">
+            <div class="name">Nao</div>
+            <div class="row"><span class="label">目標点数</span>175</div>
+            <div class="row"><span class="label">今日の自己べ</span>130</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 現在時刻をリアルタイム更新（1秒ごと）
+    const pad2 = n => String(n).padStart(2, "0")
+    const weekdays = ["日", "月", "火", "水", "木", "金", "土"]
+
+    function tick() {
+        const now = new Date()
+        const hh = pad2(now.getHours())
+        const mm = pad2(now.getMinutes())
+        const ss = pad2(now.getSeconds())
+
+        const y = now.getFullYear()
+        const mo = pad2(now.getMonth() + 1)
+        const d = pad2(now.getDate())
+        const wd = weekdays[now.getDay()]
+
+        document.getElementById("clockTime").textContent = `${hh}:${mm}:${ss}`
+        document.getElementById("clockDate").textContent = `${y}/${mo}/${d} (${wd})`
+    }
+
+    tick()
+    setInterval(tick, 1000)
+</script>
+</body>
+</html>
