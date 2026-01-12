@@ -4,6 +4,8 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
 import bcrypt from "bcrypt"
+import { decryptEmail } from '../../../lib/emailCrypto'
+import {maskEmailAddress} from "../../../lib/pik5";
 
 export const authOptions = {
     adapter: PrismaAdapter(prisma),
@@ -120,6 +122,14 @@ export const authOptions = {
                 if(token.role) session.user.role = token.role
                 if(token.name) session.user.name = token.name
 
+                // メール認証関連情報
+                session.user.hasVerifiedEmail = Boolean(token.hasVerifiedEmail)
+                session.user.emailMasked = token.emailMasked ?? null
+                session.user.email = token.emailMasked ?? null
+
+                // 互換: session.email を参照する実装があればこちらも埋める
+                session.email = token.emailMasked ?? null
+
                 // 画像は未使用
                 session.user.image = null
             }
@@ -132,6 +142,17 @@ export const authOptions = {
                 token.userId = user.userId
                 token.name = user.name
                 token.role = user.role
+
+                // サインイン直後にもメール情報を載せる（次リクエスト待ちにしない）
+                if (user.emailVerified && user.email) {
+                    token.hasVerifiedEmail = true
+                    const plain = decryptEmail(user.email)
+                    token.emailMasked = plain ? maskEmailAddress(plain) : null
+                } else {
+                    token.hasVerifiedEmail = false
+                    token.emailMasked = null
+                }
+
                 return token
             }
 
@@ -151,8 +172,17 @@ export const authOptions = {
                 if(needsDbHydrate){
                     const dbUser = await prisma.user.findFirst({
                         where: { userId: token.userId },
-                        select: { id: true, userId: true, name: true, role: true },
+                        select: { id: true, userId: true, name: true, role: true, email: true, emailVerified: true },
                     })
+
+                    if (dbUser?.emailVerified && dbUser?.email) {
+                        token.hasVerifiedEmail = true
+                        const plain = decryptEmail(dbUser.email)
+                        token.emailMasked = plain ? maskEmailAddress(plain) : null
+                    } else {
+                        token.hasVerifiedEmail = false
+                        token.emailMasked = null
+                    }
 
                     if(dbUser){
                         token.id = dbUser.id
@@ -163,6 +193,42 @@ export const authOptions = {
                 }
             } catch (e) {
                 // 失敗しても既存セッションを落とさない
+            }
+
+            // 通常トークンでもメール情報が未設定なら補完する（DB参照は必要時のみ）
+            if (token.hasVerifiedEmail === undefined) {
+                try {
+                    let u = null
+
+                    // まずはDB主キーで検索（token.id は基本的にDB主キー）
+                    if (token.id) {
+                        u = await prisma.user.findUnique({
+                            where: { id: token.id },
+                            select: { email: true, emailVerified: true },
+                        })
+                    }
+
+                    // 取れなければログインIDで検索
+                    if (!u && token.userId) {
+                        u = await prisma.user.findFirst({
+                            where: { userId: token.userId },
+                            select: { email: true, emailVerified: true },
+                        })
+                    }
+
+                    if (u?.emailVerified && u?.email) {
+                        token.hasVerifiedEmail = true
+                        const plain = decryptEmail(u.email)
+                        token.emailMasked = plain ? maskEmailAddress(plain) : null
+                    } else {
+                        token.hasVerifiedEmail = false
+                        token.emailMasked = null
+                    }
+                } catch (e) {
+                    // メール情報の補完に失敗してもログインは継続させる
+                    token.hasVerifiedEmail = false
+                    token.emailMasked = null
+                }
             }
 
             // useSession().update() などで session 更新が走った場合に token も追随させる

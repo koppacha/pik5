@@ -9,8 +9,7 @@ export function normalizeEmail(email) {
 
 export function hashEmail(email) {
     const norm = normalizeEmail(email)
-    const h = crypto.createHmac('sha256', hmacKey).update(norm).digest('hex')
-    return h
+    return crypto.createHmac('sha256', hmacKey).update(norm).digest('hex')
 }
 
 export function encryptEmail(email) {
@@ -36,6 +35,5 @@ export function decryptEmail(enc) {
     const decipher = crypto.createDecipheriv('aes-256-gcm', encKey, iv)
     decipher.setAuthTag(tag)
 
-    const pt = Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8')
-    return pt
+    return Buffer.concat([decipher.update(ct), decipher.final()]).toString('utf8')
 }

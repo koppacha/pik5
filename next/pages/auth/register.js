@@ -96,12 +96,12 @@ export default function Register() {
                 </Box>
                 <Grid container justifyContent="center" alignItems="center" style={{height:"100vh"}}>
                     <AuthWindow className="auth-window" item>
-                        <Typography variant="strong" style={{margin:"10px",fontSize:"2em",lineHeight:"2em"}}>ピクチャレ大会へようこそ</Typography><br/>
+                        <Typography variant="strong" style={{margin:"10px",fontSize:"2em",lineHeight:"2em"}}>{t.g.welcome}</Typography><br/>
                         <Box className="form-helper-text">
                             <TextField
                                 {...register('name')}
                                 id="name"
-                                label="ユーザー名"
+                                label={t.g.userName}
                                 type="text"
                                 variant="standard"
                                 error={'name' in errors}
@@ -110,7 +110,7 @@ export default function Register() {
                             <TextField
                                 {...register('userId')}
                                 id="userId"
-                                label="ユーザーID"
+                                label={t.g.userId}
                                 type="text"
                                 variant="standard"
                                 error={'userId' in errors}
@@ -119,7 +119,7 @@ export default function Register() {
                             <TextField
                                 {...register('password')}
                                 id="password"
-                                label="パスワード"
+                                label={t.g.password}
                                 type="password"
                                 variant="standard"
                                 error={'password' in errors}
@@ -131,16 +131,16 @@ export default function Register() {
                             {message && <>＊{message}</>}
                         </Box>
                         <Box style={{border:"1px solid #fff",borderRadius:"8px",padding:"10px",width:"100%"}}>
-                            ユーザー名はランキングに表示される名前です。今後変更できるようになる予定です。<br/>
-                            ユーザーIDはログインとユーザーページのアクセスに必要なIDです。基本的に変更はできません。<br/>
-                            登録することで利用規約に同意したものとみなします。
+                            {t.g.register1}<br/>
+                            {t.g.register2}<br/>
+                            {t.g.register3}
                         </Box>
                         <Box style={{width:"100%"}}>
                             <List>
-                                <ListItem><Link href="/">・トップページへ</Link></ListItem>
-                                <ListItem><Link href="/auth/login">・登録済みの方はこちら</Link></ListItem>
-                                <ListItem><Link href="/keyword/moving">・旧ピクチャレ大会からの引き継ぎはこちら</Link></ListItem>
-                                <ListItem><Link href="/keyword/rules">・利用規約</Link></ListItem>
+                                <ListItem><Link href="/">{t.g.top}</Link></ListItem>
+                                <ListItem><Link href="/auth/login">{t.g.registered}</Link></ListItem>
+                                <ListItem><Link href="/keyword/moving">{t.g.transferFromOldSite}</Link></ListItem>
+                                <ListItem><Link href="/keyword/rules">{t.g.ru}</Link></ListItem>
                             </List>
                         </Box>
 

@@ -220,3 +220,20 @@ export const formattedDate = () => {
     const parts = formatter.formatToParts(now);
     return `${parts.find(p => p.type === 'hour').value}:${parts.find(p => p.type === 'minute').value}:${parts.find(p => p.type === 'second').value}`;
 }
+// メールアドレスのマスキング
+export function maskEmailAddress(rawEmail) {
+    const email = String(rawEmail || '').trim()
+    const at = email.indexOf('@')
+    if (at <= 0) return null
+
+    const local = email.slice(0, at)
+    const domainFull = email.slice(at + 1)
+
+    const localKeep = local.slice(0, Math.min(3, local.length))
+    const maskedLocal = localKeep + '******'
+
+    const domainKeep = domainFull.slice(0, Math.min(2, domainFull.length))
+    const maskedDomain = domainKeep + '****'
+
+    return `${maskedLocal}@${maskedDomain}`
+}

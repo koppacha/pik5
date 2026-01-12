@@ -1,9 +1,26 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/router'
 
+import Alert from '@mui/material/Alert'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import CircularProgress from '@mui/material/CircularProgress'
+import Container from '@mui/material/Container'
+import Paper from '@mui/material/Paper'
+import Stack from '@mui/material/Stack'
+import TextField from '@mui/material/TextField'
+import Typography from '@mui/material/Typography'
+import {useLocale} from "../../../lib/pik5";
+
 export default function ResetTokenPage() {
+
+    const {t} = useLocale()
+
     const router = useRouter()
-    const token = router.query.token
+    const token = useMemo(() => {
+        const t = router.query.token
+        return Array.isArray(t) ? t[0] : t
+    }, [router.query.token])
 
     const [valid, setValid] = useState(null)
     const [busy, setBusy] = useState(false)
@@ -27,8 +44,8 @@ export default function ResetTokenPage() {
     const onSubmit = async (e) => {
         e.preventDefault()
         setErr(null)
+        if (pw.length < 8) return setErr('パスワードは8文字以上にしてください')
         if (pw !== pw2) return setErr('確認用パスワードが一致しません')
-        if (pw.length < 8) return setErr('8文字以上にしてください')
 
         setBusy(true)
         try {
@@ -48,18 +65,107 @@ export default function ResetTokenPage() {
         }
     }
 
-    if (valid === null) return <div style={{padding:16}}>確認中...</div>
-    if (!valid) return <div style={{padding:16}}>リンクが無効か期限切れです</div>
+    if (valid === null) {
+        return (
+            <Container maxWidth="sm" sx={{ py: 6 }}>
+                <Paper elevation={2} sx={{ p: 3 }}>
+                    <Stack spacing={2} alignItems="center">
+                        <CircularProgress />
+                        <Typography variant="body1">リンクを確認しています…</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            しばらくお待ちください。
+                        </Typography>
+                    </Stack>
+                </Paper>
+            </Container>
+        )
+    }
+
+    if (!valid) {
+        return (
+            <Container maxWidth="sm" sx={{ py: 6 }}>
+                <Paper elevation={2} sx={{ p: 3 }}>
+                    <Stack spacing={2}>
+                        <Typography variant="h5" component="h1">リンクが無効です</Typography>
+                        <Alert severity="error">
+                            パスワードリセットのリンクが無効、または期限切れの可能性があります。
+                        </Alert>
+                        <Typography variant="body2" color="text.secondary">
+                            もう一度、パスワードリセットをやり直してください。
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <Button variant="outlined" onClick={() => router.push('/auth/login')}>{t.g.login}</Button>
+                            <Button variant="contained" onClick={() => router.push('/auth/reset')}>{t.g.passwordReset}</Button>
+                        </Box>
+                    </Stack>
+                </Paper>
+            </Container>
+        )
+    }
 
     return (
-        <div style={{maxWidth: 520, margin: '0 auto', padding: 16}}>
-            <h1>新しいパスワード設定</h1>
-            {err && <div style={{color:'crimson'}}>{err}</div>}
-            <form onSubmit={onSubmit}>
-                <input type="password" value={pw} onChange={(e)=>setPw(e.target.value)} placeholder="new password" />
-                <input type="password" value={pw2} onChange={(e)=>setPw2(e.target.value)} placeholder="confirm" />
-                <button type="submit" disabled={busy}>送信</button>
-            </form>
-        </div>
+        <Container maxWidth="sm" sx={{ py: 6 }}>
+            <Paper elevation={2} sx={{ p: 3 }}>
+                <Stack spacing={2.5}>
+                    <Box>
+                        <Typography variant="h5" component="h1" gutterBottom>
+                            {t.g.newPassword}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            8文字以上の新しいパスワードを入力してください。
+                        </Typography>
+                    </Box>
+
+                    {err && <Alert severity="error">{err}</Alert>}
+
+                    <Box component="form" onSubmit={onSubmit} noValidate>
+                        <Stack spacing={2}>
+                            <TextField
+                                label={t.g.newPassword}
+                                type="password"
+                                value={pw}
+                                onChange={(e) => setPw(e.target.value)}
+                                fullWidth
+                                autoComplete="new-password"
+                                disabled={busy}
+                                helperText="8文字以上"
+                            />
+                            <TextField
+                                label={t.g.confirmPassword}
+                                type="password"
+                                value={pw2}
+                                onChange={(e) => setPw2(e.target.value)}
+                                fullWidth
+                                autoComplete="new-password"
+                                disabled={busy}
+                            />
+
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', alignItems: 'center' }}>
+                                <Button
+                                    type="button"
+                                    variant="text"
+                                    onClick={() => router.push('/auth/login')}
+                                    disabled={busy}
+                                >
+                                    {t.g.cancel}
+                                </Button>
+                                <Button
+                                    type="submit"
+                                    variant="contained"
+                                    disabled={busy}
+                                    startIcon={busy ? <CircularProgress size={18} /> : null}
+                                >
+                                    {busy ? '送信中…' : '送信'}
+                                </Button>
+                            </Box>
+                        </Stack>
+                    </Box>
+
+                    <Alert severity="info" sx={{ mt: 1 }}>
+                        このページは一度のみ有効な場合があります。うまくいかない場合は、リンクを再発行してください。
+                    </Alert>
+                </Stack>
+            </Paper>
+        </Container>
     )
 }
