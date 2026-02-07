@@ -99,7 +99,7 @@ $ git config user.name "(ユーザー名)"
 $ git config user.email "(公開しても構わないメールアドレス)"
 ```
 ---
-## 開発環境のURL一覧
+## URL
 * フロントエンド画面 http://localhost:3005
 * バックエンド（API） http://localhost:8000
 ---
@@ -205,7 +205,7 @@ sudo ufw allow 3005 # ←フロントエンドのポート
 vi /etc/nginx/sites-available/pik5.conf
 ```
 
-nginx設定ファイル（certbotが勝手に書き換えるので最小限で良い）
+nginx設定ファイル（Certbotが勝手に書き換えるので最小限で良い）
 ```text
 server {
     listen 80;

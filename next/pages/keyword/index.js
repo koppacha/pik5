@@ -139,6 +139,7 @@ export default function KeywordIndex({users}) {
                         <li>Sorry, this content is Japanese only.</li>
                         <li>登録できるのはピクミン界隈にある程度受け入れられている概念に限ります。作成者以外に認知されていない概念等は削除対象です。</li>
                         <li>本文には<Link style={{textDecoration:"underline"}} href="https://docs.github.com/ja/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax" target="_blank">Markdown</Link>を使用できます。YouTubeリンクを貼ると埋め込みコードに変換されます。</li>
+                        <li><code>[[キーワード名]]</code>でキーワード名へのリンクになります。リンク文字列とリンク先が異なる場合は、<code>[文字列](リンク先)</code>のように書いてください。</li>
                         <li>キーワード名及び本文はピクミン初心者にもなるべくわかりやすい表現を心がけてください。</li>
                         <li>キーワード名単独でどのシリーズやステージの用語か分かりにくい場合は（）でステージ名等を付け加えてください。その際、よみがなにカッコ及びカッコ内を含める必要はありません。</li>
                         <li>本文中のゲームタイトルは『』で囲んでください。強調したい言葉は「」で囲んでください。（キーワード名に含まれる場合は不要）</li>

@@ -29,10 +29,18 @@ class BattleController extends Controller
     public function getScore(): JsonResponse
     {
         $battles = new Battle();
-        $result = $battles->select('user_id', 'stage_id', 'pikmin', 'dandori_pts', 'com_dandori_pts', 'com_dandori_pts', 'com_dandori_pts', 'created_at',
-        DB::raw('dandori_pts - com_dandori_pts as dandori_score'))
+        $result = $battles->select(
+            'user_id',
+            'stage_id',
+            'pikmin',
+            'dandori_pts',
+            'com_dandori_pts',
+            'created_at',
+            DB::raw('dandori_pts - com_dandori_pts as dandori_score')
+        )
             ->orderBy('stage_id')
             ->orderBy('pikmin')
+            ->orderBy('user_id')
             ->orderBy('dandori_score', 'desc')
             ->orderBy('created_at', 'asc')
             ->get()
@@ -41,7 +49,7 @@ class BattleController extends Controller
         $check = [];
         $data = [];
         foreach($result as $item) {
-            $check_str = $item["stage_id"]."-".$item["pikmin"];
+            $check_str = $item["stage_id"]."-".$item["pikmin"]."-".$item["user_id"];
             if(in_array($check_str, $check, true)){
                 continue;
             }
