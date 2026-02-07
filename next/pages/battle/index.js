@@ -1,19 +1,20 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Box, Button, Container, Grid, Typography} from '@mui/material';
 import {StyledTextField} from "../../styles/pik5.css";
-import {id2name, rankColor, range, useLocale} from "../../lib/pik5";
+import {id2name, range, rankColor, useLocale} from "../../lib/pik5";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
 import prisma from "../../lib/prisma";
+import {Tooltip} from "@mui/material";
 
 const dandoriStages = range(413, 418)
 const dandoriPikmins = range(1, 8) // 赤、青、黄、白、紫、羽、岩、氷
 
 function generateRandomHex(length){
-    return Math.floor(Math.random() * Math.pow(16, length).toString(16).padStart(length, "0"))
+    return Math.floor(Math.random() * Math.pow(16, length)).toString(16).padStart(length, "0")
 }
 const sessionId = generateRandomHex(9)
 
@@ -40,6 +41,61 @@ export async function getStaticProps() {
 export default function Battle(props) {
 
     const {t} = useLocale()
+
+    // BattleController の getScore() は「stage_id × pikmin × user_id ごとの最高記録」を返す。
+    // ただし user_id が userId（内部ID）で返る場合と、表示名（name）で返る場合の両方があり得るため、
+    // props.users（userId <-> name）を使って両方のキーで引けるようにインデックス化する。
+    const scoreIndex = useMemo(() => {
+        const list = Array.isArray(props.score) ? props.score : []
+        const users = Array.isArray(props.users) ? props.users : []
+
+        // userId <-> name の相互変換テーブル
+        const userIdByName = new Map()
+        const nameByUserId = new Map()
+        for (const u of users) {
+            if (!u) continue
+            if (u.name != null) userIdByName.set(String(u.name), String(u.userId))
+            if (u.userId != null) nameByUserId.set(String(u.userId), String(u.name))
+        }
+
+        // key: "stageId-pikmin" -> 大会ベスト（その組み合わせの最高点）
+        const bestByStagePikmin = new Map()
+
+        // key: "stageId-pikmin-userIdOrName" -> 自己ベスト（その組み合わせ × そのユーザーの最高点）
+        const bestByStagePikminUser = new Map()
+
+        const putIfBetter = (map, key, row) => {
+            const prev = map.get(key)
+            // 同点の場合は created_at が早い方を採用（表示の揺れを抑える）
+            if (!prev || row.dandori_score > prev.dandori_score || (row.dandori_score === prev.dandori_score && row.created_at < prev.created_at)) {
+                map.set(key, row)
+            }
+        }
+
+        for (const row of list) {
+            if (!row) continue
+
+            const stageKey = `${row.stage_id}-${row.pikmin}`
+            putIfBetter(bestByStagePikmin, stageKey, row)
+
+            // user_id は userId / 表示名のどちらで来ても引けるよう、両方のキーを登録する。
+            const rawUser = row.user_id != null ? String(row.user_id) : ''
+            const mappedUserId = userIdByName.get(rawUser) // raw が name の場合 userId に変換
+            const mappedName = nameByUserId.get(rawUser)   // raw が userId の場合 name に変換
+
+            const candidates = new Set([rawUser])
+            if (mappedUserId) candidates.add(mappedUserId)
+            if (mappedName) candidates.add(mappedName)
+
+            for (const uid of candidates) {
+                if (!uid) continue
+                const keyUser = `${row.stage_id}-${row.pikmin}-${uid}`
+                putIfBetter(bestByStagePikminUser, keyUser, row)
+            }
+        }
+
+        return { bestByStagePikmin, bestByStagePikminUser }
+    }, [props.score, props.users])
 
     const [grids, setGrids] = useState([])
     const [history, setHistory] = useState([])
@@ -160,10 +216,13 @@ export default function Battle(props) {
             })
         })
     }
-    const handleScoreSubmit = () => {
+    const handleScoreSubmit = (gridId) => {
         setGrids(prevGrids => {
-            // 最新のグリッドを取得
-            const latestGrid = prevGrids[0]
+            // 対象のグリッドを取得
+            const latestGrid = prevGrids.find(grid => grid.id === gridId)
+            if (!latestGrid) {
+                return prevGrids
+            }
             let currentPool = 0
 
             // 現在のレートを保存（計算前の状態を保存する）
@@ -175,14 +234,21 @@ export default function Battle(props) {
 
             // 各プレイヤーの貢献度を計算し、プールを更新
             const updatedPlayers = latestGrid.players.map((player) => {
-                const contribution = Math.round(player.initialRate / 10); // プールへの支払い
+                // 現在レートの10分の1を四捨五入してポットに積み立てる
+                const contribution = Math.round(player.initialRate / 10)
                 currentPool += contribution;
                 return { ...player, rate: player.initialRate - contribution };
             });
             setPool(currentPool);
 
             // 順位計算と自然数の和を計算
-            const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC);
+            const sortedPlayers = [...updatedPlayers].sort((a, b) => b.scoreC - a.scoreC)
+            sortedPlayers.forEach((player, index, array) => {
+                player.rank = index + 1
+                if (index > 0 && player.scoreC === array[index - 1].scoreC) {
+                    player.rank = array[index - 1].rank
+                }
+            })
             const n = sortedPlayers.length;
             const t = (n * (n + 1)) / 2; // 自然数の和
 
@@ -195,7 +261,7 @@ export default function Battle(props) {
                 let borderRank = n + 1; // 初期値として最低順位を設定
 
                 // 各順位でリワードを計算し、比較
-                for (let rank = n; rank >= 0; rank--) {
+                for (let rank = n; rank >= 1; rank--) {
                     const reward = Math.round(((n - rank + 1) / t) * currentPool); // リワード計算
                     if (reward > contribution) {
                         borderRank = rank; // 支払いよりリワードが多ければボーダーラインを更新
@@ -209,11 +275,32 @@ export default function Battle(props) {
             setBorders(newBorders);
 
             // 各プレイヤーの順位に基づいて報酬を更新
-            sortedPlayers.forEach((player, index) => {
-                const rank = index + 1; // 順位 (1位が最上位)
-                const reward = Math.round(((n - rank + 1) / t) * currentPool); // 新しい計算式
-                player.rate += reward; // 報酬を追加
-            });
+            // 同順位は該当順位の報酬総和を人数で等分して配る
+            const rewardsByPlayer = {}
+            let rewardIndex = 0
+            while (rewardIndex < sortedPlayers.length) {
+                const scoreC = sortedPlayers[rewardIndex].scoreC
+                const group = []
+                while (rewardIndex < sortedPlayers.length && sortedPlayers[rewardIndex].scoreC === scoreC) {
+                    group.push(sortedPlayers[rewardIndex])
+                    rewardIndex += 1
+                }
+                const startRank = rewardIndex - group.length + 1
+                const endRank = rewardIndex
+                let groupReward = 0
+                for (let rank = startRank; rank <= endRank; rank++) {
+                    // 順位ごとの還元 = ((参加者数-順位+1) / (1..nの和)) * ポット
+                    groupReward += Math.round(((n - rank + 1) / t) * currentPool)
+                }
+                // 同点の場合は「該当順位の報酬総和」を人数で等分し、小数点は切り捨てる
+                const perPlayerReward = Math.floor(groupReward / group.length)
+                group.forEach((player) => {
+                    rewardsByPlayer[player.name] = perPlayerReward
+                })
+            }
+            sortedPlayers.forEach((player) => {
+                player.rate += rewardsByPlayer[player.name] || 0
+            })
 
             // 各プレイヤーの最終レートと順位を設定
             const finalPlayers = updatedPlayers.map((player) => ({
@@ -230,11 +317,11 @@ export default function Battle(props) {
             setRates(newRates);
 
             // 最新のグリッドを更新
-            return prevGrids.map((grid, index) => {
-                if (index === 0) {
-                    return { ...latestGrid, players: finalPlayers };
+            return prevGrids.map((grid) => {
+                if (grid.id === gridId) {
+                    return { ...latestGrid, players: finalPlayers }
                 }
-                return grid;
+                return grid
             })
         })
     }
@@ -247,7 +334,7 @@ export default function Battle(props) {
                 stageId: grid.itemA,
                 itemB: grid.itemB,
                 scoreA: player.scoreA,
-                scoreB: player.scoreA,
+                scoreB: player.scoreB,
                 rank: player.rank,
                 initialRate: player.initialRate,
                 rate: player.rate,
@@ -366,11 +453,11 @@ export default function Battle(props) {
                     <li>みまわしドローンは使用禁止。</li>
                     <li>ハンデ設定は常にノーマル（COMもノーマル）</li>
                     <li>ステージとピクミンは毎回ランダム。ただし、同じ組み合わせは同一セッションの中で一度しか出現しない。セッションは主催が終了処理を行うか48回対戦するとリセットする。</li>
-                    <li>「風雲ダンドリ城」で城スタートの場合のみ、開始後10秒以内なら１回までのリスタート（ダンドリバトルを中断→再入場）が許される。</li>
+                    <li>「風雲ダンドリ城」で城スタート、または「最果ての闘技場」で闘技場から遠い方スタートの場合のみ、開始後10秒以内なら１回までのリスタート（ダンドリバトルを中断→再入場）が許される。</li>
                     <li>各参加者は初参加時に1000点（全総合ランキング初段未満は原則500点。ただし特に希望する場合は1000点）支給され、各対戦開始前に所持ポイントの10分の１をポットに支払う。（小数は四捨五入する。四捨五入の結果が０点でも参加は可能）</li>
                     <li>対戦後、[（自分のダンドリP）-（COMのダンドリP）]をプレイヤーの得点とし、それによって順位づけを行う。</li>
                     <li>各参加者は順位に応じて次の計算によってポイントが還元される。［（参加者数-順位+1) / (1から参加者数までの整数の和) * ポット］</li>
-                    <li>同点の場合は該当者がもらえるポイントを等分する。</li>
+                    <li>同点の場合は該当者全員が本来もらえるポイントを人数で等分（小数点は切り捨て）する。</li>
                 </ul>
                 <Box style={{margin:"1em",padding:"1.5em",fontSize:"0.9em",border:"1px solid red"}}>
                     <ul>
@@ -389,14 +476,16 @@ export default function Battle(props) {
             <Button variant="contained" color="primary" onClick={copyToClipboard} style={{ marginLeft: 16 }}>
                 スコアをエクスポート
             </Button>
-            {grids.map((grid, gridIndex) => (
+            {grids.map((grid) => (
                 <Box key={grid.id} sx={{ mt: 2, p: 2, border: '1px solid grey' }}>
                     <Typography variant="span">#{grid.id + 1}</Typography><br/>
                     <Typography variant="span" style={{fontSize:"2em"}}>{t.stage[grid.itemA]} × {t.pikmin[grid.itemB]}</Typography>
                     {(() => {
-                        const hiScore = props.score?.find(score => score.stage_id === grid.itemA && score.pikmin === grid.itemB);
+                        // 大会ベスト（stage_id × pikmin の最高点）をインデックスから取得
+                        const key = `${grid.itemA}-${grid.itemB}`
+                        const hiScore = scoreIndex.bestByStagePikmin.get(key)
                         return hiScore ? (
-                            <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: {hiScore.dandori_score} pts （{id2name(props.users, hiScore.user_id)} さん）</Typography>
+                            <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: {hiScore.dandori_score} pts（{id2name(props.users, hiScore.user_id)} さん）</Typography>
                         ) : (
                             <Typography variant="span" style={{border:"1px solid #fff",padding:"0.5em",marginLeft:"3em"}}>大会ベスト: -</Typography>
                         );
@@ -420,7 +509,7 @@ export default function Battle(props) {
                                             inputProps={{ "data-grid-id": grid.id, "data-player-name": player.name, "data-score-type": "scoreA" }}
                                             style={{minWidth: "100px", marginBottom: "10px"}}
                                             onChange={(e) => handleScoreChange(grid.id, player.name, 'scoreA', parseInt(e.target.value, 10) || 0)}
-                                            flilWidth
+                                            fullWidth
                                         />
                                         <StyledTextField
                                             type="number"
@@ -428,7 +517,7 @@ export default function Battle(props) {
                                             inputProps={{ "data-grid-id": grid.id, "data-player-name": player.name, "data-score-type": "scoreB" }}
                                             style={{minWidth: "100px", marginBottom: "20px"}}
                                             onChange={(e) => handleScoreChange(grid.id, player.name, 'scoreB', parseInt(e.target.value, 10) || 0)}
-                                            flilWidth
+                                            fullWidth
                                         />
                                         <Box style={{padding:"4px",fontSize:"1em",borderBottom:`1px solid ${rankColorStr}`,borderLeft:`5px solid ${rankColorStr}`,borderRadius:"4px"}}>{player.scoreC} pts. ({player.rank} 位)</Box>
                                     </Grid>
@@ -449,16 +538,76 @@ export default function Battle(props) {
                 backgroundColor: 'white',
                 color: '#000'
             }}>
-                <Grid container spacing={2} columns={players.length}>
+                <Grid container spacing={1} columns={players.length + 1}>
+                    <Grid item xs={1} style={{textAlign:"left"}}>
+                        <div style={{backgroundColor:"#333",color:"#eee",minHeight:"111px",borderRadius:"12px",padding:"6px 10px",fontSize:"0.95em",fontFamily:"M PLUS 1 CODE !important"}}>
+                            <div style={{fontSize:"0.85em",opacity:0.9}}>{
+                                (() => {
+                                    const latestGrid = grids?.[0] || null
+                                    return latestGrid ? `#${latestGrid.id + 1}` : '-'
+                                })()
+                            }</div>
+                            <div style={{fontSize:"0.95em",marginTop:"2px"}}>{
+                                (() => {
+                                    const latestGrid = grids?.[0] || null
+                                    return latestGrid ? `${t.stage[latestGrid.itemA]} × ${t.pikmin[latestGrid.itemB]}` : '-'
+                                })()
+                            }</div>
+                            <div style={{fontSize:"0.8em",marginTop:"4px",opacity:0.85}}>{
+                                (() => {
+                                    const latestGrid = grids?.[0] || null
+                                    const latestHiScore = latestGrid
+                                        ? scoreIndex.bestByStagePikmin.get(`${latestGrid.itemA}-${latestGrid.itemB}`) : null
+                                    return latestHiScore
+                                        ? (
+                                            <>
+                                                <div>{`大会ベスト: ${latestHiScore.dandori_score} pts`}</div>
+                                                <div style={{opacity:0.9}}>{`保持者: ${id2name(props.users, latestHiScore.user_id)} さん`}</div>
+                                            </>
+                                        )
+                                        : (
+                                            <>
+                                                <div>大会ベスト: -</div>
+                                                <div style={{opacity:0.9}}>保持者: -</div>
+                                            </>
+                                        )
+                                })()
+                            }</div>
+                        </div>
+                    </Grid>
                     {players.map(function(player) {
                         // 前回レートと今回レートから増減値を計算
                         const prevReward = prevRates[player] ? (rates[player] - prevRates[player]) : 0
                         const prevRewardStr = prevReward > 0 ? `+${prevReward}` : `${prevReward}`
+                        const latestGrid = grids?.[0] || null
+                        const latestPlayer = latestGrid?.players?.find(p => p.name === player) || null
+                        const latestScoreA = latestPlayer ? latestPlayer.scoreA : null
+                        const latestScoreB = latestPlayer ? latestPlayer.scoreB : null
+                        const latestScoreC = latestPlayer ? latestPlayer.scoreC : null
+                        const latestRank = latestPlayer ? latestPlayer.rank : null
+
+                        // 最新セッションの組み合わせにおける「このユーザーの自己ベスト」を取得
+                        // user_id が userId / 表示名のどちらで保存されていても引けるよう、両方を試す。
+                        const playerName = id2name(props.users, player)
+                        const userBest = latestGrid
+                            ? (
+                                scoreIndex.bestByStagePikminUser.get(`${latestGrid.itemA}-${latestGrid.itemB}-${player}`)
+                                || scoreIndex.bestByStagePikminUser.get(`${latestGrid.itemA}-${latestGrid.itemB}-${playerName}`)
+                              )
+                            : null
+                        const userBestStr = userBest ? `自己ベスト: ${userBest.dandori_score} pts` : '自己ベスト: -'
+
+                        // 新規セッション直後（未入力）に見せ方をリセットするための表示用文字列
+                        const latestStatsStr = (latestGrid && latestPlayer && (latestScoreA || latestScoreB))
+                            ? `${latestScoreA} - ${latestScoreB} = ${latestScoreC}（${latestRank}位）`
+                            : ''
                         return (
                         <Grid item xs={1} key={player} style={{textAlign:"center"}}>
                             <div style={{backgroundColor:"#333",color:"#eee",borderRadius:"12px",padding:"4px 0",fontSize:"1.1em",cursor:'pointer',fontFamily:"M PLUS 1 CODE !important"}} onClick={() => handlePlayerClick(player)}>{id2name(props.users, player)}</div>
                             <div style={{marginTop:"4px",fontFamily:"Proza Libre"}}>{rates[player]}<span style={{fontSize:"0.8em",color:"#777"}}> / {iniRates[player]}</span></div>
-                            <div style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""} {borders[player] ? `→BEP：${borders[player]}位` : ""}</div>
+                            <div style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""} {borders[player] ? `BEP：${borders[player]}位` : ""}</div>
+                            <div style={{fontSize:"0.85em",color:"#333",minHeight:"1.2em",borderTop:"#ccc 1px solid"}}>{latestStatsStr}</div>
+                            <div style={{fontSize:"0.8em",color:"#555",marginTop:"2px"}}>{userBestStr}</div>
                         </Grid>
                     )})}
                 </Grid>
