@@ -1,0 +1,12 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+### ステージ情報
+GET http://localhost:3005/api/server/stage/101
+
+### ダンバト大会レート
+GET http://localhost:8000/api/battle/rate
+
+### ダンバト大会スコア
+GET http://localhost:8000/api/battle/score
