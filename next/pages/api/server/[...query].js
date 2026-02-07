@@ -3,12 +3,13 @@ export const config = {
     bodyParser: false,
   },
 }
-import {logger} from "../../../lib/logger";
-import fetch from "node-fetch";
 import prisma from "../../../lib/prisma";
 import {networkInterfaces} from "os";
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "../auth/[...nextauth]";
+import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
+
+const LARAVEL_API_BASE = 'http://laravel:8000/api'
 
 async function readRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -19,147 +20,133 @@ async function readRawBody(req) {
   })
 }
 
+function getSafeQueryPath(rawQuery) {
+  if (!Array.isArray(rawQuery) || rawQuery.length === 0) return null
+
+  const segments = rawQuery
+    .map((segment) => String(segment || '').trim())
+    .filter(Boolean)
+
+  if (segments.length === 0) return null
+  if (segments.some((segment) => segment.includes('..') || segment.includes('/') || segment.includes('?') || segment.includes('#'))) {
+    return null
+  }
+
+  return segments.map((segment) => encodeURIComponent(segment)).join('/')
+}
+
+function buildSearchParams(queryObject) {
+  const params = new URLSearchParams()
+  Object.entries(queryObject).forEach(([key, value]) => {
+    if (key === 'query') return
+    const values = Array.isArray(value) ? value : [value]
+    values.forEach((v) => {
+      if (v === undefined || v === null) return
+      params.append(key, String(v))
+    })
+  })
+  return params
+}
+
+async function parseUpstreamResponse(upstreamRes) {
+  const raw = await upstreamRes.text()
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return raw
+  }
+}
+
 export default async function handle(req, res){
 
-    const session = await getServerSession(req, res, authOptions)
+  const session = await getServerSession(req, res, authOptions)
 
-    return new Promise(async resolve => {
-        switch (req.method) {
-            case "POST": {
-                try {
-                    const query = req.query.query.join("/")
-                    const postParams = { ...req.query }
-                    delete postParams.query
-                    const postSearch = new URLSearchParams()
-                    Object.entries(postParams).forEach(([key, val]) => {
-                      const values = Array.isArray(val) ? val : [val]
-                      values.forEach(v => postSearch.append(key, v))
-                    })
-                    const upstreamUrl = `http://laravel:8000/api/${query}` + (postSearch.toString() ? `?${postSearch.toString()}` : '')
-                    await prismaLogging(session?.user?.id ?? "guest", "queryPost", { headers: req.headers, length: req.headers['content-length'] })
-
-                    const contentType = (req.headers['content-type'] || '').toLowerCase()
-                    let upstreamRes
-
-                    if (contentType.startsWith('multipart/form-data')) {
-                        // Pass through the original stream and headers (including boundary)
-                        upstreamRes = await fetch(upstreamUrl, {
-                            method: 'POST',
-                            // Preserve content-type (with boundary) and content-length if present
-                            headers: {
-                                'content-type': req.headers['content-type'] || '',
-                                ...(req.headers['content-length'] ? { 'content-length': req.headers['content-length'] } : {})
-                            },
-                            body: req
-                        })
-                    } else if (contentType.includes('application/json')) {
-                        // bodyParser is disabled, so req.body is undefined. Read raw JSON and forward as-is.
-                        const raw = await readRawBody(req)
-                        // Optional: try to log a tiny preview to ensure 'keyword' exists without leaking full content
-                        let preview = null
-                        try { preview = JSON.parse(raw.toString('utf8')) } catch {}
-                        await prismaLogging(session?.user?.id ?? "guest", "queryPostJsonPreview", {
-                          hasKeyword: preview && typeof preview === 'object' && Object.prototype.hasOwnProperty.call(preview, 'keyword'),
-                          keys: preview && typeof preview === 'object' ? Object.keys(preview).slice(0, 10) : []
-                        })
-                        console.log(upstreamUrl)
-                        upstreamRes = await fetch(upstreamUrl, {
-                            method: 'POST',
-                            headers: { 'content-type': req.headers['content-type'] || 'application/json' },
-                            body: raw
-                        })
-                    } else {
-                        // Fallback: forward as-is without forcing JSON
-                        upstreamRes = await fetch(upstreamUrl, {
-                            method: 'POST',
-                            headers: { 'content-type': req.headers['content-type'] || 'application/octet-stream' },
-                            body: req
-                        })
-                    }
-
-                    const text = await upstreamRes.text()
-                    let data
-                    try { data = JSON.parse(text) } catch { data = text }
-
-                    if (!upstreamRes.ok) {
-                        await prismaLogging(session?.user?.id ?? "guest", "queryPostErrorUpstream", { status: upstreamRes.status, body: text?.slice?.(0, 2000) })
-                        res.status(upstreamRes.status).json({ error: true, status: upstreamRes.status, data })
-                        return resolve()
-                    }
-
-                    res.status(200).json({ data })
-                    return resolve()
-
-                } catch (e) {
-                    await prismaLogging(session?.user?.id ?? "guest", "queryPostError", String(e))
-                    res.status(500).json({ error: true, message: 'proxy error' })
-                    return resolve()
-                }
-            }
-            case "GET": {
-
-                const path = req.query.query.join('/')
-
-                // Build full URL with all query parameters
-                const params = { ...req.query }
-                delete params.query
-                const searchParams = new URLSearchParams()
-                Object.entries(params).forEach(([key, val]) => {
-                  const values = Array.isArray(val) ? val : [val]
-                  values.forEach(v => {
-                    searchParams.append(key, htmlSpecialChars(v))
-                  })
-                })
-                const url = `http://laravel:8000/api/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-                const get = await fetch(url)
-                let data
-
-                if(!get.ok) {
-                    const resText = await get.text()
-                    await prismaLogging(session?.user?.id ?? "guest", "queryNotPostError", resText)
-                    console.log(resText)
-                    res.status(500).end()
-                    return resolve()
-                }
-                data = await get.json()
-                res.status(200).json({data})
-                return resolve()
-            }
-        }
-        res.status(405).end()
-        return resolve()
+  if (!ensureServerApiAccess(req, res)) {
+    await prismaLogging(session?.user?.id ?? "guest", "queryAccessDenied", {
+      method: req.method,
+      path: req.url,
     })
-}
+    res.status(403).json({error: true, message: 'forbidden'})
+    return
+  }
 
-// JSON形式にパースできるかどうか判定する
-function isValidJson(value){
-    try {
-        JSON.parse(value)
-    } catch (e) {
-        return false
-    }
-    return true
-}
+  const path = getSafeQueryPath(req.query.query)
+  if (!path) {
+    res.status(400).json({error: true, message: 'invalid path'})
+    return
+  }
 
-// HTMLで有効な特殊文字をエンコードする
-function htmlSpecialChars(string) {
-    return string.replace(/[&<>"']/g, function (match) {
-        switch (match) {
-            case '&':
-                return '&amp;';
-            case '<':
-                return '&lt;';
-            case '>':
-                return '&gt;';
-            case '"':
-                return '&quot;';
-            case "'":
-                return '&#039;';
-            default:
-                return match;
+  const searchParams = buildSearchParams(req.query)
+  const upstreamUrl = `${LARAVEL_API_BASE}/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
+
+  try {
+    switch (req.method) {
+      case "GET": {
+        const upstreamRes = await fetch(upstreamUrl)
+        const data = await parseUpstreamResponse(upstreamRes)
+
+        if (!upstreamRes.ok) {
+          await prismaLogging(session?.user?.id ?? "guest", "queryGetErrorUpstream", {status: upstreamRes.status})
+          res.status(upstreamRes.status).json({error: true, status: upstreamRes.status, data})
+          return
         }
-    });
+
+        res.status(upstreamRes.status).json({data})
+        return
+      }
+      case "POST": {
+        await prismaLogging(session?.user?.id ?? "guest", "queryPost", {
+          path,
+          contentType: req.headers['content-type'] || '',
+          length: req.headers['content-length'] || '',
+        })
+
+        const contentType = (req.headers['content-type'] || '').toLowerCase()
+        let upstreamRes
+
+        if (contentType.startsWith('multipart/form-data')) {
+          upstreamRes = await fetch(upstreamUrl, {
+            method: 'POST',
+            headers: {
+              'content-type': req.headers['content-type'] || '',
+              ...(req.headers['content-length'] ? { 'content-length': req.headers['content-length'] } : {}),
+            },
+            body: req,
+            duplex: 'half',
+          })
+        } else {
+          const raw = await readRawBody(req)
+          upstreamRes = await fetch(upstreamUrl, {
+            method: 'POST',
+            headers: {
+              ...(req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {}),
+            },
+            body: raw,
+          })
+        }
+
+        const data = await parseUpstreamResponse(upstreamRes)
+        if (!upstreamRes.ok) {
+          await prismaLogging(session?.user?.id ?? "guest", "queryPostErrorUpstream", {status: upstreamRes.status})
+          res.status(upstreamRes.status).json({error: true, status: upstreamRes.status, data})
+          return
+        }
+
+        res.status(upstreamRes.status).json({data})
+        return
+      }
+      default: {
+        res.setHeader('Allow', 'GET, POST')
+        res.status(405).json({error: true, message: 'method not allowed'})
+        return
+      }
+    }
+  } catch (error) {
+    await prismaLogging(session?.user?.id ?? "guest", "queryProxyError", String(error))
+    res.status(502).json({error: true, message: 'proxy error'})
+  }
 }
+
 // IPアドレスを取得
 export function getIpAddress() {
     const nets = networkInterfaces()
