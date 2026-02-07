@@ -42,6 +42,13 @@ async function parseUpstreamResponse(upstreamRes) {
     }
 }
 
+function getForwardedFor(req) {
+    const forwarded = req.headers['x-forwarded-for']
+    if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded
+    if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded.join(', ')
+    return req.socket?.remoteAddress || ''
+}
+
 export default async function handler(req, res){
 
     const session = await getServerSession(req, res, authOptions)
@@ -87,7 +94,6 @@ export default async function handler(req, res){
         formData.append('team', '0')
         formData.append('post_comment', String(getFieldValue(fields.post_comment)))
         formData.append('created_at', String(getFieldValue(fields.created_at)))
-        formData.append('user_ip', String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || ''))
         formData.append('user_agent', String(getFieldValue(fields.user_agent)))
 
         const uploadFile = Array.isArray(files?.file) ? files.file[0] : files?.file
@@ -95,8 +101,17 @@ export default async function handler(req, res){
             formData.append('file', fs.createReadStream(uploadFile.filepath))
         }
 
+        const proxyHeaders = {
+            ...formData.getHeaders(),
+            'x-forwarded-for': getForwardedFor(req),
+            'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
+            'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
+            'x-forwarded-host': String(req.headers.host || ''),
+        }
+
         const response = await fetch("http://laravel:8000/api/record", {
             method: "POST",
+            headers: proxyHeaders,
             body: formData,
         })
         const data = await parseUpstreamResponse(response)
