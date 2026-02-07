@@ -11,8 +11,8 @@ services:
       - ./laravel:/var/www/laravel
     links:
       - mysql
-    ports:
-      - "8000:8000"
+    expose:
+      - "8000"
     restart:
       always
     logging:

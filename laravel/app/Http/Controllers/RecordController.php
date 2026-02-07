@@ -215,6 +215,12 @@ class RecordController extends Controller
         }
         // 画像以外の処理
         try {
+            $clientIp = $request->ip() ?: "";
+            $clientHost = "";
+            if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+                $clientHost = gethostbyaddr($clientIp) ?: "";
+            }
+
             $posts = new Record();
             $posts->fill([
                 'user_id' => $request['user_id'],
@@ -227,8 +233,8 @@ class RecordController extends Controller
                 'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
                 'unique_id' => config('version.record_prefix').sprintf('%06d',random_int(0, 999999)),
                 'post_comment' => $comment,
-                'user_ip' => $request['user_ip'],
-                'user_host' => gethostbyaddr($request['user_ip']) ?: "",
+                'user_ip' => $clientIp,
+                'user_host' => $clientHost,
                 'user_agent' => $request['user_agent'],
                 'img_url' => $fileName,
                 'video_url' => $request['video_url'] ?: "",

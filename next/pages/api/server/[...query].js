@@ -57,6 +57,13 @@ async function parseUpstreamResponse(upstreamRes) {
   }
 }
 
+function getForwardedFor(req) {
+  const forwarded = req.headers['x-forwarded-for']
+  if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded
+  if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded.join(', ')
+  return req.socket?.remoteAddress || ''
+}
+
 export default async function handle(req, res){
 
   const session = await getServerSession(req, res, authOptions)
@@ -110,6 +117,10 @@ export default async function handle(req, res){
             headers: {
               'content-type': req.headers['content-type'] || '',
               ...(req.headers['content-length'] ? { 'content-length': req.headers['content-length'] } : {}),
+              'x-forwarded-for': getForwardedFor(req),
+              'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
+              'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
+              'x-forwarded-host': String(req.headers.host || ''),
             },
             body: req,
             duplex: 'half',
@@ -120,6 +131,10 @@ export default async function handle(req, res){
             method: 'POST',
             headers: {
               ...(req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {}),
+              'x-forwarded-for': getForwardedFor(req),
+              'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
+              'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
+              'x-forwarded-host': String(req.headers.host || ''),
             },
             body: raw,
           })
