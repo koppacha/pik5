@@ -7,36 +7,46 @@ import {getSpeedrunUserCache, setSpeedrunUserCache} from "../../lib/speedrunUser
 
 const SPEEDRUN_CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000
 
-export default function SpeedRunWrapper({post, index}){
+export default function SpeedRunWrapper({post, rank, index}){
 
     const {t} = useLocale()
     const userId = post?.run?.players?.[0]?.id || null
-    const cachedUser = React.useMemo(() => getSpeedrunUserCache(userId), [userId])
+    const [isClient, setIsClient] = React.useState(false)
+    const [cachedUser, setCachedUser] = React.useState(null)
+
+    React.useEffect(() => {
+        setIsClient(true)
+    }, [])
+
+    React.useEffect(() => {
+        if (!isClient) return
+        setCachedUser(getSpeedrunUserCache(userId))
+    }, [isClient, userId])
 
     const {data: userNameResponse} = useSWR(
-        userId ? `speedrun:user:${userId}` : null,
+        userId && isClient && !cachedUser ? `speedrun:user:${userId}` : null,
         () => fetcher(`https://www.speedrun.com/api/v1/users/${userId}`),
         {
             dedupingInterval: SPEEDRUN_CACHE_TTL_MS,
             revalidateOnFocus: false,
             revalidateOnReconnect: false,
             revalidateIfStale: false,
-            revalidateOnMount: !cachedUser,
-            fallbackData: cachedUser || undefined,
             onSuccess: (data) => {
                 setSpeedrunUserCache(userId, data)
+                setCachedUser(data)
             },
         }
     )
 
-    if (userId && !userNameResponse) {
+    if (userId && !cachedUser && !userNameResponse) {
         return (
             <NowLoading/>
         )
     }
 
-    const name = userNameResponse?.data?.names?.japanese
-        || userNameResponse?.data?.names?.international
+    const userNameData = cachedUser || userNameResponse
+    const name = userNameData?.data?.names?.japanese
+        || userNameData?.data?.names?.international
         || null
 
     // 証拠動画の有無をチェックして、存在するならURLを取得
@@ -48,7 +58,7 @@ export default function SpeedRunWrapper({post, index}){
 
     const data = {
         category: "speedrun",
-        post_rank: index + 1 || null,
+        post_rank: rank || (index + 1) || null,
         video_url: video,
         post_comment: post.run.comment || t.g.noComment,
         user_id: userId,
