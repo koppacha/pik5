@@ -707,6 +707,8 @@ export const en = {
         2: "Wii",
         3: "Wii U",
         4: "Switch",
+        5: "Switch 2",
+        12: "Wii U VC"
     },
     classes: {
         0:  "D3",
