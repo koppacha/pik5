@@ -4,14 +4,11 @@ import {StyledSelect} from "../../styles/pik5.css";
 import Link from "next/link";
 import * as React from "react";
 
-export default function SpeedRunConsole({stage, console, consoles}){
+export default function SpeedRunConsole({stage, console:cnsl, consoles}){
 
     const {t} = useLocale()
 
-    // 存在しない操作方法がセットされていたら「すべて」に強制変更
-    const defaultValue = (consoles.includes(console)) ? console : 0
-
-    if(!consoles){
+    if(!consoles || consoles.length === 0){
         return (
             <></>
         )
@@ -20,7 +17,9 @@ export default function SpeedRunConsole({stage, console, consoles}){
         <FormControl>
             <FormHelperText className="form-helper-text">{t.speedrun.console.title}</FormHelperText>
             <StyledSelect
-                defaultValue={defaultValue}
+                className="styled-select"
+                defaultValue={consoles[0]}
+                value={cnsl || consoles[0]}
                 id="select-console"
             >
                 {
