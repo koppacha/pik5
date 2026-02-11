@@ -26,6 +26,10 @@ export default function SpeedRunWrapper({post, index}){
     } else {
         video = null
     }
+    // 操作方法を取得する。取得用配列はNGC, Wii, Wii U, Switch, Switch 2
+    const consoles = ["4p9z06rn", "v06dk3e4", "8gejn93d" , "7m6ylw9p", "3167lw9q", null, null, null, null, null, null, "v06dr394"]
+    const cnsl = String(consoles.indexOf(post.run.system.platform) + 1)
+
     const data = {
         category: "speedrun",
         post_rank: index + 1 || null,
@@ -34,7 +38,7 @@ export default function SpeedRunWrapper({post, index}){
         user_id: post.run.players[0].id || null,
         user_name: name || null,
         score: post.run.times.realtime_t || 0,
-        console: (post.run.system.platform === "v06dk3e4") ? 2 : 1,
+        console: cnsl,
         created_at: post.run.submitted || "2023-06-10 23:00:00",
     }
     return (

@@ -28,7 +28,7 @@ export async function getStaticProps({params}){
     const console = query[1] || 0
 
     let q = ""
-    const consoles = [0]
+    const consoles = []
 
     switch(Number(stage)){
         // パーツ全回収
