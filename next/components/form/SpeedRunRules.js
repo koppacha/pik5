@@ -41,6 +41,16 @@ export default function SpeedRunRules({stage, console}){
                 <RuleBox className="rule-box" component={Link} href={'/speedrun/313/'+console}>{t.speedrun.s[313]}</RuleBox>
             </>
         )
+    } else if(series === "40"){
+        return (
+            <>
+                <RuleBox className="rule-box" component={Link} href={'/speedrun/401/'+console}>{t.speedrun.s[401]}</RuleBox>
+                <RuleBox className="rule-box" component={Link} href={'/speedrun/402/'+console}>{t.speedrun.s[402]}</RuleBox>
+                <RuleBox className="rule-box" component={Link} href={'/speedrun/403/'+console}>{t.speedrun.s[403]}</RuleBox>
+                <RuleBox className="rule-box" component={Link} href={'/speedrun/404/'+console}>{t.speedrun.s[404]}</RuleBox>
+                <RuleBox className="rule-box" component={Link} href={'/speedrun/405/'+console}>{t.speedrun.s[405]}</RuleBox>
+            </>
+        )
     } else {
         return null
     }

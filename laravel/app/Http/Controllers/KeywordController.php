@@ -147,8 +147,8 @@ class KeywordController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \App\Http\Requests\StoreKeywordRequest  $request
-     * @return Response
+     * @param StoreKeywordRequest $request
+     * @return void
      */
     public function store(StoreKeywordRequest $request)
     {
@@ -186,7 +186,7 @@ class KeywordController extends Controller
                 $recentItems = Keyword::orderByDesc('updated_at')
                     ->limit(500) // 重複排除後に十分数が残るようバッファ
                     ->get()
-                    ->unique('keyword')
+                    ->unique('unique_id') // ユニークIDが重複した場合は落とす
                     ->take(20)
                     ->values();
 
@@ -227,14 +227,14 @@ class KeywordController extends Controller
                 $t = trim($s);
                 // PHPの数値表現（+/-、小数、指数）を広く許容
                 // 先頭+はfloatvalが解釈できるが、ここでは許容
-                return preg_match('/^[\+\-]?(?:\d+\.?\d*|\.\d+)(?:[eE][\+\-]?\d+)?$/', $t) === 1;
+                return preg_match('/^[+\-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+\-]?\d+)?$/', $t) === 1;
             };
 
             // 日付らしさ判定（YYYY[-/]MM[-/]DD( [T]?hh[:MM][:ss]?) あるいは区切り無しYYYYMMDD[hhMMss]）
             $isDateLike = static function (string $s): bool {
                 $t = trim($s);
                 // 素直なISO/一般的な区切りあり
-                if (preg_match('/^\d{4}([\-\/]?\d{2}){1,2}([ T]\d{2}:\d{2}(:\d{2})?)?(?:Z)?$/', $t)) {
+                if (preg_match('/^\d{4}([\-\/]?\d{2}){1,2}([ T]\d{2}:\d{2}(:\d{2})?)?Z?$/', $t)) {
                     return true;
                 }
                 // 区切りなし 例: 20250101123456 or 20250101
@@ -242,7 +242,7 @@ class KeywordController extends Controller
                     return true;
                 }
                 // ISO拡張 例: 2025-01-01T12:34:56Z
-                if (preg_match('/^\d{4}\-\d{2}\-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[\+\-]\d{2}:\d{2})?$/', $t)) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+\-]\d{2}:\d{2})?$/', $t)) {
                     return true;
                 }
                 return false;

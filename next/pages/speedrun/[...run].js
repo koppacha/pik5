@@ -215,6 +215,18 @@ export default function Run({data, stage, console, consoles}){
     const {t, r} = useLocale()
 
     const dates = data.data?.runs
+    const displayRuns = (dates || []).reduce((acc, post) => {
+
+        // ピクミン4のNG+はスキップする
+        if(post?.run?.values?.dloe59en === "q650zkjl") return acc
+
+        const score = Number(post?.run?.times?.realtime_t || 0)
+        const prev = acc[acc.length - 1]
+        const rank = prev && prev.score === score ? prev.rank : acc.length + 1
+
+        acc.push({post, score, rank})
+        return acc
+    }, [])
 
     return (
         <>
@@ -235,14 +247,13 @@ export default function Run({data, stage, console, consoles}){
             }}>
                 <SpeedRunRules stage={stage} console={console}/>
             </Grid>
-            {
-                dates?.map(function (post, index){
-                        return (
-                            <SpeedRunWrapper key={index} post={post} index={index} />
-                        )
-                    }
-                )
-            }
+            {displayRuns.map(({post, rank}) => (
+                <SpeedRunWrapper
+                    key={post?.run?.id || `${post?.run?.submitted || "run"}-${rank}`}
+                    post={post}
+                    rank={rank}
+                />
+            ))}
         </>
     )
 }
