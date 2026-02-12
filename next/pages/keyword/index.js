@@ -10,7 +10,7 @@ import {faCertificate, faHouseChimney, faLayerGroup, faStairs, faTowerCell} from
 import PullDownKeywordCategory from "../../components/form/PullDownKeywordCategory";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import Head from "next/head";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import {useSession} from "next-auth/react";
 import dynamic from "next/dynamic";
 import NewRecords from "../../components/top/NewRecords";
@@ -19,12 +19,7 @@ import Button from "@mui/material/Button";
 export async function getServerSideProps(context){
 
     // スクリーンネームをリクエスト（検索用）
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     return {
         props: {

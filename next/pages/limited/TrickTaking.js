@@ -9,7 +9,7 @@ import Field from '../../components/limited/Field'
 import Hand from '../../components/limited/Hand'
 import DrawButton from '../../components/limited/DrawButton'
 import JoinButton from '../../components/limited/JoinButton'
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import NowLoading from "../../components/NowLoading";
 import * as React from "react";
 import Head from "next/head";
@@ -24,12 +24,7 @@ const fetcher = url => fetch(url).then(res => res.json())
 export async function getStaticProps() {
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     // 閉鎖中
     return {

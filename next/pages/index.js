@@ -25,7 +25,7 @@ import NewRecords from "../components/top/NewRecords";
 import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
-import prisma from "../lib/prisma"
+import { getCachedUsers } from "../lib/usersCache"
 import Head from "next/head";
 import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
 import {mutate} from "swr";
@@ -40,12 +40,8 @@ export async function getServerSideProps(context) {
     const prev = (res.status < 300) ? await res.json() : null
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
+
     return {
         props: {
             users, prev

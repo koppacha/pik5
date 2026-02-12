@@ -8,7 +8,7 @@ import {StairIcon} from "../../styles/pik5.css";
 import React from "react";
 import {useLocale} from "../../lib/pik5";
 import Head from "next/head";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import dynamic from 'next/dynamic'
 import {useSession} from "next-auth/react";
 
@@ -38,9 +38,7 @@ export async function getStaticProps({ params }) {
     }
 
     // 既存のスクリーンネーム一覧（検索用）
-    const users = await prisma.user.findMany({
-        select: { userId: true, name: true }
-    })
+    const users = await getCachedUsers()
 
     return {
         props: {
