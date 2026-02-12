@@ -38,14 +38,19 @@ export default function DashBoard({user, users}){
             </>
         )
     }
+    // 取得した合計ランクポイントを正規化し、非数だった場合は0に置き換える
     const normalizedRps = Number(data.data?.totals?.rps)
     const totalRps = Number.isFinite(normalizedRps) ? normalizedRps : 0
-    const cls = basePoints.findLastIndex(base => totalRps > stageCounts * base)
-    const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCounts * base)
-    const nextPoints = (basePoints[cls + 1] * stageCounts) - totalRps
+
+    // 最新のステージ数を取得
+    const stageCnt = Object.values(stageCounts)[0]
+
+    const cls = basePoints.findLastIndex(base => totalRps > stageCnt * base)
+    const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCnt * base)
+    const nextPoints = (basePoints[cls + 1] * stageCnt) - totalRps
     const notPostCategory = selectable.filter(value => !Object.keys(data.data?.scores ?? {}).map(Number).includes(value))
 
-    const rivals = getSurroundingRanking(totalRanking?.data, totalRps, (basePoints[cls + 1] * stageCounts))
+    const rivals = getSurroundingRanking(totalRanking?.data, totalRps, (basePoints[cls + 1] * stageCnt))
 
     // 前後プレイヤー５名を抽出する関数
     function getSurroundingRanking(totalRanking, userRps, checkPoint = 0) {
@@ -143,7 +148,7 @@ export default function DashBoard({user, users}){
                                     <br/>
                                     {/* 3行目: RPS表示 */}
                                     <span className="cell-box-caption">
-                                        {player?.rps < (stageCounts * basePoints.at(-1)) && (
+                                        {player?.rps < (stageCnt * basePoints.at(-1)) && (
                                             <>{Number(player?.rps).toLocaleString()} rps.</>
                                         )}
                                     </span>

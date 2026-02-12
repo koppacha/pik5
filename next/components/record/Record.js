@@ -26,7 +26,7 @@ import {
 import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
-import {displayDifficulty, hideRuleNames} from "../../lib/const";
+import {displayDifficulty, hideRuleNames, normalStageCounts, stageCounts} from "../../lib/const";
 import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
@@ -63,9 +63,14 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const stageUrl = stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
     const stageLink = (stageUrl) ? '/stage/'+stageUrl : ""
 
-    // 全総合を表示する場合、二重カウント対象分のステージ数を加算
-    // 全回収TA 5＋新チャレ 26＋ゲキカラ 28
-    const addStageCount = (Number(series) === 1) ? 59 : 0
+    // 総合ランキングのステージ数
+    // 特殊ランキングは同一キーの全総合と通常総合の差分を算出
+    const stageCountArray = {
+        1: stageCounts,
+        2: normalStageCounts,
+        3: Object.fromEntries(Object.entries(stageCounts).map(([key, valueA]) => [key, valueA - (normalStageCounts[key] ?? 0)]))
+    }
+    const stageCount = (data?.ranks) ? String(stageCountArray?.series?.year || stages.length) : "0"
 
     // 比較値を整形する
     let compare;
@@ -124,7 +129,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                     <CompareType className="compare-type" as="span"> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
-                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stages.length + addStageCount}</ScoreType></>
+                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stageCount}</ScoreType></>
                     }
                     </div>
                 </RecordGridWrapper>
