@@ -4,7 +4,7 @@ import NowLoading from "../NowLoading";
 import Record from "./Record";
 import * as React from "react";
 
-export default function RankingTotal({posts, series, console:consoles, rule, year, users, stages}){
+export default function RankingTotal({posts, series, console:consoles, rule, year, users, stages, isRpsTotalMode = false}){
 
     // 取得したデータにPrismaから取ってきたスクリーンネームを入れる TODO: あとで共通化
     const data = posts ? Object.values(posts).map(function(post){
@@ -16,6 +16,6 @@ export default function RankingTotal({posts, series, console:consoles, rule, yea
     }) : []
 
     return data.map(function(post, index) {
-        return <Record key={post.user_id} prevUser={data[index-1]?.user_id} data={post} stages={stages} series={series} consoles={consoles} year={year}/>
+        return <Record key={post.user_id} prevUser={data[index-1]?.user_id} data={post} stages={stages} series={series} consoles={consoles} year={year} swapScoreRpsLabel={isRpsTotalMode}/>
     })
 }

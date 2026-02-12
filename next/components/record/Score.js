@@ -2,7 +2,7 @@ import {ScoreTail, ScoreType} from "../../styles/pik5.css";
 import {range, sec2time} from "../../lib/pik5";
 import {timeStageList} from "../../lib/const";
 
-export default function Score({rule, score, stage, category}){
+export default function Score({rule, score, stage, category, unit = "pts"}){
 
     if(!score){
         return (
@@ -50,7 +50,7 @@ export default function Score({rule, score, stage, category}){
             return (
                 <>
                     <ScoreType className="score-type" as="span">{score.toLocaleString()}</ScoreType>
-                    <ScoreTail className="score-tail" as="span"> pts.</ScoreTail>
+                    <ScoreTail className="score-tail" as="span"> {unit}.</ScoreTail>
                 </>
             )
         }

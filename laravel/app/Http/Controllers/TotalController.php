@@ -137,9 +137,12 @@ class TotalController extends Controller
 
     public function getTotals(Request $request): array
     {
+        $seriesId = (int)$request['id'];
+        $isRpsTotalMode = $seriesId > 0 && $seriesId < 10;
+
         $req = [
             "console" => (int)$request['console'] ?: 0,
-            "rule" => (int)$request['rule'] ?: (int)$request['id'],
+            "rule" => (int)$request['rule'] ?: $seriesId,
             "year" => (int)$request['year'] ?: date("Y")
         ];
 
@@ -276,7 +279,18 @@ class TotalController extends Controller
             return $user;
         }, $users);
 
-        // 合計スコアの降順で並び替え
+        if ($isRpsTotalMode) {
+            // series < 10 は RPS 基準のランキングに切り替える
+            $users = array_map(static function ($user) {
+                $score = $user['score'];
+                $rps = $user['rps'];
+                $user['score'] = $rps;
+                $user['rps'] = $score;
+                return $user;
+            }, $users);
+        }
+
+        // 合計値（RPSモード時は置換後score=RPS）の降順で並び替え
         usort($users, static function ($a, $b) {
             return $b['score'] <=> $a['score'];
         });

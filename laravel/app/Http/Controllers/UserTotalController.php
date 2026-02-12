@@ -43,6 +43,14 @@ class UserTotalController extends Controller
      */
     public function show(Request $request): JsonResponse
     {
+        $result = [
+            "totals" => [
+                "score" => 0,
+                "rps" => 0,
+                "mark" => 0,
+            ],
+        ];
+
         // 該当ユーザーの全総合ランキングデータをリクエスト
         $req = new Request(['id' => 1, 'rule' => 1, 'console' => 0, 'year' => date('Y')]);
         $totalController = new TotalController();
@@ -99,9 +107,6 @@ class UserTotalController extends Controller
 
             // ここまでの計算結果をデータベースへ書き込む
             $this->updateTotalsTable($request['id'], $result);
-        } else {
-            // 総合ランキングを取得できなかった場合
-            $result = ["error" => "Totals Not Found"];
         }
         return response()->json(
             $result
