@@ -34,7 +34,7 @@ import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
 import {stageUrlOutput} from "../../lib/factory";
 
-export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history}) {
+export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history, swapScoreRpsLabel = false}) {
 
     const router = useRouter()
     const {t} = useLocale()
@@ -112,7 +112,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : "rps"}]</RankPointType>}
+                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>
@@ -120,7 +120,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} /><br className="pc-hidden"/>
+                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={swapScoreRpsLabel ? "rps" : "pts"} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span"> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示

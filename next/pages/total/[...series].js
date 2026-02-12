@@ -177,7 +177,7 @@ export default function Series(param){
                 </Grid>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal posts={param.posts} users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages}/>
+            <RankingTotal posts={param.posts} users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages} isRpsTotalMode={Number(param.series) < 10}/>
         </>
     )
 }

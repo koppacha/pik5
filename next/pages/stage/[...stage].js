@@ -1,5 +1,5 @@
 import * as React from "react";
-import {Box, Button, Grid, List, ListItem, SwipeableDrawer, Typography} from "@mui/material";
+import {Box, Button, Grid, List, ListItem, Stack, SwipeableDrawer, Typography} from "@mui/material";
 import {range, fetcher, useLocale, currentYear, sec2time, dateFormat, purgeCache, formattedDate} from "../../lib/pik5";
 import RecordPost from "../../components/modal/RecordPost";
 import PullDownConsole from "../../components/form/PullDownConsole";
@@ -251,36 +251,70 @@ export default function Stage(param){
             <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
             {!pik4range.includes(Number(param.rule)) && <ConsoleList param={param}/>}
             {pik4range.includes(Number(param.rule)) && <DifficultyList param={param}/>}
-            <Grid container style={{marginBottom:'1em'}}>
-                <Grid item xs={6} style={{paddingLeft:'0.5em'}}>
-                    <PullDownConsole props={param}/>
-                    <PullDownDifficulty props={param}/>
-                    <PullDownYear props={param}/>
-                </Grid>
-                <Grid container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
-                    {
-                        // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
-                        (isEvent(param.parent)) &&
-                            <RecordPost
-                                style={{alignItems: "center"}}
-                                info={param.info} rule={param.rule} console={param.consoles}/>
-                    }
-                    <Button
-                        variant="contained"
-                        className={"rule-box active"}
-                        onClick={() => handleOpen(param.ruleId)}>
-                        <span>{t.g.rule}</span>
-                    </Button>
-                    {param.guide && (
-                      <Button
-                          variant="contained"
-                          className={"rule-box active"}
-                          onClick={() => handleOpen(param.stage)}>
-                        <span>{t.g.guide}</span>
-                      </Button>
-                    )}
-                </Grid>
-            </Grid>
+            <Box
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    whiteSpace: 'nowrap',
+                    overflowX: { xs: 'auto', sm: 'visible' },
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarGutter: 'stable both-edges',
+                }}
+            >
+                <Box
+                    sx={{
+                        display: 'flex',
+                        alignItems: 'flex-end',
+                        paddingBottom: '8px',
+                        width: '100%',
+                        justifyContent: { xs: 'flex-start', sm: 'space-between'},
+                        minWidth: { xs: 'max-content', sm: 0},
+                    }}
+                >
+                    <Stack
+                        direction="row"
+                        spacing={1}
+                        sx={{ flexShrink: 0}}
+                    >
+                        <Box><PullDownConsole props={param}/></Box>
+                        <Box><PullDownYear props={param}/></Box>
+                        <Box>{pik4range.includes(Number(param.rule)) && <PullDownDifficulty props={param}/>}</Box>
+                    </Stack>
+                    <Stack
+                        direction="row"
+                        spacing={0}
+                        sx={{ flexShrink: 0}}
+                    >
+                        <Box style={{paddingLeft: "15px"}}>
+                            {
+                                // イベント対象ステージの場合はイベント期間内なら投稿ボタンを表示、イベント対象外の場合は常に投稿ボタンを表示する
+                                (isEvent(param.parent)) &&
+                                <RecordPost
+                                    style={{alignItems: "center"}}
+                                    info={param.info} rule={param.rule} console={param.consoles}/>
+                            }
+                        </Box>
+                        <Box>
+                            <Button
+                                variant="contained"
+                                className={"rule-box active"}
+                                onClick={() => handleOpen(param.ruleId)}>
+                                <span>{t.g.rule}</span>
+                            </Button>
+                        </Box>
+                        <Box>
+                            {param.guide && (
+                                <Button
+                                    variant="contained"
+                                    className={"rule-box active"}
+                                    onClick={() => handleOpen(param.stage)}>
+                                    <span>{t.g.guide}</span>
+                                </Button>
+                            )}
+                        </Box>
+                    </Stack>
+                </Box>
+            </Box>
             <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
             <ModalKeyword open={open} uniqueId={keywordId} users={param.users} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
