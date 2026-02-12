@@ -38,12 +38,14 @@ export default function DashBoard({user, users}){
             </>
         )
     }
-    const cls = basePoints.findLastIndex(base => data.data?.totals?.rps > stageCounts * base)
+    const normalizedRps = Number(data.data?.totals?.rps)
+    const totalRps = Number.isFinite(normalizedRps) ? normalizedRps : 0
+    const cls = basePoints.findLastIndex(base => totalRps > stageCounts * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCounts * base)
-    const nextPoints = (basePoints[cls + 1] * stageCounts) - data.data?.totals?.rps
+    const nextPoints = (basePoints[cls + 1] * stageCounts) - totalRps
     const notPostCategory = selectable.filter(value => !Object.keys(data.data?.scores ?? {}).map(Number).includes(value))
 
-    const rivals = getSurroundingRanking(totalRanking?.data, data.data?.totals?.rps, (basePoints[cls + 1] * stageCounts))
+    const rivals = getSurroundingRanking(totalRanking?.data, totalRps, (basePoints[cls + 1] * stageCounts))
 
     // 前後プレイヤー５名を抽出する関数
     function getSurroundingRanking(totalRanking, userRps, checkPoint = 0) {
@@ -202,7 +204,7 @@ export default function DashBoard({user, users}){
                                         </ul>
                                     </>
                                 }>
-                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "68px"}}>
+                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "80px"}}>
                                         <GradientLine color={"#ccc"} />
                                         <br/>
                                         {t.title[9]}<br/>

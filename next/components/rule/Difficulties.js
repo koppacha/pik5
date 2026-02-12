@@ -11,8 +11,6 @@ export default function Difficulties({users, stage, rule, consoles, year, diffic
 
     const {t} = useLocale()
 
-    console.log(stage, consoles, rule, difficulty)
-
     const { data: record } = useSWR(`/api/server/record/top/${stage}/${consoles}/${rule}/${difficulty}`, fetcher)
     if(!record) return <NowLoading />
 
