@@ -33,7 +33,7 @@ import {
 } from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faHouseChimney, faSquare, faStairs, faXmark} from "@fortawesome/free-solid-svg-icons";
@@ -107,12 +107,8 @@ export async function getServerSideProps(context){
     }, {});
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
+
     return {
         props: {
             stages, limited, info, users, teams, total, arena, flagCount

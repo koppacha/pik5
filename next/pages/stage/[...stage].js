@@ -13,7 +13,7 @@ import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
 import {available, hideRuleNames} from "../../lib/const";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import RuleList from "../../components/record/RuleList";
 import useSWR from "swr";
@@ -115,12 +115,8 @@ export async function getStaticProps({params}){
         guide = (guide_res.status < 300) ? await guide_res.json() : {}
     }
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
+
     // キャッシュ時間をリクエスト
     const fDate = formattedDate()
     return {

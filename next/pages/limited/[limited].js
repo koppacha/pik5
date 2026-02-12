@@ -14,7 +14,7 @@ import Head from "next/head";
 import {PageHeader, RuleBox, RuleWrapper, StageListBox, StairIcon} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
@@ -61,12 +61,7 @@ export async function getStaticProps({params}){
     }
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     return {
         props: {

@@ -13,17 +13,12 @@ import {AuthButton, AuthWindow} from "../../styles/pik5.css";
 import Image from "next/image";
 import Link from "next/link";
 import Head from "next/head";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 
 export async function getServerSideProps(){
 
     // スクリーンネームをリクエスト（検索用）
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     return {
         props: {

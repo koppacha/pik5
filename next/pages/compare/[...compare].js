@@ -3,7 +3,7 @@ import * as React from "react";
 import {currentYear, useLocale} from "../../lib/pik5";
 import Head from "next/head";
 import RankingCompare from "../../components/record/RankingCompare";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import {reverseStages, rule2array} from "../../lib/const";
 import {RuleBox, RuleWrapper, TeamRpsType, TeamScoreType, UserType} from "../../styles/pik5.css";
 import Link from "next/link";
@@ -66,12 +66,7 @@ export async function getServerSideProps(ctx){
     }
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     // 表示中のユーザー名を取り出す
     const userName = users.find(function(e){
