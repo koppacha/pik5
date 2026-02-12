@@ -1,15 +1,10 @@
 import {KeywordContent} from "../../components/modal/KeywordContent";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 
 export async function getServerSideProps(context){
 
     // スクリーンネームをリクエスト（検索用）
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     return {
         props: {

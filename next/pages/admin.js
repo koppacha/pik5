@@ -1,5 +1,5 @@
 import { useSession, signIn, signOut } from "next-auth/react"
-import prisma from "../lib/prisma";
+import { getCachedUsersWithRole } from "../lib/usersCache";
 
 const DownloadCsvButton = ({ record }) => {
 
@@ -69,13 +69,7 @@ const DownloadCsvButton = ({ record }) => {
 
 export async function getStaticProps() {
 
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true,
-            role: true
-        }
-    })
+    const users = await getCachedUsersWithRole()
 
     // すべての記録をリクエスト
     const res = await fetch(`http://laravel:8000/api/record`)

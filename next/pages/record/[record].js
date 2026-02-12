@@ -4,7 +4,7 @@ import {addName2posts, useLocale} from "../../lib/pik5";
 import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import Link from "next/link";
 import Head from "next/head";
-import prisma from "../../lib/prisma";
+import { getCachedUsersWithRole } from "../../lib/usersCache";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faArrowTrendUp, faHouseChimney, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
@@ -43,13 +43,7 @@ export async function getServerSideProps(ctx) {
     let history = await historyRes.json()
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true,
-            role: true
-        }
-    })
+    const users = await getCachedUsersWithRole()
 
     // 表示中のユーザー名を取り出す
     data.user_name = users.find(function(e){

@@ -7,7 +7,7 @@ import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import {available, rule2array} from "../../lib/const";
 import {
     MarkerTableCell,
@@ -35,12 +35,8 @@ export async function getStaticProps({params}){
     const user = query[0]
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
+
     // 表示中のユーザー名を取り出す
     const userName = users.find(function(e){
         return e.userId === user

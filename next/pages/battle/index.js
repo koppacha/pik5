@@ -7,7 +7,7 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
-import prisma from "../../lib/prisma";
+import { getCachedUsers } from "../../lib/usersCache";
 import {Tooltip} from "@mui/material";
 
 const dandoriStages = range(413, 418)
@@ -28,12 +28,7 @@ export async function getStaticProps() {
     const score = await scoreRes.json()
 
     // スクリーンネームをリクエスト
-    const users = await prisma.user.findMany({
-        select: {
-            userId: true,
-            name: true
-        }
-    })
+    const users = await getCachedUsers()
 
     return {props: {rate, users, score} }
 }
