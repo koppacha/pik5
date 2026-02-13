@@ -43,18 +43,18 @@ export default function DashBoard({user, users}){
     const totalRps = Number.isFinite(normalizedRps) ? normalizedRps : 0
 
     // 最新のステージ数を取得
-    const stageCnt = Object.values(stageCounts)[0]
+    const stageCnt = stageCounts[currentYear()]
 
     const cls = basePoints.findLastIndex(base => totalRps > stageCnt * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCnt * base)
     const nextPoints = (basePoints[cls + 1] * stageCnt) - totalRps
     const notPostCategory = selectable.filter(value => !Object.keys(data.data?.scores ?? {}).map(Number).includes(value))
 
-    const rivals = getSurroundingRanking(totalRanking?.data, totalRps, (basePoints[cls + 1] * stageCnt))
+    const rivals = getSurroundingRanking(totalRanking?.data, user?.id, totalRps, (basePoints[cls + 1] * stageCnt))
 
     // 前後プレイヤー５名を抽出する関数
-    function getSurroundingRanking(totalRanking, userRps, checkPoint = 0) {
-        const userIndex = totalRanking.findIndex(item => item.rps === userRps);
+    function getSurroundingRanking(totalRanking, userId, userRps, checkPoint = 0) {
+        const userIndex = totalRanking.findIndex(item => item.user === userId)
 
         if (userIndex === -1) {
             return []
