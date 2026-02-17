@@ -12,8 +12,8 @@ import * as yup from "yup";
 import {AuthButton, AuthWindow} from "../../styles/pik5.css";
 import Image from "next/image";
 import Link from "next/link";
-import Head from "next/head";
 import { getCachedUsers } from "../../lib/usersCache";
+import SeoHead from "../../components/SeoHead"
 
 export async function getServerSideProps(){
 
@@ -81,9 +81,10 @@ export default function Login(){
 
     return (
         <>
-            <Head>
-                <title>{t.g.login+" - "+t.title[0]}</title>
-            </Head>
+            <SeoHead
+                title={t.g.login+" - "+t.title[0]}
+                noindex={true}
+            />
             <Box>
                 <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
                     <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>

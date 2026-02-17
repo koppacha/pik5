@@ -1,7 +1,6 @@
 import {Box, Grid, Typography} from "@mui/material";
 import * as React from "react";
 import {currentYear, useLocale} from "../../lib/pik5";
-import Head from "next/head";
 import RankingCompare from "../../components/record/RankingCompare";
 import { getCachedUsers } from "../../lib/usersCache";
 import {reverseStages, rule2array} from "../../lib/const";
@@ -9,6 +8,7 @@ import {RuleBox, RuleWrapper, TeamRpsType, TeamScoreType, UserType} from "../../
 import Link from "next/link";
 import ModalCompare from "../../components/modal/ModalCompare";
 import {useState} from "react";
+import SeoHead from "../../components/SeoHead"
 
 // サーバーサイドの処理（SSR）
 export async function getServerSideProps(ctx){
@@ -196,9 +196,10 @@ export default function Compare(param){
 
     return (
         <>
-            <Head>
-                <title>{`ピクチャレ星取表（${param.userName} vs. ${param.userName2}） - ${t.title[0]}`}</title>
-            </Head>
+            <SeoHead
+                title={`ピクチャレ星取表（${param.userName} vs. ${param.userName2}） - ${t.title[0]}`}
+                noindex={true}
+            />
             ツール<br/>
             <Typography variant="" className="title">ピクチャレ星取表</Typography><br/>
             <Typography variant="" className="subtitle">Score Comparison List</Typography><br/>

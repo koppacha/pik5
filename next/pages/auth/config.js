@@ -17,6 +17,7 @@ import {
     Typography,
 } from '@mui/material'
 import {maskEmailAddress, useLocale} from "../../lib/pik5";
+import SeoHead from "../../components/SeoHead"
 
 function isValidEmailSimple(rawEmail) {
     const email = String(rawEmail || '').trim()
@@ -209,16 +210,26 @@ export default function AuthConfigPage() {
 
     if (status === 'loading') {
         return (
-            <Container maxWidth="sm" sx={{ py: 6 }}>
-                <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 240 }}>
-                    <CircularProgress />
-                </Stack>
-            </Container>
+            <>
+                <SeoHead
+                    title={`${t.g.config} - ${t.title[0]}`}
+                    noindex={true}
+                />
+                <Container maxWidth="sm" sx={{ py: 6 }}>
+                    <Stack alignItems="center" justifyContent="center" sx={{ minHeight: 240 }}>
+                        <CircularProgress />
+                    </Stack>
+                </Container>
+            </>
         )
     }
 
     return (
         <Container maxWidth="sm" sx={{ py: 4 }}>
+            <SeoHead
+                title={`${t.g.config} - ${t.title[0]}`}
+                noindex={true}
+            />
             <Backdrop
                 open={Boolean(submitting || emailBusy)}
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
