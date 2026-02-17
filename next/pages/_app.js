@@ -17,6 +17,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import {DevSupport} from "@react-buddy/ide-toolbox-next";
 import {ComponentPreviews, useInitial} from "../dev";
+import SeoHead from "../components/SeoHead"
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -52,6 +53,7 @@ export default function App(props) {
 
     return (
         <>
+            <SeoHead />
             <Script strategy="afterInteractive"
                     src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
             <Script id="gtag-init" strategy="afterInteractive"

@@ -9,9 +9,9 @@ import * as yup from "yup";
 import {yupResolver} from "@hookform/resolvers/yup";
 import Image from "next/image";
 import Link from "next/link";
-import Head from "next/head";
 import {logger} from "../../lib/logger";
 import { getCachedUsers } from "../../lib/usersCache";
+import SeoHead from "../../components/SeoHead"
 
 export async function getServerSideProps(context){
 
@@ -82,9 +82,10 @@ export default function Register() {
     }
     return (
         <>
-            <Head>
-                <title>{t.g.register+" - "+t.title[0]}</title>
-            </Head>
+            <SeoHead
+                title={t.g.register+" - "+t.title[0]}
+                noindex={true}
+            />
             <Box>
                 <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
                     <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>

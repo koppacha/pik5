@@ -1,5 +1,6 @@
 import { useSession, signIn, signOut } from "next-auth/react"
 import { getCachedUsersWithRole } from "../lib/usersCache";
+import SeoHead from "../components/SeoHead"
 
 const DownloadCsvButton = ({ record }) => {
 
@@ -95,12 +96,20 @@ export default function Admin({data, users}){
     if(Number(role) !== 10) {
         return (
             <div>
+                <SeoHead
+                    title={"管理画面 - ピクチャレ大会"}
+                    noindex={true}
+                />
                 <h1>アクセス権がありません。</h1>
             </div>
         )
     }
     return (
         <div>
+            <SeoHead
+                title={"管理画面 - ピクチャレ大会"}
+                noindex={true}
+            />
             <h1>全記録ダウンロード</h1>
             <DownloadCsvButton record={data}/>
         </div>

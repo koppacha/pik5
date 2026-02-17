@@ -1,5 +1,6 @@
 import {KeywordContent} from "../../components/modal/KeywordContent";
 import { getCachedUsers } from "../../lib/usersCache";
+import SeoHead from "../../components/SeoHead"
 
 export async function getServerSideProps(context){
 
@@ -32,6 +33,10 @@ const data = {
 function Rules(){
     return (
         <>
+            <SeoHead
+                title={"更新履歴 - ピクチャレ大会"}
+                noindex={true}
+            />
             <KeywordContent data={data}/>
         </>
     )

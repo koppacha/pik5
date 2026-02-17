@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /auth/
+Disallow: /admin
+Disallow: /compare
+Disallow: /compare/
+Disallow: /record
+Disallow: /record/
+Disallow: /keyword/moving
+Disallow: /keyword/update
+
+Sitemap: https://pik5.net/sitemap.xml

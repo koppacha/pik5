@@ -3,7 +3,6 @@ import {Box, Button, Typography} from "@mui/material";
 import {addName2posts, useLocale} from "../../lib/pik5";
 import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import Link from "next/link";
-import Head from "next/head";
 import { getCachedUsersWithRole } from "../../lib/usersCache";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faArrowTrendUp, faHouseChimney, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
@@ -11,6 +10,7 @@ import Record from "../../components/record/Record";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
+import SeoHead from "../../components/SeoHead"
 
 // recordsではページキャッシュを作らないようにSSRで動的に生成する
 export async function getServerSideProps(ctx) {
@@ -109,9 +109,10 @@ export default function RecordPage({users, data, history}){
 
     return (
         <>
-            <Head>
-                <title>{data.user_name+"/"+t.stage[data.stage_id]+" - "+t.title[0]}</title>
-            </Head>
+            <SeoHead
+                title={data.user_name+"/"+t.stage[data.stage_id]+" - "+t.title[0]}
+                noindex={true}
+            />
             {
                 (data.flg > 1 || !data.unique_id) ?
                     <>
