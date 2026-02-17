@@ -1,8 +1,8 @@
 import Link from "next/link";
 import {useLocale} from "../lib/pik5";
 import {Typography} from "@mui/material";
-import Head from "next/head";
 import * as React from "react";
+import SeoHead from "../components/SeoHead"
 
 export default function NotFound(){
 
@@ -10,9 +10,10 @@ export default function NotFound(){
 
     return (
         <>
-            <Head>
-                <title>{"404 Page Not Found - "+t.title[0]}</title>
-            </Head>
+            <SeoHead
+                title={"404 Page Not Found - "+t.title[0]}
+                noindex={true}
+            />
             <div style={{height:"100vh"}}>
                 <Typography className="title" variant="h2">404 Page Not Found</Typography>
                 {t.t.notFound}<br/>

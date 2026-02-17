@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import {useLocale} from "../../../lib/pik5";
 import Image from "next/image";
+import SeoHead from "../../../components/SeoHead"
 
 export default function ResetRequestPage() {
 
@@ -58,88 +59,94 @@ export default function ResetRequestPage() {
   const emailIsValid = /.+@.+\..+/.test(email)
 
   return (
-    <Box sx={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', py: 4 }}>
-      <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
-        <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
-      </Box>
-      <Container maxWidth="sm">
-        <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
-          <Stack spacing={2.5}>
-            <Box>
-              <Typography variant="h5" component="h1" fontWeight={700}>
-                {t.g.passwordReset}
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                登録済みのメールアドレスを入力してください。リセット手順を送信します。
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
-                もしメールが届かない場合、迷惑メールフォルダや受信設定をご確認ください。
-              </Typography>
-            </Box>
+    <>
+      <SeoHead
+        title={`${t.g.passwordReset} - ${t.title[0]}`}
+        noindex={true}
+      />
+      <Box sx={{ minHeight: '100dvh', display: 'flex', alignItems: 'center', py: 4 }}>
+        <Box style={{zIndex:"-1",position:"fixed",top:"0",left:"0",width:"100%",height:"100vh"}}>
+          <Image src="/img/bg29.jpg" fill style={{objectFit:"cover",overflow:"hidden"}} alt="background"/>
+        </Box>
+        <Container maxWidth="sm">
+          <Paper elevation={2} sx={{ p: { xs: 2, sm: 3 } }}>
+            <Stack spacing={2.5}>
+              <Box>
+                <Typography variant="h5" component="h1" fontWeight={700}>
+                  {t.g.passwordReset}
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                  登録済みのメールアドレスを入力してください。リセット手順を送信します。
+                </Typography>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
+                  もしメールが届かない場合、迷惑メールフォルダや受信設定をご確認ください。
+                </Typography>
+              </Box>
 
-            <Box component="form" onSubmit={onSubmit} noValidate>
-              <Stack spacing={2}>
-                <TextField
-                  label={t.g.email}
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  type="email"
-                  autoComplete="email"
-                  fullWidth
-                  required
-                  disabled={busy}
-                  error={email.length > 0 && !emailIsValid}
-                  helperText={
-                    email.length === 0
-                      ? '例: you@example.com'
-                      : emailIsValid
-                        ? ' '
-                        : 'メールアドレスの形式をご確認ください'
-                  }
-                />
+              <Box component="form" onSubmit={onSubmit} noValidate>
+                <Stack spacing={2}>
+                  <TextField
+                    label={t.g.email}
+                    placeholder="you@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    type="email"
+                    autoComplete="email"
+                    fullWidth
+                    required
+                    disabled={busy}
+                    error={email.length > 0 && !emailIsValid}
+                    helperText={
+                      email.length === 0
+                        ? '例: you@example.com'
+                        : emailIsValid
+                          ? ' '
+                          : 'メールアドレスの形式をご確認ください'
+                    }
+                  />
 
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  disabled={busy || !emailIsValid}
-                  fullWidth
-                  sx={{ py: 1.2 }}
-                >
-                  {busy ? (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <CircularProgress size={18} color="inherit" />
-                      送信中…
-                    </Box>
-                  ) : (
-                    '送信'
-                  )}
-                </Button>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    size="large"
+                    disabled={busy || !emailIsValid}
+                    fullWidth
+                    sx={{ py: 1.2 }}
+                  >
+                    {busy ? (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <CircularProgress size={18} color="inherit" />
+                        送信中…
+                      </Box>
+                    ) : (
+                      '送信'
+                    )}
+                  </Button>
 
-                {msg && <Alert severity="success">{msg}</Alert>}
-                {err && <Alert severity="error">{err}</Alert>}
-              </Stack>
-            </Box>
+                  {msg && <Alert severity="success">{msg}</Alert>}
+                  {err && <Alert severity="error">{err}</Alert>}
+                </Stack>
+              </Box>
 
-            <Divider />
+              <Divider />
 
-            <Stack spacing={1}>
-              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-                <Link component={NextLink} href="/" underline="hover">
-                  {t.g.top}
-                </Link><br/>
-                <Link component={NextLink} href="/auth/login" underline="hover">
-                  {t.g.login}
-                </Link><br/>
-                <Link component={NextLink} href="/auth/register" underline="hover">
-                  {t.g.unregistered}
-                </Link>
+              <Stack spacing={1}>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                  <Link component={NextLink} href="/" underline="hover">
+                    {t.g.top}
+                  </Link><br/>
+                  <Link component={NextLink} href="/auth/login" underline="hover">
+                    {t.g.login}
+                  </Link><br/>
+                  <Link component={NextLink} href="/auth/register" underline="hover">
+                    {t.g.unregistered}
+                  </Link>
+                </Stack>
               </Stack>
             </Stack>
-          </Stack>
-        </Paper>
-      </Container>
-    </Box>
+          </Paper>
+        </Container>
+      </Box>
+    </>
   )
 }

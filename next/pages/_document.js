@@ -5,13 +5,12 @@ import PropTypes from "prop-types";
 
 export default function MyDocument(props) {
 
-    const { emotionStyleTags } = props
+    const { emotionStyleTags, locale } = props
 
     return (
-        <Html lang="ja">
+        <Html lang={locale || "ja"}>
           <Head>
               <meta charSet="utf-8"/>
-              <meta name="description" content="" />
               <meta name="emotion-insertion-point" content=""/>
               {emotionStyleTags}
               <link rel="icon" href="/favicon.ico" />
@@ -52,6 +51,7 @@ MyDocument.getInitialProps = async (ctx) => {
     return {
         ...initialProps,
         emotionStyleTags,
+        locale: ctx.locale || ctx.defaultLocale || "ja",
     }
 }
 MyDocument.prototypes = {

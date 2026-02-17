@@ -26,12 +26,13 @@ import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
 import { getCachedUsers } from "../lib/usersCache"
-import Head from "next/head";
 import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
 import {mutate} from "swr";
 import ModalIdeaPost from "../components/modal/ModalIdeaPost";
 import PostButton from "../components/PostButton";
 import DashBoard from "../components/top/DashBoard";
+import SeoHead from "../components/SeoHead"
+import {toAbsoluteUrl} from "../lib/seo"
 
 export async function getServerSideProps(context) {
 
@@ -108,9 +109,17 @@ export default function Home({users, prev}) {
 
   return (
       <>
-          <Head>
-              <title>{t.title[0] + " - " + t.t.desc}</title>
-          </Head>
+          <SeoHead
+              title={t.title[0] + " - " + t.t.desc}
+              description={t.t.welcome}
+              jsonLd={{
+                  "@context": "https://schema.org",
+                  "@type": "WebSite",
+                  name: t.title[0],
+                  inLanguage: "ja",
+                  url: toAbsoluteUrl("/")
+              }}
+          />
           <Typography variant="" className="title">{t.title[0]}</Typography><br/>
           <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
           <InfoBox className="info-box">
