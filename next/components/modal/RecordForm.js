@@ -12,14 +12,13 @@ import {convertToSeconds, currentYear, rule2consoles, useLocale} from "../../lib
 import {Box, MenuItem, ToggleButton} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
-import FormData from "form-data"
 import Link from "next/link";
 import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheck} from "@fortawesome/free-solid-svg-icons";
 
-export default function RecordForm({info, rule, mode, open, setOpen, handleClose}) {
+export default function RecordForm({info, rule, mode, open, setOpen, handleClose, initialData = null, onSuccess = null}) {
 
     // 送信イベント判定
     const isSubmit = useRef(false)
@@ -46,6 +45,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [pikmin, setPikmin] = useState(0)
     const [treasure, setTreasure] = useState(0)
     const [caveTime, setCaveTime] = useState("")
+    const [timeValue, setTimeValue] = useState("00:00:00")
 
     const videoRegex = videoUrl ?
         // 証拠動画URLが入力された場合の正規表現
@@ -86,19 +86,34 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // フォームデータの初期化
     useEffect(() => {
+        const isEditMode = mode === "edit" && initialData
+        const defaultConsole = Number(isEditMode ? initialData.console : consoleList[0]) || consoleList[0]
+        const defaultDifficulty = Number(isEditMode ? initialData.difficulty : 0) || 0
+        const defaultScore = Number(isEditMode ? initialData.score : 0) || 0
+        const defaultVideoUrl = isEditMode ? (initialData.video_url || "") : ""
+        const defaultComment = isEditMode ? (initialData.post_comment || "") : ""
+        const defaultRegion = Number(isEditMode ? initialData.region : 0) || 0
+        const defaultTime = "00:00:00"
+
         reset({
-            defaultValue: {
-                time: "00:00:00",
-                score: 0,
-                console: consoleList[0],
-                difficulty: "",
-                videoUrl: "",
-                comment: "",
-            }
+            time: defaultTime,
+            score: defaultScore,
+            console: defaultConsole,
+            difficulty: defaultDifficulty,
+            videoUrl: defaultVideoUrl,
+            comment: defaultComment,
+            "region-score": defaultScore,
         })
         setUserAgent(window.navigator.userAgent)
-        setConsole(consoleList[0])
-    }, [])
+        setConsole(defaultConsole)
+        setDifficulty(defaultDifficulty)
+        setScore(defaultScore)
+        setVideoUrl(defaultVideoUrl)
+        setComment(defaultComment)
+        setRegion(defaultRegion)
+        setRegionSelected(defaultRegion > 0)
+        setTimeValue(defaultTime)
+    }, [mode, initialData, rule])
 
     const {
         register,
@@ -112,9 +127,6 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         resolver: yupResolver(schema)
     })
 
-    // フォームデータ格納先
-    const formData = new FormData()
-
     // キーワードをバックエンドに送信する
     const onSubmit = async () => {
 
@@ -127,21 +139,46 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         isSubmit.current = true
 
         if (confirm) {
+            const formData = new FormData()
+            const isEditMode = mode === "edit" && initialData
+            const payloadScore = Number(score) > 0
+                ? Number(score)
+                : Number(isEditMode ? initialData.score : 0)
+            const payloadRule = Number(rule) > 0
+                ? Number(rule)
+                : Number(isEditMode ? initialData.rule : 0)
+            const payloadConsole = Number(consoles) > 0
+                ? Number(consoles)
+                : Number(isEditMode ? initialData.console : 0)
+            const payloadDifficulty = Number(difficulty) > 0
+                ? Number(difficulty)
+                : Number(isEditMode ? initialData.difficulty : 0)
+            const payloadRegion = Number(region) > 0
+                ? Number(region)
+                : Number(isEditMode ? initialData.region : 0)
+            const payloadVideoUrl = (videoUrl ?? "") || (isEditMode ? (initialData.video_url || "") : "")
+            const payloadComment = (comment ?? "") || (isEditMode ? (initialData.post_comment || "") : "")
+
             // 送信するデータをオブジェクトに追加
             formData.append('stage_id', info.stage_id)
-            formData.append('rule', rule)
-            formData.append('region', region)
-            formData.append('score', score)
+            formData.append('rule', payloadRule)
+            formData.append('region', payloadRegion)
+            formData.append('score', payloadScore)
             formData.append('user_id', session.user.userId)
-            formData.append('console', consoles)
-            formData.append('difficulty', difficulty)
+            formData.append('console', payloadConsole)
+            formData.append('difficulty', payloadDifficulty)
             if(img?.name) {
                 formData.append('file', img, img.name)
             }
-            formData.append('video_url', videoUrl)
+            formData.append('video_url', payloadVideoUrl)
             formData.append('user_agent', userAgent)
-            formData.append('post_comment', comment)
+            formData.append('post_comment', payloadComment)
             formData.append('created_at', now)
+            formData.append('mode', mode || "create")
+            if(mode === "edit" && initialData?.unique_id){
+                formData.append('edit_unique_id', initialData.unique_id)
+                formData.append('old_img_url', initialData.img_url || "")
+            }
 
             // APIへ送信
             const res = await fetch('/api/server/post', {
@@ -181,6 +218,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     },
                 })
                 if(resStage.ok){
+                    if(typeof onSuccess === "function"){
+                        onSuccess()
+                    }
                     window.location.reload()
                 }
                 if(!resStage.ok || !resTotal.ok || !resUser.ok){
@@ -277,7 +317,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     return (
         <>
             <Dialog open={open} onClose={handleClose}>
-                <DialogTitle>{t.post.title}</DialogTitle>
+                <DialogTitle>{mode === "edit" ? `${t.post.title}（再編集）` : t.post.title}</DialogTitle>
                 <DialogContent>
                     <TextField
                         id="stage"
@@ -317,7 +357,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         onChange={(e) => setConsole(e.target.value)}
                         fullWidth
                         variant="standard"
-                        defaultValue={consoleList[0]}
+                        value={consoles || consoleList[0]}
                         margin="normal"
                     >
                         {
@@ -334,7 +374,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         onChange={(e) => setDifficulty(e.target.value)}
                         fullWidth
                         variant="standard"
-                        defaultValue={consoleList[0]}
+                        value={difficulty || ""}
                         margin="normal"
                         className={isPik4() || "hidden"}
                     >
@@ -350,7 +390,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         color="success"
                         className={[203, 213, 228].includes(info?.stage_id) || "hidden"}
                         onChange={() => {
-                            setRegionSelected(!regionSelected);
+                            const nextSelected = !regionSelected
+                            setRegionSelected(nextSelected)
+                            setRegion(nextSelected ? 1 : 0)
                         }}
                     >
                         <FontAwesomeIcon icon={faCheck} />　For Nintendo Switch or non-Japanese（スイッチ版または海外版の場合はチェック）
@@ -444,13 +486,14 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         onChange={function (e){
                                 setScore(time2score(e.target.value))
                                 setTime(e.target.value)
+                                setTimeValue(e.target.value)
                             }
                         }
                         fullWidth
                         variant="standard"
                         error={'time' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="00:00:00"
+                        value={timeValue}
                         margin="normal"
                         className={isTime() || "hidden"}
                     />
@@ -493,7 +536,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'videoUrl' in errors}
                         helperText={errors.videoUrl?.message}
-                        defaultValue=""
+                        value={videoUrl}
                         margin="normal"
                     />
                     <TextField
@@ -506,7 +549,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'comment' in errors}
                         helperText={errors.comment?.message}
-                        defaultValue=""
+                        value={comment}
                         margin="normal"
                     />
                 </DialogContent>
