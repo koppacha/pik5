@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Foundation\Http\FormRequest;
 use InvalidArgumentException;
@@ -43,10 +44,24 @@ class RecordController extends Controller
         return in_array((int)$rule, $ruleArray, true) ||
             in_array((int)$stage, $stageArray, true);
     }
+
+    private function createUniqueId(): int
+    {
+        do {
+            $uniqueId = (int)(config('version.record_prefix') . sprintf('%06d', random_int(0, 999999)));
+            $exists = Record::where('unique_id', $uniqueId)->exists();
+        } while ($exists);
+
+        return $uniqueId;
+    }
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $record = Record::select(config('const.selected'))->where('unique_id', $request['id'])->first();
+        $record = Record::select(config('const.selected'))
+            ->where('unique_id', $request['id'])
+            ->where('flg', '<', 2)
+            ->orderBy('post_id', 'DESC')
+            ->first();
         $data = $record ? $record->toArray() : [];
         $data["post_rank"] = $this->getRankArray($data, false);
 
@@ -175,27 +190,33 @@ class RecordController extends Controller
      */
     public function create(Request $request): JsonResponse
     {
-        // 簡易バリデーション
-        if((int)$request['score'] < 1 || (int)$request['rule'] < 1 || (int)$request['console'] < 1){
-            return response()->json(
-                ["ERROR", 500]
-            );
-        }
-        // コメントのNGワード処理（NGの場合は問答無用で「コメントなし」とする）
-        function ng_word_check($test, $array): bool
-        {
-            foreach ($array as $word){
-                if(str_contains($test, $word)){
-                    return true;
-                }
-            }
-            return false;
-        }
-        if(ng_word_check($request['post_comment'], HiddenController::ngWords())){
-            $comment = "コメントなし ";
-        } else {
-            $comment = $request['post_comment'] ?: "コメントなし";
-        }
+        $isEdit = ($request['mode'] === 'edit') && !empty($request['edit_unique_id']);
+        $editUniqueId = (int)($request['edit_unique_id'] ?: 0);
+        $score = (int)($request['score'] ?: 0);
+        $rule = (int)($request['rule'] ?: 0);
+        $console = (int)($request['console'] ?: 0);
+        $difficulty = (int)($request['difficulty'] ?: 0);
+        $region = (int)($request['region'] ?: 0);
+        $videoUrl = (string)($request['video_url'] ?: "");
+        $commentInput = (string)($request['post_comment'] ?? "");
+
+        // DEBUG LOG (コミット前に削除): 受信直後の生値と正規化値を確認
+        Log::info('RecordController.create.raw_input', [
+            'mode' => (string)$request['mode'],
+            'edit_unique_id' => (string)$request['edit_unique_id'],
+            'raw_score' => $request['score'],
+            'raw_rule' => $request['rule'],
+            'raw_console' => $request['console'],
+            'raw_difficulty' => $request['difficulty'],
+            'raw_region' => $request['region'],
+            'normalized' => [
+                'score' => $score,
+                'rule' => $rule,
+                'console' => $console,
+                'difficulty' => $difficulty,
+                'region' => $region,
+            ],
+        ]);
 
         // 受信した画像の処理
         $fileName = "";
@@ -213,35 +234,179 @@ class RecordController extends Controller
                 return response()->json("error:".$e);
             }
         }
-        // 画像以外の処理
-        try {
-            $clientIp = $request->ip() ?: "";
-            $clientHost = "";
-            if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
-                $clientHost = gethostbyaddr($clientIp) ?: "";
+
+        $current = null;
+        $newUniqueIdForCurrent = null;
+        $targetUniqueId = $this->createUniqueId();
+        $postMemo = "";
+
+        if($isEdit){
+            $current = Record::where('unique_id', $editUniqueId)
+                ->where('flg', '<', 2)
+                ->orderBy('post_id', 'DESC')
+                ->first();
+
+            if(!$current){
+                return response()->json(["Record Not Found"], 404);
             }
 
-            $posts = new Record();
-            $posts->fill([
-                'user_id' => $request['user_id'],
-                'score' => $request['score'],
-                'stage_id' => $request['stage_id'],
-                'rule' => $request['rule'],
-                'console' => $request['console'] ?: 0,
-                'difficulty' => $request['difficulty'] ?: 2,
-                'region' => 0,
-                'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
-                'unique_id' => config('version.record_prefix').sprintf('%06d',random_int(0, 999999)),
-                'post_comment' => $comment,
-                'user_ip' => $clientIp,
-                'user_host' => $clientHost,
-                'user_agent' => $request['user_agent'],
-                'img_url' => $fileName,
-                'video_url' => $request['video_url'] ?: "",
-                'post_memo' => "",
-                'flg' => 0
+            // 削除権限と同じ条件
+            $postDate = new DateTime($current->created_at);
+            $now = new DateTime();
+            $canEdit = false;
+            $editorRole = (int)($request['editor_role'] ?: 0);
+            $editorUserId = (string)($request['user_id'] ?: "");
+
+            if($editorRole === 10){
+                $canEdit = true;
+            } else {
+                $expired = ($postDate->getTimestamp() + 86400) < $now->getTimestamp();
+                if(!$expired){
+                    $canEdit = ($editorUserId === (string)$current->user_id) || ($editorRole > 0);
+                }
+            }
+
+            if(!$canEdit){
+                return response()->json(["Forbidden"], 403);
+            }
+
+            // 編集後レコードは編集前unique_idを引き継ぐ
+            $targetUniqueId = (int)$current->unique_id;
+
+            // 未編集項目は旧値を引き継ぐ
+            if($score < 1){
+                $score = (int)$current->score;
+            }
+            if($rule < 1){
+                $rule = (int)$current->rule;
+            }
+            if($console < 1){
+                $console = (int)$current->console;
+            }
+            if($difficulty < 1){
+                $difficulty = (int)$current->difficulty;
+            }
+            if($region < 0){
+                $region = (int)$current->region;
+            }
+            if($videoUrl === ""){
+                $videoUrl = (string)$current->video_url;
+            }
+            if($commentInput === ""){
+                $commentInput = (string)$current->post_comment;
+            }
+
+            // DEBUG LOG (コミット前に削除): 編集時フォールバック後の値を確認
+            Log::info('RecordController.create.after_edit_fallback', [
+                'current_post_id' => $current->post_id,
+                'current_unique_id' => $current->unique_id,
+                'current_values' => [
+                    'score' => (int)$current->score,
+                    'rule' => (int)$current->rule,
+                    'console' => (int)$current->console,
+                    'difficulty' => (int)$current->difficulty,
+                    'region' => (int)$current->region,
+                ],
+                'resolved_values' => [
+                    'score' => $score,
+                    'rule' => $rule,
+                    'console' => $console,
+                    'difficulty' => $difficulty,
+                    'region' => $region,
+                ],
             ]);
-            $posts->save();
+
+            // 編集前レコードは論理削除し、別unique_idへ付け替える
+            $newUniqueIdForCurrent = $this->createUniqueId();
+            $postMemo = trim(((string)$current->post_memo)." edited_from:".$targetUniqueId);
+
+            // 画像は新規添付がなければ既存を引き継ぐ
+            if(!$fileName){
+                $fileName = (string)($current->img_url ?: $request['old_img_url'] ?: "");
+            }
+        }
+
+        // 簡易バリデーション
+        // DEBUG LOG (コミット前に削除): 簡易バリデーション直前の最終値を確認
+        Log::info('RecordController.create.before_validation', [
+            'is_edit' => $isEdit,
+            'edit_unique_id' => $editUniqueId,
+            'score' => $score,
+            'rule' => $rule,
+            'console' => $console,
+            'difficulty' => $difficulty,
+            'region' => $region,
+        ]);
+
+        if($score < 1 || $rule < 1 || $console < 1){
+            // DEBUG LOG (コミット前に削除): バリデーション失敗時の値を確認
+            Log::warning('RecordController.create.validation_failed', [
+                'score' => $score,
+                'rule' => $rule,
+                'console' => $console,
+                'is_edit' => $isEdit,
+                'edit_unique_id' => $editUniqueId,
+            ]);
+            return response()->json(
+                ["ERROR", 500]
+            );
+        }
+
+        // コメントのNGワード処理（NGの場合は問答無用で「コメントなし」とする）
+        function ng_word_check($test, $array): bool
+        {
+            foreach ($array as $word){
+                if(str_contains($test, $word)){
+                    return true;
+                }
+            }
+            return false;
+        }
+        if(ng_word_check($commentInput, HiddenController::ngWords())){
+            $comment = "コメントなし ";
+        } else {
+            $comment = $commentInput ?: "コメントなし";
+        }
+
+        // 画像以外の処理
+        try {
+            DB::transaction(function () use ($request, $comment, $fileName, $targetUniqueId, $postMemo, $isEdit, $current, $newUniqueIdForCurrent, $score, $rule, $console, $difficulty, $region, $videoUrl) {
+                $clientIp = $request->ip() ?: "";
+                $clientHost = "";
+                if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+                    $clientHost = gethostbyaddr($clientIp) ?: "";
+                }
+
+                if($isEdit && $current){
+                    $current->fill([
+                        'flg' => 2,
+                        'unique_id' => $newUniqueIdForCurrent,
+                    ]);
+                    $current->save();
+                }
+
+                $posts = new Record();
+                $posts->fill([
+                    'user_id' => $request['user_id'],
+                    'score' => $score,
+                    'stage_id' => $request['stage_id'],
+                    'rule' => $rule,
+                    'console' => $console ?: 0,
+                    'difficulty' => $difficulty ?: 2,
+                    'region' => $region,
+                    'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
+                    'unique_id' => $targetUniqueId,
+                    'post_comment' => $comment,
+                    'user_ip' => $clientIp,
+                    'user_host' => $clientHost,
+                    'user_agent' => $request['user_agent'],
+                    'img_url' => $fileName,
+                    'video_url' => $videoUrl,
+                    'post_memo' => $postMemo,
+                    'flg' => 0
+                ]);
+                $posts->save();
+            });
 
             // イベントの場合の処理（stage_id が 1000 以上 10000 未満）
             $stageId = (int) $request['stage_id'];
@@ -464,7 +629,11 @@ class RecordController extends Controller
         $now_date = $datetime->format("Y-m-d H:i:s");
 
         // 投稿時刻を取得
-        $data = Record::select('created_at')->where('unique_id', $unique_id)->first();
+        $target = Record::where('unique_id', $unique_id)
+            ->where('flg', '<', 2)
+            ->orderBy('post_id', 'DESC')
+            ->first();
+        $data = $target ? ['created_at' => $target->created_at] : null;
         if(!$data){
             return response()->json(
                 ["Request Error"]
@@ -475,7 +644,7 @@ class RecordController extends Controller
 
         if($diff_date < 86400) {
 
-            Record::where("unique_id", $unique_id)->update(
+            Record::where("post_id", $target->post_id)->update(
                 [
                     'flg' => 2,
                     'updated_at' => $now_date

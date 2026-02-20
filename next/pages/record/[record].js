@@ -5,12 +5,13 @@ import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} fro
 import Link from "next/link";
 import { getCachedUsersWithRole } from "../../lib/usersCache";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faArrowTrendUp, faHouseChimney, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
+import {faArrowTrendUp, faHouseChimney, faPenToSquare, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
 import { useRouter } from "next/router";
 import SeoHead from "../../components/SeoHead"
+import RecordForm from "../../components/modal/RecordForm"
 
 // recordsではページキャッシュを作らないようにSSRで動的に生成する
 export async function getServerSideProps(ctx) {
@@ -64,6 +65,7 @@ export default function RecordPage({users, data, history}){
     const {t, r} = useLocale()
     const {data: session } = useSession()
     const router = useRouter()
+    const [editOpen, setEditOpen] = React.useState(false)
     let role = 0
 
     if(session) {
@@ -101,6 +103,8 @@ export default function RecordPage({users, data, history}){
             }
         }
     }
+    const handleEditOpen = () => setEditOpen(true)
+    const handleEditClose = () => setEditOpen(false)
     if(!data){
         return (
             <NowLoading/>
@@ -152,7 +156,18 @@ export default function RecordPage({users, data, history}){
                             {
                                 (delFlag()) &&
                                     <Button
-                                        sx={{marginLeft:"auto"}}
+                                        sx={{marginLeft:"auto", marginRight: "0.5em"}}
+                                        variant="contained"
+                                        color="primary"
+                                        className={"rule-box"}
+                                        onClick={handleEditOpen}>
+                                        <FontAwesomeIcon style={{color:"#e0e0e0"}} icon={faPenToSquare} /> この記録を再編集する
+                                    </Button>
+                            }
+                            {
+                                (delFlag()) &&
+                                    <Button
+                                        sx={{marginLeft:0}}
                                         variant="contained"
                                         color="primary"
                                         className={"rule-box"}
@@ -161,6 +176,16 @@ export default function RecordPage({users, data, history}){
                                     </Button>
                             }
                         </Box>
+                        <RecordForm
+                            info={{stage_id: data.stage_id}}
+                            rule={data.rule}
+                            mode="edit"
+                            open={editOpen}
+                            setOpen={setEditOpen}
+                            handleClose={handleEditClose}
+                            initialData={data}
+                            onSuccess={handleEditClose}
+                        />
                         <TopBox style={{marginTop:"4em"}} >
                             <TopBoxHeader className="top-box-header">
                                 <span><FontAwesomeIcon icon={faArrowTrendUp}/> 過去の記録</span>
