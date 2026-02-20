@@ -3,11 +3,11 @@
  */
 import {getServerSession} from "next-auth/next";
 const formidable = require("formidable");
-import FormData from "form-data";
 import fs from "fs";
 import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
+import prisma from "../../../lib/prisma";
 
 export const config = {
     api: {
@@ -49,6 +49,17 @@ function getForwardedFor(req) {
     return req.socket?.remoteAddress || ''
 }
 
+function canEditRecord(sessionUserId, role, createdAt, ownerUserId) {
+    if (Number(role) === 10) return true
+
+    const postDate = new Date(createdAt)
+    if (Number.isNaN(postDate.getTime())) return false
+    if ((postDate.getTime() + 86400000) < Date.now()) return false
+
+    if (sessionUserId === ownerUserId) return true
+    return Number(role) > 0
+}
+
 export default async function handler(req, res){
 
     const session = await getServerSession(req, res, authOptions)
@@ -75,11 +86,51 @@ export default async function handler(req, res){
 
     try {
         const {fields, files} = await parseForm(req)
-        const requiredKeys = ['stage_id', 'rule', 'region', 'score', 'console', 'difficulty', 'post_comment', 'created_at', 'user_agent']
+        const mode = String(getFieldValue(fields.mode) || 'create')
+        const editUniqueId = String(getFieldValue(fields.edit_unique_id) || '')
+        const isEdit = mode === 'edit'
+        const requiredKeys = ['stage_id', 'rule', 'region', 'score', 'console', 'difficulty', 'created_at', 'user_agent']
         const missing = requiredKeys.filter((key) => !getFieldValue(fields[key]))
         if (missing.length > 0) {
             res.status(400).json({error: true, message: `missing fields: ${missing.join(',')}`})
             return
+        }
+        if (isEdit && !editUniqueId) {
+            res.status(400).json({error: true, message: 'missing fields: edit_unique_id'})
+            return
+        }
+
+        const currentUserId = String(session.user.userId || session.user.id || '')
+        let editorRole = Number(session.user.role || 0)
+        if (!Number.isFinite(editorRole) || editorRole === 0) {
+            const editor = await prisma.user.findFirst({
+                where: {userId: currentUserId},
+                select: {role: true},
+            })
+            editorRole = Number(editor?.role || 0)
+        }
+
+        if (isEdit) {
+            const currentRecordRes = await fetch(`http://laravel:8000/api/record/id/${editUniqueId}`)
+            if (!currentRecordRes.ok) {
+                res.status(404).json({error: true, message: 'record not found'})
+                return
+            }
+            const currentRecord = await currentRecordRes.json()
+            if (!currentRecord?.unique_id || Number(currentRecord?.flg) > 1) {
+                res.status(404).json({error: true, message: 'record not found'})
+                return
+            }
+            const editable = canEditRecord(
+                currentUserId,
+                editorRole,
+                currentRecord.created_at,
+                String(currentRecord.user_id || '')
+            )
+            if (!editable) {
+                res.status(403).json({error: true, message: 'forbidden'})
+                return
+            }
         }
 
         const formData = new FormData()
@@ -87,7 +138,7 @@ export default async function handler(req, res){
         formData.append('rule', String(getFieldValue(fields.rule)))
         formData.append('region', String(getFieldValue(fields.region)))
         formData.append('score', String(getFieldValue(fields.score)))
-        formData.append('user_id', String(session.user.userId))
+        formData.append('user_id', currentUserId)
         formData.append('console', String(getFieldValue(fields.console)))
         formData.append('difficulty', String(getFieldValue(fields.difficulty)))
         formData.append('video_url', String(getFieldValue(fields.video_url) || ''))
@@ -95,14 +146,21 @@ export default async function handler(req, res){
         formData.append('post_comment', String(getFieldValue(fields.post_comment)))
         formData.append('created_at', String(getFieldValue(fields.created_at)))
         formData.append('user_agent', String(getFieldValue(fields.user_agent)))
+        formData.append('mode', mode)
+        formData.append('editor_role', String(editorRole))
+        if (isEdit) {
+            formData.append('edit_unique_id', editUniqueId)
+            formData.append('old_img_url', String(getFieldValue(fields.old_img_url) || ''))
+        }
 
         const uploadFile = Array.isArray(files?.file) ? files.file[0] : files?.file
         if (uploadFile?.filepath) {
-            formData.append('file', fs.createReadStream(uploadFile.filepath))
+            const fileBuffer = await fs.promises.readFile(uploadFile.filepath)
+            const filename = uploadFile.originalFilename || uploadFile.newFilename || 'upload.bin'
+            formData.append('file', new Blob([fileBuffer]), filename)
         }
 
         const proxyHeaders = {
-            ...formData.getHeaders(),
             'x-forwarded-for': getForwardedFor(req),
             'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
             'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),

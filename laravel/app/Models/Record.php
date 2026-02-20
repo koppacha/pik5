@@ -12,6 +12,13 @@ class Record extends Model
     use HasFactory;
 
     /**
+     * Primary key settings.
+     */
+    protected $primaryKey = 'post_id';
+    public $incrementing = true;
+    protected $keyType = 'int';
+
+    /**
      * 複数代入可能な属性
      *
      * @var array
