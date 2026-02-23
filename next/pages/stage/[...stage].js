@@ -121,7 +121,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            stages, stage, rule, consoles, year, info, users, parent, posts, ruleId, keyword, fDate, guide
+            stages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide
         },
         revalidate: 86400,
     }
@@ -207,6 +207,14 @@ export default function Stage(param){
     // トークンを取得
     const token = useFetchToken()
 
+    const stageRecordKey = `/api/server/record/${param.stage}/${param.consoles}/${param.rule}/${param.year}/${param.difficulty || 0}`
+    const {data: stageRecordRes, mutate: mutateStageRecords} = useSWR(
+        stageRecordKey,
+        fetcher,
+        {fallbackData: {data: param.posts}}
+    )
+    const rankingPosts = stageRecordRes?.data ?? param.posts
+
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
         setIsProcessing(true)
@@ -214,6 +222,10 @@ export default function Stage(param){
     }
     // ピクミン４は難易度別トップを表示し、それ以外は操作方法別トップを表示する
     const pik4range = [41, 42, 43, 44, 45, 46, 47]
+
+    const handleRecordPosted = async () => {
+        await mutateStageRecords()
+    }
 
     return (
         <>
@@ -291,7 +303,8 @@ export default function Stage(param){
                                 (isEvent(param.parent)) &&
                                 <RecordPost
                                     style={{alignItems: "center"}}
-                                    info={param.info} rule={param.rule} console={param.consoles}/>
+                                    info={param.info} rule={param.rule} console={param.consoles}
+                                    onPosted={handleRecordPosted}/>
                             }
                         </Box>
                         <Box>
@@ -315,7 +328,7 @@ export default function Stage(param){
                     </Stack>
                 </Box>
             </Box>
-            <RankingStandard parent={param.parent} posts={param.posts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
+            <RankingStandard parent={param.parent} posts={rankingPosts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
             <ModalKeyword open={open} uniqueId={keywordId} users={param.users} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )
