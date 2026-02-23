@@ -12,12 +12,11 @@ import {useRouter} from "next/router";
 import createEmotionCache from "../lib/createEmotionCache";
 import {CacheProvider} from "@emotion/react";
 import PropTypes from "prop-types";
-import {faCircleNotch} from "@fortawesome/free-solid-svg-icons";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import * as React from "react";
 import {DevSupport} from "@react-buddy/ide-toolbox-next";
 import {ComponentPreviews, useInitial} from "../dev";
 import SeoHead from "../components/SeoHead"
+import {Backdrop, Box, CircularProgress, Typography} from "@mui/material"
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -27,28 +26,90 @@ export default function App(props) {
     const router = useRouter()
     const [pageLoading, setPageLoading] = useState(false)
 
+    const showUnloadLoadingLayer = () => {
+        if (typeof document === "undefined") return
+        if (document.getElementById("__reload-loading-backdrop")) return
+
+        if (!document.getElementById("__reload-loading-style")) {
+            const style = document.createElement("style")
+            style.id = "__reload-loading-style"
+            style.textContent = `
+              @keyframes reload-loading-spin { to { transform: rotate(360deg); } }
+            `
+            document.head.appendChild(style)
+        }
+
+        const backdrop = document.createElement("div")
+        backdrop.id = "__reload-loading-backdrop"
+        backdrop.setAttribute("aria-hidden", "true")
+        backdrop.style.position = "fixed"
+        backdrop.style.inset = "0"
+        backdrop.style.display = "flex"
+        backdrop.style.alignItems = "center"
+        backdrop.style.justifyContent = "center"
+        backdrop.style.background = "rgba(0,0,0,0.5)"
+        backdrop.style.color = "#fff"
+        backdrop.style.zIndex = "1400"
+
+        const box = document.createElement("div")
+        box.style.textAlign = "center"
+
+        const spinner = document.createElement("div")
+        spinner.style.width = "40px"
+        spinner.style.height = "40px"
+        spinner.style.margin = "0 auto"
+        spinner.style.border = "3px solid rgba(255,255,255,0.25)"
+        spinner.style.borderTopColor = "#fff"
+        spinner.style.borderRadius = "50%"
+        spinner.style.animation = "reload-loading-spin 0.8s linear infinite"
+
+        const text = document.createElement("div")
+        text.textContent = "Loading..."
+        text.style.marginTop = "12px"
+
+        box.appendChild(spinner)
+        box.appendChild(text)
+        backdrop.appendChild(box)
+        document.body.appendChild(backdrop)
+    }
+
     useEffect(() => {
         const handleStart = (url) => url !== router.asPath && setPageLoading(true)
         const handleComplete = () => setPageLoading(false)
         const handleRouterChange = (url) => {
             pageView(url)
         }
+        const handleBeforeUnload = () => {
+            showUnloadLoadingLayer()
+        }
         router.events.on("routeChangeStart", handleStart)
         router.events.on("routeChangeComplete", handleComplete)
         router.events.on("routeChangeComplete", handleRouterChange)
         router.events.on("routeChangeError", handleComplete)
+        window.addEventListener("beforeunload", handleBeforeUnload)
+        window.addEventListener("pagehide", handleBeforeUnload)
         return () => {
             router.events.off("routeChangeStart", handleStart)
             router.events.off("routeChangeComplete", handleComplete)
             router.events.off("routeChangeComplete", handleRouterChange)
             router.events.off("routeChangeError", handleComplete)
+            window.removeEventListener("beforeunload", handleBeforeUnload)
+            window.removeEventListener("pagehide", handleBeforeUnload)
         }
     }, [router.events])
 
     function Loading() {
-        return <div className="loading-layer">
-            <FontAwesomeIcon icon={faCircleNotch} spin/> Loading...
-        </div>
+        return (
+            <Backdrop
+                open={true}
+                sx={{color: '#fff', zIndex: (theme) => theme.zIndex.modal + 1}}
+            >
+                <Box style={{textAlign: "center"}}>
+                    <CircularProgress color="inherit" />
+                    <Typography style={{marginTop: "12px"}}>Loading...</Typography>
+                </Box>
+            </Backdrop>
+        )
     }
 
     return (
