@@ -9,7 +9,7 @@ import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
 import {convertToSeconds, currentYear, rule2consoles, useLocale} from "../../lib/pik5";
-import {Box, MenuItem, ToggleButton} from "@mui/material";
+import {Backdrop, Box, CircularProgress, MenuItem, ToggleButton, Typography} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
 import Link from "next/link";
@@ -18,7 +18,7 @@ import Compressor from "compressorjs";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheck} from "@fortawesome/free-solid-svg-icons";
 
-export default function RecordForm({info, rule, mode, open, setOpen, handleClose, initialData = null, onSuccess = null}) {
+export default function RecordForm({info, rule, mode, open, setOpen, handleClose, initialData = null, onSuccess = null, onPosted = null}) {
 
     // 送信イベント判定
     const isSubmit = useRef(false)
@@ -41,6 +41,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [comment, setComment] = useState("")
     const [img, setImg] = useState(null)
     const [userAgent, setUserAgent] = useState("")
+    const [isProcessing, setIsProcessing] = useState(false)
 
     const [pikmin, setPikmin] = useState(0)
     const [treasure, setTreasure] = useState(0)
@@ -127,18 +128,15 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         resolver: yupResolver(schema)
     })
 
-    // キーワードをバックエンドに送信する
+    // データをバックエンドに送信する
     const onSubmit = async () => {
 
         if(isSubmit.current) return
 
-        // 送信確認（暫定的な実装）
-        const confirm = window.confirm(t.g.confirm)
-
         // ここから送信処理
         isSubmit.current = true
-
-        if (confirm) {
+        setIsProcessing(true)
+        try {
             const formData = new FormData()
             const isEditMode = mode === "edit" && initialData
             const payloadScore = Number(score) > 0
@@ -185,51 +183,70 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 method: 'POST',
                 body: formData,
             })
-            // 投稿後の処理
-            if (res.status < 300) {
-                // フォームを閉じる
-                setImg(null)
-                setOpen(false)
-
-                // キャッシュクリア用のトークンをリクエスト
-                const tokenRes = await fetch('/api/token')
-                const { token } = await tokenRes.json()
-                const getYear = currentYear()
-
-                // ステージ別ページのキャッシュをクリア
-                const resStage = await fetch(`/api/revalidate?page=stage&id=${info.stage_id}&console=${consoles}&rule=${rule}&year=${getYear}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                })
-                // 総合ページのキャッシュをクリア
-                const resTotal = await fetch(`/api/revalidate?page=total&id=${rule}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                })
-                // ユーザーページのキャッシュをクリア
-                const resUser = await fetch(`/api/revalidate?page=total&id=${session.user.userId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                })
-                if(resStage.ok){
-                    if(typeof onSuccess === "function"){
-                        onSuccess()
-                    }
-                    window.location.reload()
-                }
-                if(!resStage.ok || !resTotal.ok || !resUser.ok){
-                    console.error("Page Cache Clear Failed")
-                }
+            if (!res.ok) {
+                console.error("Record post failed", res.status, await res.text().catch(() => ""))
+                return
             }
+            // 投稿後の処理
+            setImg(null)
+            setOpen(false)
+            if(typeof onSuccess === "function"){
+                onSuccess()
+            }
+
+            // ISR再検証はバックグラウンドで投げる（UI更新は onPosted / reload 側で担当）
+            void (async () => {
+                try {
+                    const tokenRes = await fetch('/api/token')
+                    const { token } = await tokenRes.json()
+                    const getYear = currentYear()
+
+                    const stageQuery = new URLSearchParams({
+                        page: "stage",
+                        id: String(info.stage_id),
+                        console: String(payloadConsole),
+                        rule: String(payloadRule),
+                        year: String(getYear),
+                        difficulty: String(payloadDifficulty || 0)
+                    })
+
+                    const revalidateReq = (url) => fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    })
+
+                    const [resStage, resTotal, resUser] = await Promise.allSettled([
+                        revalidateReq(`/api/revalidate?${stageQuery.toString()}`),
+                        revalidateReq(`/api/revalidate?page=total&id=${payloadRule}`),
+                        revalidateReq(`/api/revalidate?page=user&id=${session.user.userId}`),
+                    ])
+
+                    if (resStage.status === 'rejected' || resTotal.status === 'rejected' || resUser.status === 'rejected') {
+                        console.error("Page Cache Clear Failed", {resStage, resTotal, resUser})
+                    }
+                } catch (e) {
+                    console.error("Background revalidate failed", e)
+                }
+            })()
+
+            if(typeof onPosted === "function"){
+                await onPosted({
+                    stageId: info.stage_id,
+                    rule: payloadRule,
+                    console: payloadConsole,
+                    difficulty: payloadDifficulty
+                })
+                return
+            }
+
+            window.location.reload()
+        } finally {
+            setIsProcessing(false)
+            // ここまで送信処理
+            isSubmit.current = false
         }
-        // ここまで送信処理
-        isSubmit.current = false
     }
     // 画像をアップロード
     const handleFileClick = async (e) => {
@@ -314,9 +331,24 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             </>
         )
     }
+
+    const handleDialogRequestClose = (...args) => {
+        if (isProcessing) return
+        handleClose(...args)
+    }
+
     return (
         <>
-            <Dialog open={open} onClose={handleClose}>
+            <Backdrop
+                open={isProcessing}
+                sx={{color: '#fff', zIndex: (theme) => theme.zIndex.modal + 1}}
+            >
+                <Box style={{textAlign: "center"}}>
+                    <CircularProgress color="inherit" />
+                    <Typography style={{marginTop: "12px"}}>記録処理中です。しばらくお待ちください。</Typography>
+                </Box>
+            </Backdrop>
+            <Dialog open={open} onClose={handleDialogRequestClose} disableEscapeKeyDown={isProcessing}>
                 <DialogTitle>{mode === "edit" ? `${t.post.title}（再編集）` : t.post.title}</DialogTitle>
                 <DialogContent>
                     <TextField
@@ -554,8 +586,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     />
                 </DialogContent>
                 <DialogActions>
-                    <Button onClick={handleClose}>閉じる</Button>
-                    <Button disabled={isSubmit.current} onClick={handleSubmit(onSubmit)}>送信</Button>
+                    <Button disabled={isProcessing} onClick={handleClose}>閉じる</Button>
+                    <Button disabled={isProcessing || isSubmit.current} onClick={handleSubmit(onSubmit)}>送信</Button>
                 </DialogActions>
             </Dialog>
         </>

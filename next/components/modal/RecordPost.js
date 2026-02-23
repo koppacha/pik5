@@ -9,7 +9,7 @@ import {faPaperPlane} from "@fortawesome/free-solid-svg-icons";
 import {useLocale} from "../../lib/pik5";
 import {mutate} from "swr";
 
-export default function RecordPost({info, rule, console, mode}){
+export default function RecordPost({info, rule, console, mode, onPosted = null}){
 
     const {t, } = useLocale()
 
@@ -38,6 +38,7 @@ export default function RecordPost({info, rule, console, mode}){
                 mode={mode}
                 setOpen={setOpen}
                 handleClose={handleClose}
+                onPosted={onPosted}
             />
         </>
     )
