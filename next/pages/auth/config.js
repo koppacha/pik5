@@ -11,13 +11,20 @@ import {
     CircularProgress,
     Container,
     Divider,
+    FormControlLabel,
     Paper,
     Stack,
+    Switch,
     TextField,
     Typography,
 } from '@mui/material'
 import {maskEmailAddress, useLocale} from "../../lib/pik5";
 import SeoHead from "../../components/SeoHead"
+import {
+    isBrowserNotificationEnabled,
+    RECORD_BROWSER_NOTIFICATION_ENABLED_KEY,
+    writeNotificationStorage,
+} from "../../lib/recordNotification"
 
 function isValidEmailSimple(rawEmail) {
     const email = String(rawEmail || '').trim()
@@ -46,12 +53,38 @@ export default function AuthConfigPage() {
         }
     }, [session?.user?.name])
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+
+        const supported = 'Notification' in window
+        setNotificationSupported(supported)
+
+        if (!supported) {
+            setNotificationEnabled(false)
+            setNotificationLoaded(true)
+            return
+        }
+
+        const enabled = isBrowserNotificationEnabled()
+        if (window.Notification.permission === 'granted') {
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, enabled)
+        }
+
+        setNotificationEnabled(enabled)
+        setNotificationLoaded(true)
+    }, [])
+
     const [email, setEmail] = useState('')
     const [otpSent, setOtpSent] = useState(false)
     const [otp, setOtp] = useState('')
     const [emailBusy, setEmailBusy] = useState(false)
     const [emailMsg, setEmailMsg] = useState(null)
     const [emailErr, setEmailErr] = useState(null)
+    const [notificationEnabled, setNotificationEnabled] = useState(false)
+    const [notificationSupported, setNotificationSupported] = useState(false)
+    const [notificationLoaded, setNotificationLoaded] = useState(false)
+    const [notificationMsg, setNotificationMsg] = useState(null)
+    const [notificationErr, setNotificationErr] = useState(null)
 
     // 「もう一度送信」は、少なくとも一度「送信」を押した後に活性化する
     const [otpSendAttempted, setOtpSendAttempted] = useState(false)
@@ -208,6 +241,58 @@ export default function AuthConfigPage() {
         }
     }
 
+    const handleNotificationToggle = async (event) => {
+        const checked = event.target.checked
+        setNotificationErr(null)
+        setNotificationMsg(null)
+
+        if (typeof window === 'undefined') return
+        if (!('Notification' in window)) {
+            setNotificationEnabled(false)
+            setNotificationErr('このブラウザは通知に対応していません')
+            return
+        }
+
+        if (!checked) {
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, false)
+            setNotificationEnabled(false)
+            setNotificationMsg('ブラウザ通知をOFFにしました')
+            return
+        }
+
+        if (window.Notification.permission === 'granted') {
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, true)
+            setNotificationEnabled(true)
+            setNotificationMsg('ブラウザ通知をONにしました')
+            return
+        }
+
+        if (window.Notification.permission === 'denied') {
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, false)
+            setNotificationEnabled(false)
+            setNotificationErr('ブラウザ側で通知が拒否されています。ブラウザ設定から許可してください')
+            return
+        }
+
+        try {
+            const permission = await window.Notification.requestPermission()
+            const enabled = permission === 'granted'
+
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, enabled)
+            setNotificationEnabled(enabled)
+
+            if (enabled) {
+                setNotificationMsg('ブラウザ通知をONにしました')
+            } else {
+                setNotificationErr('通知が許可されなかったため、ブラウザ通知はOFFのままです')
+            }
+        } catch (e) {
+            writeNotificationStorage(RECORD_BROWSER_NOTIFICATION_ENABLED_KEY, false)
+            setNotificationEnabled(false)
+            setNotificationErr('通知設定の変更に失敗しました')
+        }
+    }
+
     if (status === 'loading') {
         return (
             <>
@@ -267,6 +352,42 @@ export default function AuthConfigPage() {
                         </Typography>
                         <Typography variant="h6" sx={{ wordBreak: 'break-word' }}>
                             {maskedEmail ?? '登録なし'}
+                        </Typography>
+                    </Stack>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        新着記録の通知
+                    </Typography>
+
+                    {notificationErr && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {notificationErr}
+                        </Alert>
+                    )}
+                    {notificationMsg && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {notificationMsg}
+                        </Alert>
+                    )}
+
+                    <Stack spacing={1}>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={notificationEnabled}
+                                    onChange={handleNotificationToggle}
+                                    disabled={!notificationLoaded || !notificationSupported}
+                                />
+                            }
+                            label="ブラウザ通知"
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            サイト内のトースト通知は常時表示されます。ここで切り替えるのは、OS の通知領域へ表示するブラウザ通知です。
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            OFF にした場合も、ブラウザ自体の通知権限は解除されません。
                         </Typography>
                     </Stack>
                 </Paper>

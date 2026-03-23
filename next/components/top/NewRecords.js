@@ -15,10 +15,10 @@ export default function NewRecords({users}){
     }
 
     const data = newRecords ? newRecords.data.map(function(post){
-        const user = users.find(user => user.userId === post.user_id)
+        const user = (users || []).find(user => user.userId === post.user_id)
         return {
             ...post,
-            user_name: user ? user.name : ""
+            user_name: post.user_name || (user ? user.name : "")
         }
     }) : []
 

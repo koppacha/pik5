@@ -108,7 +108,6 @@ export default function Series(param){
 
     // 外部リンク生成
     let speedrunUrl = "", twitchUrl = ""
-    console.log(param.series)
     switch (param.series) {
         case '10':
             speedrunUrl = "https://www.speedrun.com/pikmin1";

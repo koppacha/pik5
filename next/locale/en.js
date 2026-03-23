@@ -763,6 +763,7 @@ export const en = {
         46: "The Ultra-Spicy Hermit's Challenge",
         47: "Night expedition",
         91: "Other",
+        99: "Test",
         231216: "第19回期間限定ランキング",
     },
     ru: {

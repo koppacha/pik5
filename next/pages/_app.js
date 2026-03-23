@@ -19,6 +19,7 @@ import {DevSupport} from "@react-buddy/ide-toolbox-next";
 import {ComponentPreviews, useInitial} from "../dev";
 import SeoHead from "../components/SeoHead"
 import {Backdrop, Box, CircularProgress, Typography} from "@mui/material"
+import RecordNotificationCenter from "../components/notifications/RecordNotificationCenter"
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -149,6 +150,7 @@ export default function App(props) {
                 <SessionProvider session={session}>
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
                         <Layout>
+                            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
                             {pageLoading && <Loading/>}
                             <DevSupport ComponentPreviews={ComponentPreviews}
                                         useInitialHook={useInitial}
