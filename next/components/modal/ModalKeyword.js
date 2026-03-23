@@ -15,7 +15,8 @@ export default function ModalKeyword({uniqueId, open, users, handleClose, handle
 
     const {t} = useLocale()
 
-    const {data} = useSWR(`/api/server/keyword/${uniqueId}`, fetcher)
+    const shouldFetch = open && uniqueId !== null && uniqueId !== undefined
+    const {data} = useSWR(shouldFetch ? `/api/server/keyword/${uniqueId}` : null, fetcher)
 
     if(!data){
         return (
