@@ -126,7 +126,7 @@ export default function Battle(props) {
         };
 
         fetchPlayerData()
-    }, [])
+    }, [props.rate])
 
     const getRandomStages = (stages, pikmins, history, setHistory, historyA, setHistoryA, historyB, setHistoryB) => {
         const allStages = []
