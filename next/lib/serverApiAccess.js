@@ -67,19 +67,27 @@ function isSameOriginBrowserRequest(req) {
   const originHost = getNormalizedHost(req.headers.origin)
   const refererHost = getNormalizedHost(req.headers.referer)
   const secFetchSite = (req.headers['sec-fetch-site'] || '').toString().toLowerCase()
+  const secFetchMode = (req.headers['sec-fetch-mode'] || '').toString().toLowerCase()
 
   const originMatch = origin ? origin === expectedOrigin : false
   const refererMatch = referer ? referer === expectedOrigin : false
   const originHostMatch = originHost ? originHost === host : false
   const refererHostMatch = refererHost ? refererHost === host : false
   const fetchSiteOk = !secFetchSite || secFetchSite === 'same-origin' || secFetchSite === 'same-site'
+  const fetchModeOk = !secFetchMode || secFetchMode === 'cors' || secFetchMode === 'same-origin' || secFetchMode === 'navigate'
 
-  if (!fetchSiteOk) return false
+  if (!fetchSiteOk || !fetchModeOk) return false
   if (originMatch || refererMatch) return true
 
   // TLS終端が手前のプロキシにあると、Node 側で http 扱いになり protocol だけ不一致になることがある。
   // その場合でも same-site 判定と host 一致が取れていれば同一サイトのブラウザ要求として扱う。
-  return originHostMatch || refererHostMatch
+  if (originHostMatch || refererHostMatch) return true
+
+  // 一部の本番環境やブラウザでは、同一サイト fetch でも Origin / Referer が欠けることがある。
+  // その場合は Fetch Metadata が same-origin / same-site を示していればブラウザ要求として許可する。
+  if (secFetchSite === 'same-origin' || secFetchSite === 'same-site') return true
+
+  return false
 }
 
 function createAccessToken() {
