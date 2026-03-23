@@ -27,6 +27,7 @@ export default function RecordNotificationCenter({initialUsers = []}) {
     const pollingRef = useRef(false)
     const pendingRecordsRef = useRef([])
     const flushTimerRef = useRef(null)
+    const flushPendingRecordsRef = useRef(() => {})
     const lastNotificationAtRef = useRef(0)
     const userNotificationMapRef = useRef({})
 
@@ -107,7 +108,7 @@ export default function RecordNotificationCenter({initialUsers = []}) {
         const remaining = isDebugModeRef.current ? 0 : (lastNotificationAtRef.current + RECORD_NOTIFY_COOLDOWN_MS) - now
 
         if (remaining > 0) {
-            flushTimerRef.current = window.setTimeout(flushPendingRecords, remaining)
+            flushTimerRef.current = window.setTimeout(() => flushPendingRecordsRef.current(), remaining)
             return
         }
 
@@ -124,6 +125,10 @@ export default function RecordNotificationCenter({initialUsers = []}) {
         notifyBrowser(payload)
         persistCooldownState()
     }, [markUsersNotified, notifyBrowser, persistCooldownState, t, usersById])
+
+    useEffect(() => {
+        flushPendingRecordsRef.current = flushPendingRecords
+    }, [flushPendingRecords])
 
     const enqueueRecords = useCallback((records) => {
         const existingIds = new Set(pendingRecordsRef.current.map((record) => Number(record.post_id)))

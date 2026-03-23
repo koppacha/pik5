@@ -14,10 +14,12 @@ import Link from "next/link";
 import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
 import {useLocale} from "../../lib/pik5";
 import {du, eg, ne, p1} from "../../lib/const";
+import {signOut, useSession} from "next-auth/react";
 
 export default function Menu0(props){
 
     const {t} = useLocale()
+    const {data: session} = useSession()
     const color = "#fff"
 
     return (
@@ -35,12 +37,16 @@ export default function Menu0(props){
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
                             }} component={Link} href="/" onClick={props.handleClose}>{t.g.top}</StyledMenuItem>
-                            <StyledMenuItem style={{
-                                borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/auth/login" onClick={props.handleClose}>{t.g.login}</StyledMenuItem>
-                            <StyledMenuItem style={{
-                                borderLeft:"solid 10px "+color,
-                            }} component={Link} href="/auth/register" onClick={props.handleClose}>{t.g.register}</StyledMenuItem>
+                            {!session && (
+                                <StyledMenuItem style={{
+                                    borderLeft:"solid 10px "+color,
+                                }} component={Link} href="/auth/login" onClick={props.handleClose}>{t.g.login}</StyledMenuItem>
+                            )}
+                            {!session && (
+                                <StyledMenuItem style={{
+                                    borderLeft:"solid 10px "+color,
+                                }} component={Link} href="/auth/register" onClick={props.handleClose}>{t.g.register}</StyledMenuItem>
+                            )}
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
                             }} component={Link} href="/auth/config" onClick={props.handleClose}>{t.g.config}</StyledMenuItem>
@@ -68,6 +74,13 @@ export default function Menu0(props){
                             <StyledMenuItem style={{
                                 borderLeft:"solid 10px "+color,
                             }} component={Link} href="/keyword/rules" onClick={props.handleClose}>{t.g.ru}</StyledMenuItem>
+                            {session && (
+                                <StyledMenuItem style={{
+                                    borderLeft:"solid 10px "+color,
+                                }} onClick={() => {
+                                    signOut()
+                                }}>{t.g.logout}</StyledMenuItem>
+                            )}
                         </Grid>
                     </Grid>
                 </MenuList>

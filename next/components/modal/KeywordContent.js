@@ -248,12 +248,14 @@ export function KeywordContent({data, users}){
         if (!isClient) return
         if (!mdRootRef.current) return
 
+        const currentRoot = mdRootRef.current
+
         // クリックでiframe生成（YouTube/Twitch）
-        initLazyEmbeds(mdRootRef.current)
+        initLazyEmbeds(currentRoot)
 
         // ページ遷移/再描画時のメモリ圧迫を避ける
         return () => {
-            deactivateAllEmbeds(mdRootRef.current)
+            deactivateAllEmbeds(currentRoot)
         }
     }, [isClient, mdContent])
 
