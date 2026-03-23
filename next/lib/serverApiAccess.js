@@ -48,6 +48,15 @@ function getNormalizedOrigin(rawValue) {
   }
 }
 
+function getNormalizedHost(rawValue) {
+  if (!rawValue || typeof rawValue !== 'string') return null
+  try {
+    return new URL(rawValue).host.toLowerCase()
+  } catch {
+    return null
+  }
+}
+
 function isSameOriginBrowserRequest(req) {
   const host = getRequestHost(req)
   if (!host) return false
@@ -55,13 +64,22 @@ function isSameOriginBrowserRequest(req) {
   const expectedOrigin = `${getRequestProtocol(req)}://${host}`
   const origin = getNormalizedOrigin(req.headers.origin)
   const referer = getNormalizedOrigin(req.headers.referer)
+  const originHost = getNormalizedHost(req.headers.origin)
+  const refererHost = getNormalizedHost(req.headers.referer)
   const secFetchSite = (req.headers['sec-fetch-site'] || '').toString().toLowerCase()
 
   const originMatch = origin ? origin === expectedOrigin : false
   const refererMatch = referer ? referer === expectedOrigin : false
+  const originHostMatch = originHost ? originHost === host : false
+  const refererHostMatch = refererHost ? refererHost === host : false
   const fetchSiteOk = !secFetchSite || secFetchSite === 'same-origin' || secFetchSite === 'same-site'
 
-  return fetchSiteOk && (originMatch || refererMatch)
+  if (!fetchSiteOk) return false
+  if (originMatch || refererMatch) return true
+
+  // TLS終端が手前のプロキシにあると、Node 側で http 扱いになり protocol だけ不一致になることがある。
+  // その場合でも same-site 判定と host 一致が取れていれば同一サイトのブラウザ要求として扱う。
+  return originHostMatch || refererHostMatch
 }
 
 function createAccessToken() {
