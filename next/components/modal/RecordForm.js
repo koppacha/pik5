@@ -1,7 +1,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
-import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import DialogContent from "@mui/material/DialogContent";
 import {useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
@@ -23,7 +23,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // 送信イベント判定
     const isSubmit = useRef(false)
 
-    const consoleList = rule2consoles(rule)
+    const consoleList = useMemo(() => rule2consoles(rule), [rule])
 
     const {t} = useLocale()
     const {data: session} = useSession()
@@ -85,6 +85,18 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             }),
     })
 
+    const {
+        register,
+        setValue,
+        handleSubmit,
+        reset,
+        formState: {errors},
+        trigger
+    } = useForm({
+        mode: 'onChange',
+        resolver: yupResolver(schema)
+    })
+
     // フォームデータの初期化
     useEffect(() => {
         const isEditMode = mode === "edit" && initialData
@@ -114,19 +126,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         setRegion(defaultRegion)
         setRegionSelected(defaultRegion > 0)
         setTimeValue(defaultTime)
-    }, [mode, initialData, rule])
-
-    const {
-        register,
-        setValue,
-        handleSubmit,
-        reset,
-        formState: {errors},
-        trigger
-    } = useForm({
-        mode: 'onChange',
-        resolver: yupResolver(schema)
-    })
+    }, [consoleList, initialData, mode, reset, rule])
 
     // データをバックエンドに送信する
     const onSubmit = async () => {

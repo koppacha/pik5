@@ -101,7 +101,7 @@ export default function App(props) {
             window.removeEventListener("beforeunload", handleBeforeUnload)
             window.removeEventListener("pagehide", handleBeforeUnload)
         }
-    }, [router.events])
+    }, [router.asPath, router.events])
 
     useEffect(() => {
         if (typeof document === "undefined") return

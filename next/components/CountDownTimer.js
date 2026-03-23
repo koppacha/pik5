@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const CountdownTimer = ({ startTime, endTime }) => {
     const [timeLeft, setTimeLeft] = useState(getTimeLeft());
 
-    function getTimeLeft() {
+    const getTimeLeft = useCallback(() => {
         const now = new Date();
         const start = new Date(startTime);
         const end = new Date(endTime);
@@ -27,7 +27,7 @@ const CountdownTimer = ({ startTime, endTime }) => {
             seconds,
             color: now < start ? "#888" : "#fff",
         };
-    }
+    }, [endTime, startTime])
 
     useEffect(() => {
         const timer = setInterval(() => {
@@ -35,7 +35,7 @@ const CountdownTimer = ({ startTime, endTime }) => {
         }, 1000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [getTimeLeft]);
 
     if (timeLeft.message) {
         return <div style={{ color: timeLeft.color }}>{timeLeft.message}</div>;

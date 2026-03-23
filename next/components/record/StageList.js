@@ -1,6 +1,6 @@
 import {Box, Grid} from "@mui/material";
 import Link from "next/link";
-import {StageListBox, StageListWrapper} from "../../styles/pik5.css";
+import {StageListBox} from "../../styles/pik5.css";
 import * as React from "react";
 import {currentYear, useLocale} from "../../lib/pik5";
 import {stageUrlOutput} from "../../lib/factory";
@@ -23,7 +23,16 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
     }
 
     return (
-        <StageListWrapper className="stage-list-wrapper" count={stages?.length}>
+        <Box
+            className="stage-list-wrapper"
+            style={{
+                width: "100%",
+                ...(stages?.length > 16 ? {
+                    overflow: "scroll",
+                    whiteSpace: "nowrap",
+                } : {}),
+            }}
+        >
             <Grid container style={{minWidth:(stages?.length > 16) ? "1200px" : "100%"}}
                   columns={{xs:(stages?.length > 16) ? 10 : 4, md:(stages?.length > 16) ? 10 : 6, lg : 10}}>
                 {
@@ -38,6 +47,6 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
                     )
                 }
             </Grid>
-        </StageListWrapper>
+        </Box>
     )
 }
