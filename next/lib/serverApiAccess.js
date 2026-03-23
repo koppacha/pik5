@@ -16,6 +16,25 @@ function getRequestProtocol(req) {
   if (typeof forwardedProto === 'string' && forwardedProto.length > 0) {
     return forwardedProto.split(',')[0].trim().toLowerCase()
   }
+
+  const originProtocol = getNormalizedOrigin(req.headers.origin)
+  if (originProtocol) {
+    try {
+      return new URL(originProtocol).protocol.replace(':', '').toLowerCase()
+    } catch {
+      // noop
+    }
+  }
+
+  const refererProtocol = getNormalizedOrigin(req.headers.referer)
+  if (refererProtocol) {
+    try {
+      return new URL(refererProtocol).protocol.replace(':', '').toLowerCase()
+    } catch {
+      // noop
+    }
+  }
+
   return req.socket?.encrypted ? 'https' : 'http'
 }
 
