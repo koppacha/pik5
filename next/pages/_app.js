@@ -1,4 +1,5 @@
 import '@/styles/globals.css';
+import '@/styles/colors.scss';
 import '@/styles/styles.scss';
 import Layout from '../components/Layout';
 import '@fortawesome/fontawesome-svg-core/styles.css';
@@ -9,6 +10,7 @@ import {useEffect, useState} from "react";
 import Script from "next/script";
 import {ga, pageView} from "../lib/gtag";
 import {useRouter} from "next/router";
+import {getPageThemeKind, resolvePageSeriesId} from "../lib/pik5";
 import createEmotionCache from "../lib/createEmotionCache";
 import {CacheProvider} from "@emotion/react";
 import PropTypes from "prop-types";
@@ -25,6 +27,8 @@ export default function App(props) {
 
     const router = useRouter()
     const [pageLoading, setPageLoading] = useState(false)
+    const pageThemeKind = getPageThemeKind(router.pathname, pageProps, router.query)
+    const pageSeriesId = resolvePageSeriesId(router.pathname, pageProps, router.query)
 
     const showUnloadLoadingLayer = () => {
         if (typeof document === "undefined") return
@@ -47,8 +51,8 @@ export default function App(props) {
         backdrop.style.display = "flex"
         backdrop.style.alignItems = "center"
         backdrop.style.justifyContent = "center"
-        backdrop.style.background = "rgba(0,0,0,0.5)"
-        backdrop.style.color = "#fff"
+        backdrop.style.background = "var(--color-loading-overlay)"
+        backdrop.style.color = "var(--color-surface-inverse-text)"
         backdrop.style.zIndex = "1400"
 
         const box = document.createElement("div")
@@ -58,8 +62,8 @@ export default function App(props) {
         spinner.style.width = "40px"
         spinner.style.height = "40px"
         spinner.style.margin = "0 auto"
-        spinner.style.border = "3px solid rgba(255,255,255,0.25)"
-        spinner.style.borderTopColor = "#fff"
+        spinner.style.border = "3px solid var(--color-loading-spinner-track)"
+        spinner.style.borderTopColor = "var(--color-surface-inverse-text)"
         spinner.style.borderRadius = "50%"
         spinner.style.animation = "reload-loading-spin 0.8s linear infinite"
 
@@ -98,11 +102,24 @@ export default function App(props) {
         }
     }, [router.events])
 
+    useEffect(() => {
+        if (typeof document === "undefined") return
+
+        const root = document.documentElement
+        root.dataset.pageTheme = pageThemeKind
+
+        if (pageSeriesId) {
+            root.dataset.pageSeries = String(pageSeriesId)
+        } else {
+            delete root.dataset.pageSeries
+        }
+    }, [pageSeriesId, pageThemeKind])
+
     function Loading() {
         return (
             <Backdrop
                 open={true}
-                sx={{color: '#fff', zIndex: (theme) => theme.zIndex.modal + 1}}
+                sx={{color: 'var(--color-surface-inverse-text)', zIndex: (theme) => theme.zIndex.modal + 1}}
             >
                 <Box style={{textAlign: "center"}}>
                     <CircularProgress color="inherit" />
@@ -130,7 +147,7 @@ export default function App(props) {
             <GlobalStyle/>
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
-                    <ThemeProvider defaultTheme="dark">
+                    <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
                         <Layout>
                             {pageLoading && <Loading/>}
                             <DevSupport ComponentPreviews={ComponentPreviews}

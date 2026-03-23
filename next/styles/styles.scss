@@ -2,20 +2,60 @@
 /*
   汎用のカラースキーム
  */
-$dark-front: #e1e1e1;
-$dark-back: #212121;
-$dark-sub-title: #b6b6b6;
-$dark-sub-back: #3f454b;
-$dark-hover-back: #2d3748;
-$dark-border: #c7d8da;
-$dark-compare: #4ce600;
-$light-front: #282828;
-$light-back: #e1dbd5;
-$light-sub-title: #464646;
-$light-sub-back: #c0b1a2;
-$light-hover-back: #2d3748;
-$light-border: #7a6c62;
-$light-compare: #e63600;
+$dark-front: var(--color-text-base);
+$dark-back: var(--color-bg-base);
+$dark-sub-title: var(--color-text-sub);
+$dark-sub-back: var(--color-block-default-bg);
+$dark-hover-back: var(--color-hover-bg);
+$dark-border: var(--color-border-base);
+$dark-compare: var(--color-compare);
+$light-front: var(--color-text-base);
+$light-back: var(--color-bg-base);
+$light-sub-title: var(--color-text-sub);
+$light-sub-back: var(--color-block-default-bg);
+$light-hover-back: var(--color-hover-bg);
+$light-border: var(--color-border-base);
+$light-compare: var(--color-compare);
+$rank-default-bg: var(--color-rank-default-bg);
+$rank-1-bg: var(--color-rank-1-bg);
+$rank-2-bg: var(--color-rank-2-bg);
+$rank-3-bg: var(--color-rank-3-bg);
+$rank-4to10-bg: var(--color-rank-4to10-bg);
+$rank-11to20-bg: var(--color-rank-11to20-bg);
+$rank-21plus-bg: var(--color-rank-21plus-bg);
+$overlay-back: var(--color-bg-overlay);
+$surface-inverse-bg: var(--color-surface-inverse-bg);
+$surface-inverse-text: var(--color-surface-inverse-text);
+$menu-item-bg: var(--color-menu-item-bg);
+$menu-item-border: var(--color-menu-item-border);
+$menu-item-hover-bg: var(--color-menu-item-hover-bg);
+$menu-item-hover-text: var(--color-menu-item-hover-text);
+$nav-text: var(--color-nav-text);
+$nav-border: var(--color-nav-border);
+$nav-hover-bg: var(--color-nav-hover-bg);
+$button-alt-bg: var(--color-button-alt-bg);
+$button-alt-text: var(--color-button-alt-text);
+$divider-muted: var(--color-divider-muted);
+$divider-strong: var(--color-divider-strong);
+$muted-text: var(--color-muted-text);
+$markdown-strong: var(--color-markdown-strong);
+$markdown-table-border: var(--color-markdown-table-border);
+$tag-bg: var(--color-tag-bg);
+$tag-text: var(--color-tag-text);
+$card-bg: var(--color-card-bg);
+$card-subtitle: var(--color-card-subtitle);
+$card-description: var(--color-card-description);
+$reward-bg: var(--color-reward-bg);
+$level-1-bg: var(--color-level-1-bg);
+$level-1-text: var(--color-level-1-text);
+$level-2-bg: var(--color-level-2-bg);
+$level-2-text: var(--color-level-2-text);
+$level-3-bg: var(--color-level-3-bg);
+$level-3-text: var(--color-level-3-text);
+$overlay-dark: var(--color-overlay-dark);
+$cell-hover-shadow: var(--color-cell-hover-shadow);
+$card-shadow: var(--color-card-shadow);
+$reward-shadow: var(--color-reward-shadow);
 
 .loading-layer {
     position :fixed;
@@ -24,7 +64,7 @@ $light-compare: #e63600;
     width :100%;
     height :100%;
     z-index :1000;
-    background-color :rgba(0,0,0,0.1);
+    background-color :$overlay-back;
     @media(max-width: 600px) {
         text-align: right;
         padding-top: 0;
@@ -32,52 +72,52 @@ $light-compare: #e63600;
 }
 
 .rank1 {
-    background-color: #b7b7b7;
+    background-color: $rank-1-bg;
     [data-theme='dark'] & {
-        background-color: #656565;
+        background-color: $rank-1-bg;
     }
 }
 .rank2 {
-    background-color: #eaeaea;
+    background-color: $rank-2-bg;
     [data-theme='dark'] & {
-        background-color: #4b4b4b;
+        background-color: $rank-2-bg;
     }
 }
 .rank3 {
-    background-color: #dedede;
+    background-color: $rank-3-bg;
     [data-theme='dark'] & {
-        background-color: #2a2a2a;
+        background-color: $rank-3-bg;
     }
 }
 .rank4 {
-    background-color: #d5d5d5;
+    background-color: $rank-4to10-bg;
     [data-theme='dark'] & {
-        background-color: #181818;
+        background-color: $rank-4to10-bg;
     }
 }
 .rank11 {
-    background-color: #b7b7b7;
+    background-color: $rank-11to20-bg;
     [data-theme='dark'] & {
-        background-color: #181818;
+        background-color: $rank-11to20-bg;
     }
 }
 .rank21 {
-    background-color: #b7b7b7;
+    background-color: $rank-21plus-bg;
     [data-theme='dark'] & {
-        background-color: #181818;
+        background-color: $rank-21plus-bg;
     }
 }
 $dark-shadow:
-        2px  2px 2px #000, -2px  2px 2px #000,
-        2px -2px 2px #000, -2px -2px 2px #000,
-        2px    0 2px #000,    0  2px 2px #000,
-        -2px   0 2px #000,    0 -2px 2px #000;
+        2px  2px 2px var(--color-shadow), -2px  2px 2px var(--color-shadow),
+        2px -2px 2px var(--color-shadow), -2px -2px 2px var(--color-shadow),
+        2px    0 2px var(--color-shadow),    0  2px 2px var(--color-shadow),
+        -2px   0 2px var(--color-shadow),    0 -2px 2px var(--color-shadow);
 
 $light-shadow:
-2px  2px 2px #dadada, -2px  2px 2px #dadada,
-2px -2px 2px #dadada, -2px -2px 2px #dadada,
-2px    0 2px #dadada,    0  2px 2px #dadada,
--2px   0 2px #dadada,    0 -2px 2px #dadada;
+2px  2px 2px var(--color-shadow), -2px  2px 2px var(--color-shadow),
+2px -2px 2px var(--color-shadow), -2px -2px 2px var(--color-shadow),
+2px    0 2px var(--color-shadow),    0  2px 2px var(--color-shadow),
+-2px   0 2px var(--color-shadow),    0 -2px 2px var(--color-shadow);
 
 
 body {
@@ -124,21 +164,21 @@ body {
     display: none;
 }
 .not-active {
-    background-color: $light-sub-back !important;
-    color: $light-front !important;
+    background-color: var(--color-block-default-bg) !important;
+    color: var(--color-text-base) !important;
 
     [data-theme='dark'] & {
-        background-color: $dark-sub-back !important;
-        color: $dark-front !important;
+        background-color: var(--color-block-default-bg) !important;
+        color: var(--color-text-base) !important;
     }
 }
 .active {
-    background-color: $light-front !important;
-    color: $light-back !important;
+    background-color: var(--color-block-active-bg) !important;
+    color: var(--color-block-active-text) !important;
 
     [data-theme='dark'] & {
-        background-color: $dark-front !important;
-        color: $dark-back !important;
+        background-color: var(--color-block-active-bg) !important;
+        color: var(--color-block-active-text) !important;
     }
 }
 
@@ -195,7 +235,7 @@ body {
 
     strong {
         font-size: 1.1em;
-        color: #f7fafc;
+        color: $markdown-strong;
     }
 
     table {
@@ -205,7 +245,7 @@ body {
 
     td, th {
         padding: 8px;
-        border: 1px solid #4a5568;
+        border: 1px solid $markdown-table-border;
     }
     a {
         text-decoration: underline;
@@ -223,21 +263,22 @@ body {
 
 }
 .custom-menu-button {
-    color: #d2d8e0;
+    color: $nav-text;
     background-color: transparent;
     font-size: 0.9em;
     border-radius: 0;
     height: 64px;
     padding: 0 18px;
-    border-bottom: 4px solid #000;
+    border-bottom: 4px solid $nav-border;
     max-width: 210px;
 
     @media(max-width: 600px) {
         font-size: 0.7em;
     }
     &:hover {
-        //border-bottom: 4px solid ${props => SeriesTheme(props.$series)};
-        background-color: #2d4448;
+        border-bottom: 4px solid $surface-inverse-text;
+        background-color: $surface-inverse-text;
+        color: $menu-item-hover-text;
     }
 }
 .welcome-block {
@@ -246,18 +287,24 @@ body {
 .record-post-button {
     border-radius: 4px;
     padding: 12px;
-    margin: 6px;
     cursor: pointer;
+    background-color: var(--color-page-accent) !important;
+    color: var(--color-text-on-main) !important;
+
+    [data-theme='dark'] & {
+        background-color: var(--color-page-accent) !important;
+        color: var(--color-text-on-main) !important;
+    }
 }
 .auth-button {
-    background-color: #cfd2de;
-    color: #1a293b;
+    background-color: $button-alt-bg;
+    color: $button-alt-text;
     font-weight: bold;
     border-radius: 8px;
     padding: 4px 12px;
     &:hover {
-        background-color: #1a293b;
-        color: #cfd2de;
+        background-color: $button-alt-text;
+        color: $button-alt-bg;
     }
 }
 .styled-select {
@@ -281,7 +328,7 @@ body {
     }
 }
 .thin-app-bar {
-    background-color: #111;
+    background-color: $surface-inverse-bg;
     @media(max-width: 600px) {
         display: none;
     }
@@ -302,13 +349,14 @@ body {
 }
 .styled-menu-item {
     font-family: "M PLUS 1 CODE", sans-serif;
-    border-left: 10px solid #f7fafc;
-    background-color: #3a3a3a;
+    border-left: 10px solid $menu-item-border;
+    background-color: $menu-item-bg;
+    color: $menu-item-border;
     overflow-x: hidden;
 
     &:hover {
-        color: #111;
-        background-color: #fff;
+        color: $menu-item-hover-text;
+        background-color: $menu-item-hover-bg;
     }
 }
 .info-box {
@@ -368,7 +416,7 @@ body {
     }
     &:hover {
         transform: scale(1.05);
-        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 5px $cell-hover-shadow;
     }
 }
 .cell-box-caption {
@@ -380,7 +428,7 @@ body {
     }
 
     .active & {
-        color: $dark-sub-back !important;
+        color: var(--color-block-active-text) !important;
     }
 }
 .stair-icon {
@@ -405,8 +453,8 @@ body {
     }
 }
 .top-box-header {
-    background-color: $light-border;
-    color: $light-back;
+    background-color: var(--color-block-header-bg);
+    color: var(--color-block-header-text);
     padding :4px;
     border-radius: 4px;
     display: flex;
@@ -417,8 +465,8 @@ body {
     }
 
     [data-theme="dark"] & {
-        background-color: $dark-border;
-        color : $dark-back;
+        background-color: var(--color-block-header-bg);
+        color : var(--color-block-header-text);
     }
 }
 .top-box-content {
@@ -428,7 +476,7 @@ body {
     font-size: 0.9em;
     padding-top :4px;
     padding-bottom :12px;
-    border-bottom: 1px solid #777;
+    border-bottom: 1px solid $divider-muted;
 }
 .top-box-caption {
     font-size: 0.8em;
@@ -456,13 +504,12 @@ body {
     display: grid;
     place-items: center;
     width: 100%;
-    border-right: 1px solid #777;
+    border-right: 1px solid $divider-muted;
 }
 .team-score-type {
     font-size: 1000%;
     letter-spacing: 10px;
     font-family:"Proza Libre","cursive";
-    text-shadow: $light-shadow;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -474,7 +521,6 @@ body {
 .score-type {
     font-size: 1.3em;
     font-family:"Proza Libre","cursive";
-    text-shadow: $light-shadow;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -486,7 +532,6 @@ body {
 .score-tail {
     color: $light-sub-title;
     font-family:"Proza Libre","cursive";
-    text-shadow: $light-shadow;
 
     [data-theme='dark'] & {
         color: $dark-sub-title;
@@ -497,7 +542,6 @@ body {
     color: $light-compare;
     font-size :0.8em;
     font-family:"Proza Libre","cursive";
-    text-shadow: $light-shadow;
 
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
@@ -507,7 +551,6 @@ body {
 .user-type {
     font-size :1.25em;
     font-family: "M PLUS 1 CODE", sans-serif;
-    text-shadow: $light-shadow;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -529,7 +572,6 @@ body {
     line-height :2em;
     font-weight: 200;
     font-family: "Kulim Park","cursive";
-    text-shadow: $light-shadow;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -539,7 +581,6 @@ body {
 }
 .rank-edge {
     color: $light-sub-title;
-    text-shadow: $light-shadow;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
         color: $dark-sub-title;
@@ -609,7 +650,7 @@ body {
     text-align: center;
     min-height: 47px;
     line-height: 47px;
-    border-bottom: 1px dotted #333;
+    border-bottom: 1px dotted $divider-strong;
     align-content: flex-start;
 }
 .user-info-box {
@@ -628,7 +669,11 @@ body {
     padding: 8px;
 
     span {
-        color: #9d9d9d;
+        color: $light-sub-title;
+
+        [data-theme='dark'] & {
+            color: $dark-sub-title;
+        }
     }
 }
 .page-header {
@@ -650,8 +695,8 @@ body {
     inset: auto 0 0 0;
     height: 62px;
     z-index: 50;
-    border-top: 1px solid #333;
-    background: rgba(17, 17, 17, .25);
+    border-top: 1px solid $divider-strong;
+    background: $overlay-dark;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     @media(min-width: 601px) {
@@ -729,24 +774,24 @@ body {
     padding: 2px;
     margin: 2px;
     //background-color: ${props => props.$color};
-    color: #000;
+    color: var(--color-text-on-main);
 }
 .search-result-item {
     width: 100%;
-    border-bottom: 1px solid #000;
+    border-bottom: 1px solid var(--color-text-on-main);
 //    $ {
 //    function (props) {
 //    if (props.$index ===0) {
 //    return css `
-//    background-color: #1a293b;
-//    color: #cfd2de;
+//    background-color: var(--color-page-main);
+//    color: var(--color-block-active-text);
 //    `
 //}
 //}
 //}
     &:hover {
-        background-color: #1a293b;
-        color: #cfd2de;
+        background-color: var(--color-page-main);
+        color: var(--color-block-active-text);
     }
     svg {
         margin-right: 0.5em;
@@ -793,7 +838,7 @@ body {
 
     .week {
         font-size: 0.8em;
-        color: #8c8c8c;
+        color: $muted-text;
     }
 }
 .event-content {
@@ -821,25 +866,23 @@ body {
     }
 }
 .icon-button {
-    color: #fff;
+    color: $surface-inverse-text;
     font-size: 140%;
 }
 .team-rps-type {
     font-size: 333%;
     font-family:"Proza Libre","cursive";
     color: $light-sub-title;
-    text-shadow: $light-shadow;
 
     [data-theme='dark'] & {
         color: $dark-sub-title;
-        text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
         font-size: 2em;
     }
 }
 .footer-container {
-    background-color:#111;
+    background-color:$surface-inverse-bg;
     width:100%;
     padding:10px 20px;
 }
@@ -871,17 +914,17 @@ body {
     position: absolute;
     top: 0;
     left: 0;
-    background: #ffffff;
+    background: $card-bg;
     border-radius: 12px;
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 4px 10px $card-shadow;
     transform: rotate(0deg);
     z-index: 0;
 }
 .card {
     width: 280px;
-    background: white;
+    background: $card-bg;
     border-radius: 12px;
-    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: 4px 4px 10px $card-shadow;
     padding: 16px;
     position: relative;
     z-index: 1;
@@ -899,12 +942,12 @@ body {
 }
 .card-subtitle {
     font-size: 16px;
-    color: #666;
+    color: $card-subtitle;
     margin-top: 4px;
 }
 .card-description {
     font-size: 14px;
-    color: #333;
+    color: $card-description;
     margin-top: 8px;
 }
 .reward-icon {
@@ -922,11 +965,11 @@ body {
     padding: 0;
     font-size: 2.5rem;
     line-height: 1;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 2px 12px $reward-shadow;
     white-space: nowrap;
     pointer-events: none;
-    background-color: #3a3a3a;
-    color: #fff;
+    background-color: $reward-bg;
+    color: $surface-inverse-text;
     z-index: 0;
 }
 .top-series-mini-box {
@@ -945,23 +988,23 @@ body {
     position: relative;
     top: -2px;
     font-size: 0.85em;
-    background-color: #eee;
-    color: #111;
+    background-color: $tag-bg;
+    color: $tag-text;
     border-radius: 4px;
     padding: 2px 4px;
     margin-right:0.5em;
 }
 .level-1 {
-    background-color: #99f18f;
-    color: #555;
+    background-color: $level-1-bg;
+    color: $level-1-text;
 }
 .level-2 {
-    background-color: #eee;
-    color: #111;
+    background-color: $level-2-bg;
+    color: $level-2-text;
 }
 .level-3 {
-    background-color: #c21ec7;
-    color: #fff;
+    background-color: $level-3-bg;
+    color: $level-3-text;
 }
 .embed {
     width: 100%;
@@ -1003,5 +1046,5 @@ body {
 .embed--twitch .embed__meta {
     padding: 12px;
     box-sizing: border-box;
-    border: 1px solid #ffffff;
+    border: 1px solid $surface-inverse-text;
 }
