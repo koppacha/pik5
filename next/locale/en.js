@@ -66,6 +66,7 @@ export const en = {
         value: "Value of Treasures",
         time: "Time",
         originalScore: "Original Score",
+        topRecordByController: "Top Records by Controller",
         score: "Score",
         realTime: "Real Time",
         evidenceImage: "Evidence Image",

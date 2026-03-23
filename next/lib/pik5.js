@@ -130,6 +130,59 @@ export function truncateSmart(str) {
         return str.length > 12 ? str.slice(0, 12) + '…' : str
     }
 }
+
+export const stageId2seriesId = (stageId) => {
+    const id = Number(stageId)
+    if (!Number.isFinite(id)) return null
+    if (id < 100 || id >= 500) return null
+
+    const seriesId = Math.floor(id / 100)
+    return (seriesId >= 1 && seriesId <= 4) ? seriesId : null
+}
+
+export const isLimitedStageId = (stageId) => {
+    const id = Number(stageId)
+    return Number.isFinite(id) && id >= 1000 && id <= 9999
+}
+
+export const getPageThemeKind = (pathname = "", pageProps = {}, query = {}) => {
+    if (pathname.startsWith("/limited")) return "limited"
+
+    if (pathname === "/stage/[...stage]") {
+        return isLimitedStageId(pageProps?.stage ?? query?.stage?.[0]) ? "limited" : "series"
+    }
+
+    if ([
+        "/record/[record]",
+        "/speedrun/[...run]",
+        "/total/[...series]",
+    ].includes(pathname)) return "series"
+    return "other"
+}
+
+export const normalizeSeriesId = (series) => {
+    const value = Number(series)
+    if (!Number.isFinite(value)) return null
+    if (value >= 1 && value <= 4) return value
+    if (value >= 10 && value < 50) return Math.floor(value / 10)
+    return null
+}
+
+export const resolvePageSeriesId = (pathname = "", pageProps = {}, query = {}) => {
+    if (pathname === "/total/[...series]") {
+        return normalizeSeriesId(pageProps?.series ?? query?.series?.[0])
+    }
+
+    if (pathname === "/stage/[...stage]" || pathname === "/speedrun/[...run]") {
+        return stageId2seriesId(pageProps?.stage ?? query?.stage?.[0] ?? query?.run?.[0])
+    }
+
+    if (pathname === "/record/[record]") {
+        return stageId2seriesId(pageProps?.data?.stage_id)
+    }
+
+    return null
+}
 // ボーダーカラーと背景色（罫線色、ダークテーマ時背景、ライトテーマ時背景の順）
 export const rankColor = (rank, team = 0, target = 0) => {
     const t = Number(team)
@@ -137,28 +190,51 @@ export const rankColor = (rank, team = 0, target = 0) => {
     if(!t || target === 0){
         switch (true) {
             case !r: // false
-                return target ? '#2d2d2d' : '#b7b7b7'
+                return target ? 'var(--color-rank-default-border)' : 'var(--color-rank-default-bg)'
             case r === 1: // 1位
-                return target ? '#f6f24e' : '#eaeaea'
+                return target ? 'var(--color-rank-1-border)' : 'var(--color-rank-1-bg)'
             case r === 2: // 2位
-                return target ? '#42f35d' : '#dedede'
+                return target ? 'var(--color-rank-2-border)' : 'var(--color-rank-2-bg)'
             case r === 3: // 3位
-                return target ? '#23abf1' : '#d5d5d5'
+                return target ? 'var(--color-rank-3-border)' : 'var(--color-rank-3-bg)'
             case r < 11: // 4～10位
-                return target ? '#c7c7c7' : '#b7b7b7'
+                return target ? 'var(--color-rank-4to10-border)' : 'var(--color-rank-4to10-bg)'
             case r < 21: // 11～20位
-                return target ? '#9a9a9a' : '#b7b7b7'
+                return target ? 'var(--color-rank-11to20-border)' : 'var(--color-rank-11to20-bg)'
             default: // 21位～
-                return target ? '#3f3d3d' : '#b7b7b7'
+                return target ? 'var(--color-rank-21plus-border)' : 'var(--color-rank-21plus-bg)'
         }
     } else {
         const teamColor = ['',
-            '#19acff', '#ff3919', '#eeeeee', '#b419ff',
-            '#ff63f2', '#e3e3e3', '#f3524c', '#8ba9ff',
-            '#e0e0e0', '#010101', '#45aee6', '#e6d745',
-            '#e6456c', '#e6b945', '#45e675', '#dce645',
-            '#457de6', '#e69345', '#e64575', '#455ae6']
+            'var(--series-theme-default)',
+            'var(--color-team-1)', 'var(--color-team-2)', 'var(--color-team-3)', 'var(--color-team-4)',
+            'var(--color-team-5)', 'var(--color-team-6)', 'var(--color-team-7)', 'var(--color-team-8)',
+            'var(--color-team-9)', 'var(--color-team-10)', 'var(--color-team-11)', 'var(--color-team-12)',
+            'var(--color-team-13)', 'var(--color-team-14)', 'var(--color-team-15)', 'var(--color-team-16)',
+            'var(--color-team-17)', 'var(--color-team-18)', 'var(--color-team-19)', 'var(--color-team-20)']
         return teamColor[t]
+    }
+}
+
+export const recordContainerBackgroundColor = (rank, theme = "light") => {
+    if (theme !== "dark") return "#ffffff"
+
+    const r = Number(rank)
+    switch (true) {
+        case !r:
+            return "#656565"
+        case r === 1:
+            return "#656565"
+        case r === 2:
+            return "#4b4b4b"
+        case r === 3:
+            return "#2a2a2a"
+        case r < 11:
+            return "#181818"
+        case r < 21:
+            return "#181818"
+        default:
+            return "#181818"
     }
 }
 

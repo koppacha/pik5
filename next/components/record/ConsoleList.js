@@ -20,7 +20,7 @@ export default function ConsoleList({param}){
     return (
         <>
             <Box style={{marginTop:"20px"}}>
-                <div className="cell-box" style={{width:"14em"}}>操作方法別トップ記録</div>
+                <div className="cell-box" style={{width:"14em"}}>{t.g.topRecordByController}</div>
                 <Grid container>
                     {
                         consoleList.map((console, index) => (
