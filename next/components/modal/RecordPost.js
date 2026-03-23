@@ -26,8 +26,7 @@ export default function RecordPost({info, rule, console, mode, onPosted = null})
         <>
             <Button
                 variant="contained"
-                color="primary"
-                className={"rule-box"}
+                className={"rule-box record-post-button"}
                 onClick={handleClickOpen}>
                 <span><FontAwesomeIcon icon={faPaperPlane} /> {t.g.post}</span>
             </Button>

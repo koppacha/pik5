@@ -161,7 +161,7 @@ export default function RecordPage({users, data, history}){
                                         color="primary"
                                         className={"rule-box"}
                                         onClick={handleEditOpen}>
-                                        <FontAwesomeIcon style={{color:"#e0e0e0"}} icon={faPenToSquare} /> この記録を再編集する
+                                        <FontAwesomeIcon style={{color:"var(--color-surface-inverse-text)"}} icon={faPenToSquare} /> この記録を再編集する
                                     </Button>
                             }
                             {
@@ -172,7 +172,7 @@ export default function RecordPage({users, data, history}){
                                         color="primary"
                                         className={"rule-box"}
                                         onClick={handleOpen}>
-                                        <FontAwesomeIcon style={{color:"#e0e0e0"}} icon={faTrashCan} /> この記録を削除する
+                                        <FontAwesomeIcon style={{color:"var(--color-surface-inverse-text)"}} icon={faTrashCan} /> この記録を削除する
                                     </Button>
                             }
                         </Box>

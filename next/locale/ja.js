@@ -66,6 +66,7 @@ export const ja = {
         lastUpdate: "最終更新",
         value: "お宝価値",
         time: "時間",
+        topRecordByController: "操作方法別トップ記録",
         originalScore: "元々のスコア",
         score: "スコア",
         realTime: "リアル時間",

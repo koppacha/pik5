@@ -144,7 +144,7 @@ export default function Series(param){
             </Box>
             <Grid container style={{marginBottom:"8px"}}>
                 <Grid className="user-info-box" item>
-                    <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                    <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </Grid>
                 {speedrunUrl && <Link href={speedrunUrl} target="_blank">
                     <Grid className="user-info-box" item>

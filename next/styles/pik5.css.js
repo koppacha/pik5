@@ -21,54 +21,75 @@ import TextField from "@mui/material/TextField";
 // 汎用のカラースキーム
 const colors = {
     dark: {
-        front: "#e1e1e1",
-        back: "#212121",
-        subTitle: "#b6b6b6",
-        subBack: "#3f454b",
-        hoverBack: "#2d3748",
-        border: "#c7d8da",
-        compare: "#4ce600",
+        front: "var(--color-text-base)",
+        back: "var(--color-bg-base)",
+        subTitle: "var(--color-text-sub)",
+        subBack: "var(--color-block-default-bg)",
+        hoverBack: "var(--color-hover-bg)",
+        border: "var(--color-border-base)",
+        compare: "var(--color-compare)",
     },
     light: {
-        front: "#282828",
-        back: "#e7e7e7",
-        subTitle: "#464646",
-        subBack: "#9b9b9b",
-        hoverBack: "#2d3748",
-        border: "#444444",
-        compare: "#e63600",
+        front: "var(--color-text-base)",
+        back: "var(--color-bg-base)",
+        subTitle: "var(--color-text-sub)",
+        subBack: "var(--color-block-default-bg)",
+        hoverBack: "var(--color-hover-bg)",
+        border: "var(--color-border-base)",
+        compare: "var(--color-compare)",
     }
+}
+
+const uiColors = {
+    markdownStrong: "var(--color-markdown-strong)",
+    markdownTableBorder: "var(--color-markdown-table-border)",
+    navText: "var(--color-nav-text)",
+    navBorder: "var(--color-nav-border)",
+    buttonAltBg: "var(--color-button-alt-bg)",
+    buttonAltText: "var(--color-button-alt-text)",
+    inverseBg: "var(--color-surface-inverse-bg)",
+    inverseText: "var(--color-surface-inverse-text)",
+    menuItemBg: "var(--color-menu-item-bg)",
+    menuItemBorder: "var(--color-menu-item-border)",
+    menuItemHoverBg: "var(--color-menu-item-hover-bg)",
+    menuItemHoverText: "var(--color-menu-item-hover-text)",
+    dividerMuted: "var(--color-divider-muted)",
+    dividerStrong: "var(--color-divider-strong)",
+    textOnMain: "var(--color-text-on-main)",
+    mutedText: "var(--color-muted-text)",
+    tagBg: "var(--color-tag-bg)",
+    tagText: "var(--color-tag-text)",
 }
 
 // シリーズ別テーマカラー（フロント用）
 export const SeriesTheme = (series) => {
     switch (series) {
         case 1: // ピクミン1
-            return '#6eb8ec'
+            return 'var(--series-theme-1)'
         case 2: // ピクミン2
-            return '#e86363'
+            return 'var(--series-theme-2)'
         case 3: // ピクミン3/DX
-            return '#39d961'
+            return 'var(--series-theme-3)'
         case 4: // ピクミン4
-            return '#e3cf37'
+            return 'var(--series-theme-4)'
         case 5: // 期間限定
-            return '#7c37e3'
+            return 'var(--series-theme-5)'
         case 6: // 本編RTA
-            return '#e337ad'
+            return 'var(--series-theme-6)'
         case 7: // ピクミンキーワード
-            return '#37cfe3'
+            return 'var(--series-theme-7)'
         case 8: // Discord
-            return '#3796e3'
+            return 'var(--series-theme-8)'
         case 9: // その他
-            return '#ababab'
+            return 'var(--series-theme-9)'
         default:
-            return '#ffffff'
+            return 'var(--series-theme-default)'
     }
 }
 // 文字影
 const shadow = () => {
-    const {theme} = useTheme()
-    const shadowColor = theme === "dark" ? "#000" : "#dadada"
+    useTheme()
+    const shadowColor = "var(--color-shadow)"
     return `2px  2px 2px ${shadowColor}, -2px  2px 2px ${shadowColor},
             2px -2px 2px ${shadowColor}, -2px -2px 2px ${shadowColor},
             2px    0 2px ${shadowColor},    0  2px 2px ${shadowColor},
@@ -87,7 +108,6 @@ const pc = (first, ...interpolations) => css`
   }
 `
 export const GlobalStyle = createGlobalStyle`
-
   body {
     color: ${colors.light.front};
     background-color: ${colors.light.back};
@@ -130,13 +150,33 @@ export const GlobalStyle = createGlobalStyle`
     display: none;
   }
 
-  .active {
-    background-color: ${colors.light.front} !important;
-    color: ${colors.light.back} !important;
+  .not-active {
+    background-color: var(--color-block-default-bg) !important;
+    color: var(--color-text-base) !important;
 
     [data-theme='dark'] & {
-      background-color: ${colors.dark.front} !important;
-      color: ${colors.dark.back} !important;
+      background-color: var(--color-block-default-bg) !important;
+      color: var(--color-text-base) !important;
+    }
+  }
+
+  .active {
+    background-color: var(--color-block-active-bg) !important;
+    color: var(--color-block-active-text) !important;
+
+    [data-theme='dark'] & {
+      background-color: var(--color-block-active-bg) !important;
+      color: var(--color-block-active-text) !important;
+    }
+  }
+
+  .record-post-button {
+    background-color: var(--color-page-accent) !important;
+    color: var(--color-text-on-main) !important;
+
+    [data-theme='dark'] & {
+      background-color: var(--color-page-accent) !important;
+      color: var(--color-text-on-main) !important;
     }
   }
   
@@ -196,7 +236,7 @@ export const GlobalStyle = createGlobalStyle`
 
     strong {
       font-size: 1.1em;
-      color: #f7fafc;
+      color: ${uiColors.markdownStrong};
     }
 
     table {
@@ -206,7 +246,7 @@ export const GlobalStyle = createGlobalStyle`
 
     td, th {
       padding: 8px;
-      border: 1px solid #4a5568;
+      border: 1px solid ${uiColors.markdownTableBorder};
     }
     a {
       text-decoration: underline;
@@ -224,32 +264,33 @@ export const OffsetContainer = styled(Container)`
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
   font-family: "M PLUS 1 CODE", sans-serif;
-  color: #d2d8e0;
+  color: ${uiColors.navText};
   background-color: transparent;
   font-size: 0.9em;
   border-radius: 0;
   height: 64px;
   padding: 0 18px;
-  border-bottom: 4px solid #000;
+  border-bottom: 4px solid ${uiColors.navBorder};
   max-width: 210px;
   
   ${sp`font-size: 0.7em;`}
 
   &:hover {
-    border-bottom: 4px solid ${props => SeriesTheme(props.$series)};
-    background-color: #2d4448;
+    border-bottom: 4px solid ${uiColors.inverseText};
+    background-color: ${uiColors.inverseText};
+    color: ${uiColors.menuItemHoverText};
   }
 `
 export const AuthButton = styled(Button)`
     font-family: "M PLUS 1 CODE", sans-serif;
-    background-color: #cfd2de;
-    color: #1a293b;
+    background-color: ${uiColors.buttonAltBg};
+    color: ${uiColors.buttonAltText};
     font-weight: bold;
     border-radius: 8px;
     padding: 4px 12px;
     &:hover {
-      background-color: #1a293b;
-      color: #cfd2de;
+      background-color: ${uiColors.buttonAltText};
+      color: ${uiColors.buttonAltBg};
     }
 `
 export const CustomButton = styled(Button)`
@@ -272,7 +313,7 @@ export const CustomButton = styled(Button)`
 export const StyledSelect = styled(Select)`
     max-width: 200px;
     max-height: 42px;
-    margin-right: 10px;
+    margin-left: 0.5em;
     border: 1px solid ${colors.light.front};
     svg {
       color: ${colors.light.front};
@@ -321,7 +362,7 @@ export const StyledTextField = styled(TextField)`
     }
 `
 export const ThinAppBar = styled(AppBar)`
-    background-color: #111;
+    background-color: ${uiColors.inverseBg};
   
     ${sp`display: none;`}
 `
@@ -341,13 +382,14 @@ export const HeaderPopMenu = styled(Paper)`
 `
 export const StyledMenuItem = styled(MenuItem)`
   font-family: "M PLUS 1 CODE", sans-serif;
-  border-left: 10px solid #f7fafc;
-  background-color: #3a3a3a;
+  border-left: 10px solid ${uiColors.menuItemBorder};
+  background-color: ${uiColors.menuItemBg};
+  color: ${uiColors.menuItemBorder};
   overflow-x: hidden;
   
   &:hover {
-    color: #111;
-    background-color: #fff;
+    color: ${uiColors.menuItemHoverText};
+    background-color: ${uiColors.menuItemHoverBg};
   }
 `
 export const InfoBox = styled(Box)`
@@ -364,7 +406,7 @@ export const InfoBox = styled(Box)`
   }
 `
 export const RuleWrapper = styled(Grid)`
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   min-width: 1200px;
   overflow: scroll;
   white-space: nowrap;
@@ -389,7 +431,6 @@ export const CellBox = styled(Box)`
   background-color: ${colors.light.subBack};
   border-radius :8px;
   text-align :center;
-
   [data-theme="dark"] & {
     background-color: ${colors.dark.subBack};
   }
@@ -413,8 +454,8 @@ export const TopBox = styled(Box)`
   }
 `
 export const TopBoxHeader = styled(Box)`
-  background-color: ${colors.light.border};
-  color: ${colors.light.back};
+  background-color: var(--color-block-header-bg);
+  color: var(--color-block-header-text);
   padding :4px;
   border-radius: 4px;
   display: flex;
@@ -425,8 +466,8 @@ export const TopBoxHeader = styled(Box)`
   }
   
   [data-theme="dark"] & {
-    background-color: ${colors.dark.border};
-    color : ${colors.dark.back};
+    background-color: var(--color-block-header-bg);
+    color : var(--color-block-header-text);
   }
 `
 export const TopBoxContent = styled(Box)`
@@ -436,7 +477,7 @@ export const TopBoxContentList = styled(Box)`
   font-size: 0.9em;
   padding-top :4px;
   padding-bottom :12px;
-  border-bottom: 1px solid #777;
+  border-bottom: 1px solid ${uiColors.dividerMuted};
 `
 export const StyledGrid = styled(Grid)`
   border-bottom: 1px solid ${colors.light.border};
@@ -455,14 +496,14 @@ export const RecordGridWrapper = styled(Grid)`
   display: grid;
   place-items: center;
   width: 100%;
-  border-right: 1px solid #777;
+  border-right: 1px solid ${uiColors.dividerMuted};
 `
 export const TeamScoreType = styled(Typography)`
   font-size: 800%;
   letter-spacing: 10px;
   line-height: 85%;
   font-family:"Proza Libre","cursive";
-
+  
   ${sp`
     font-size: 500%;
   `}
@@ -470,7 +511,6 @@ export const TeamScoreType = styled(Typography)`
 export const TeamRpsType = styled(Typography)`
   font-size: 333%;
   font-family:"Proza Libre","cursive";
-  text-shadow: ${shadow};
   color: ${colors.light.subTitle};
 
   ${sp`
@@ -483,8 +523,7 @@ export const TeamRpsType = styled(Typography)`
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
   font-family:"Proza Libre","cursive";
-  text-shadow: ${shadow};
-
+  
   ${sp`
     font-size: 0.9em;
   `}
@@ -492,7 +531,6 @@ export const ScoreType = styled(Typography)`
 export const ScoreTail = styled(Typography)`
   color: ${colors.light.subTitle};
   font-family:"Proza Libre","cursive";
-  text-shadow: ${shadow};
 
   [data-theme='dark'] & {
     color: ${colors.dark.subTitle};
@@ -502,7 +540,6 @@ export const CompareType = styled(Typography)`
   color: ${colors.light.compare};
   font-size :0.8em;
   font-family:"Proza Libre","cursive";
-  text-shadow: ${shadow};
   
   [data-theme='dark'] & {
     color: ${colors.dark.compare};
@@ -510,7 +547,6 @@ export const CompareType = styled(Typography)`
 `
 export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
     font-size :1.25em;
-    text-shadow: ${shadow};
     font-family: "M PLUS 1 CODE", sans-serif;
 
     ${sp`
@@ -528,14 +564,12 @@ export const RankType = styled(Typography)`
     line-height :2em;
     font-weight: 200;
     font-family: "Kulim Park","cursive";
-    text-shadow: ${shadow};
 
     ${sp`font-size: 1.2em;`}
 
 `
 export const RankEdge = styled(Typography)`
   color: ${colors.light.subTitle};
-  text-shadow: ${shadow};
   [data-theme='dark'] & {
     color: ${colors.dark.subTitle};
   }
@@ -553,13 +587,19 @@ export const RankPointType = styled(Typography)`
 export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank, $team: props.team}))`
   
     border-left: 10px solid ${props => rankColor(props.$rank, props.$team, 1)};
+    border-top: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
+    border-right: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
     border-bottom: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    background-color: ${props => rankColor(props.$rank, props.$team, 0)};
     border-radius: 8px;
     padding: 4px;
     margin-bottom: 10px;
     text-align: center;
-    box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, props.$team, 1)};
+
+    [data-theme='dark'] & {
+      border-top: none;
+      border-right: none;
+      box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, props.$team, 1)};
+    }
 `
 export const BattleRecordContainer = styled(RecordContainer)`
   border-left: 1px solid;
@@ -578,7 +618,6 @@ export const AuthWindow = styled(Grid)`
   }
 `
 export const StageListWrapper = styled(Box).attrs(props => ({$count: props.count}))`
-
   width: 100%;
   
   ${
@@ -622,14 +661,17 @@ export const MarkerTableCell = styled(Grid)`
   text-align: center;
   min-height: 47px;
   line-height: 47px;
-  border-bottom: 1px dotted #333;
+  border-bottom: 1px dotted ${uiColors.dividerStrong};
   align-content: flex-start;
 `
 export const UserInfoBox = styled(StageListBox)`
   padding: 8px;
   min-height: 2em;
   span {
-    color: #9d9d9d;
+      color: ${colors.light.subTitle};
+      [data-theme='dark'] & {
+          color: ${colors.dark.subTitle};
+      }
   }
 `
 export const UserInfoTotalBox = styled(StageListBox).attrs(props => ({$series: props.series}))`
@@ -650,7 +692,7 @@ export const MobileFooterMenu = styled(Grid)`
   width: 100vw;
   height: 62px;
   bottom: 0;
-  background-color: #111;
+  background-color: ${uiColors.inverseBg};
   opacity: 0.9;
   padding-top: 6px;
   
@@ -719,24 +761,24 @@ export const SearchResultTag = styled(Typography).attrs(props => ({$color: props
   padding: 2px 6px;
   margin: 2px;
   background-color: ${props => props.$color};
-  color: #000;
+  color: ${uiColors.textOnMain};
 `
 export const SearchResultItem = styled(ListItem).attrs(props => ({$index: props.index}))`
   width: 100%;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid ${uiColors.textOnMain};
   
   ${function (props) {
     if (props.$index === 0) {
         return css`
-          background-color: #1a293b;
-          color: #cfd2de;
+          background-color: var(--color-page-main);
+          color: var(--color-block-active-text);
         `
     }
 }}
   
   &:hover {
-    background-color: #1a293b;
-    color: #cfd2de;
+    background-color: var(--color-page-main);
+    color: var(--color-block-active-text);
   }
   
   svg {
@@ -779,7 +821,7 @@ export const EventDate = styled(Box).attrs(props => ({$week: props.week}))`
 
   .week {
     font-size: 0.8em;
-    color: #8c8c8c;
+    color: ${uiColors.mutedText};
   }
 `
 export const EventContent = styled(Box)`
@@ -809,9 +851,9 @@ export const EventContent = styled(Box)`
 export const CompareIcon = styled(Typography)`
     margin-right: 4px;
     padding :0 4px;
-    background-color :#eee;
+    background-color :${uiColors.tagBg};
     border-radius :4px;
-    color :#111;
+    color :${uiColors.tagText};
     font-size: 1em;
     display: inline-block;
 `

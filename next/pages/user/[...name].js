@@ -180,7 +180,7 @@ export default function Stage(param){
                     <UserInfoBox item className="user-info-box"><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
                     <UserInfoBox item className="user-info-box"><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
                     <UserInfoBox item className="user-info-box">
-                        <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"#fff",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                        <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                     </UserInfoBox>
                 </Grid>
             </Box>

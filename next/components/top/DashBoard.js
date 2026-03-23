@@ -105,6 +105,9 @@ export default function DashBoard({user, users}){
     const handleTooltipOpen = () => {
         setOpen(true);
     }
+    const categoryGridItemStyle = {display: "flex"}
+    const categoryLinkStyle = {display: "flex", flex: 1}
+    const categoryCellBoxStyle = {flex: 1}
     return (
         <>
             <TopBoxHeader className="top-box-header">
@@ -167,12 +170,12 @@ export default function DashBoard({user, users}){
                 }
                 </Grid>
                 <Box className="top-box-caption" style={{paddingTop:"1.5em"}}>{t.g.categoryAndPosts}</Box>
-                <Grid container>
+                <Grid container alignItems="stretch">
                 {
                     Object.keys(data.data?.scores ?? {}).map((series) =>
-                        <Grid item xs={4} sm={3} md={2} key={series}>
-                            <Link href={`/total/${series}`}>
-                                <CellBox className="cell-box">
+                        <Grid item xs={4} sm={3} md={2} key={series} style={categoryGridItemStyle}>
+                            <Link href={`/total/${series}`} style={categoryLinkStyle}>
+                                <CellBox className="cell-box" style={categoryCellBoxStyle}>
                                     <GradientLine color={SeriesTheme(Number(series.at(0)))} />
                                     <span className="cell-box-caption">{t.subtitle[series]}</span><br/>
                                     {Number(data.data.scores[series]).toLocaleString()} <span className=".score-tail" style={{fontSize:"0.8em"}}>pts.</span><br/>
@@ -188,7 +191,7 @@ export default function DashBoard({user, users}){
                 {
                     (notPostCategory.length > 0) && (
                         <ClickAwayListener onClickAway={handleTooltipClose}>
-                            <Grid item xs={2} key={0}>
+                            <Grid item xs={4} sm={3} md={2} key={0} style={categoryGridItemStyle}>
                                 <Tooltip
                                     PopperProps={{
                                         disablePortal: true,
@@ -209,7 +212,7 @@ export default function DashBoard({user, users}){
                                         </ul>
                                     </>
                                 }>
-                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{cursor: "pointer", height: "80px"}}>
+                                    <CellBox className="cell-box" onClick={handleTooltipOpen} style={{...categoryCellBoxStyle, cursor: "pointer"}}>
                                         <GradientLine color={"#ccc"} />
                                         <br/>
                                         {t.title[9]}<br/>
