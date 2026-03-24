@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {currentYear, dateFormat, fetcher, rankColor, recordContainerBackgroundColor, sec2time, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, rankColor, sec2time, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -33,7 +33,6 @@ import { useDrag } from '@use-gesture/react';
 import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
 import {stageUrlOutput} from "../../lib/factory";
-import {useTheme} from "next-themes";
 
 export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history, swapScoreRpsLabel = false}) {
 
@@ -47,7 +46,6 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const [editOpen, setEditOpen] = useState(false)
     const [videoOpen, setVideoOpen] = useState(false)
     const [isClient, setIsClient] = useState(false)
-    const {resolvedTheme, theme} = useTheme()
 
     useEffect(() => setIsClient(true), [])
 
@@ -94,10 +92,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     } else {
         compare = ""
     }
-    const currentTheme = resolvedTheme ?? theme ?? "dark"
-    const isDarkTheme = currentTheme === "dark"
     const currentRankFrontColor = rankColor(data?.post_rank ?? 20, data?.team ?? 0, 1)
-    const currentRankBackColor = recordContainerBackgroundColor(data?.post_rank ?? 20, currentTheme)
     const className = data?.post_rank === 1 ? "rank1" :
                              data?.post_rank === 2 ? "rank2" :
                              data?.post_rank === 3 ? "rank3" :
@@ -116,12 +111,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
         // <Swiper userPageUrl={userPageUrl} stageLink={stageLink} router={router}>
         <>
             <RecordContainer className={`record-container ${className}`} container rank={data?.post_rank ?? 20} team={data?.team ?? 0}
-                style={{borderLeft:      `10px solid ${currentRankFrontColor}`,
-                        borderTop:       isDarkTheme ? "none" : `1px solid ${currentRankFrontColor}`,
-                        borderRight:     isDarkTheme ? "none" : `1px solid ${currentRankFrontColor}`,
-                        borderBottom:    `1px solid ${currentRankFrontColor}`,
-                        backgroundColor: currentRankBackColor,
-                        ...(isDarkTheme ? {boxShadow: `-3px 1px 4px ${currentRankFrontColor}`} : {})}}
+                style={{"--record-rank-front-color": currentRankFrontColor}}
             >
                 <RecordGridWrapper className="record-grid-wrapper" item xs={1.8} sm={1}>
                     <div style={{fontSize:mini && "0.8em"}}>

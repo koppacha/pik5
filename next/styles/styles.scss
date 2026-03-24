@@ -72,37 +72,31 @@ $reward-shadow: var(--color-reward-shadow);
 }
 
 .rank1 {
-    background-color: $rank-1-bg;
     [data-theme='dark'] & {
         background-color: $rank-1-bg;
     }
 }
 .rank2 {
-    background-color: $rank-2-bg;
     [data-theme='dark'] & {
         background-color: $rank-2-bg;
     }
 }
 .rank3 {
-    background-color: $rank-3-bg;
     [data-theme='dark'] & {
         background-color: $rank-3-bg;
     }
 }
 .rank4 {
-    background-color: $rank-4to10-bg;
     [data-theme='dark'] & {
         background-color: $rank-4to10-bg;
     }
 }
 .rank11 {
-    background-color: $rank-11to20-bg;
     [data-theme='dark'] & {
         background-color: $rank-11to20-bg;
     }
 }
 .rank21 {
-    background-color: $rank-21plus-bg;
     [data-theme='dark'] & {
         background-color: $rank-21plus-bg;
     }
@@ -598,14 +592,21 @@ body {
     }
 }
 .record-container {
-    //border-left: 10px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    //border-bottom: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    //background-color: ${props => rankColor(props.$rank, props.$team, 0)};
+    background-color: $rank-default-bg;
+    border-left: 10px solid var(--record-rank-front-color, var(--color-rank-default-border));
+    border-top: 1px solid var(--record-rank-front-color, var(--color-rank-default-border));
+    border-right: 1px solid var(--record-rank-front-color, var(--color-rank-default-border));
+    border-bottom: 1px solid var(--record-rank-front-color, var(--color-rank-default-border));
     border-radius: 8px;
     padding: 4px;
     margin-bottom: 10px;
     text-align: center;
-    //box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, props.$team, 1)};
+
+    [data-theme='dark'] & {
+        border-top: none;
+        border-right: none;
+        box-shadow: -3px 1px 4px var(--record-rank-front-color, var(--color-rank-default-border));
+    }
 }
 .auth-window {
     background-color: $light-back;
