@@ -12,6 +12,18 @@ export default function MyDocument(props) {
           <Head>
               <meta charSet="utf-8"/>
               <meta name="emotion-insertion-point" content=""/>
+              <script
+                  dangerouslySetInnerHTML={{
+                      __html: `
+                        try {
+                          var storedTheme = window.localStorage.getItem('theme');
+                          document.documentElement.dataset.theme = storedTheme || 'dark';
+                        } catch (e) {
+                          document.documentElement.dataset.theme = 'dark';
+                        }
+                      `,
+                  }}
+              />
               {emotionStyleTags}
               <link rel="icon" href="/favicon.ico" />
               <link rel="preconnect" href="https://fonts.googleapis.com"/>
