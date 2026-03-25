@@ -585,21 +585,10 @@ export const RankPointType = styled(Typography)`
   }
 `
 export const RecordContainer = styled(Grid).attrs(props => ({$rank: props.rank, $team: props.team}))`
-  
-    border-left: 10px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    border-top: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    border-right: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
-    border-bottom: 1px solid ${props => rankColor(props.$rank, props.$team, 1)};
     border-radius: 8px;
     padding: 4px;
     margin-bottom: 10px;
     text-align: center;
-
-    [data-theme='dark'] & {
-      border-top: none;
-      border-right: none;
-      box-shadow: -3px 1px 4px ${props => rankColor(props.$rank, props.$team, 1)};
-    }
 `
 export const BattleRecordContainer = styled(RecordContainer)`
   border-left: 1px solid;
