@@ -9,8 +9,6 @@ services:
     container_name: laravel
     volumes:
       - ./laravel:/var/www/laravel
-    links:
-      - mysql
     expose:
       - "8000"
     restart:
@@ -68,14 +66,15 @@ services:
       args:
         - TZ=${TZ}
     container_name: next
+    working_dir: /var/www/next
+    stdin_open: true
+    command: sh -c "sleep infinity"
     tty: true
     volumes:
       - ./next:/var/www/next
     ports:
       - "3005:3000"
       - "5555:5555"
-    restart:
-      always
     logging:
       driver: json-file
       options:

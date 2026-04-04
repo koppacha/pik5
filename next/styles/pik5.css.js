@@ -276,7 +276,7 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
   ${sp`font-size: 0.7em;`}
 
   &:hover {
-    border-bottom: 4px solid ${uiColors.inverseText};
+    border-bottom: 4px solid ${props => SeriesTheme(props.$series)};
     background-color: ${uiColors.inverseText};
     color: ${uiColors.menuItemHoverText};
   }

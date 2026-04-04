@@ -1,6 +1,5 @@
 import { styled } from '@mui/material/styles'
 import Box from '@mui/material/Box'
-import {SeriesTheme} from "@/styles/pik5.css";
 
 /**
  * 横罫線（高さ 4px・角丸）に rps 比率で 4 色グラデーションを適用する。
@@ -25,10 +24,16 @@ const buildGradient = ({
   rps2 = 0,
   rps3 = 0,
   rps4 = 0,
-  color = 'ccc',
+  baseColor = 'ccc',
 }) => {
-  // '#ccc' 形式に正規化
-  const base = color.startsWith('#') ? color : `#${color}`
+  const base = (
+    baseColor.startsWith('#') ||
+    baseColor.startsWith('var(') ||
+    baseColor.startsWith('rgb(') ||
+    baseColor.startsWith('rgba(') ||
+    baseColor.startsWith('hsl(') ||
+    baseColor.startsWith('hsla(')
+  ) ? baseColor : `#${baseColor}`
   const total = (rps1 + rps2 + rps3 + rps4) || 0
   if (!total) {
     // 合計が 0 または falsy の場合は単色バー
@@ -78,9 +83,9 @@ const buildGradient = ({
 }
 
 const GradientLine = styled(Box, {
-  // rps, rps1–4, color を DOM に渡さない
+  // rps, rps1–4, baseColor を DOM に渡さない
   shouldForwardProp: (prop) =>
-    !['rps', 'rps1', 'rps2', 'rps3', 'rps4', 'color'].includes(prop),
+    !['rps', 'rps1', 'rps2', 'rps3', 'rps4', 'baseColor'].includes(prop),
 })((props) => ({
   width: '68%',
   marginLeft: 'auto',

@@ -176,7 +176,7 @@ export default function DashBoard({user, users}){
                         <Grid item xs={4} sm={3} md={2} key={series} style={categoryGridItemStyle}>
                             <Link href={`/total/${series}`} style={categoryLinkStyle}>
                                 <CellBox className="cell-box" style={categoryCellBoxStyle}>
-                                    <GradientLine color={SeriesTheme(Number(series.at(0)))} />
+                                    <GradientLine baseColor={SeriesTheme(Number(series.at(0)))} />
                                     <span className="cell-box-caption">{t.subtitle[series]}</span><br/>
                                     {Number(data.data.scores[series]).toLocaleString()} <span className=".score-tail" style={{fontSize:"0.8em"}}>pts.</span><br/>
                                     <span className="cell-box-caption">
@@ -213,7 +213,7 @@ export default function DashBoard({user, users}){
                                     </>
                                 }>
                                     <CellBox className="cell-box" onClick={handleTooltipOpen} style={{...categoryCellBoxStyle, cursor: "pointer"}}>
-                                        <GradientLine color={"#ccc"} />
+                                        <GradientLine baseColor={"#ccc"} />
                                         <br/>
                                         {t.title[9]}<br/>
                                     </CellBox>
