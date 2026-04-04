@@ -1,0 +1,6 @@
+services:
+  next:
+    command: sh -c "yarn build && yarn start"
+    stdin_open: false
+    tty: false
+    restart: unless-stopped
