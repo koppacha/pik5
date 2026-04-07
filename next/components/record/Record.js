@@ -11,7 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faYoutube} from "@fortawesome/free-brands-svg-icons";
-import {currentYear, dateFormat, fetcher, rankColor, sec2time, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, rankColor, sec2time, stageId2seriesId, useLocale} from "../../lib/pik5";
 import Score from "./Score";
 import React, {useEffect, useState} from "react";
 import {
@@ -93,6 +93,18 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
         compare = ""
     }
     const currentRankFrontColor = rankColor(data?.post_rank ?? 20, data?.team ?? 0, 1)
+    const normalizedSeriesId = (() => {
+        const seriesValue = Number(series)
+        if (Number.isFinite(seriesValue)) {
+            if (seriesValue >= 1 && seriesValue <= 4) return seriesValue
+            if (seriesValue >= 10 && seriesValue < 50) return Math.floor(seriesValue / 10)
+        }
+
+        return stageId2seriesId(data?.stage_id)
+    })()
+    const recordAccentColor = normalizedSeriesId
+        ? `var(--page-theme-series-${normalizedSeriesId}-accent)`
+        : undefined
     const className = data?.post_rank === 1 ? "rank1" :
                              data?.post_rank === 2 ? "rank2" :
                              data?.post_rank === 3 ? "rank3" :
@@ -127,7 +139,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
                     <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={swapScoreRpsLabel ? "rps" : "pts"} /><br className="pc-hidden"/>
-                    <CompareType className="compare-type" as="span"> {compare}</CompareType>
+                    <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
                         (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stageCount}</ScoreType></>

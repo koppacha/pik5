@@ -980,9 +980,10 @@ body {
     cursor: pointer;
     text-decoration: none !important;
     border: 1px solid $light-border;
+    color: $light-front;
 
     [data-theme='dark'] & {
-        color: $dark-border;
+        color: $dark-front;
     }
 }
 .tags {
