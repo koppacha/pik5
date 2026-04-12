@@ -7,6 +7,10 @@ import * as React from "react";
 export default function NewRecords({users}){
 
     const {data:newRecords} = useSWR(`/api/server/new`, fetcher, { refreshInterval: 10000 })
+    const {data: latestUsers} = useSWR('/api/users', fetcher, {
+        fallbackData: Array.isArray(users) ? users : [],
+        refreshInterval: 60000
+    })
 
     if(!newRecords){
         return (
@@ -14,11 +18,12 @@ export default function NewRecords({users}){
         )
     }
 
+    const userList = Array.isArray(latestUsers) ? latestUsers : (Array.isArray(users) ? users : [])
     const data = newRecords ? newRecords.data.map(function(post){
-        const user = (users || []).find(user => user.userId === post.user_id)
+        const user = userList.find(user => user.userId === post.user_id)
         return {
             ...post,
-            user_name: post.user_name || (user ? user.name : "")
+            user_name: user?.name || post.user_name || ""
         }
     }) : []
 

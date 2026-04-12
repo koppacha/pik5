@@ -119,7 +119,7 @@ export const authOptions = {
                 // 新規: DB主キーは dbId として露出（将来的にこちらを参照できる）
                 session.user.dbId = token.id
 
-                if(token.role) session.user.role = token.role
+                session.user.role = token.role ?? null
                 if(token.name) session.user.name = token.name
 
                 // メール認証関連情報

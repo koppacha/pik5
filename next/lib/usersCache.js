@@ -16,6 +16,16 @@ function getUsersCacheStore() {
     return global.usersCacheStore
 }
 
+export function invalidateUsersCache() {
+    const cache = getUsersCacheStore()
+    cache.basic = null
+    cache.basicExpiresAt = 0
+    cache.basicPromise = null
+    cache.withRole = null
+    cache.withRoleExpiresAt = 0
+    cache.withRolePromise = null
+}
+
 export async function getCachedUsers() {
     const cache = getUsersCacheStore()
     if (cache.basic && cache.basicExpiresAt > Date.now()) {

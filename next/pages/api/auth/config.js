@@ -2,6 +2,7 @@ import {getServerSession} from 'next-auth/next'
 import bcrypt from 'bcrypt'
 import prisma from '../../../lib/prisma'
 import {authOptions} from './[...nextauth]'
+import {invalidateUsersCache} from '../../../lib/usersCache'
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -77,6 +78,7 @@ export default async function handler(req, res) {
         where: { id: user.id },
         data
     })
+    invalidateUsersCache()
 
     return res.status(200).json({
         ok: true,

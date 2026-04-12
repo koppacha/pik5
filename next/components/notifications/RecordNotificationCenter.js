@@ -44,8 +44,6 @@ export default function RecordNotificationCenter({initialUsers = []}) {
     }, [initialUsers])
 
     useEffect(() => {
-        if (users.length > 0) return
-
         let cancelled = false
         fetcher("/api/users").then((response) => {
             if (cancelled || !Array.isArray(response)) return
@@ -57,7 +55,33 @@ export default function RecordNotificationCenter({initialUsers = []}) {
         return () => {
             cancelled = true
         }
-    }, [users.length])
+    }, [])
+
+    useEffect(() => {
+        if (typeof window === "undefined") return
+
+        const handleUserNameUpdated = (event) => {
+            const detail = event?.detail || {}
+            const userId = String(detail.userId || "")
+            const name = String(detail.name || "")
+            if (!userId || !name) return
+
+            setUsers((prev) => {
+                const list = Array.isArray(prev) ? [...prev] : []
+                const index = list.findIndex((user) => user?.userId === userId)
+                if (index >= 0) {
+                    list[index] = {...list[index], name}
+                    return list
+                }
+                return [...list, {userId, name}]
+            })
+        }
+
+        window.addEventListener("pik5:user-name-updated", handleUserNameUpdated)
+        return () => {
+            window.removeEventListener("pik5:user-name-updated", handleUserNameUpdated)
+        }
+    }, [])
 
     const usersById = useMemo(() => {
         return users.reduce((acc, user) => {
@@ -95,6 +119,42 @@ export default function RecordNotificationCenter({initialUsers = []}) {
 
         }
     }, [])
+
+    useEffect(() => {
+        if (typeof window === "undefined") return
+
+        let cancelled = false
+
+        const handleManualNotify = async () => {
+            try {
+                const latest = await fetcher("/api/server/new?limit=1")
+                if (cancelled) return
+
+                const rows = Array.isArray(latest?.data) ? latest.data : []
+                const record = rows[0]
+                if (!record) return
+
+                const normalizedRecord = {
+                    ...record,
+                    user_name: getRecordUserName(record, usersById),
+                }
+                const payload = buildNotificationPayload([normalizedRecord], t, usersById)
+                if (!payload) return
+
+                setToastPayload(payload)
+                setToastOpen(true)
+                notifyBrowser(payload)
+            } catch {
+
+            }
+        }
+
+        window.addEventListener("pik5:notify-latest-record", handleManualNotify)
+        return () => {
+            cancelled = true
+            window.removeEventListener("pik5:notify-latest-record", handleManualNotify)
+        }
+    }, [notifyBrowser, t, usersById])
 
     const flushPendingRecords = useCallback(() => {
         if (flushTimerRef.current) {

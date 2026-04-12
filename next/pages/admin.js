@@ -88,10 +88,7 @@ export default function Admin({data, users}){
     const {data: session } = useSession()
     // 権限チェック
     if(session) {
-        // セッションユーザーの情報を取り出す
-        role = Number(users.find(function (e) {
-            return e.userId === session.user.userId
-        }).role)
+        role = Number(session?.user?.role)
     }
     if(Number(role) !== 10) {
         return (
