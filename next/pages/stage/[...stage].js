@@ -13,7 +13,6 @@ import Link from "next/link";
 import RankingStandard from "../../components/record/RankingStandard";
 import Head from "next/head";
 import {available, hideRuleNames} from "../../lib/const";
-import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import RuleList from "../../components/record/RuleList";
 import useSWR from "swr";
@@ -38,6 +37,7 @@ export async function getStaticPaths(){
 
 // サーバーサイドの処理
 export async function getStaticProps({params}){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query      = params.stage
     const stage      = query[0]

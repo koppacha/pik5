@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { signOut, useSession } from 'next-auth/react'
-import { getServerSession } from 'next-auth/next'
-import { authOptions } from '../api/auth/[...nextauth]'
+import { useRouter } from 'next/router'
 
 import {
     Alert,
@@ -37,6 +36,7 @@ export default function AuthConfigPage() {
     const {t} = useLocale()
 
     const { data: session, status, update } = useSession()
+    const router = useRouter()
 
     const [currentPassword, setCurrentPassword] = useState('')
     const [name, setName] = useState('')
@@ -52,6 +52,13 @@ export default function AuthConfigPage() {
             setName(session.user.name)
         }
     }, [session?.user?.name])
+
+    useEffect(() => {
+        if (status === 'loading') return
+        if (!session) {
+            router.replace('/auth/login')
+        }
+    }, [router, session, status])
 
     useEffect(() => {
         if (typeof window === 'undefined') return
@@ -317,6 +324,10 @@ export default function AuthConfigPage() {
         )
     }
 
+    if (!session) {
+        return null
+    }
+
     return (
         <Container maxWidth="sm" sx={{ py: 4 }}>
             <SeoHead
@@ -559,17 +570,4 @@ export default function AuthConfigPage() {
             </Stack>
         </Container>
     )
-}
-
-export async function getServerSideProps(context) {
-    const session = await getServerSession(context.req, context.res, authOptions)
-    if (!session) {
-        return {
-            redirect: {
-                destination: '/auth/login',
-                permanent: false
-            }
-        }
-    }
-    return { props: {} }
 }

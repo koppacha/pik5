@@ -33,7 +33,6 @@ import {
 } from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
-import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faChevronLeft, faHouseChimney, faSquare, faStairs, faXmark} from "@fortawesome/free-solid-svg-icons";
@@ -41,7 +40,6 @@ import ModalKeyword from "../../components/modal/ModalKeyword";
 import RankingTeam from "../../components/record/RankingTeam";
 import {useTheme} from "next-themes";
 import CountDownTimer from "../../components/CountDownTimer";
-import {hydrate} from "react-dom";
 import PostButton from "../../components/PostButton";
 import {useSession} from "next-auth/react";
 import NowLoading from "../../components/NowLoading";
@@ -55,6 +53,7 @@ import RecordPost from "../../components/modal/RecordPost";
 import CardGrid from "../../components/limited/CardGrid";
 
 export async function getServerSideProps(context){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const limited = 221008
 

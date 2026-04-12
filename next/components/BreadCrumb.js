@@ -2,7 +2,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import Link from "next/link";
 import {faCircleNotch, faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import * as React from "react";
-import Styled from "styled-components";
 import {fetcher, useLocale} from "../lib/pik5";
 import useSWR from "swr";
 import {Box, Typography} from "@mui/material";

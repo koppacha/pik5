@@ -7,7 +7,6 @@ import Head from "next/head";
 import RankingUser from "../../components/record/RankingUser";
 import PullDownRule from "../../components/form/PullDownRule";
 import {logger} from "../../lib/logger";
-import { getCachedUsers } from "../../lib/usersCache";
 import {available, rule2array} from "../../lib/const";
 import {
     MarkerTableCell,
@@ -30,6 +29,7 @@ export async function getStaticPaths(){
     }
 }
 export async function getStaticProps({params}){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query = params.name
     const user = query[0]

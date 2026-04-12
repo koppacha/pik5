@@ -10,13 +10,13 @@ import {faCertificate, faHouseChimney, faLayerGroup, faStairs, faTowerCell} from
 import PullDownKeywordCategory from "../../components/form/PullDownKeywordCategory";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import Head from "next/head";
-import { getCachedUsers } from "../../lib/usersCache";
 import {useSession} from "next-auth/react";
 import dynamic from "next/dynamic";
 import NewRecords from "../../components/top/NewRecords";
 import Button from "@mui/material/Button";
 
 export async function getServerSideProps(context){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()

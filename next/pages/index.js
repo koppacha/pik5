@@ -25,7 +25,6 @@ import NewRecords from "../components/top/NewRecords";
 import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
 import { useSession, signIn, signOut } from "next-auth/react"
-import { getCachedUsers } from "../lib/usersCache"
 import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
 import {mutate} from "swr";
 import ModalIdeaPost from "../components/modal/ModalIdeaPost";
@@ -35,6 +34,7 @@ import SeoHead from "../components/SeoHead"
 import {toAbsoluteUrl} from "../lib/seo"
 
 export async function getServerSideProps(context) {
+    const { getCachedUsers } = await import("../lib/usersCache")
 
     // 前回のトレンドをリクエスト
     const res = await fetch(`http://laravel:8000/api/prev`)

@@ -2,7 +2,6 @@ import {Box, Grid, Typography} from "@mui/material";
 import * as React from "react";
 import {currentYear, useLocale} from "../../lib/pik5";
 import RankingCompare from "../../components/record/RankingCompare";
-import { getCachedUsers } from "../../lib/usersCache";
 import {reverseStages, rule2array} from "../../lib/const";
 import {RuleBox, RuleWrapper, TeamRpsType, TeamScoreType, UserType} from "../../styles/pik5.css";
 import Link from "next/link";
@@ -12,6 +11,7 @@ import SeoHead from "../../components/SeoHead"
 
 // サーバーサイドの処理（SSR）
 export async function getServerSideProps(ctx){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const { params, res } = ctx
 

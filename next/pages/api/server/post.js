@@ -2,8 +2,8 @@
  *  バイナリデータを含むPOST専用のAPI
  */
 import {getServerSession} from "next-auth/next";
-const formidable = require("formidable");
 import fs from "fs";
+import formidable from "formidable";
 import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
@@ -21,7 +21,7 @@ function getFieldValue(value) {
 }
 
 async function parseForm(req) {
-    const form = new formidable.IncomingForm()
+    const form = formidable({})
     return new Promise((resolve, reject) => {
         form.parse(req, (error, fields, files) => {
             if (error) {

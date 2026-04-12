@@ -3,7 +3,6 @@ import {Box, Button, Typography} from "@mui/material";
 import {addName2posts, useLocale} from "../../lib/pik5";
 import {PageHeader, RuleBox, StairIcon, TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css";
 import Link from "next/link";
-import { getCachedUsersWithRole } from "../../lib/usersCache";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faArrowTrendUp, faHouseChimney, faPenToSquare, faStairs, faTrashCan} from "@fortawesome/free-solid-svg-icons";
 import Record from "../../components/record/Record";
@@ -15,6 +14,7 @@ import RecordForm from "../../components/modal/RecordForm"
 
 // recordsではページキャッシュを作らないようにSSRで動的に生成する
 export async function getServerSideProps(ctx) {
+    const { getCachedUsersWithRole } = await import("../../lib/usersCache")
 
     const { params, res } = ctx
 

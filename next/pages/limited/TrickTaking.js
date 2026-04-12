@@ -9,7 +9,6 @@ import Field from '../../components/limited/Field'
 import Hand from '../../components/limited/Hand'
 import DrawButton from '../../components/limited/DrawButton'
 import JoinButton from '../../components/limited/JoinButton'
-import { getCachedUsers } from "../../lib/usersCache";
 import NowLoading from "../../components/NowLoading";
 import * as React from "react";
 import Head from "next/head";
@@ -22,19 +21,9 @@ import {faHouseChimney, faStairs, faXmark} from "@fortawesome/free-solid-svg-ico
 const fetcher = url => fetch(url).then(res => res.json())
 
 export async function getStaticProps() {
-
-    // スクリーンネームをリクエスト
-    const users = await getCachedUsers()
-
     // 閉鎖中
     return {
         notFound: true
-    }
-
-    return {
-        props: {
-            users
-        }
     }
 }
 

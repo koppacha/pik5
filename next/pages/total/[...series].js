@@ -14,7 +14,6 @@ import Head from "next/head";
 import {PageHeader, RuleBox, RuleWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
 import {available} from "../../lib/const";
-import { getCachedUsers } from "../../lib/usersCache";
 import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
@@ -31,6 +30,7 @@ export async function getStaticPaths(){
     }
 }
 export async function getStaticProps({params}){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query   = params.series
     const series  = query[0]
