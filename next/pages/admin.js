@@ -1,5 +1,4 @@
 import { useSession, signIn, signOut } from "next-auth/react"
-import { getCachedUsersWithRole } from "../lib/usersCache";
 import SeoHead from "../components/SeoHead"
 
 const DownloadCsvButton = ({ record }) => {
@@ -68,7 +67,8 @@ const DownloadCsvButton = ({ record }) => {
     )
 }
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
+    const { getCachedUsersWithRole } = await import("../lib/usersCache")
 
     const users = await getCachedUsersWithRole()
 

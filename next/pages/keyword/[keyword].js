@@ -8,7 +8,6 @@ import {StairIcon} from "../../styles/pik5.css";
 import React from "react";
 import {useLocale} from "../../lib/pik5";
 import Head from "next/head";
-import { getCachedUsers } from "../../lib/usersCache";
 import dynamic from 'next/dynamic'
 import {useSession} from "next-auth/react";
 
@@ -21,6 +20,8 @@ export async function getStaticPaths(){
     }
 }
 export async function getStaticProps({ params }) {
+    const { getCachedUsers } = await import("../../lib/usersCache")
+
     const id = params.keyword
 
     // 解決 API を呼ぶ

@@ -13,7 +13,6 @@ import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
-import { getCachedUsers } from "../../lib/usersCache";
 
 export async function getStaticPaths(){
     return {
@@ -22,6 +21,7 @@ export async function getStaticPaths(){
     }
 }
 export async function getStaticProps({params}){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query = params.run
     const stage = query[0]

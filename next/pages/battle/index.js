@@ -7,7 +7,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import TextField from "@mui/material/TextField";
 import DialogActions from "@mui/material/DialogActions";
-import { getCachedUsers } from "../../lib/usersCache";
 import {Tooltip} from "@mui/material";
 
 const dandoriStages = range(413, 418)
@@ -18,7 +17,9 @@ function generateRandomHex(length){
 }
 const sessionId = generateRandomHex(9)
 
-export async function getStaticProps() {
+export async function getServerSideProps() {
+    const { getCachedUsers } = await import("../../lib/usersCache")
+
     // 最新レートを取得
     const res = await fetch(`http://laravel:8000/api/battle/rate`)
     const rate = await res.json()

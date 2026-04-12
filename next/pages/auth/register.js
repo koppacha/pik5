@@ -10,10 +10,10 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import Image from "next/image";
 import Link from "next/link";
 import {logger} from "../../lib/logger";
-import { getCachedUsers } from "../../lib/usersCache";
 import SeoHead from "../../components/SeoHead"
 
 export async function getServerSideProps(context){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()

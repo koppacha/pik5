@@ -1,7 +1,7 @@
 import {KeywordContent} from "../../components/modal/KeywordContent";
-import { getCachedUsers } from "../../lib/usersCache";
 
 export async function getServerSideProps(context){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()

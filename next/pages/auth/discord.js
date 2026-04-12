@@ -12,10 +12,10 @@ import * as yup from "yup";
 import {AuthButton, AuthWindow} from "../../styles/pik5.css";
 import Image from "next/image";
 import Link from "next/link";
-import { getCachedUsers } from "../../lib/usersCache";
 import SeoHead from "../../components/SeoHead"
 
 export async function getServerSideProps(){
+    const { getCachedUsers } = await import("../../lib/usersCache")
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()
