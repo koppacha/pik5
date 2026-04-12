@@ -54,12 +54,18 @@ export default function Home({users, prev}) {
 
     const {t,r} = useLocale()
     const {data: session } = useSession()
+    const isAdmin = Number(session?.user?.role) === 10
 
     // 期間限定ルール投稿モーダル制御関連
     const [editOpen, setEditOpen] = useState(false)
     const [uniqueId, setUniqueId] = useState("")
     const handleEditOpen = () => setEditOpen(true)
     const handleEditClose = () => setEditOpen(false)
+
+    const handleNotifyLatestRecord = () => {
+        if (typeof window === "undefined") return
+        window.dispatchEvent(new window.CustomEvent("pik5:notify-latest-record"))
+    }
 
     // ログイン判定によって表示を変更
     const loginName = () => {
@@ -86,6 +92,11 @@ export default function Home({users, prev}) {
                 <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/total/40">{t.title[4]}</Grid>
                 <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/keyword">{t.g.key}</Grid>
                 <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="https://discord.gg/rQEBJQa">Discord</Grid>
+                {isAdmin &&
+                    <Grid item xs={1} className="top-series-mini-box" onClick={handleNotifyLatestRecord} style={{cursor: "pointer"}}>
+                        最新記録を通知
+                    </Grid>
+                }
                 {(!session)
                     ?
                     <>

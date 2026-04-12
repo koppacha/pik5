@@ -14,7 +14,7 @@ export function isLocalNotificationDebugMode() {
 }
 
 export function getRecordUserName(record, usersById = {}) {
-    return record?.user_name || usersById?.[record?.user_id]?.name || "名無し"
+    return usersById?.[record?.user_id]?.name || record?.user_name || "名無し"
 }
 
 export function getRecordStageName(record, t) {

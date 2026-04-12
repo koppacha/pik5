@@ -2,6 +2,7 @@ import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
 import sha256 from "crypto-js/sha256"
 import bcrypt from "bcrypt";
+import {invalidateUsersCache} from "../../../lib/usersCache"
 
 export default async function handle(req, res) {
     if (req.method === "POST") {
@@ -33,6 +34,7 @@ async function handlePOST(res, req) {
         const user = await prisma.user.create({
             data: {...req.body, password: hashPassword(req.body.password)},
         })
+        invalidateUsersCache()
         res.status(200).json(user);
     }
 }

@@ -164,6 +164,14 @@ export default function AuthConfigPage() {
             if (changedName) {
                 // NextAuth の update() payload 形状は環境で揺れるので、最低限 name だけ流す
                 await update({ name: data.name })
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new window.CustomEvent('pik5:user-name-updated', {
+                        detail: {
+                            userId: session?.user?.userId ?? session?.user?.id ?? '',
+                            name: data.name
+                        }
+                    }))
+                }
             }
 
             setMessage('更新しました')
