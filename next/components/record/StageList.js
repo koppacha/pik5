@@ -28,7 +28,8 @@ export default function StageList({parent, currentStage, stages, consoles, rule,
             style={{
                 width: "100%",
                 ...(stages?.length > 16 ? {
-                    overflow: "scroll",
+                    overflowX: "auto",
+                    overflowY: "hidden",
                     whiteSpace: "nowrap",
                 } : {}),
             }}
