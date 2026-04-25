@@ -372,7 +372,8 @@ body {
 .console-wrapper {
     margin-top: 8px;
     margin-bottom: 8px;
-    overflow-x: scroll;
+    overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
 }
 .rule-box {

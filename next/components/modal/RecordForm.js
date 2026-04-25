@@ -296,11 +296,15 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             return sec
         }
     }
+    function syncScore(nextScore) {
+        setScore(nextScore)
+        setValue('score', nextScore, {shouldValidate: true})
+    }
     // 本編地下のスコアを計算
     function caveCalc() {
         const sec = convertToSeconds(caveTime || "0:00:00")
         const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
-        setScore((Number(pikmin) + Number(treasure)) * 10 + Math.floor((lestTime.time - sec) / 2))
+        syncScore((Number(pikmin) + Number(treasure)) * 10 + Math.floor((lestTime.time - sec) / 2))
     }
 
     // リージョン違いのスコアを計算
@@ -516,7 +520,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
                         onChange={function (e){
-                                setScore(time2score(e.target.value))
+                                syncScore(time2score(e.target.value))
                                 setTime(e.target.value)
                                 setTimeValue(e.target.value)
                             }

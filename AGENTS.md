@@ -31,6 +31,21 @@
 - フロントエンドは scripts に専用のテストランナーがありません。next/ 内で `yarn lint` を実行し、ブラウザでの手動スモークチェックに依存してください。
 - DB 関連のテストは分離し、冪等性（何度実行しても同じ結果になること）を保ってください。既存のローカルボリュームに依存しないようにしてください。
 
+### 記録投稿APIの再現手順
+- `/api/server/post` の疎通確認は、NextAuth の認証 cookie を取得した上で multipart の `POST` を送る必要があります。
+- 前提として `docker compose up -d` 済み、`next` コンテナ内で `yarn install --ignore-engines` 済み、`yarn dev` 起動済みであることを確認してください。
+- 既存のローカルデータを使う場合、seed 済みユーザー `mercysnow` / `[REMOVED_CREDENTIAL]` でログインできます。未投入環境では先に seed を投入してください。
+- 投稿APIの再現では、`stage_id` は `399` を使ってください。
+- 実行場所はホストではなく `next` コンテナ内に揃えてください。`docker compose exec next bash` で入った後、下記のコマンドを実行すると、認証取得から `/api/server/post` 送信まで一度に再現できます。
+
+```bash
+node -e "(async()=>{ const base='http://localhost:3000'; let cookies=[]; const addCookies=(res)=>{ const vals = res.headers.getSetCookie ? res.headers.getSetCookie() : []; for (const v of vals) { const kv = v.split(';')[0]; const key = kv.split('=')[0]; cookies = cookies.filter(c=>!c.startsWith(key + '=')); cookies.push(kv); } }; const cookieHeader=()=>cookies.join('; '); const csrfRes = await fetch(base + '/api/auth/csrf'); addCookies(csrfRes); const {csrfToken} = await csrfRes.json(); const loginBody = new URLSearchParams({ csrfToken, userId:'mercysnow', password:'[REMOVED_CREDENTIAL]', callbackUrl: base + '/', json:'true' }); const loginRes = await fetch(base + '/api/auth/callback/credentials', { method:'POST', headers:{ 'content-type':'application/x-www-form-urlencoded', cookie: cookieHeader() }, body: loginBody, redirect:'manual' }); addCookies(loginRes); const form = new FormData(); form.append('stage_id','399'); form.append('rule','1'); form.append('region','1'); form.append('score','123'); form.append('console','1'); form.append('difficulty','0'); form.append('video_url',''); form.append('post_comment','codex api post test'); form.append('created_at', new Date().toISOString().slice(0,19).replace('T',' ')); form.append('user_agent','codex'); form.append('mode','create'); const postRes = await fetch(base + '/api/server/post', { method:'POST', headers:{ cookie: cookieHeader(), origin: base, referer: base + '/', host:'localhost:3000' }, body: form }); console.log('postStatus', postRes.status); console.log(await postRes.text()); })().catch(e=>{ console.error(e); process.exit(1) })"
+```
+
+- 正常系では `postStatus 200` と `["OK",200]` が返ります。
+- `502 {"error":true,"message":"proxy error"}` が返る場合は、まず `next/pages/api/server/post.js`、`next/lib/prisma.js`、`next/lib/prismaConnection.js` を確認してください。
+- テスト投稿は DB に残るため、必要に応じて MySQL コンテナ内で該当レコードを削除してください。
+
 ## コミット・プルリクエストのガイドライン
 - Git 履歴ではコミットメッセージとして ver.X.XX <short description>（日本語であることも多い）が使われています。この形式に合わせるか、短く要点が伝わる要約を付けてください。
 - PR にはユーザーが目にする変更点を説明し、UI 更新には関連スクリーンショットを添え、実行した DB マイグレーションやシードがあれば明記してください。
