@@ -1,4 +1,4 @@
-FROM node:20.20.2-alpine
+FROM node:22-alpine
 
 RUN mkdir -p /var/www/next
 
