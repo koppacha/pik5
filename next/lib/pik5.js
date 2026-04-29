@@ -41,7 +41,7 @@ export const convertToSeconds = (timeString) => {
 export function dateFormat(date){
 
     const now = new Date()
-    const diff = now.getTime() - date.getTime()
+    const diff = now.getTime() - date?.getTime()
 
     if(diff > (1000 * 60 * 60 * 12)) {
         // 12時間以上前なら日付で表示

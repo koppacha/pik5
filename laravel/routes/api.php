@@ -3,6 +3,7 @@
 use App\Http\Controllers\ArenaController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CardController;
+use App\Http\Controllers\DiscordEventController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\NewRecordController;
@@ -37,6 +38,10 @@ Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
 // 汎用API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get('func/member', [Func::class, 'memberCount']);
+});
+// Discordイベント取得API
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get('discord/events', [DiscordEventController::class, 'index']);
 });
 // 記録取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
@@ -144,4 +149,3 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 
     Route::get('tournament', [TournamentController::class, 'info']);
 });
-

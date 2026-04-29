@@ -436,7 +436,21 @@ body {
 
 }
 .wrap-top-box {
-    margin-bottom :10px;
+
+}
+.top-split-column,
+.top-split-column-grid,
+.top-split-column-item {
+    height: auto;
+}
+@media (min-width: 600px) {
+    .top-split-column,
+    .top-split-column-grid {
+        height: 100%;
+    }
+    .top-split-column-item {
+        height: 50%;
+    }
 }
 .top-box {
     border: 1px solid $light-border;
