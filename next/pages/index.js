@@ -32,6 +32,9 @@ import PostButton from "../components/PostButton";
 import DashBoard from "../components/top/DashBoard";
 import SeoHead from "../components/SeoHead"
 import {toAbsoluteUrl} from "../lib/seo"
+import NextEvent from "../components/top/NextEvent"
+import PickupVideo from "../components/top/PickupVideo"
+import RecentKeywordArticle from "../components/top/RecentKeywordArticle"
 
 export async function getServerSideProps(context) {
     const { getCachedUsers } = await import("../lib/usersCache")
@@ -137,7 +140,7 @@ export default function Home({users, prev}) {
               {t.t.welcome}
               {WelcomeBlock}
           </InfoBox>
-          <Grid container>
+          <Grid container spacing={1}>
               {(session) &&
                   <WrapTopBox item xs={12} className="wrap-top-box">
                       <TopBox className="top-box">
@@ -155,6 +158,19 @@ export default function Home({users, prev}) {
                       <ModalIdeaPost editOpen={editOpen} uniqueId={uniqueId} handleEditClose={handleEditClose} handleEditOpen={handleEditOpen}/>
                   </WrapTopBox>
           }
+              <WrapTopBox item xs={12} sm={6} className="wrap-top-box top-split-column">
+                  <Grid container spacing={1} className="top-split-column-grid">
+                      <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
+                          <NextEvent/>
+                      </WrapTopBox>
+                      <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
+                          <RecentKeywordArticle/>
+                      </WrapTopBox>
+                  </Grid>
+              </WrapTopBox>
+              <WrapTopBox item xs={12} sm={6} className="wrap-top-box">
+                  <PickupVideo users={users}/>
+              </WrapTopBox>
               <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox className="top-box">
                       <TopBoxHeader className="top-box-header">

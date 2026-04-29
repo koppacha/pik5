@@ -1,4 +1,4 @@
-import {be, ce, db, dc, dd, eg, ex, ne, ss} from "./const";
+import {be, ce, db, dc, dd, eg, ex, ne, ss, timeStageList} from "./const";
 import {currentYear} from "./pik5";
 
 /*
@@ -33,4 +33,35 @@ export function stageUrlOutput(stage, consoles, rule, year, parent){
         if(arr.includes(s)) return `${stage}/${consoles}/${newRule}/${year}`
     }
     return `${stage}/${consoles}/${rule}/${year}`
+}
+
+const timeRules = [11, 29, 35, 43, 46, 47, 91]
+const remainingTimeStages = [338, 341, 343, 345, 346, 347, 348, 349, 350]
+
+function secondsToTime(value) {
+    const sec = Math.max(0, Number(value) || 0)
+    const hh = Math.floor(sec / 3600)
+    const mm = String(Math.floor(sec / 60) % 60).padStart(2, "0")
+    const ss = String(sec % 60).padStart(2, "0")
+
+    return `${hh ? `${hh}:`:""}${mm}:${ss}`
+}
+
+export function score2str(score, rule, stage) {
+    const numericScore = Number(score)
+    const numericRule = Number(rule)
+    const numericStage = Number(stage)
+
+    if (remainingTimeStages.includes(numericStage)) {
+        const stageTime = timeStageList.find(({stage: targetStage}) => targetStage === numericStage)
+        const elapsedTime = Number(stageTime?.time ?? 0) - numericScore
+
+        return secondsToTime(elapsedTime)
+    }
+
+    if (timeRules.includes(numericRule)) {
+        return secondsToTime(numericScore)
+    }
+
+    return `${numericScore.toLocaleString()} pts.`
 }
