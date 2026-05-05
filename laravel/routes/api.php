@@ -14,6 +14,7 @@ use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
 use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\TrickController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\VoteController;
@@ -148,4 +149,22 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route::post('cards/{id}/scores', [ScoreController::class, 'store']);
 
     Route::get('tournament', [TournamentController::class, 'info']);
+});
+
+// 第19回期間限定ランキング（トリックテイキング制）
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get('tricks/tournament', [TrickController::class, 'tournament']);
+    Route::get('tricks/state', [TrickController::class, 'state']);
+    Route::get('tricks/players', [TrickController::class, 'players']);
+    Route::get('tricks/hand', [TrickController::class, 'hand']);
+    Route::get('tricks/field', [TrickController::class, 'field']);
+    Route::get('tricks/logs', [TrickController::class, 'logs']);
+    Route::get('tricks/cards/{deckId}/scores', [TrickController::class, 'scores']);
+    Route::post('tricks/join', [TrickController::class, 'join']);
+    Route::post('tricks/draw', [TrickController::class, 'draw']);
+    Route::post('tricks/cards/{deckId}/take', [TrickController::class, 'take']);
+    Route::post('tricks/cards/{deckId}/collect', [TrickController::class, 'collect']);
+    Route::post('tricks/cards/{deckId}/debug-collect', [TrickController::class, 'collect']);
+    Route::post('tricks/records/posted', [TrickController::class, 'recordPosted']);
+    Route::post('tricks/maintenance/collect-expired', [TrickController::class, 'collectExpired']);
 });
