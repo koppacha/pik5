@@ -26,7 +26,7 @@ import {
 import Lightbox from "yet-another-react-lightbox";
 import LightBoxImage from "../modal/LightBoxImage";
 import "yet-another-react-lightbox/styles.css";
-import {displayDifficulty, hideRuleNames, normalStageCounts, stageCounts} from "../../lib/const";
+import {displayDifficulty, hideRuleNames, normalStageCounts, rule2array, stageCounts} from "../../lib/const";
 import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
 import { useDrag } from '@use-gesture/react';
@@ -70,9 +70,10 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
         2: normalStageCounts,
         3: Object.fromEntries(Object.entries(stageCounts).map(([key, valueA]) => [key, valueA - (normalStageCounts[key] ?? 0)]))
     }
+    const totalStageId = Number(series)
     const stageCountSeries = Number(String(series ?? "").slice(0, 1))
     const stageCount = (data?.ranks)
-        ? String(stageCountArray[stageCountSeries]?.[Number(year)] ?? stages.length)
+        ? String(totalStageId > 9 && totalStageId < 100 ? rule2array(totalStageId).length : (stageCountArray[stageCountSeries]?.[Number(year)] ?? stages.length))
         : "0"
 
     // 比較値を整形する
