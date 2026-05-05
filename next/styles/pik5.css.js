@@ -502,7 +502,7 @@ export const TeamScoreType = styled(Typography)`
   font-size: 800%;
   letter-spacing: 10px;
   line-height: 85%;
-  font-family:"Proza Libre","cursive";
+  font-family:"Quicksand","cursive";
   
   ${sp`
     font-size: 500%;
@@ -510,7 +510,7 @@ export const TeamScoreType = styled(Typography)`
 `
 export const TeamRpsType = styled(Typography)`
   font-size: 333%;
-  font-family:"Proza Libre","cursive";
+  font-family:"Quicksand","cursive";
   color: ${colors.light.subTitle};
 
   ${sp`
@@ -522,27 +522,32 @@ export const TeamRpsType = styled(Typography)`
 `
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
-  font-family:"Proza Libre","cursive";
+  font-family:"Quicksand","Proza Libre","cursive";
   
   ${sp`
     font-size: 0.9em;
   `}
+  [data-theme='dark'] & {
+    font-family:"Proza Libre","cursive";
+  }
 `
 export const ScoreTail = styled(Typography)`
   color: ${colors.light.subTitle};
-  font-family:"Proza Libre","cursive";
+  font-family:"Quicksand","Proza Libre","cursive";
 
   [data-theme='dark'] & {
+    font-family:"Proza Libre","cursive";
     color: ${colors.dark.subTitle};
   }
 `
 export const CompareType = styled(Typography)`
   color: ${colors.light.compare};
   font-size :0.8em;
-  font-family:"Proza Libre","cursive";
+  font-family:"Quicksand","cursive";
   
   [data-theme='dark'] & {
-    color: ${colors.dark.compare};
+      font-family:"Proza Libre","cursive";
+      color: ${colors.dark.compare};
   }
 `
 export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
@@ -563,7 +568,11 @@ export const RankType = styled(Typography)`
     font-size: 2em;
     line-height :2em;
     font-weight: 200;
-    font-family: "Kulim Park","cursive";
+    font-family: "Krub","cursive";
+
+    [data-theme='dark'] & {
+        font-family:"Kulim Park","cursive";
+    }
 
     ${sp`font-size: 1.2em;`}
 

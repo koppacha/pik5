@@ -529,8 +529,9 @@ body {
 }
 .score-type {
     font-size: 1.3em;
-    font-family:"Proza Libre","cursive";
+    font-family:"Quicksand","Proza Libre","cursive";
     [data-theme='dark'] & {
+        font-family:"Proza Libre","cursive";
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -540,9 +541,10 @@ body {
 }
 .score-tail {
     color: $light-sub-title;
-    font-family:"Proza Libre","cursive";
+    font-family:"Quicksand","Proza Libre","cursive";
 
     [data-theme='dark'] & {
+        font-family:"Proza Libre","cursive";
         color: $dark-sub-title;
         text-shadow: $dark-shadow;
     }
@@ -580,8 +582,9 @@ body {
     font-size: 2em;
     line-height :2em;
     font-weight: 200;
-    font-family: "Kulim Park","cursive";
+    font-family: "Krub","cursive";
     [data-theme='dark'] & {
+        font-family: "Kulim Park","cursive";
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
