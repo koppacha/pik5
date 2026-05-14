@@ -25,7 +25,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     const consoleList = useMemo(() => rule2consoles(rule), [rule])
 
-    const {t} = useLocale()
+    const {t, locale} = useLocale()
     const {data: session} = useSession()
 
     const now = new Date().toLocaleString()
@@ -340,6 +340,14 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         if (isProcessing) return
         handleClose(...args)
     }
+    const providedStageName = locale === "en"
+        ? (info?.eng_stage_name || info?.stage_name)
+        : (info?.stage_name || info?.eng_stage_name)
+    const isEventStage = Number(info?.stage_id) >= 1000
+    const stageDisplayName = (isEventStage ? providedStageName : t.stage[info?.stage_id])
+        || t.stage[info?.stage_id]
+        || providedStageName
+        || (info?.stage_id ? `#${info.stage_id}` : t.stage[101])
 
     return (
         <>
@@ -362,7 +370,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         fullWidth
                         disabled={!!info}
                         variant="standard"
-                        defaultValue={t.stage[info?.stage_id || 101]}
+                        defaultValue={stageDisplayName}
                         margin="normal"
                     />
                     <TextField

@@ -130,6 +130,18 @@ export default function App(props) {
         )
     }
 
+    const pageContent = (
+        <>
+            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
+            {pageLoading && <Loading/>}
+            <DevSupport ComponentPreviews={ComponentPreviews}
+                        useInitialHook={useInitial}
+            >
+                <Component {...pageProps} />
+            </DevSupport>
+        </>
+    )
+
     return (
         <>
             <SeoHead />
@@ -149,15 +161,11 @@ export default function App(props) {
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
-                        <Layout>
-                            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
-                            {pageLoading && <Loading/>}
-                            <DevSupport ComponentPreviews={ComponentPreviews}
-                                        useInitialHook={useInitial}
-                            >
-                                <Component {...pageProps} />
-                            </DevSupport>
-                        </Layout>
+                        {Component.disableLayout ? pageContent : (
+                            <Layout>
+                                {pageContent}
+                            </Layout>
+                        )}
                     </ThemeProvider>
                 </SessionProvider>
             </CacheProvider>
