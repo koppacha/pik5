@@ -5,7 +5,7 @@ function logText(log) {
     return log?.message || log?.text || log?.event || JSON.stringify(log)
 }
 
-export default function TricksHud({state, nowValue = Date.now()}) {
+export default function TricksHud({state, nowValue = Date.now(), dimmed = false}) {
     const tournament = state?.tournament || {}
     const players = state?.players || []
     const logs = state?.logs || []
@@ -22,6 +22,7 @@ export default function TricksHud({state, nowValue = Date.now()}) {
                     zIndex: 2,
                     color: "#e6edf8",
                     pointerEvents: "auto",
+                    opacity: dimmed ? 0.35 : 1,
                 }}
             >
                 <div style={{fontSize: 13, color: "#9aa8bd", marginBottom: 6}}>
@@ -64,6 +65,7 @@ export default function TricksHud({state, nowValue = Date.now()}) {
                     zIndex: 2,
                     color: "#e6edf8",
                     pointerEvents: "auto",
+                    opacity: dimmed ? 0.35 : 1,
                 }}
             >
                 <div

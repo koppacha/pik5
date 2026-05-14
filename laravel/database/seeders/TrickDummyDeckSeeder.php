@@ -24,12 +24,12 @@ class TrickDummyDeckSeeder extends Seeder
 
         $rows = [];
         for ($i = 1; $i <= 100; $i++) {
-            $stageId = 190000 + $i;
+            $originStageId = 200 + (($i - 1) % 30) + 1;
             $difficulty = (($i - 1) % 5) + 1;
             $rarity = (($i - 1) % 5) + 1;
             $row = [
                 'eventId' => $eventId,
-                'stageId' => $stageId,
+                'stageId' => $originStageId,
                 'title' => "ダミートリック{$i}",
                 'ruleName' => "チャレンジルール{$i}",
                 'state' => '_deck',
@@ -49,8 +49,14 @@ class TrickDummyDeckSeeder extends Seeder
             if (Schema::hasColumn('decks', 'event_id')) {
                 $row['event_id'] = $eventId;
             }
+            if (Schema::hasColumn('decks', 'card_id')) {
+                $row['card_id'] = $i;
+            }
             if (Schema::hasColumn('decks', 'stage_id')) {
-                $row['stage_id'] = $stageId;
+                $row['stage_id'] = null;
+            }
+            if (Schema::hasColumn('decks', 'origin_stage_id')) {
+                $row['origin_stage_id'] = $originStageId;
             }
             if (Schema::hasColumn('decks', 'rule_name')) {
                 $row['rule_name'] = $row['ruleName'];

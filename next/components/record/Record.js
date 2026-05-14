@@ -23,9 +23,6 @@ import {
     RecordContainer, RecordGridWrapper, ScoreType,
     UserType
 } from "../../styles/pik5.css";
-import Lightbox from "yet-another-react-lightbox";
-import LightBoxImage from "../modal/LightBoxImage";
-import "yet-another-react-lightbox/styles.css";
 import {displayDifficulty, hideRuleNames, normalStageCounts, rule2array, stageCounts} from "../../lib/const";
 import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
@@ -48,6 +45,16 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
     const [isClient, setIsClient] = useState(false)
 
     useEffect(() => setIsClient(true), [])
+    useEffect(() => {
+        if (!imgOpen) return
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") setImgOpen(false)
+        }
+
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+    }, [imgOpen])
 
     const imgHandleClose = () => setImgOpen(false)
     const imgHandleOpen = () => setImgOpen(true)
@@ -188,10 +195,35 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                             {data.img_url &&
                                 <>
                                     <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
-                                    <Lightbox open={imgOpen} close={() => setImgOpen(false)}
-                                              slides={[{src:"/api/file/"+data.img_url}]}
-                                              render={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
-                                              controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
+                                    {imgOpen &&
+                                        <Box
+                                            role="dialog"
+                                            aria-modal="true"
+                                            onClick={imgHandleClose}
+                                            style={{
+                                                position: "fixed",
+                                                inset: 0,
+                                                zIndex: 1500,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                background: "rgba(0, 0, 0, 0.84)",
+                                                padding: "24px"
+                                            }}
+                                        >
+                                            <Box
+                                                component="img"
+                                                src={"/api/file/"+data.img_url}
+                                                alt=""
+                                                onClick={(event) => event.stopPropagation()}
+                                                style={{
+                                                    maxWidth: "min(100%, 1200px)",
+                                                    maxHeight: "calc(100vh - 48px)",
+                                                    objectFit: "contain"
+                                                }}
+                                            />
+                                        </Box>
+                                    }
                                 </>}
                             {data.video_url &&
                                 <>

@@ -88,6 +88,13 @@
 - ログ、ダッシュボード、ランキング、投稿フォームなど、スクロールやテキスト密度が高いUIはDOM/React側で扱う
 - 場札詳細はPhaser側で選択カードをモーダル表示位置へ移動させ、その後React/MUIのモーダルでランキングと投稿導線を表示する
 
+### 3.8 レンダリング負荷に関する制約
+- 本イベントは低スペックPCの参加者も想定するため、見栄えのために過剰なローカルリソースを消費してはならない。フルスクリーンcanvasを使う場合でも、静的な状態で高fps描画を続ける、重いフィルターや大量パーティクルを常用する、不要に大きい描画領域を維持する実装は避ける
+- Phaser Sceneの再描画では、古いGameObject、Tween、イベントリスナー、DOM要素を確実に破棄する。`children.removeAll()`のように表示リストから外すだけの処理に依存せず、必要に応じて`destroy()`やTween停止を明示する
+- ポーリングやSWR更新で画面全体を再生成する場合は、更新頻度を必要最小限にする。回収・投稿・テイクなど状態変化が発生した時は即時再取得してよいが、状態変化のない監視処理で毎秒全再描画を誘発しない
+- レンダリングに関わる改修をした場合は、Playwrightでcanvasが描画されることだけでなく、常時描画fps、オブジェクト数の増加、ポーリング間隔、画面を開いたままにした時のCPU/GPU負荷を確認する
+- 過負荷または過負荷になりうる実装を検知した場合は、仕様・要件の範囲内で軽量化を優先する。具体的にはfps制限、差分更新、描画オブジェクトの再利用、パーティクル数削減、エフェクトの簡素化、canvasサイズ抑制、API再取得頻度の調整を検討し、実装可能なものはその場で反映する
+
 ---
 
 ## 4. コンポーネントの詳細仕様
@@ -107,8 +114,8 @@
     - 「誰かの手札（ユーザーID）」「場札」「山札」「回収済み」「捨て札」の判別は`state`カラムを使う
 - ゲームの記録は`records`テーブルを利用する（非イベント時も使う汎用記録テーブル）
 - `records`へのカラム追加はしない想定。必要な場合ユーザーの承認を要する。`decks`のカラム構成は必要に応じて変更してよい。
-- 各カードには専用の`stage_id`を付与する。同内容のカードであっても`stage_id`はカードごとに異なるため、`records.stage_id`でイベント内のカードを一意に判別できる
-- 既存migrationには`eventId`、`stageId`、`ruleName`、`topPlayer`などcamelCaseカラムが存在する。今後の追加・整理ではLaravel/SQL側の扱いやすさを優先し、可能であればsnake_caseへ寄せる
+- 各カードにはカード固有IDとして`card_id`を付与する。`stage_id`は投稿先となる`stages.stage_id`であり、テイクされた時点で初めて払い出す
+- 既存migrationには`eventId`、`stageId`、`ruleName`、`topPlayer`などcamelCaseカラムが存在する。`stageId`は元ステージ番号として扱い、追加カラムでは`origin_stage_id`へ寄せる
 
 ### 5.1.1 `decks`テーブル設計
 `decks`はカード本体とカード状態を管理する中心テーブルである。既存カラムを活用しつつ、不足する状態管理カラムは追加を検討する。
@@ -116,8 +123,10 @@
 | カラム                         | 型                             | 必須 | 用途                                                                 |
 |-----------------------------|-------------------------------|----|--------------------------------------------------------------------|
 | `id`                        | unsigned big integer          | 必須 | カードID。内部操作の主キー                                                     |
+| `card_id`                   | unsigned big integer          | 必須 | イベント内でカードを識別する固有ID                                                |
 | `event_id`                  | unsigned integer              | 必須 | 大会ID。既存`eventId`相当                                                 |
-| `stage_id`                  | unsigned integer              | 必須 | 投稿先となる専用ステージ番号。カードごとに一意                                            |
+| `stage_id`                  | unsigned integer nullable     | 任意 | テイク時に払い出される投稿用ステージ番号。`stages.stage_id`と紐づく                         |
+| `origin_stage_id`           | unsigned integer nullable     | 任意 | カードの元になった既存ステージ番号。既存`stageId`相当                                    |
 | `title`                     | string                        | 必須 | カード名・ステージ名                                                         |
 | `rule_name`                 | string                        | 必須 | 縛りルール名。既存`ruleName`相当                                              |
 | `text`                      | text                          | 必須 | ミニゲームのルール本文                                                        |
@@ -161,7 +170,7 @@
 
 ### 5.1.3 `records`テーブルの扱い
 - スコア投稿は既存の汎用`records`テーブルを利用する
-- イベントカードごとに専用`stage_id`が付与されるため、イベント投稿は`records.stage_id = decks.stage_id`で紐付ける
+- テイク済みカードにのみ投稿用`stage_id`が付与されるため、イベント投稿は`records.stage_id = decks.stage_id`で紐付ける
 - `records`へのカラム追加は行わない
 - イベント専用ステージ番号の投稿は新着記録APIやピックアップ動画選出から除外する
 
@@ -208,11 +217,13 @@
     - 場札数が`参加者数 + 5`未満
     - 場札数が15枚以下
 - 選択カードは`state = '_field'`、`taker = user_id`、`stack_count = テイク直前の手札枚数`、`taken_at = 現在時刻`に更新する
+- 選択カードに`stage_id`が未設定の場合、イベント用ステージ番号を1313から順に払い出し、`stages`へステージ情報を作成してから`decks.stage_id`へ保存する
+- 今回イベントの`stages`作成値は、`stage_sub = "期間限定チャレンジ"`、`type = "stage"`、`display = "int"`、`parent = 260704`、`series = origin_stage_idの先頭1桁`、`time/treasure/pikmin/border1-4 = 0`とする
 - 選択されなかった手札は`state = '_stack'`、`stack_parent_id = 選択カードのid`に更新する
 - テイク時点では`limit_at`は設定しない。初回投稿時に90分カウントダウンを開始する
 
 ### 5.5 記録投稿時のバックエンド処理
-- 投稿された記録をカードID＝`stage_id`として記録投稿処理を行う
+- 投稿された記録はテイク時に払い出した`stage_id`を使って記録投稿処理を行う
 - このイベントで投稿された記録は新着記録API（`/api/new`）では取得しない（ピックアップ動画選出ロジックでも対象外になる想定）
 - 投稿成功後、`records.stage_id`に一致する`decks`の場札を取得し、投稿数・トップ投稿者・リミットオーバー時刻・ポイントを更新する
 - 対象場札の`limit_at`がnullの場合、現在時刻から90分後をセットする
@@ -265,6 +276,7 @@
 ### 6.4 投稿APIとの連携
 - 実際のスコア投稿は既存の`next/components/modal/RecordForm.js`から`/api/server/post`へ送る
 - 投稿フォームには対象カードの専用`stage_id`を`stage_id`として渡す
+- 投稿モーダルのステージ名は、ローカライズ辞書に存在しない場合、`stages.stage_name`またはカードタイトル由来の名称を表示する
 - `/api/server/post`が成功した後、フロントエンドはプロキシ経由で`POST /api/server/tricks/records/posted`を呼び出し、イベント固有の状態更新を行う
 - 将来的には`RecordController`側から`TrickController`を呼ぶ形へ寄せてもよいが、まずはイベントページ側から投稿成功後APIを呼ぶ実装を優先する
 
@@ -319,3 +331,8 @@ TRICKS_E2E_CHROME_EXECUTABLE=/usr/bin/chromium-browser npx playwright test -c pa
     - `/api/server/tricks/state`がNextプロキシ経由でイベント状態スナップショットを返す
     - `/api/server/tricks/maintenance/collect-expired`が冪等な期限切れ回収APIとして疎通する
     - `/limited/tricks`を開いたとき、Phaserのcanvasが表示され、描画済みピクセルを持つ
+- レンダリング関連の改修時は、上記に加えて以下を確認する
+    - ページを開いたままにしてもPhaser GameObjectやDOM要素が継続的に増え続けない
+    - 静止状態で不要な高fps描画や毎秒の全再生成が発生していない
+    - 期限切れ回収などの監視処理が、状態変化のない時に過剰な再取得・再描画を誘発していない
+    - 実機またはブラウザのPerformance/Activity Monitorで、CPU/GPU/WindowServer負荷がリリース可能な範囲に収まる

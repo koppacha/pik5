@@ -360,6 +360,7 @@ class CardController extends Controller
             $decks = Deck::query()
                 ->where(function ($q) use ($stage_id) {
                     $q->where('stageId', $stage_id);
+                    $q->orWhere('stage_id', $stage_id);
                 })
                 ->lockForUpdate()
                 ->get();

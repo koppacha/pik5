@@ -20,6 +20,8 @@ class TrickController extends Controller
     private const START_AT = '2026-05-03 00:00:00';
     private const END_AT = '2026-05-05 00:00:00';
     private const POLL_LIMIT = 100;
+    private const STAGE_ID_START = 1313;
+    private const STAGE_ID_END = 9999;
 
     private array $deckColumns = [];
 
@@ -137,8 +139,8 @@ class TrickController extends Controller
             $this->writeLog([
                 'event' => 'draw',
                 'actor_name' => $userId,
-                'card_id' => $card?->id,
-                'stage_id' => $card ? $this->cardValue($card, 'stage_id', 'stageId') : null,
+                'card_id' => $card ? $this->eventCardId($card) : null,
+                'stage_id' => $card ? $this->postingStageId($card) : null,
                 'remaining_draw_points' => $player->draw_points,
                 'remaining_deck_count' => $this->deckQuery()->where('state', '_deck')->count(),
                 'card_snapshot' => $card?->toArray(),
@@ -161,60 +163,63 @@ class TrickController extends Controller
         $userId = $this->requireUserId($request);
         $payload = null;
 
-        DB::transaction(function () use ($userId, $deckId, $request, &$payload) {
-            $player = Player::where('name', $userId)->lockForUpdate()->firstOrFail();
-            $hand = $this->handQuery($userId)->lockForUpdate()->get();
-            $selected = $hand->firstWhere('id', $deckId);
+        $this->withStageAllocationLock(function () use ($userId, $deckId, $request, &$payload) {
+            DB::transaction(function () use ($userId, $deckId, $request, &$payload) {
+                $player = Player::where('name', $userId)->lockForUpdate()->firstOrFail();
+                $hand = $this->handQuery($userId)->lockForUpdate()->get();
+                $selected = $hand->firstWhere('id', $deckId);
 
-            if (!$selected) {
-                abort(response()->json(['message' => '対象カードが手札にありません'], 409));
-            }
-            if ($hand->count() < 3) {
-                abort(response()->json(['message' => 'テイクには手札が3枚以上必要です'], 422));
-            }
-            if (!$this->isDebug() && Carbon::now()->greaterThanOrEqualTo($this->eventEnd()->subHour())) {
-                abort(response()->json(['message' => '大会終了1時間前以降はテイクできません'], 403));
-            }
+                if (!$selected) {
+                    abort(response()->json(['message' => '対象カードが手札にありません'], 409));
+                }
+                if ($hand->count() < 3) {
+                    abort(response()->json(['message' => 'テイクには手札が3枚以上必要です'], 422));
+                }
+                if (!$this->isDebug() && Carbon::now()->greaterThanOrEqualTo($this->eventEnd()->subHour())) {
+                    abort(response()->json(['message' => '大会終了1時間前以降はテイクできません'], 403));
+                }
 
-            $fieldCount = $this->deckQuery()->where('state', '_field')->lockForUpdate()->count();
-            $participantCount = max(Player::count(), 1);
-            if ($fieldCount >= $participantCount + 5 || $fieldCount > 15) {
-                abort(response()->json(['message' => '場札の上限に達しています'], 409));
-            }
+                $fieldCount = $this->deckQuery()->where('state', '_field')->lockForUpdate()->count();
+                $participantCount = max(Player::count(), 1);
+                if ($fieldCount >= $participantCount + 5 || $fieldCount > 15) {
+                    abort(response()->json(['message' => '場札の上限に達しています'], 409));
+                }
 
-            $stackIds = $hand->where('id', '!=', $deckId)->pluck('id')->values()->all();
-            $this->deckQuery()->whereIn('id', $stackIds)->update(array_filter([
-                'state' => '_stack',
-                'stack_parent_id' => $this->hasDeckColumn('stack_parent_id') ? $deckId : null,
-            ], static fn ($value) => $value !== null));
+                $stackIds = $hand->where('id', '!=', $deckId)->pluck('id')->values()->all();
+                $this->deckQuery()->whereIn('id', $stackIds)->update(array_filter([
+                    'state' => '_stack',
+                    'stack_parent_id' => $this->hasDeckColumn('stack_parent_id') ? $deckId : null,
+                ], static fn ($value) => $value !== null));
 
-            $selected->state = '_field';
-            $this->setCardValue($selected, 'taker', $userId);
-            $this->setCardValue($selected, 'stack_count', $hand->count(), 'rewards');
-            $this->setCardValue($selected, 'taken_at', Carbon::now()->toDateTimeString());
-            $this->setCardValue($selected, 'limit_at', null, 'limit');
-            $selected->save();
+                $stageId = $this->ensureStageForCard($selected);
+                $selected->state = '_field';
+                $this->setCardValue($selected, 'taker', $userId);
+                $this->setCardValue($selected, 'stack_count', $hand->count(), 'rewards');
+                $this->setCardValue($selected, 'taken_at', Carbon::now()->toDateTimeString());
+                $this->setCardValue($selected, 'limit_at', null, 'limit');
+                $selected->save();
 
-            $player->card_count = 0;
-            $player->save();
+                $player->card_count = 0;
+                $player->save();
 
-            $this->writeLog([
-                'event' => 'take',
-                'actor_name' => $userId,
-                'card_id' => $selected->id,
-                'stage_id' => $this->cardValue($selected, 'stage_id', 'stageId'),
-                'to_state' => '_field',
-                'hand_count' => $hand->count(),
-                'rewards' => $hand->count(),
-                'stacked_card_ids' => $stackIds,
-                'card_snapshot' => $selected->toArray(),
-                'player_snapshot' => $player->toArray(),
-            ], $request);
+                $this->writeLog([
+                    'event' => 'take',
+                    'actor_name' => $userId,
+                    'card_id' => $this->eventCardId($selected),
+                    'stage_id' => $stageId,
+                    'to_state' => '_field',
+                    'hand_count' => $hand->count(),
+                    'rewards' => $hand->count(),
+                    'stacked_card_ids' => $stackIds,
+                    'card_snapshot' => $selected->toArray(),
+                    'player_snapshot' => $player->toArray(),
+                ], $request);
 
-            $payload = [
-                'card' => $this->normalizeCard($selected->fresh()),
-                'player' => $player->fresh(),
-            ];
+                $payload = [
+                    'card' => $this->normalizeCard($selected->fresh()),
+                    'player' => $player->fresh(),
+                ];
+            });
         });
 
         return response()->json($payload);
@@ -223,9 +228,12 @@ class TrickController extends Controller
     public function scores(int $deckId): JsonResponse
     {
         $card = Deck::findOrFail($deckId);
-        $stageId = $this->cardValue($card, 'stage_id', 'stageId');
+        $stageId = $this->postingStageId($card);
+        if (!$stageId) {
+            return response()->json([]);
+        }
 
-        return response()->json($this->rankingsForStage((int) $stageId));
+        return response()->json($this->rankingsForStage($stageId));
     }
 
     public function recordPosted(Request $request): JsonResponse
@@ -255,7 +263,7 @@ class TrickController extends Controller
             $this->writeLog([
                 'event' => $previousLimit ? 'limit_extended' : 'first_record_posted',
                 'actor_name' => $this->userId($request),
-                'card_id' => $card->id,
+                'card_id' => $this->eventCardId($card),
                 'stage_id' => $stageId,
                 'previous_limit' => $previousLimit,
                 'new_limit' => $newLimit?->toDateTimeString(),
@@ -400,7 +408,10 @@ class TrickController extends Controller
                 return;
             }
 
-            $stageId = (int) $this->cardValue($card, 'stage_id', 'stageId');
+            $stageId = $this->postingStageId($card);
+            if (!$stageId) {
+                return;
+            }
             $stackCount = max((int) $this->cardValue($card, 'stack_count', 'rewards'), 1);
             $difficulty = max((int) $this->cardValue($card, 'difficulty'), 1);
             $rankings = $this->rankingsForStage($stageId);
@@ -425,7 +436,7 @@ class TrickController extends Controller
 
             $this->writeLog([
                 'event' => 'collect',
-                'card_id' => $card->id,
+                'card_id' => $this->eventCardId($card),
                 'stage_id' => $stageId,
                 'from_state' => '_field',
                 'to_state' => '_collected',
@@ -439,21 +450,34 @@ class TrickController extends Controller
 
     private function rankingsForStage(int $stageId): array
     {
+        $card = $this->deckByStage($stageId)->first();
+        $stackCount = $card ? max((int) $this->cardValue($card, 'stack_count', 'rewards'), 1) : 1;
         $rows = Record::query()
-            ->where('stage_id', $stageId)
-            ->where('flg', '<=', 1)
-            ->select('user_id', DB::raw('MAX(score) AS score'), DB::raw('MIN(created_at) AS created_at'))
-            ->groupBy('user_id')
-            ->orderByDesc('score')
-            ->orderBy('created_at')
+            ->leftJoin('users', 'records.user_id', '=', 'users.user_id')
+            ->where('records.stage_id', $stageId)
+            ->where('records.flg', '<=', 1)
+            ->select('records.*', 'users.user_name as user_name')
+            ->orderByDesc('records.score')
+            ->orderBy('records.created_at')
             ->get();
+        $seen = [];
+        $rankings = [];
+        foreach ($rows as $row) {
+            if (isset($seen[$row->user_id])) {
+                continue;
+            }
+            $seen[$row->user_id] = true;
+            $rank = count($rankings) + 1;
+            $data = $row->toArray();
+            $data['rank'] = $rank;
+            $data['post_rank'] = $rank;
+            $data['rps'] = max($stackCount - $rank + 1, 0);
+            $data['user_name'] = $data['user_name'] ?: $data['user_id'];
+            $data['score'] = (int) $data['score'];
+            $rankings[] = $data;
+        }
 
-        return $rows->values()->map(static fn ($row, $index) => [
-            'rank' => $index + 1,
-            'user_id' => $row->user_id,
-            'score' => (int) $row->score,
-            'created_at' => $row->created_at,
-        ])->all();
+        return $rankings;
     }
 
     private function recalculateRankPoints(): void
@@ -461,7 +485,10 @@ class TrickController extends Controller
         Player::query()->update(['rank_points' => 0]);
         $cards = $this->deckQuery()->whereIn('state', ['_field', '_collected'])->get();
         foreach ($cards as $card) {
-            $stageId = (int) $this->cardValue($card, 'stage_id', 'stageId');
+            $stageId = $this->postingStageId($card);
+            if (!$stageId) {
+                continue;
+            }
             $stackCount = max((int) $this->cardValue($card, 'stack_count', 'rewards'), 1);
             foreach ($this->rankingsForStage($stageId) as $row) {
                 if ($row['rank'] <= $stackCount) {
@@ -471,6 +498,134 @@ class TrickController extends Controller
         }
     }
 
+    private function ensureStageForCard(Deck $card): int
+    {
+        $stageId = $this->postingStageId($card);
+        if ($stageId) {
+            $this->createEventStage($card, $stageId);
+            return $stageId;
+        }
+
+        $stageId = $this->nextEventStageId();
+        $this->createEventStage($card, $stageId);
+        $this->setCardValue($card, 'stage_id', $stageId);
+
+        return $stageId;
+    }
+
+    private function withStageAllocationLock(callable $callback)
+    {
+        $lockName = 'tricks_stage_' . $this->configuredEventId();
+        $result = DB::selectOne('SELECT GET_LOCK(?, 10) AS locked', [$lockName]);
+        if ((int) ($result->locked ?? 0) !== 1) {
+            abort(response()->json(['message' => 'ステージ番号の採番に失敗しました'], 409));
+        }
+
+        try {
+            return (int) $callback();
+        } finally {
+            DB::selectOne('SELECT RELEASE_LOCK(?) AS released', [$lockName]);
+        }
+    }
+
+    private function nextEventStageId(): int
+    {
+        $config = $this->eventStageConfig();
+        $start = (int) $config['stage_id_start'];
+        $end = (int) $config['stage_id_end'];
+        $stageColumn = $this->deckColumn('stage_id');
+        $used = DB::table('stages')
+            ->whereBetween('stage_id', [$start, $end])
+            ->pluck('stage_id')
+            ->map(static fn ($value) => (int) $value)
+            ->all();
+        $usedDeckIds = $this->deckQuery()
+            ->whereNotNull($stageColumn)
+            ->whereBetween($stageColumn, [$start, $end])
+            ->pluck($stageColumn)
+            ->map(static fn ($value) => (int) $value)
+            ->all();
+        $usedIds = array_flip(array_merge($used, $usedDeckIds));
+
+        for ($stageId = $start; $stageId <= $end; $stageId++) {
+            if (!isset($usedIds[$stageId])) {
+                return $stageId;
+            }
+        }
+
+        abort(response()->json(['message' => '利用可能なイベント用ステージ番号がありません'], 409));
+    }
+
+    private function createEventStage(Deck $card, int $stageId): void
+    {
+        $now = Carbon::now()->toDateTimeString();
+        $config = $this->eventStageConfig();
+        $title = (string) ($this->cardValue($card, 'title') ?: ('カード' . $this->eventCardId($card)));
+        DB::table('stages')->updateOrInsert(
+            ['stage_id' => $stageId],
+            [
+                'stage_name' => $title,
+                'eng_stage_name' => $title,
+                'stage_sub' => $config['stage_sub'],
+                'type' => $config['type'],
+                'display' => $config['display'],
+                'series' => $this->seriesFromOriginStageId($this->originStageId($card)),
+                'parent' => $config['parent'],
+                'time' => 0,
+                'treasure' => 0,
+                'pikmin' => 0,
+                'border1' => 0,
+                'border2' => 0,
+                'border3' => 0,
+                'border4' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]
+        );
+    }
+
+    private function eventStageConfig(): array
+    {
+        $configs = [
+            self::EVENT_ID => [
+                'stage_id_start' => (int) env('TRICKS_STAGE_ID_START', self::STAGE_ID_START),
+                'stage_id_end' => (int) env('TRICKS_STAGE_ID_END', self::STAGE_ID_END),
+                'stage_sub' => '期間限定チャレンジ',
+                'type' => 'stage',
+                'display' => 'int',
+                'parent' => (int) env('TRICKS_STAGE_PARENT', 260704),
+            ],
+        ];
+
+        return $configs[$this->configuredEventId()] ?? $configs[self::EVENT_ID];
+    }
+
+    private function seriesFromOriginStageId(?int $originStageId): int
+    {
+        if (!$originStageId) {
+            return 0;
+        }
+
+        return (int) substr((string) $originStageId, 0, 1);
+    }
+
+    private function eventCardId(Deck $card): int
+    {
+        return (int) ($this->cardValue($card, 'card_id') ?: $card->id);
+    }
+
+    private function postingStageId(Deck $card): ?int
+    {
+        $value = $this->cardValue($card, 'stage_id');
+        return $value ? (int) $value : null;
+    }
+
+    private function originStageId(Deck $card): ?int
+    {
+        $value = $this->cardValue($card, 'origin_stage_id', 'stageId');
+        return $value ? (int) $value : null;
+    }
+
     private function deckQuery()
     {
         return Deck::query()->where($this->deckColumn('event_id', 'eventId'), $this->deckEventId());
@@ -478,7 +633,7 @@ class TrickController extends Controller
 
     private function deckByStage(int $stageId)
     {
-        return $this->deckQuery()->where($this->deckColumn('stage_id', 'stageId'), $stageId);
+        return $this->deckQuery()->where($this->deckColumn('stage_id'), $stageId);
     }
 
     private function handQuery(string $userId)
@@ -499,8 +654,12 @@ class TrickController extends Controller
 
         return [
             'id' => $card->id,
+            'card_id' => $this->eventCardId($card),
             'event_id' => $this->cardValue($card, 'event_id', 'eventId'),
-            'stage_id' => $this->cardValue($card, 'stage_id', 'stageId'),
+            'stage_id' => $this->postingStageId($card),
+            'origin_stage_id' => $this->originStageId($card),
+            'stage_name' => $this->cardValue($card, 'title'),
+            'eng_stage_name' => $this->cardValue($card, 'title'),
             'title' => $this->cardValue($card, 'title'),
             'rule_name' => $this->cardValue($card, 'rule_name', 'ruleName'),
             'text' => $this->cardValue($card, 'text'),

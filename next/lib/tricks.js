@@ -14,7 +14,7 @@ export const tricksActions = {
     selectField: "selectField",
     cancel: "cancel",
 }
-
+// Tricks APIのJSONレスポンスを取得し、失敗時はメッセージ付きで例外化する。
 export const tricksFetcher = async (url) => {
     const res = await fetch(url)
     const body = await res.json().catch(() => ({}))
@@ -25,7 +25,7 @@ export const tricksFetcher = async (url) => {
 
     return body?.data ?? body
 }
-
+// Tricks APIへJSONのPOSTを送り、失敗時はメッセージ付きで例外化する。
 export const postTricks = async (url, userId, payload = {}) => {
     const res = await fetch(url, {
         method: "POST",
@@ -40,7 +40,7 @@ export const postTricks = async (url, userId, payload = {}) => {
 
     return body?.data ?? body
 }
-
+// 指定時刻までの残り時間をHH:mm:ss形式で返す。
 export const formatRemaining = (endAt, nowValue = Date.now()) => {
     if (!endAt) return "--:--:--"
     const diff = Math.max(0, new Date(endAt).getTime() - nowValue)
@@ -53,21 +53,52 @@ export const formatRemaining = (endAt, nowValue = Date.now()) => {
         .map((v) => String(v).padStart(2, "0"))
         .join(":")
 }
-
+// 場札のリミット時刻が現在時刻を過ぎているかを判定する。
 export const isTricksCardLimitExpired = (card, nowValue = Date.now()) => {
     return Boolean(card?.limit_at) && new Date(card.limit_at).getTime() <= nowValue
 }
-
+// 場札のリミット表示ラベルを返す。
 export const cardLimitLabel = (card, nowValue = Date.now()) => {
     if (!card?.limit_at) return "初回投稿待ち"
     return formatRemaining(card.limit_at, nowValue)
 }
+// 日時文字列を比較可能なミリ秒へ変換する。
+const parseTricksTime = (value) => {
+    if (!value) return null
+    const time = new Date(value).getTime()
 
+    return Number.isFinite(time) ? time : null
+}
+// 場札をリミット残り分数とテイク時刻のルールで比較する。
+export const compareTricksFieldCards = (a, b, nowValue = Date.now()) => {
+    const aLimit = parseTricksTime(a?.limit_at)
+    const bLimit = parseTricksTime(b?.limit_at)
+    const aHasLimit = aLimit !== null
+    const bHasLimit = bLimit !== null
+
+    if (aHasLimit && !bHasLimit) return -1
+    if (!aHasLimit && bHasLimit) return 1
+
+    if (aHasLimit && bHasLimit) {
+        const aMinutes = Math.floor(Math.max(0, aLimit - nowValue) / 60000)
+        const bMinutes = Math.floor(Math.max(0, bLimit - nowValue) / 60000)
+        if (aMinutes !== bMinutes) return aMinutes - bMinutes
+    }
+
+    if (!aHasLimit && !bHasLimit) {
+        const aTaken = parseTricksTime(a?.taken_at) || 0
+        const bTaken = parseTricksTime(b?.taken_at) || 0
+        if (aTaken !== bTaken) return bTaken - aTaken
+    }
+
+    return 0
+}
+// 表示テキストを指定文字数へ短縮する。
 export const shortenTricksText = (value, max) => {
     const text = String(value || "")
     return text.length > max ? `${text.slice(0, max - 1)}…` : text
 }
-
+// 手札を保存済み順序に合わせて並べ替える。
 export const orderTricksHand = (hand = [], order = []) => {
     const ids = hand.map((card) => card.id)
     const nextOrder = [
@@ -78,20 +109,15 @@ export const orderTricksHand = (hand = [], order = []) => {
 
     return {hand: ordered, order: nextOrder}
 }
-
+// 場札に期限切れ状態と表示ラベルを付与する。
 export const orderTricksField = (field = [], nowValue = Date.now()) => {
-    return [...field].sort((a, b) => {
-        const aTime = a?.limit_at ? new Date(a.limit_at).getTime() : Number.MAX_SAFE_INTEGER
-        const bTime = b?.limit_at ? new Date(b.limit_at).getTime() : Number.MAX_SAFE_INTEGER
-        if (aTime !== bTime) return aTime - bTime
-        return Number(a?.id || 0) - Number(b?.id || 0)
-    }).map((card) => ({
+    return [...field].map((card) => ({
         ...card,
         limit_expired: isTricksCardLimitExpired(card, nowValue),
         limit_label: cardLimitLabel(card, nowValue),
     }))
 }
-
+// APIレスポンスをPhaserとHUDが扱いやすい形へ正規化する。
 export const normalizeTricksState = (state, options = {}) => {
     const nowValue = options.nowValue || Date.now()
     const orderedHand = orderTricksHand(state?.hand || [], options.handOrder || [])
