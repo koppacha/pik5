@@ -33,6 +33,7 @@ services:
   mysql:
     container_name: mysql
     image: mysql:8.0
+    init: true
     platform: ${PLATFORM}
     environment:
       - MYSQL_DATABASE=${DB_NAME}
@@ -40,6 +41,8 @@ services:
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
       - TZ=${TZ}
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     user: root:root
     ports:
       - ${DB_PORT}:3306
@@ -57,6 +60,7 @@ services:
   redis:
     container_name: redis
     image: redis:latest
+    init: true
     volumes:
       - ./redis:/data
 
