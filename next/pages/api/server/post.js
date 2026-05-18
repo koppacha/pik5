@@ -8,6 +8,7 @@ import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import prisma from "../../../lib/prisma";
+import {createRecordValidationSchema} from "../../../lib/recordValidation";
 
 export const config = {
     api: {
@@ -40,6 +41,18 @@ async function parseUpstreamResponse(upstreamRes) {
     } catch {
         return raw
     }
+}
+
+async function fetchLaravelJson(path) {
+    const upstreamRes = await fetch(`http://laravel:8000/api/${path}`)
+    const data = await parseUpstreamResponse(upstreamRes)
+    if (!upstreamRes.ok) {
+        const error = new Error('upstream validation dependency failed')
+        error.status = upstreamRes.status
+        error.data = data
+        throw error
+    }
+    return data
 }
 
 function getForwardedFor(req) {
@@ -133,17 +146,61 @@ export default async function handler(req, res){
             }
         }
 
+        const stageId = String(getFieldValue(fields.stage_id))
+        const payloadRule = String(getFieldValue(fields.rule))
+        const payloadScore = String(getFieldValue(fields.score))
+        const payloadConsole = String(getFieldValue(fields.console))
+        const payloadVideoUrl = String(getFieldValue(fields.video_url) || '')
+        const payloadComment = String(getFieldValue(fields.post_comment) || '')
+        const uploadFile = Array.isArray(files?.file) ? files.file[0] : files?.file
+        const currentImage = uploadFile || String(getFieldValue(fields.old_img_url) || '')
+
+        try {
+            const [countInfo, rank] = await Promise.all([
+                fetchLaravelJson(`count/${encodeURIComponent(currentUserId)}`),
+                fetchLaravelJson(`record/rank/${encodeURIComponent(stageId)}/${encodeURIComponent(payloadRule)}/${encodeURIComponent(payloadScore)}`),
+            ])
+            const schema = createRecordValidationSchema({
+                rule: payloadRule,
+                stageId,
+                rank,
+                countInfo,
+                image: currentImage,
+            })
+            await schema.validate({
+                score: payloadScore,
+                videoUrl: payloadVideoUrl,
+                comment: payloadComment,
+                rule: payloadRule,
+                console: payloadConsole,
+                img: currentImage,
+            }, {abortEarly: false})
+        } catch (validationError) {
+            if (validationError.name === 'ValidationError') {
+                res.status(400).json({
+                    error: true,
+                    message: 'validation failed',
+                    details: validationError.inner?.length ? validationError.inner.map((e) => ({
+                        path: e.path,
+                        message: e.message,
+                    })) : [{path: validationError.path, message: validationError.message}],
+                })
+                return
+            }
+            throw validationError
+        }
+
         const formData = new FormData()
-        formData.append('stage_id', String(getFieldValue(fields.stage_id)))
-        formData.append('rule', String(getFieldValue(fields.rule)))
+        formData.append('stage_id', stageId)
+        formData.append('rule', payloadRule)
         formData.append('region', String(getFieldValue(fields.region)))
-        formData.append('score', String(getFieldValue(fields.score)))
+        formData.append('score', payloadScore)
         formData.append('user_id', currentUserId)
-        formData.append('console', String(getFieldValue(fields.console)))
+        formData.append('console', payloadConsole)
         formData.append('difficulty', String(getFieldValue(fields.difficulty)))
-        formData.append('video_url', String(getFieldValue(fields.video_url) || ''))
+        formData.append('video_url', payloadVideoUrl)
         formData.append('team', '0')
-        formData.append('post_comment', String(getFieldValue(fields.post_comment)))
+        formData.append('post_comment', payloadComment)
         formData.append('created_at', String(getFieldValue(fields.created_at)))
         formData.append('user_agent', String(getFieldValue(fields.user_agent)))
         formData.append('mode', mode)
@@ -153,7 +210,6 @@ export default async function handler(req, res){
             formData.append('old_img_url', String(getFieldValue(fields.old_img_url) || ''))
         }
 
-        const uploadFile = Array.isArray(files?.file) ? files.file[0] : files?.file
         if (uploadFile?.filepath) {
             const fileBuffer = await fs.promises.readFile(uploadFile.filepath)
             const filename = uploadFile.originalFilename || uploadFile.newFilename || 'upload.bin'
