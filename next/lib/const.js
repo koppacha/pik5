@@ -27,6 +27,43 @@ export const hideRuleNames = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42
 // 難易度を表示するルールID
 export const displayDifficulty = [41, 42, 43, 44, 45, 46, 47]
 
+// 新規登録者の証拠動画・画像提出要件
+// video / image の値は 0: 不要, q: 全順位で必要, 自然数: その順位以上で必要
+export const newUserEvidenceRequirements = {
+    10: {video: 1, image: 10},
+    11: {video: "q", image: 0},
+    21: {video: 10, image: 30},
+    22: {video: 10, image: 30},
+    23: {video: 1, image: 10},
+    24: {video: 1, image: 10},
+    25: {video: "q", image: 0},
+    26: {video: 1, image: 10},
+    27: {video: "q", image: 0},
+    28: {video: "q", image: 0},
+    29: {video: "q", image: 0},
+    31: {video: 1, image: 10},
+    32: {video: 1, image: 10},
+    33: {video: 1, image: 10},
+    34: {video: 1, image: 10},
+    35: {video: "q", image: 0},
+    36: {video: 1, image: 10},
+    41: {video: 1, image: 10},
+    42: {video: 1, image: 10},
+    43: {video: 1, image: 10},
+    44: {video: 1, image: 10},
+    45: {video: 1, image: 10},
+    46: {video: 1, image: 10},
+    47: {video: "q", image: 0},
+    91: {
+        video: "q",
+        image: 0,
+        stageOverrides: {
+            901: {video: 0, image: "q"},
+            902: {video: 0, image: "q"},
+        },
+    },
+}
+
 // 昇順でソートするステージID（ソロバトル、ソロビンゴ、夜の探検）
 export const reverseStages = [ ...range(245, 254), ...range(351, 362), ...range(429, 444)]
 
