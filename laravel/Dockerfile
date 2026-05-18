@@ -14,13 +14,30 @@ ENV TZ=UTC \
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
 RUN apt-get update && \
-  apt-get -y install sudo git libicu-dev libonig-dev libzip-dev unzip locales nodejs npm && \
+  apt-get -y install --no-install-recommends \
+    ca-certificates \
+    curl \
+    default-mysql-client \
+    dnsutils \
+    git \
+    iproute2 \
+    iputils-ping \
+    libcurl4-openssl-dev \
+    libicu-dev \
+    libonig-dev \
+    libzip-dev \
+    locales \
+    netcat-openbsd \
+    openssl \
+    redis-tools \
+    tini \
+    unzip && \
   apt-get clean && \
   rm -rf /var/lib/apt/lists/* && \
   locale-gen en_US.UTF-8 && \
   localedef -f UTF-8 -i en_US en_US.UTF-8 && \
   mkdir /var/run/php-fpm && \
-  docker-php-ext-install intl pdo_mysql zip bcmath && \
+  docker-php-ext-install bcmath curl intl mbstring pdo_mysql zip && \
   composer config -g process-timeout 3600 && \
   composer config -g repos.packagist composer https://packagist.org
 
@@ -29,12 +46,5 @@ COPY ./laravel/php/php.ini /usr/local/etc/php/php.ini
 
 WORKDIR /var/www/laravel/
 
-# Install Laravel Telescope at build time if a project is present
-RUN if [ -f composer.json ]; then \
-      composer require laravel/telescope --no-interaction --prefer-dist && \
-      ( [ -f artisan ] && php artisan telescope:install || true ); \
-    else \
-      echo "composer.json not found; skipping telescope install"; \
-    fi
-
+ENTRYPOINT ["tini", "--", "docker-php-entrypoint"]
 CMD ["php","artisan","serve","--host","0.0.0.0"]
