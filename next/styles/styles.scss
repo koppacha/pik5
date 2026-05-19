@@ -455,6 +455,7 @@ body {
 .top-box {
     border: 1px solid $light-border;
     border-radius: 6px;
+    margin-top: 1em;
     height: 100%;
 
     [data-theme='dark'] & {

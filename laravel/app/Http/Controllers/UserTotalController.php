@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Library\Func;
 use App\Models\Record;
 use App\Models\Total;
+use App\Models\TotalSnapshot;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -14,6 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class UserTotalController extends Controller
 {
+    private const CONSOLE_CATEGORY_RULES = [10, 20, 30];
     /**
      * Display a listing of the resource.
      *
@@ -105,13 +108,15 @@ class UserTotalController extends Controller
             $result["totals"]["mark"] = array_sum($records["marks"]);
 
             // ここまでの計算結果をデータベースへ書き込む
-            $this->updateTotalsTable($request['id'], $result);
+            $this->updateTotalsTable($request['id'], $result, 0);
+            $result["categoryRanks"] = $this->getCategoryRanks($request['id'], array_keys($result["scores"] ?? []));
+            $result["consoleScores"] = $this->getConsoleCategoryScores($request['id']);
         }
         return response()->json(
             $result
         );
     }
-    public function updateTotalsTable(string $userName, array $data): void
+    public function updateTotalsTable(string $userName, array $data, int $console = 0): void
     {
         $now = now(); // 現在時刻を取得
         $scores = $data['scores'];
@@ -145,7 +150,7 @@ class UserTotalController extends Controller
 
             // ルール別スコア
             DB::table('totals')->updateOrInsert(
-                ['user' => $userName, 'rule' => $ruleId],
+                ['user' => $userName, 'rule' => $ruleId, 'console' => $console],
                 [
                     'score' => $scoreVal,
                     'rps' => $rpsVal,
@@ -158,7 +163,7 @@ class UserTotalController extends Controller
             $totScore = $sanitizeInt($totals['score'] ?? 0, 'totals.score');
             $totRps   = $sanitizeInt($totals['rps'] ?? 0, 'totals.rps');
             DB::table('totals')->updateOrInsert(
-                ['user' => $userName, 'rule' => 0],
+                ['user' => $userName, 'rule' => 0, 'console' => $console],
                 ['score' => $totScore, 'rps' => $totRps, 'flg' => 0, 'updated_at' => $now]
             );
         }
@@ -167,9 +172,11 @@ class UserTotalController extends Controller
     {
         // リクエストからルールIDを取得
         $ruleId = (int)$request['id'];
+        $console = (int)($request['console'] ?? 0);
 
         // ルールIDが一致し、flgが0のデータを取得し、rpsで降順に並び替え
         $totals = Total::where('rule', $ruleId)
+            ->where('console', $console)
             ->where('flg', 0)
             ->orderByDesc('rps')
             ->get();
@@ -183,6 +190,7 @@ class UserTotalController extends Controller
 
             $subTotals = Total::whereIn('user', $userNames)
                 ->where('flg', 0)
+                ->where('console', $console)
                 ->whereNotIn('rule', [0, 20, 30, 40])   // 0,20,30,40 を除外
                 ->get()
                 ->groupBy('user');
@@ -227,6 +235,366 @@ class UserTotalController extends Controller
         $payload = $rankedTotals->toArray();
         // 結果をJSON形式で返す
         return response()->json($payload);
+    }
+
+    private function getCategoryRanks(string $userId, array $rules): array
+    {
+        $output = [];
+        foreach ($rules as $rule) {
+            $rule = (int)$rule;
+            $row = Total::where('user', $userId)
+                ->where('rule', $rule)
+                ->where('console', 0)
+                ->where('flg', 0)
+                ->first();
+
+            if (!$row) {
+                continue;
+            }
+
+            $rank = $this->getTotalScoreRank($rule, (int)$row->score);
+            $output[$rule] = [
+                'score' => (int)$row->score,
+                'rps' => (int)$row->rps,
+                'rank' => $rank['rank'],
+                'participants' => $rank['participants'],
+            ];
+        }
+        return $output;
+    }
+
+    private function getConsoleCategoryScores(string $userId): array
+    {
+        $output = [];
+        foreach (self::CONSOLE_CATEGORY_RULES as $rule) {
+            foreach ($this->consoleIdsForRule($rule) as $console) {
+                $ranking = $this->getCategoryRanking($rule, $console);
+                $row = $this->findUserTotal($ranking, $userId);
+                if (!$row) {
+                    continue;
+                }
+                $formatted = $this->formatRankingRow($row, count($ranking));
+                $formatted['console'] = $console;
+                $output[$rule][$console] = $formatted;
+                $this->updateConsoleTotalRow($userId, $rule, $console, $formatted);
+            }
+        }
+        return $output;
+    }
+
+    private function getCategoryRanking(int $rule, int $console): array
+    {
+        $req = new Request(['id' => $rule, 'rule' => $rule, 'console' => $console, 'year' => date('Y')]);
+        return (new TotalController())->getTotals($req);
+    }
+
+    private function findUserTotal(array $ranking, string $userId): ?array
+    {
+        foreach ($ranking as $row) {
+            if (($row['user_id'] ?? null) === $userId) {
+                return $row;
+            }
+        }
+        return null;
+    }
+
+    private function formatRankingRow(array $row, int $participants): array
+    {
+        return [
+            'score' => (int)round((float)($row['score'] ?? 0)),
+            'rps' => (int)round((float)($row['rps'] ?? 0)),
+            'mark' => isset($row['ranks']) && is_array($row['ranks']) ? count($row['ranks']) : 0,
+            'rank' => (int)($row['post_rank'] ?? 0),
+            'participants' => $participants,
+        ];
+    }
+
+    private function updateConsoleTotalRow(string $userId, int $rule, int $console, array $row): void
+    {
+        DB::table('totals')->updateOrInsert(
+            ['user' => $userId, 'rule' => $rule, 'console' => $console],
+            [
+                'score' => $row['score'],
+                'rps' => $row['rps'],
+                'flg' => 0,
+                'updated_at' => now(),
+            ]
+        );
+    }
+
+    private function getTotalScoreRank(int $rule, int $score): array
+    {
+        $participants = Total::where('rule', $rule)
+            ->where('console', 0)
+            ->where('flg', 0)
+            ->where('score', '>', 0)
+            ->count();
+
+        $higher = Total::where('rule', $rule)
+            ->where('console', 0)
+            ->where('flg', 0)
+            ->where('score', '>', $score)
+            ->count();
+
+        return [
+            'rank' => $score > 0 ? $higher + 1 : 0,
+            'participants' => $participants,
+        ];
+    }
+
+    private function consoleIdsForRule(int $rule): array
+    {
+        return Record::whereIn('stage_id', TotalController::stage_list($rule))
+            ->whereIn('rule', $this->rulesForCategory($rule))
+            ->where('console', '>', 0)
+            ->where('flg', '<', 2)
+            ->distinct()
+            ->orderBy('console')
+            ->pluck('console')
+            ->map(static fn ($console) => (int)$console)
+            ->values()
+            ->toArray();
+    }
+
+    private function rulesForCategory(int $rule): array
+    {
+        return match ($rule) {
+            20 => [20, 21, 22],
+            30 => [30, 31, 32, 33, 36],
+            40 => [40, 41, 42, 43],
+            default => [$rule],
+        };
+    }
+
+    public function getRpsHistory(Request $request): JsonResponse
+    {
+        $userId = (string)$request['id'];
+        $ruleId = (int)($request['rule'] ?? 0);
+        $withRivals = (int)($request->query('rivals', 0)) === 1;
+        $requestedYear = (int)($request->query('year', (int)date('Y')));
+        $currentYear = (int)date('Y');
+        $limit = 24;
+
+        $latest = $requestedYear >= $currentYear
+            ? TotalSnapshot::where('rule', 0)
+                ->where('flg', 0)
+                ->orderByDesc('target_year')
+                ->orderByDesc('target_month')
+                ->first()
+            : TotalSnapshot::where('rule', 0)
+                ->where('flg', 0)
+                ->where('target_year', $requestedYear)
+                ->where('target_month', 12)
+                ->first();
+
+        if (!$latest) {
+            $fallbackMonth = $requestedYear >= $currentYear ? (int)date('n') : 12;
+            $monthKeys = $this->recentMonthKeys($requestedYear, $fallbackMonth, $limit);
+            return response()->json([
+                'rule' => $ruleId,
+                'latest' => [
+                    'year' => $requestedYear,
+                    'month' => $fallbackMonth,
+                ],
+                'series' => [
+                    [
+                        'user' => $userId,
+                        'items' => array_map(static fn ($month) => [
+                            'year' => $month['year'],
+                            'month' => $month['month'],
+                            'label' => sprintf('%04d/%02d', $month['year'], $month['month']),
+                            'score' => null,
+                            'rps' => null,
+                            'rank' => null,
+                            'delta' => null,
+                        ], $monthKeys),
+                    ],
+                ],
+            ]);
+        }
+
+        $targetUsers = [$userId];
+        if ($withRivals) {
+            $targetUsers = array_values(array_unique(array_merge(
+                $targetUsers,
+                $this->getRivalUsers($userId, (int)$latest->target_year, (int)$latest->target_month, $ruleId)
+            )));
+        }
+
+        $monthKeys = $this->recentMonthKeys((int)$latest->target_year, (int)$latest->target_month, $limit);
+        $min = $monthKeys[0];
+
+        $rows = TotalSnapshot::where('rule', $ruleId)
+            ->where('flg', 0)
+            ->whereIn('user', $targetUsers)
+            ->where(static function ($query) use ($min) {
+                $query->where('target_year', '>', $min['year'])
+                    ->orWhere(static function ($q) use ($min) {
+                        $q->where('target_year', $min['year'])
+                            ->where('target_month', '>=', $min['month']);
+                    });
+            })
+            ->orderBy('target_year')
+            ->orderBy('target_month')
+            ->get()
+            ->groupBy('user');
+
+        $series = [];
+        foreach ($targetUsers as $targetUser) {
+            $byMonth = ($rows[$targetUser] ?? collect())->keyBy(static function ($row) {
+                return sprintf('%04d-%02d', $row->target_year, $row->target_month);
+            });
+            $items = [];
+            $previousRps = null;
+            foreach ($monthKeys as $month) {
+                $key = sprintf('%04d-%02d', $month['year'], $month['month']);
+                $row = $byMonth->get($key);
+                $rps = $row ? (int)$row->rps : null;
+                $items[] = [
+                    'year' => $month['year'],
+                    'month' => $month['month'],
+                    'label' => sprintf('%04d/%02d', $month['year'], $month['month']),
+                    'score' => $row ? (int)$row->score : null,
+                    'rps' => $rps,
+                    'rank' => $row ? (int)$row->rank : null,
+                    'delta' => ($rps !== null && $previousRps !== null) ? $rps - $previousRps : null,
+                ];
+                if ($rps !== null) {
+                    $previousRps = $rps;
+                }
+            }
+            $series[] = [
+                'user' => $targetUser,
+                'items' => $items,
+            ];
+        }
+
+        return response()->json([
+            'rule' => $ruleId,
+            'latest' => [
+                'year' => (int)$latest->target_year,
+                'month' => (int)$latest->target_month,
+            ],
+            'series' => $series,
+        ]);
+    }
+
+    public function getMonthlyMnp(): JsonResponse
+    {
+        $targetCount = 12;
+        $latest = TotalSnapshot::where('rule', 0)
+            ->where('flg', 0)
+            ->orderByDesc('target_year')
+            ->orderByDesc('target_month')
+            ->first();
+
+        if (!$latest) {
+            return response()->json([]);
+        }
+
+        $result = [];
+        $baseMonth = Carbon::create((int)$latest->target_year, (int)$latest->target_month, 1);
+
+        for ($i = 0; count($result) < $targetCount && $i < 240; $i++) {
+            $targetMonth = (clone $baseMonth)->subMonthsNoOverflow($i);
+            $current = TotalSnapshot::where('rule', 0)
+                ->where('flg', 0)
+                ->where('target_year', (int)$targetMonth->format('Y'))
+                ->where('target_month', (int)$targetMonth->format('n'))
+                ->get();
+
+            if ($current->isEmpty()) {
+                continue;
+            }
+
+            $previousMonth = (clone $targetMonth)->subMonthNoOverflow();
+            $previous = TotalSnapshot::where('rule', 0)
+                ->where('flg', 0)
+                ->where('target_year', (int)$previousMonth->format('Y'))
+                ->where('target_month', (int)$previousMonth->format('n'))
+                ->pluck('rps', 'user');
+
+            $best = null;
+            foreach ($current as $row) {
+                $delta = (int)$row->rps - (int)($previous[$row->user] ?? 0);
+                if ($best === null || $delta > $best['delta']) {
+                    $best = [
+                        'year' => (int)$row->target_year,
+                        'month' => (int)$row->target_month,
+                        'label' => sprintf('%04d年%02d月', $row->target_year, $row->target_month),
+                        'user' => $row->user,
+                        'rps' => (int)$row->rps,
+                        'previous_rps' => (int)($previous[$row->user] ?? 0),
+                        'delta' => $delta,
+                        'rank' => (int)$row->rank,
+                    ];
+                }
+            }
+
+            if ($best && $best['delta'] > 0) {
+                $result[] = $best;
+            }
+        }
+
+        return response()->json($result);
+    }
+
+    private function getRivalUsers(string $userId, int $year, int $month, int $ruleId): array
+    {
+        $ranking = TotalSnapshot::where('rule', $ruleId)
+            ->where('flg', 0)
+            ->where('target_year', $year)
+            ->where('target_month', $month)
+            ->where('rps', '>', 0)
+            ->orderByDesc('rps')
+            ->orderBy('user')
+            ->get()
+            ->values();
+
+        $index = $ranking->search(static fn ($row) => $row->user === $userId);
+        if ($index === false) {
+            return [];
+        }
+
+        $candidates = $ranking
+            ->map(static function ($row, $position) use ($userId, $index) {
+                return [
+                    'user' => $row->user,
+                    'position' => $position,
+                    'distance' => abs($position - $index),
+                    'is_above' => $position < $index,
+                    'is_eligible' => $row->user !== $userId,
+                ];
+            })
+            ->filter(static fn ($row) => $row['is_eligible'])
+            ->sort(static function ($a, $b) {
+                if ($a['distance'] !== $b['distance']) {
+                    return $a['distance'] <=> $b['distance'];
+                }
+                if ($a['is_above'] !== $b['is_above']) {
+                    return $a['is_above'] ? -1 : 1;
+                }
+                return $a['position'] <=> $b['position'];
+            })
+            ->take(2)
+            ->pluck('user')
+            ->toArray();
+
+        return $candidates;
+    }
+
+    private function recentMonthKeys(int $year, int $month, int $limit): array
+    {
+        $start = Carbon::create($year, $month, 1)->subMonthsNoOverflow($limit - 1);
+        $keys = [];
+        for ($i = 0; $i < $limit; $i++) {
+            $current = (clone $start)->addMonthsNoOverflow($i);
+            $keys[] = [
+                'year' => (int)$current->format('Y'),
+                'month' => (int)$current->format('n'),
+            ];
+        }
+        return $keys;
     }
     public function aggregateScores($array, $mode = "score"): array
     {

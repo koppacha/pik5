@@ -35,6 +35,7 @@ import {toAbsoluteUrl} from "../lib/seo"
 import NextEvent from "../components/top/NextEvent"
 import PickupVideo from "../components/top/PickupVideo"
 import RecentKeywordArticle from "../components/top/RecentKeywordArticle"
+import MonthlyMnp from "../components/top/MonthlyMnp"
 
 export async function getServerSideProps(context) {
     const { getCachedUsers } = await import("../lib/usersCache")
@@ -144,7 +145,7 @@ export default function Home({users, prev}) {
               {(session) &&
                   <WrapTopBox item xs={12} className="wrap-top-box">
                       <TopBox className="top-box">
-                          <DashBoard user={session.user} users={users} />
+                          <DashBoard user={session.user} users={users} simple />
                           <Box style={{
                               borderTop: "1px solid #777",
                               fontSize: "0.8em",
@@ -179,6 +180,16 @@ export default function Home({users, prev}) {
                       </TopBoxHeader>
                       <TopBoxContent className="top-box-content">
                           <TrendRanking/>
+                      </TopBoxContent>
+                  </TopBox>
+              </WrapTopBox>
+              <WrapTopBox item xs={12} className="wrap-top-box">
+                  <TopBox className="top-box">
+                      <TopBoxHeader className="top-box-header">
+                          <span><FontAwesomeIcon icon={faRankingStar}/> 今月のMVP</span>
+                      </TopBoxHeader>
+                      <TopBoxContent className="top-box-content">
+                          <MonthlyMnp users={users}/>
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>

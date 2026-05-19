@@ -42,9 +42,13 @@ class Func extends Facade
         [$console, , $year] = $option;
 
         // 対象年からフィルターする年月日を算出
-        $year = (int)$year + 1;
-        $datetime = new DateTime("{$year}-01-01 00:00:00");
-        $date = $datetime->format("Y-m-d H:i:s");
+        if (is_string($year) && str_contains($year, '-')) {
+            $date = (new DateTime($year))->format("Y-m-d H:i:s");
+        } else {
+            $year = (int)$year + 1;
+            $datetime = new DateTime("{$year}-01-01 00:00:00");
+            $date = $datetime->format("Y-m-d H:i:s");
+        }
         $console_operation = $console ? "=" : ">";
 
         if(is_array($total)){
@@ -65,9 +69,9 @@ class Func extends Facade
         }
 
         try {
-            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
+            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
         } catch (JsonException) {
-            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
+            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
         }
         static $memo = [];
         if (isset($memo[$cacheKey])) {

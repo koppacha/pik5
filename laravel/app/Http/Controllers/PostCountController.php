@@ -56,17 +56,15 @@ class PostCountController extends Controller
         // 現在の日時を取得
         $currentDate = new DateTime();
 
-        // 12ヶ月前の月初の日付を取得
-        $startDate = (clone $currentDate)->modify("-{$trendCount} months")->modify('first day of this month');
-
         // 集計データを格納する配列
         $result = [];
 
-        // 1ヶ月ずつループ
-        for ($i = 1; $i < $trendCount +1; $i++) {
+        // 投稿がある月だけを直近から12件取得する
+        for ($i = 0; count($result) < $trendCount && $i < 240; $i++) {
             // 対象月の月初と月末を計算
-            $startOfMonth = (clone $startDate)->modify("+{$i} months")->format('Y-m-01 00:00:00');
-            $endOfMonth = (clone $startDate)->modify("+{$i} months")->modify('last day of this month')->format('Y-m-d 23:59:59');
+            $targetMonth = (clone $currentDate)->modify("-{$i} months");
+            $startOfMonth = (clone $targetMonth)->format('Y-m-01 00:00:00');
+            $endOfMonth = (clone $targetMonth)->modify('last day of this month')->format('Y-m-d 23:59:59');
 
             // 月ごとの集計を取得
             $monthlyTopStage = Record::select('stage_id')
@@ -81,12 +79,11 @@ class PostCountController extends Controller
                 ->first();
 
             if ($monthlyTopStage) {
-                // 新しい方から表示するため逆順に追加する
-                array_unshift($result, [
-                    'month' => (clone $startDate)->modify("+{$i} months")->format('Y年m月'),
+                $result[] = [
+                    'month' => (clone $targetMonth)->format('Y年m月'),
                     'stage_id' => $monthlyTopStage->stage_id,
                     'cnt' => $monthlyTopStage->cnt,
-                ]);
+                ];
             }
         }
 
