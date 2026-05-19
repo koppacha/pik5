@@ -110,7 +110,7 @@ export default function Stage(param){
             <RenderStagesWrapper>
                 <Grid container wrap="nowrap" columns={{xs: 19}}>
                     {ruleList.map(rule => param.marker.scores[rule] &&
-                        <UserInfoTotalBox style={{whiteSpace: 'nowrap'}} item key={rule} xs={1} series={Number(String(rule).slice(0, 1))}>
+                        <UserInfoTotalBox style={{whiteSpace: 'nowrap'}} key={rule} series={Number(String(rule).slice(0, 1))}>
                             {t.ru[rule]}<br/>
                             <Score score={param.marker.scores[rule]}/><br/>
                             {param.marker.marks[rule]}/{rule2array(rule).length}
@@ -177,9 +177,9 @@ export default function Stage(param){
                 <Typography variant="" className="title">{ param.userName }</Typography><br/>
                 <Typography variant="" className="subtitle">@{param.user}</Typography>
                 <Grid container>
-                    <UserInfoBox item className="user-info-box"><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
-                    <UserInfoBox item className="user-info-box"><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
-                    <UserInfoBox item className="user-info-box">
+                    <UserInfoBox className="user-info-box"><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
+                    <UserInfoBox className="user-info-box">
                         <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                     </UserInfoBox>
                 </Grid>

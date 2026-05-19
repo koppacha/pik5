@@ -4,16 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class Total extends Model
+class TotalSnapshot extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'console',
+        'target_year',
+        'target_month',
+        'snapshot_at',
+        'user',
+        'rule',
         'score',
         'rps',
-        'flg'
+        'mark',
+        'rank',
+        'flg',
     ];
 }

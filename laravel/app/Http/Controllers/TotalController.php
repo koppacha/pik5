@@ -143,7 +143,8 @@ class TotalController extends Controller
         $req = [
             "console" => (int)$request['console'] ?: 0,
             "rule" => (int)$request['rule'] ?: $seriesId,
-            "year" => (int)$request['year'] ?: date("Y")
+            "year" => (int)$request['year'] ?: date("Y"),
+            "snapshot_at" => $request['snapshot_at'] ?? null,
         ];
 
         // ルールの強制置換
@@ -178,11 +179,13 @@ class TotalController extends Controller
         $ranking = [];
 
         // オプション引数を加工する
-        $year = $req["year"] + 1;
         $console_operation = $req["console"] ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
-        $datetime = new DateTime("{$year}-01-01 00:00:00");
+        $year = $req["year"] + 1;
+        $datetime = $req["snapshot_at"]
+            ? new DateTime($req["snapshot_at"])
+            : new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
         // 共通処理ここまで
 

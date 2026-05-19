@@ -37,6 +37,7 @@
     "axios": "1.15.0",
     "babel-plugin-styled-components": "^2.1.4",
     "bcrypt": "^5.1.0",
+    "chart.js": "4.5.1",
     "chalk": "^5.2.0",
     "compressorjs": "^1.2.1",
     "crypto-js": "4.2.0",
