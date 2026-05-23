@@ -12,3 +12,4 @@ redis
 
 # ブランチ統合するまで一時的に追加
 /next/pages/limited/tricks/
+/next/generated/

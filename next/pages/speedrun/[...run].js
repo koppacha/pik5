@@ -13,6 +13,7 @@ import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
+import {buildSpeedrunLeaderboardPath, getSpeedrunConsoleIds} from "../../lib/const";
 
 export async function getStaticPaths(){
     return {
@@ -27,162 +28,13 @@ export async function getStaticProps({params}){
     const stage = query[0]
     const console = query[1] || 0
 
-    let q = ""
-    const consoles = []
+    const q = buildSpeedrunLeaderboardPath(stage, console)
+    const consoles = getSpeedrunConsoleIds(stage)
 
-    switch(Number(stage)){
-        // パーツ全回収
-        case 101:
-            q += "m1zyjx60/category/9kv9y02g"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-onv29rml=klr0dpjl"
-                    break
-                case 2:
-                    q += "?var-onv29rml=21dynz41"
-                    break
-                case 4:
-                    q += "?var-onv29rml=q8kkmnkq"
-                    break
-            }
-            break
-        // ピクミン最小限パーツ全回収
-        case 102:
-            q += "m1zyjx60/category/zd3g682n"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-jlz6mx82=9qj74p3q"
-                    break
-                case 2:
-                    q += "?var-jlz6mx82=jq65x8jl"
-                    break
-                case 4:
-                    q += "?var-jlz6mx82=qoxj872q"
-                    break
-            }
-            break
-        // 借金返済
-        case 201:
-            q += "pdv9zv1w/category/zd3x7ndn"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-yn23w3jl=qyz7vv41"
-                    break
-                case 2:
-                    q += "?var-yn23w3jl=ln8e440l"
-                    break
-                case 4:
-                    q += "?var-yn23w3jl=10v6oowl"
-                    break
-                default:
-                    q += "?var-yn23w3jl=qyz7vv41"
-                    break
-            }
-            break
-        // お宝全回収
-        case 202:
-            q += "pdv9zv1w/category/wdmggxdq"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-6njy5y5n=qj7266eq"
-                    break
-                case 2:
-                    q += "?var-6njy5y5n=lmo2rrj1"
-                    break
-                case 4:
-                    q += "?var-6njy5y5n=1w47vvoq"
-                    break
-                default:
-                    q += "?var-6njy5y5n=qj7266eq"
-                    break
-            }
-            break
-        case 203:
-            consoles.push(1)
-            q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=9qj3noel"
-            break
-        case 204:
-            consoles.push(1)
-            q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=jq6drw31"
-            break
-        case 301:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/rklrvwkn"
-                    break
-                case 4:
-                    q += "76rxq246/category/jdzw1xgd"
-                    break
-                default:
-                    q += "nd27e310/category/rklrvwkn"
-                    break
-            }
-            break
-        case 302:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/9d8gjv7k"
-                    break
-                case 4:
-                    q += "76rxq246/category/02qvy6yd"
-                    break
-                default:
-                    q += "nd27e310/category/9d8gjv7k"
-                    break
-            }
-            break
-        case 303:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/ndx47j2q"
-                    break
-                case 4:
-                    q += "76rxq246/category/82405zwd"
-                    break
-                default:
-                    q += "nd27e310/category/ndx47j2q"
-                    break
-            }
-            break
-        case 311:
-            consoles.push(7)
-            q += "268e3x56/category/z276730d"
-            break
-        case 312:
-            consoles.push(7)
-            q += "268e3x56/category/5dw845nd"
-            break
-        case 313:
-            consoles.push(7)
-            q += "268e3x56/category/ndx9rovd"
-            break
-        case 401:
-            consoles.push(4)
-            q += "m1zk9901/category/rkl8xe62"
-            break
-        case 402:
-            consoles.push(4)
-            q += "m1zk9901/category/wk6gn0od"
-            break
-        case 403:
-            consoles.push(4)
-            q += "m1zk9901/category/zd3mxpv2"
-            break
-        case 404:
-            consoles.push(4)
-            q += "m1zk9901/category/n2y6oe7d"
-            break
-        case 405:
-            consoles.push(4)
-            q += "m1zk9901/category/n2y69pmd"
-            break
+    if (!q) {
+        return {
+            notFound: true,
+        }
     }
     // ステージ情報をリクエスト
     const res = await fetch(`https://www.speedrun.com/api/v1/leaderboards/${q}`)

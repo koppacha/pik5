@@ -15,15 +15,19 @@ const extractYouTubeId = (value) => {
         const url = new URL(value)
         const host = url.hostname.replace(/^www\./, "")
 
+        let id = null
+
         if (host === "youtu.be") {
-            return url.pathname.split("/").filter(Boolean)[0] || null
+            id = url.pathname.split("/").filter(Boolean)[0] || null
         }
 
         if (host === "youtube.com" || host === "m.youtube.com") {
-            if (url.pathname === "/watch") return url.searchParams.get("v")
-            if (url.pathname.startsWith("/shorts/")) return url.pathname.split("/")[2] || null
-            if (url.pathname.startsWith("/embed/")) return url.pathname.split("/")[2] || null
+            if (url.pathname === "/watch") id = url.searchParams.get("v")
+            if (url.pathname.startsWith("/shorts/")) id = url.pathname.split("/")[2] || null
+            if (url.pathname.startsWith("/embed/")) id = url.pathname.split("/")[2] || null
         }
+
+        return /^[A-Za-z0-9_-]{11}$/.test(id || "") ? id : null
     } catch {
         return null
     }
@@ -153,12 +157,14 @@ export default function PickupVideo({users}) {
 
     const handleVideoError = () => {
         if (!nextVideo) {
+            setQueue((current) => current.filter((_record, index) => index !== currentIndex))
+            setCurrentIndex((index) => Math.max(0, Math.min(index, queue.length - 2)))
             setIsVideoLoading(false)
             return
         }
 
+        setQueue((current) => current.filter((_record, index) => index !== currentIndex))
         setIsVideoLoading(true)
-        setCurrentIndex((index) => index + 1)
     }
 
     return (

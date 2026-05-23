@@ -4,6 +4,7 @@ import NowLoading from "../NowLoading"
 import Record from "./Record"
 import * as React from "react"
 import {getSpeedrunUserCache, setSpeedrunUserCache} from "../../lib/speedrunUserCache"
+import {speedrunPlatformConsoleMap} from "../../lib/const"
 
 const SPEEDRUN_CACHE_TTL_MS = 90 * 24 * 60 * 60 * 1000
 
@@ -52,9 +53,7 @@ export default function SpeedRunWrapper({post, rank, index}){
     // 証拠動画の有無をチェックして、存在するならURLを取得
     const video = post.run.videos?.links?.length > 0 ? post.run.videos.links[0].uri : null
 
-    // 操作方法を取得する。取得用配列はNGC, Wii, Wii U, Switch, Switch 2
-    const consoles = ["4p9z06rn", "v06dk3e4", "8gejn93d" , "7m6ylw9p", "3167lw9q", null, null, null, null, null, null, "v06dr394"]
-    const cnsl = String(consoles.indexOf(post.run.system.platform) + 1)
+    const cnsl = String(speedrunPlatformConsoleMap[post.run.system.platform] ?? 0)
 
     const data = {
         category: "speedrun",

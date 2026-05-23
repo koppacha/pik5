@@ -11,12 +11,15 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class UserTotalController extends Controller
 {
     private const CONSOLE_CATEGORY_RULES = [10, 20, 30];
+    private const RECOMMEND_RULES = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
+    private const NORMAL_RECOMMEND_RULES = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
     /**
      * Display a listing of the resource.
      *
@@ -235,6 +238,270 @@ class UserTotalController extends Controller
         $payload = $rankedTotals->toArray();
         // 結果をJSON形式で返す
         return response()->json($payload);
+    }
+
+    public function getDashboardSummary(Request $request): JsonResponse
+    {
+        $userId = (string)$request['id'];
+        $latest = $this->getLatestRecordSummary($userId);
+        $recommend = Cache::remember(
+            'user:dashboard-summary:recommend:v3:' . $userId,
+            3600,
+            fn () => $this->getRecommendedStageSummary($userId)
+        );
+        $recommend = $this->withPersonalBestSummary($recommend, $userId);
+
+        return response()->json([
+            'latest' => $latest,
+            'recommend' => $recommend,
+            'hasTotalRankingRecords' => $latest !== null,
+        ]);
+    }
+
+    private function getLatestRecordSummary(string $userId): ?array
+    {
+        $record = $this->getLatestRecord($userId);
+
+        return $record ? $this->formatRecordSummary($record) : null;
+    }
+
+    private function getLatestRecord(string $userId): ?Record
+    {
+        return Record::where('user_id', $userId)
+            ->where('rule', '<', 100)
+            ->where('stage_id', '<', 1000)
+            ->where('flg', '<', 2)
+            ->orderByDesc('created_at')
+            ->orderByDesc('post_id')
+            ->first();
+    }
+
+    private function getRecommendedStageSummary(string $userId): ?array
+    {
+        $hasRecords = Record::where('user_id', $userId)
+            ->where('rule', '<', 100)
+            ->where('flg', '<', 2)
+            ->exists();
+
+        if (!$hasRecords) {
+            return $this->randomUnpostedStageSummary(self::NORMAL_RECOMMEND_RULES, $userId);
+        }
+
+        $rule = $this->strongestSnapshotRule($userId);
+        if ($rule !== null) {
+            $stale = $this->stalePostedStageSummary($userId, $rule);
+            if ($stale) {
+                return $stale;
+            }
+        }
+
+        $latestRuleRecommendation = $this->latestRuleRecommendedStageSummary($userId);
+        if ($latestRuleRecommendation) {
+            return $latestRuleRecommendation;
+        }
+
+        $postedRules = Record::where('user_id', $userId)
+            ->where('rule', '<', 100)
+            ->where('flg', '<', 2)
+            ->whereIn('rule', self::RECOMMEND_RULES)
+            ->distinct()
+            ->pluck('rule')
+            ->map(static fn ($rule) => (int)$rule)
+            ->values()
+            ->toArray();
+
+        return $this->randomUnpostedStageSummary($postedRules, $userId)
+            ?? $this->randomUnpostedStageSummary(self::NORMAL_RECOMMEND_RULES, $userId);
+    }
+
+    private function strongestSnapshotRule(string $userId): ?int
+    {
+        $latest = TotalSnapshot::where('user', $userId)
+            ->where('flg', 0)
+            ->whereIn('rule', self::RECOMMEND_RULES)
+            ->orderByDesc('target_year')
+            ->orderByDesc('target_month')
+            ->first();
+
+        if (!$latest) {
+            return null;
+        }
+
+        $latestRows = TotalSnapshot::where('user', $userId)
+            ->where('flg', 0)
+            ->where('target_year', (int)$latest->target_year)
+            ->where('target_month', (int)$latest->target_month)
+            ->whereIn('rule', self::RECOMMEND_RULES)
+            ->get()
+            ->keyBy('rule');
+
+        $previousRows = TotalSnapshot::where('user', $userId)
+            ->where('flg', 0)
+            ->where('target_year', (int)$latest->target_year - 1)
+            ->where('target_month', (int)$latest->target_month)
+            ->whereIn('rule', self::RECOMMEND_RULES)
+            ->get()
+            ->keyBy('rule');
+
+        $deltas = [];
+        foreach ($latestRows as $rule => $row) {
+            $previous = $previousRows->get($rule);
+            if (!$previous) {
+                continue;
+            }
+            $deltas[] = [
+                'rule' => (int)$rule,
+                'delta' => (int)$row->rps - (int)$previous->rps,
+            ];
+        }
+
+        if (!$deltas) {
+            return null;
+        }
+
+        $max = max(array_column($deltas, 'delta'));
+        $candidates = array_values(array_filter($deltas, static fn ($row) => $row['delta'] === $max));
+        return $candidates[array_rand($candidates)]['rule'];
+    }
+
+    private function stalePostedStageSummary(string $userId, int $rule): ?array
+    {
+        $stages = TotalController::stage_list((string)$rule);
+        if (!$stages) {
+            return null;
+        }
+
+        $records = Record::where('user_id', $userId)
+            ->where('rule', $rule)
+            ->whereIn('stage_id', $stages)
+            ->where('flg', '<', 2)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('stage_id')
+            ->map(static fn ($rows) => $rows->sortByDesc('created_at')->first())
+            ->sortBy('created_at')
+            ->values();
+
+        $candidates = $records->slice(2, 5)->values();
+        if ($candidates->count() < 5) {
+            return null;
+        }
+
+        return $this->formatRecordSummary($candidates->random());
+    }
+
+    private function latestRuleRecommendedStageSummary(string $userId): ?array
+    {
+        $latestRecord = $this->getLatestRecord($userId);
+        if (!$latestRecord) {
+            return null;
+        }
+
+        $rule = (int)$latestRecord->rule;
+        return $this->randomUnpostedStageSummary([$rule], $userId)
+            ?? $this->oldestPersonalBestStageSummary($userId, $rule);
+    }
+
+    private function oldestPersonalBestStageSummary(string $userId, int $rule): ?array
+    {
+        $stages = TotalController::stage_list((string)$rule);
+        if (!$stages) {
+            return null;
+        }
+
+        $scoreOrder = in_array($rule, [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $records = Record::where('user_id', $userId)
+            ->where('rule', $rule)
+            ->whereIn('stage_id', $stages)
+            ->where('flg', '<', 2)
+            ->orderBy('score', $scoreOrder)
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('stage_id')
+            ->map(static fn ($rows) => $rows->first())
+            ->sortBy('created_at')
+            ->values();
+
+        return $records->isNotEmpty() ? $this->formatRecordSummary($records->first()) : null;
+    }
+
+    private function randomUnpostedStageSummary(array $rules, string $userId): ?array
+    {
+        $candidates = [];
+        foreach ($rules as $rule) {
+            $rule = (int)$rule;
+            $stages = TotalController::stage_list((string)$rule);
+            if (!$stages) {
+                continue;
+            }
+
+            $postedStages = Record::where('user_id', $userId)
+                ->where('rule', $rule)
+                ->whereIn('stage_id', $stages)
+                ->where('flg', '<', 2)
+                ->distinct()
+                ->pluck('stage_id')
+                ->map(static fn ($stage) => (int)$stage)
+                ->toArray();
+
+            foreach (array_values(array_diff($stages, $postedStages)) as $stage) {
+                $candidates[] = [
+                    'stage_id' => (int)$stage,
+                    'rule' => $rule,
+                    'console' => 0,
+                    'score' => null,
+                    'created_at' => null,
+                ];
+            }
+        }
+
+        return $candidates ? $candidates[array_rand($candidates)] : null;
+    }
+
+    private function withPersonalBestSummary(?array $summary, string $userId): ?array
+    {
+        if (!$summary || !isset($summary['stage_id'], $summary['rule'])) {
+            return $summary;
+        }
+
+        $record = $this->getPersonalBestRecord(
+            $userId,
+            (int)$summary['stage_id'],
+            (int)$summary['rule']
+        );
+
+        if (!$record) {
+            return array_merge($summary, [
+                'score' => null,
+                'created_at' => null,
+            ]);
+        }
+
+        return $this->formatRecordSummary($record);
+    }
+
+    private function getPersonalBestRecord(string $userId, int $stageId, int $rule): ?Record
+    {
+        $scoreOrder = in_array($rule, [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+
+        return Record::where('user_id', $userId)
+            ->where('stage_id', $stageId)
+            ->where('rule', $rule)
+            ->where('flg', '<', 2)
+            ->orderBy('score', $scoreOrder)
+            ->orderBy('created_at')
+            ->first();
+    }
+
+    private function formatRecordSummary(Record $record): array
+    {
+        return [
+            'stage_id' => (int)$record->stage_id,
+            'rule' => (int)$record->rule,
+            'console' => (int)$record->console,
+            'score' => is_numeric($record->score) ? (int)$record->score : null,
+            'created_at' => $record->created_at,
+        ];
     }
 
     private function getCategoryRanks(string $userId, array $rules): array

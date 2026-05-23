@@ -10,6 +10,9 @@ export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 
 // ユーザーページ等で選択可能なルールID
 export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 91]
 
+// 全総合ランキング集計対象のルールID
+export const totalRankingRules = [10, 11, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
+
 // ルールIDから配列に変換する関数
 export function rule2array(rule){
     const number = [1, 2, 3, 10, 11, 20, 21, 22, 23, 24, 25, 29, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
@@ -126,6 +129,147 @@ export const ni = range(429, 444)
 
 // 本編RTA（Speedrun.com）
 export const sp = [101, 102, 201, 202, 203, 204, 301, 302, 303, 311, 312, 313, 401, 402, 403, 404, 405]
+
+export const speedrunPlatformConsoleMap = {
+    "4p9z06rn": 1,
+    "v06dk3e4": 2,
+    "8gejn93d": 3,
+    "7m6ylw9p": 4,
+    "3167lw9q": 5,
+    "v06dr394": 12,
+}
+
+export const speedrunStageConfigs = {
+    101: {
+        consoles: {
+            1: {gameId: "m1zyjx60", categoryId: "9kv9y02g", variables: {"var-onv29rml": "klr0dpjl"}},
+            2: {gameId: "m1zyjx60", categoryId: "9kv9y02g", variables: {"var-onv29rml": "21dynz41"}},
+            4: {gameId: "m1zyjx60", categoryId: "9kv9y02g", variables: {"var-onv29rml": "q8kkmnkq"}},
+        },
+    },
+    102: {
+        consoles: {
+            1: {gameId: "m1zyjx60", categoryId: "zd3g682n", variables: {"var-jlz6mx82": "9qj74p3q"}},
+            2: {gameId: "m1zyjx60", categoryId: "zd3g682n", variables: {"var-jlz6mx82": "jq65x8jl"}},
+            4: {gameId: "m1zyjx60", categoryId: "zd3g682n", variables: {"var-jlz6mx82": "qoxj872q"}},
+        },
+    },
+    201: {
+        consoles: {
+            1: {gameId: "pdv9zv1w", categoryId: "zd3x7ndn", variables: {"var-yn23w3jl": "qyz7vv41"}},
+            2: {gameId: "pdv9zv1w", categoryId: "zd3x7ndn", variables: {"var-yn23w3jl": "ln8e440l"}},
+            4: {gameId: "pdv9zv1w", categoryId: "zd3x7ndn", variables: {"var-yn23w3jl": "10v6oowl"}},
+        },
+    },
+    202: {
+        consoles: {
+            1: {gameId: "pdv9zv1w", categoryId: "wdmggxdq", variables: {"var-6njy5y5n": "qj7266eq"}},
+            2: {gameId: "pdv9zv1w", categoryId: "wdmggxdq", variables: {"var-6njy5y5n": "lmo2rrj1"}},
+            4: {gameId: "pdv9zv1w", categoryId: "wdmggxdq", variables: {"var-6njy5y5n": "1w47vvoq"}},
+        },
+    },
+    203: {
+        consoles: {
+            1: {gameId: "pdv9zv1w", categoryId: "jdrw35xk", variables: {"var-ylqomdm8": "9qj3noel"}},
+        },
+    },
+    204: {
+        consoles: {
+            1: {gameId: "pdv9zv1w", categoryId: "jdrw35xk", variables: {"var-ylqomdm8": "jq6drw31"}},
+        },
+    },
+    301: {
+        consoles: {
+            3: {gameId: "nd27e310", categoryId: "rklrvwkn"},
+            4: {gameId: "76rxq246", categoryId: "jdzw1xgd"},
+        },
+    },
+    302: {
+        consoles: {
+            3: {gameId: "nd27e310", categoryId: "9d8gjv7k"},
+            4: {gameId: "76rxq246", categoryId: "02qvy6yd"},
+        },
+    },
+    303: {
+        consoles: {
+            3: {gameId: "nd27e310", categoryId: "ndx47j2q"},
+            4: {gameId: "76rxq246", categoryId: "82405zwd"},
+        },
+    },
+    311: {
+        consoles: {
+            7: {gameId: "268e3x56", categoryId: "z276730d"},
+        },
+    },
+    312: {
+        consoles: {
+            7: {gameId: "268e3x56", categoryId: "5dw845nd"},
+        },
+    },
+    313: {
+        consoles: {
+            7: {gameId: "268e3x56", categoryId: "ndx9rovd"},
+        },
+    },
+    401: {
+        consoles: {
+            4: {gameId: "m1zk9901", categoryId: "rkl8xe62"},
+        },
+    },
+    402: {
+        consoles: {
+            4: {gameId: "m1zk9901", categoryId: "wk6gn0od"},
+        },
+    },
+    403: {
+        consoles: {
+            4: {gameId: "m1zk9901", categoryId: "zd3mxpv2"},
+        },
+    },
+    404: {
+        consoles: {
+            4: {gameId: "m1zk9901", categoryId: "n2y6oe7d"},
+        },
+    },
+    405: {
+        consoles: {
+            4: {gameId: "m1zk9901", categoryId: "n2y69pmd"},
+        },
+    },
+}
+
+export function getSpeedrunConsoleIds(stage) {
+    const config = speedrunStageConfigs[Number(stage)]
+    return config ? Object.keys(config.consoles).map(Number) : []
+}
+
+export function getSpeedrunStageConfig(stage, consoleId = 0) {
+    const config = speedrunStageConfigs[Number(stage)]
+    if (!config) return null
+
+    const consoles = getSpeedrunConsoleIds(stage)
+    const selectedConsole = Number(consoleId) && config.consoles[Number(consoleId)]
+        ? Number(consoleId)
+        : consoles[0]
+
+    return {
+        stage: Number(stage),
+        console: selectedConsole,
+        ...config.consoles[selectedConsole],
+    }
+}
+
+export function buildSpeedrunLeaderboardPath(stage, consoleId = 0) {
+    const config = getSpeedrunStageConfig(stage, consoleId)
+    if (!config) return null
+
+    const params = new URLSearchParams(config.variables ?? {})
+    return `${config.gameId}/category/${config.categoryId}${params.toString() ? `?${params.toString()}` : ""}`
+}
+
+export function speedrunStageSeries(stage) {
+    return Math.floor(Number(stage) / 100)
+}
 
 // 期間限定総合・参加者企画
 export const lm = [151101, 160306, 160319, 160423, 160430, 160806, 170101, 170211, 170325, 170429, 171013, 180101, 180901, 190209, 190321, 190802, 200723, 200918, 210829, 211105, 221008]

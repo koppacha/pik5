@@ -88,6 +88,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get('user/rank/{id}', [UserTotalController::class, 'getTotalsTables']);
     Route::get('user/rps-history/{id}/{rule?}', [UserTotalController::class, 'getRpsHistory']);
     Route::get('user/monthly-mnp', [UserTotalController::class, 'getMonthlyMnp']);
+    Route::get('user/dashboard-summary/{id}', [UserTotalController::class, 'getDashboardSummary']);
 });
 // キーワード関連API
 Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {

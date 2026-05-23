@@ -32,7 +32,7 @@ export function sec2time(sec){
 export const convertToSeconds = (timeString) => {
 
     // Stepsが効かない端末ではhoursを強制的に補完する
-    const hour = (timeString.match(/:/g) || []).length < 2 ? "00:" : ""
+    const hour = (timeString?.match(/:/g) || []).length < 2 ? "00:" : ""
 
     const [hours, minutes, seconds] = (hour + timeString).split(':');
     return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);

@@ -11,6 +11,7 @@ import {
     Container,
     Divider,
     FormControlLabel,
+    MenuItem,
     Paper,
     Stack,
     Switch,
@@ -19,6 +20,7 @@ import {
 } from '@mui/material'
 import {maskEmailAddress, useLocale} from "../../lib/pik5";
 import SeoHead from "../../components/SeoHead"
+import {totalRankingRules} from "../../lib/const"
 import {
     isBrowserNotificationEnabled,
     RECORD_BROWSER_NOTIFICATION_ENABLED_KEY,
@@ -81,6 +83,27 @@ export default function AuthConfigPage() {
         setNotificationLoaded(true)
     }, [])
 
+    useEffect(() => {
+        if (!session) return
+
+        let active = true
+        fetch('/api/auth/user-settings')
+            .then(res => res.json())
+            .then(data => {
+                if (!active || !data?.ok) return
+                setSrcUserId(data.srcUserId ?? '')
+                setSavedSrcUserId(data.srcUserId ?? '')
+                setUserCatSelect(Number(data.userCatSelect || 0))
+            })
+            .catch(() => {
+                if (active) setSettingsErr('設定の取得に失敗しました')
+            })
+
+        return () => {
+            active = false
+        }
+    }, [session])
+
     const [email, setEmail] = useState('')
     const [otpSent, setOtpSent] = useState(false)
     const [otp, setOtp] = useState('')
@@ -92,6 +115,12 @@ export default function AuthConfigPage() {
     const [notificationLoaded, setNotificationLoaded] = useState(false)
     const [notificationMsg, setNotificationMsg] = useState(null)
     const [notificationErr, setNotificationErr] = useState(null)
+    const [srcUserId, setSrcUserId] = useState('')
+    const [savedSrcUserId, setSavedSrcUserId] = useState('')
+    const [userCatSelect, setUserCatSelect] = useState(0)
+    const [settingsBusy, setSettingsBusy] = useState(false)
+    const [settingsMsg, setSettingsMsg] = useState(null)
+    const [settingsErr, setSettingsErr] = useState(null)
 
     // 「もう一度送信」は、少なくとも一度「送信」を押した後に活性化する
     const [otpSendAttempted, setOtpSendAttempted] = useState(false)
@@ -308,6 +337,48 @@ export default function AuthConfigPage() {
         }
     }
 
+    const patchUserSettings = async (payload) => {
+        setSettingsBusy(true)
+        setSettingsMsg(null)
+        setSettingsErr(null)
+        try {
+            const res = await fetch('/api/auth/user-settings', {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(payload),
+            })
+            const data = await res.json().catch(() => null)
+            if (!res.ok || !data?.ok) {
+                setSettingsErr(data?.message ?? '設定の保存に失敗しました')
+                return null
+            }
+            setSrcUserId(data.srcUserId ?? '')
+            setSavedSrcUserId(data.srcUserId ?? '')
+            setUserCatSelect(Number(data.userCatSelect || 0))
+            setSettingsMsg('設定を保存しました')
+            return data
+        } catch (e) {
+            setSettingsErr('通信に失敗しました')
+            return null
+        } finally {
+            setSettingsBusy(false)
+        }
+    }
+
+    const saveSpeedrunUser = async () => {
+        await patchUserSettings({srcUserId})
+    }
+
+    const deleteSpeedrunUser = async () => {
+        await patchUserSettings({srcUserId: ''})
+    }
+
+    const changeUserCatSelect = async (event) => {
+        const value = Number(event.target.value || 0)
+        setUserCatSelect(value)
+        await patchUserSettings({userCatSelect: value})
+    }
+
     if (status === 'loading') {
         return (
             <>
@@ -335,7 +406,7 @@ export default function AuthConfigPage() {
                 noindex={true}
             />
             <Backdrop
-                open={Boolean(submitting || emailBusy)}
+                open={Boolean(submitting || emailBusy || settingsBusy)}
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
             >
                 <CircularProgress color="inherit" />
@@ -408,6 +479,80 @@ export default function AuthConfigPage() {
                         <Typography variant="caption" color="text.secondary">
                             OFF にした場合も、ブラウザ自体の通知権限は解除されません。
                         </Typography>
+                    </Stack>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        Speedrun.comユーザー名
+                    </Typography>
+
+                    {settingsErr && (
+                        <Alert severity="error" sx={{ mb: 2 }}>
+                            {settingsErr}
+                        </Alert>
+                    )}
+                    {settingsMsg && (
+                        <Alert severity="success" sx={{ mb: 2 }}>
+                            {settingsMsg}
+                        </Alert>
+                    )}
+
+                    <Stack spacing={2}>
+                        <TextField
+                            label="Speedrun.comユーザー名"
+                            value={srcUserId}
+                            onChange={(e) => setSrcUserId(e.target.value)}
+                            fullWidth
+                            helperText="保存時にSpeedrun.comで存在確認します"
+                        />
+
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                            <Button
+                                type="button"
+                                onClick={saveSpeedrunUser}
+                                disabled={settingsBusy || srcUserId.trim() === savedSrcUserId}
+                                variant="contained"
+                                size="large"
+                                fullWidth
+                            >
+                                {t.g.submit}
+                            </Button>
+                            <Button
+                                type="button"
+                                onClick={deleteSpeedrunUser}
+                                disabled={settingsBusy || !savedSrcUserId}
+                                variant="outlined"
+                                size="large"
+                                fullWidth
+                            >
+                                削除
+                            </Button>
+                        </Stack>
+                    </Stack>
+                </Paper>
+
+                <Paper variant="outlined" sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2 }}>
+                        各種設定
+                    </Typography>
+
+                    <Stack spacing={2}>
+                        <TextField
+                            select
+                            label="プロフィールのデフォルトカテゴリ"
+                            value={userCatSelect}
+                            onChange={changeUserCatSelect}
+                            fullWidth
+                            helperText="変更すると自動で保存されます"
+                        >
+                            <MenuItem value={0}>未設定</MenuItem>
+                            {totalRankingRules.map(rule => (
+                                <MenuItem key={rule} value={rule}>
+                                    {t.rule?.[rule] ?? rule}
+                                </MenuItem>
+                            ))}
+                        </TextField>
                     </Stack>
                 </Paper>
 

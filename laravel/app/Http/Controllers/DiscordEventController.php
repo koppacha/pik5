@@ -24,10 +24,10 @@ class DiscordEventController extends Controller
         }
 
         $cacheSeconds = max((int) config('services.discord.events_cache_seconds', 120), 30);
-        $cacheKey = 'discord:guild_scheduled_events:' . $guildId;
+        $cacheKey = 'discord:guild_scheduled_events:v2:' . $guildId;
 
         try {
-            $events = Cache::remember($cacheKey, $cacheSeconds, static function () use ($botToken, $guildId) {
+            $result = Cache::remember($cacheKey, $cacheSeconds, static function () use ($botToken, $guildId) {
                 $response = Http::timeout(5)
                     ->acceptJson()
                     ->withToken($botToken, 'Bot')
@@ -40,10 +40,10 @@ class DiscordEventController extends Controller
                         'status' => $response->status(),
                     ]);
 
-                    return null;
+                    return ['ok' => false, 'event' => null];
                 }
 
-                return collect($response->json())
+                $event = collect($response->json())
                     ->filter(static function (array $event) {
                         return in_array((int) ($event['status'] ?? 0), [1, 2], true);
                     })
@@ -68,15 +68,17 @@ class DiscordEventController extends Controller
                     })
                     ->values()
                     ->first();
+
+                return ['ok' => true, 'event' => $event];
             });
 
-            if ($events === null) {
+            if (!($result['ok'] ?? false)) {
                 return response()->json([
                     'message' => 'Discord events are not available.',
                 ], 502);
             }
 
-            return response()->json($events);
+            return response()->json($result['event']);
         } catch (Throwable $e) {
             Log::warning('Discord events API request threw an exception.', [
                 'exception' => get_class($e),
