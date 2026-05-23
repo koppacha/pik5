@@ -50,6 +50,8 @@ model User {
   emailHash          String?              @unique
   emailVerified      DateTime?
   password           String?              @db.VarChar(255)
+  srcUserId          String?              @db.VarChar(191)
+  userCatSelect      Int?
   accounts           Account[]
   sessions           Session[]
   date               DateTime             @default(now())

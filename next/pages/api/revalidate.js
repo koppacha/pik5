@@ -1,3 +1,6 @@
+import prisma from "../../lib/prisma"
+import {clearSpeedrunCacheForUsername} from "../../lib/speedrunRecords"
+
 // キャッシュを削除するAPI
 export default async function handler(req, res) {
     // const { authorization } = req.headers
@@ -10,6 +13,13 @@ export default async function handler(req, res) {
         try {
             // ページ種別とステージIDは必須
             if(id && page){
+                if (page === "user") {
+                    const user = await prisma.user.findFirst({
+                        where: {userId: String(id)},
+                        select: {srcUserId: true},
+                    })
+                    clearSpeedrunCacheForUsername(user?.srcUserId)
+                }
                 const targets = [`/${page}/${id}`]
                 await Promise.all(targets.map((target) => res.revalidate(target)))
             }

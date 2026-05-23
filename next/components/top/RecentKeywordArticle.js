@@ -2,25 +2,29 @@ import Link from "next/link"
 import {Box, Typography} from "@mui/material"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {faNewspaper} from "@fortawesome/free-solid-svg-icons"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
 import useSWR from "swr"
 import {dateFormat, fetcher} from "../../lib/pik5"
 import {TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
 
-const stripImages = (value) => String(value || "")
+const buildPlainText = (value) => String(value || "")
     .replace(/<!--[\s\S]*?-->/g, "")
     .replace(/!\[[^\]]*]\([^)]*\)/g, "")
     .replace(/!\[[^\]]*]/g, "")
     .replace(/<img\b[^>]*>/gi, "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\[([^\]]+)]\([^)]*\)/g, "$1")
+    .replace(/[`*_~>#-]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
 
 const truncateText = (value, maxLength = 200) => {
-    if (value.length <= maxLength) return value
+    if (!value) return ""
+    if (value.length <= maxLength) return `${value}...`
 
     return value.slice(0, maxLength - 3) + "..."
 }
 
-const buildPreview = (value) => truncateText(stripImages(value).trim())
+const buildPreview = (value) => truncateText(buildPlainText(value))
 
 export default function RecentKeywordArticle() {
     const {data, error} = useSWR("/api/server/keyword/resolve/recent", fetcher)
@@ -107,15 +111,7 @@ export default function RecentKeywordArticle() {
                         overflowWrap: "anywhere",
                     }}
                 >
-                    <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        components={{
-                            a: ({children}) => <span style={{textDecoration: "underline"}}>{children}</span>,
-                            img: () => null,
-                        }}
-                    >
-                        {preview || "本文はありません。"}
-                    </ReactMarkdown>
+                    {preview || "本文はありません。"}
                 </Box>
                 <Box style={{display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", fontSize: "0.86em", marginTop: "10px"}}>
                     <Box style={{minWidth: 0}}>

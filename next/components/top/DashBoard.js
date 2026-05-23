@@ -7,11 +7,12 @@ import {CellBox, EventContainer, EventContent, SeriesTheme, TopBoxContent, TopBo
 import {basePoints, rule2array, selectable, stageCounts} from "../../lib/const";
 import Link from "next/link";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCircleInfo, faCircleQuestion, faFlag, faRankingStar, faStar} from "@fortawesome/free-solid-svg-icons";
+import {faCircleInfo, faCircleQuestion, faFlag, faHouseUser, faRankingStar, faStar, faWrench} from "@fortawesome/free-solid-svg-icons";
 import GradientLine from "./GradientLine";
 import RankPointHistoryChart from "./RankPointHistoryChart";
+import {score2str} from "../../lib/factory";
 
-export default function DashBoard({user, users, simple = false}){
+export default function DashBoard({user, users, simple = false, speedrunRecords = []}){
 
     const {t, locale} = useLocale()
     const [open, setOpen] = useState(false)
@@ -19,6 +20,13 @@ export default function DashBoard({user, users, simple = false}){
     const {data} = useSWR(`/api/server/user/total/${user?.id}`, fetcher)
     const {data:totalRanking} = useSWR(`/api/server/user/rank/0`, fetcher)
     const {data:rpsHistory} = useSWR(simple ? `/api/server/user/rps-history/${user?.id}/0` : null, fetcher)
+    const {data:speedrunResponse} = useSWR(!simple ? `/api/user/speedrun-records?userId=${user?.id}` : null, fetcher)
+    const {data:dashboardSummary} = useSWR(simple ? `/api/server/user/dashboard-summary/${user?.id}` : null, fetcher)
+
+    // 順位を包括する関数
+    function outputRank(rank){
+        return t.g.rankHead + String(rank) + t.g.rankTail
+    }
 
     if(!data || !totalRanking){
         return (
@@ -57,6 +65,8 @@ export default function DashBoard({user, users, simple = false}){
         : getSurroundingRanking(totalRanking?.data, user?.id, totalRps, (basePoints[cls + 1] * stageCnt))
     const latestHistory = rpsHistory?.data?.series?.[0]?.items?.filter(item => item.rps !== null).at(-1)
     const rpsDelta = latestHistory?.delta
+    const displayedSpeedrunRecords = speedrunResponse?.records ?? speedrunRecords
+    const summary = dashboardSummary?.data ?? {}
 
     // 前後プレイヤー５名を抽出する関数
     function getSurroundingRanking(totalRanking, userId, userRps, checkPoint = 0) {
@@ -122,6 +132,16 @@ export default function DashBoard({user, users, simple = false}){
     const consoleCategoryRules = [10, 20, 30]
     const smallMetaStyle = {fontSize: "0.85em"}
     const rankStarStyle = {color: "var(--color-rank-1-border)"}
+    const speedrunStarStyle = {color: "#f5c542"}
+    const formatSpeedrunTime = (seconds) => {
+        const total = Math.floor(Number(seconds || 0))
+        const h = Math.floor(total / 3600)
+        const m = Math.floor((total % 3600) / 60)
+        const s = total % 60
+        return h > 0
+            ? `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
+            : `${m}:${String(s).padStart(2, "0")}`
+    }
     const renderCategoryMeta = ({marks, stageCount, rank = null, participants = null}) => (
         <>
             {marks >= stageCount && <FontAwesomeIcon icon={faStar} style={{color: "#fff"}} />}
@@ -129,7 +149,7 @@ export default function DashBoard({user, users, simple = false}){
             {rank !== null && (
                 <>
                     {" - "}
-                    {rank ? `${rank}位` : "-位"}<span style={smallMetaStyle}>/{participants ?? "-"}</span>
+                    {outputRank(rank ?? "-")}<span style={smallMetaStyle}>/{participants ?? "-"}</span>
                     {rank === 1 && <FontAwesomeIcon icon={faStar} style={rankStarStyle} />}
                 </>
             )}
@@ -184,6 +204,131 @@ export default function DashBoard({user, users, simple = false}){
             </CellBox>
         </Link>
     )
+    const renderSpeedrunCell = (record) => (
+        <Link href={record.url} target="_blank" rel="noopener noreferrer" style={categoryLinkStyle}>
+            <CellBox className="cell-box" style={categoryCellBoxStyle}>
+                <GradientLine baseColor={SeriesTheme(record.series)} />
+                <span className="cell-box-caption">
+                    {t.speedrun?.s?.[record.stage] ?? `#${record.stage}`} / {t.cnsl?.[record.console] ?? record.console}
+                </span><br/>
+                {formatSpeedrunTime(record.time)}<br/>
+                <span className="cell-box-caption">
+                    {outputRank(record.rank)}<span style={smallMetaStyle}>/{record.participants}</span>
+                    {record.rank === 1 && <FontAwesomeIcon icon={faStar} style={speedrunStarStyle} />}
+                </span>
+            </CellBox>
+        </Link>
+    )
+    const stageHref = (record) => {
+        if (!record?.stage_id) {
+            return "/"
+        }
+        if ((record.rule ?? 0) < 100) {
+            return `/stage/${record.stage_id}`
+        }
+        return `/stage/${record.stage_id}/${record.console ?? 0}/${record.rule}/${currentYear()}`
+    }
+    const renderStageActionCell = (record, caption) => (
+        <Link href={stageHref(record)} style={categoryLinkStyle}>
+            <CellBox className="cell-box" style={categoryCellBoxStyle}>
+                <GradientLine baseColor={record?.stage_id ? SeriesTheme(Math.floor(Number(record.stage_id) / 100)) : "#ccc"} />
+                <span className="cell-box-caption">{record?.stage_id ? t.stage?.[record.stage_id] ?? `#${record.stage_id}` : "-"}</span><br/>
+                {record?.score !== null && record?.score !== undefined
+                    ? score2str(record.score, record.rule, record.stage_id)
+                    : "未投稿"
+                }<br/>
+                <span className="cell-box-caption">{caption}</span>
+            </CellBox>
+        </Link>
+    )
+    const renderSimpleNavCell = ({href, icon, label}) => (
+        <Link href={href} style={categoryLinkStyle}>
+            <CellBox className="cell-box" style={categoryCellBoxStyle}>
+                <GradientLine baseColor={"#ccc"} />
+                <span className="cell-box-caption"><FontAwesomeIcon icon={icon} /></span><br/>
+                {label}<br/>
+                <span className="cell-box-caption">&nbsp;</span>
+            </CellBox>
+        </Link>
+    )
+    const renderSimpleTotalCell = (player) => {
+        const deltaText = Number.isFinite(rpsDelta)
+            ? `${rpsDelta > 0 ? "+" : ""}${Number(rpsDelta).toLocaleString()}`
+            : null
+        return (
+            <Link href="/total/1" style={categoryLinkStyle}>
+                <CellBox className={`cell-box ${player?.user === user?.id ? "active" : ""}`} style={categoryCellBoxStyle}>
+                    <GradientLine rps={player?.rps} rps1={player?.rps1} rps2={player?.rps2} rps3={player?.rps3} rps4={player?.rps4} />
+                    <span className="cell-box-caption">
+                        {player?.rank ? (
+                            <>{outputRank(player.rank)} / {clas(player?.rps) === 14 && player?.rank === 1 ? t.classes[15] : t.classes[clas(player?.rps)]}</>
+                        ) : (<FontAwesomeIcon icon={faFlag}/>)}
+                    </span><br/>
+                    {id2name(users, player?.user)}<br/>
+                    <span className="cell-box-caption">
+                        {player?.rps < (stageCnt * basePoints.at(-1)) && <>{Number(player?.rps).toLocaleString()} rps.</>}
+                        {deltaText && (
+                            <span style={{marginLeft: "0.5em", color: rpsDelta >= 0 ? "#d95c5c" : "#4d79bd"}}>
+                                ({deltaText})
+                            </span>
+                        )}
+                    </span>
+                </CellBox>
+            </Link>
+        )
+    }
+    const fixedRecommend = (stageId) => ({
+        stage_id: stageId,
+        rule: 10,
+        console: 0,
+        score: null
+    })
+
+    if (simple) {
+        const ownRanking = rivals[0] ?? {}
+        const noTotalRankingRecords = summary.hasTotalRankingRecords === false
+        return (
+            <Box className={"top-box"}>
+                <TopBoxHeader className="top-box-header">
+                    <span><FontAwesomeIcon icon={faCircleInfo} />{t.g.dashBoard}</span>
+                </TopBoxHeader>
+                <TopBoxContent className="top-box-content">
+                    <Grid container alignItems="stretch" columns={{xs: 3, md: 12}}>
+                        {noTotalRankingRecords ? (
+                            <>
+                                <Grid item xs={1} md={2.5} style={categoryGridItemStyle}>
+                                    {renderStageActionCell(fixedRecommend(101), "あなたにオススメ！")}
+                                </Grid>
+                                {[201, 301, 401].map(stageId => (
+                                    <Grid item xs={1} md={2} style={categoryGridItemStyle} key={stageId}>
+                                        {renderStageActionCell(fixedRecommend(stageId), "あなたにオススメ！")}
+                                    </Grid>
+                                ))}
+                            </>
+                        ) : (
+                            <>
+                                <Grid item xs={1} md={3.5} style={categoryGridItemStyle}>
+                                    {renderSimpleTotalCell(ownRanking)}
+                                </Grid>
+                                <Grid item xs={1} md={2.5} style={categoryGridItemStyle}>
+                                    {renderStageActionCell(summary.latest, "最後に投稿したステージ")}
+                                </Grid>
+                                <Grid item xs={1} md={2.5} style={categoryGridItemStyle}>
+                                    {renderStageActionCell(summary.recommend, "あなたにオススメ！")}
+                                </Grid>
+                            </>
+                        )}
+                        <Grid item xs={1.5} md={2} style={categoryGridItemStyle}>
+                            {renderSimpleNavCell({href: `/user/${user?.id}`, icon: faHouseUser, label: "ユーザーページへ"})}
+                        </Grid>
+                        <Grid item xs={1.5} md={1.5} style={categoryGridItemStyle}>
+                            {renderSimpleNavCell({href: "/auth/config", icon: faWrench, label: "ユーザー設定へ"})}
+                        </Grid>
+                    </Grid>
+                </TopBoxContent>
+            </Box>
+        )
+    }
     return (
         <>
             <Box className={"top-box"}>
@@ -218,7 +363,7 @@ export default function DashBoard({user, users, simple = false}){
                                     <span className="cell-box-caption">
                                     {player?.rank ? (
                                         <>
-                                            {player?.rank}位 / {clas(player?.rps) === 14 && player?.rank === 1 ? t.classes[15] : t.classes[clas(player?.rps)]}
+                                            {outputRank(player?.rank)} / {clas(player?.rps) === 14 && player?.rank === 1 ? t.classes[15] : t.classes[clas(player?.rps)]}
                                         </>
                                     ) : (<><FontAwesomeIcon icon={faFlag}/></>)}
                                         </span><br/>
@@ -275,6 +420,11 @@ export default function DashBoard({user, users, simple = false}){
                             </React.Fragment>
                         ))
                     }
+                    {displayedSpeedrunRecords.map(record => (
+                        <Grid item xs={4} sm={3} md={2} key={`speedrun-${record.stage}-${record.configuredConsole}`} style={categoryGridItemStyle}>
+                            {renderSpeedrunCell(record)}
+                        </Grid>
+                    ))}
                     {
                         (notPostCategory.length > 0) && (
                             <ClickAwayListener onClickAway={handleTooltipClose}>

@@ -30,6 +30,7 @@ export async function getStaticPaths(){
 }
 export async function getStaticProps({params}){
     const { getCachedUsers } = await import("../../lib/usersCache")
+    const prisma = (await import("../../lib/prisma")).default
 
     const query = params.name
     const user = query[0]
@@ -51,7 +52,14 @@ export async function getStaticProps({params}){
     const marker = await mark_res.json()
 
     const consoles = query[1] || 0
-    const rule     = query[2] || 0
+    const userSettings = await prisma.user.findFirst({
+        where: {userId: user},
+        select: {srcUserId: true, userCatSelect: true},
+    })
+    const requestedRule = query[2]
+    const rule = (!requestedRule || Number(requestedRule) === 0)
+        ? (userSettings?.userCatSelect ?? 0)
+        : requestedRule
     const year     = query[3] || currentYear()
 
     // 記録を取得
@@ -72,7 +80,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            users, user, userName, consoles, rule, year, info, marker, posts, fDate
+            users, user, userName, consoles, rule, year, info, marker, posts, fDate, userSettings: userSettings ?? null
         },
         revalidate: 604800,
     }

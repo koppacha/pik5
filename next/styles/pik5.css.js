@@ -445,19 +445,14 @@ export const WrapTopBox = styled(Grid)`
   margin-bottom: 10px;
 `
 export const TopBox = styled(Box)`
-  border: 1px solid ${colors.light.border};
   border-radius: 6px;
   height: 100%;
-
-  [data-theme='dark'] & {
-    border: 1px solid ${colors.dark.border};
-  }
 `
 export const TopBoxHeader = styled(Box)`
   background-color: var(--color-block-header-bg);
   color: var(--color-block-header-text);
   padding :4px;
-  border-radius: 4px;
+  border-radius: 4px 4px 0 0;
   display: flex;
   justify-content: space-between;
   
@@ -471,7 +466,12 @@ export const TopBoxHeader = styled(Box)`
   }
 `
 export const TopBoxContent = styled(Box)`
-  padding :8px;
+    border: 1px solid ${colors.light.border};
+    border-radius: 0 0 4px 4px;
+    padding :8px;
+    [data-theme='dark'] & {
+        border: 1px solid ${colors.dark.border};
+    }
 `
 export const TopBoxContentList = styled(Box)`
   font-size: 0.9em;
