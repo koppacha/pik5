@@ -1,0 +1,48 @@
+# Deployment And Environment
+
+## 本番障害切り分け
+
+- 本番だけサインアップ 500 / ログイン 401 が出る場合、まず DB migration 未適用を疑う。
+- Prisma migration 適用後、`/api/user/create` が `200 OK` になれば、サインアップ 500 の原因は DB migration 未適用でほぼ確定。
+- ログイン 401 が残る場合は、DB/Prisma ではなく NextAuth 環境変数、Cookie、プロセス再起動へ切り分ける。
+- `NODE_ENV=production` は本番起動時に明示設定しておく。
+- `.env` や migration 適用後は Next プロセス再起動を行う。
+
+## nginx / Proxy
+
+- 本番 nginx は Next へ `Host`, `X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto` を渡す。
+- `X-Forwarded-Proto` が無いと Next 側 same-origin 判定が `http` 扱いになり、`/api/server/*` が403になることがある。
+- TLS 終端が nginx 側にある場合、Node の `req.socket.encrypted` は通常 `false`。
+- Laravel は外部に直接公開せず、Docker 内部ネットワークで Next/nginx 経由にする。
+
+## Docker
+
+- `docker compose ps` でコンテナ起動状態を確認する。
+- `next` コンテナが起動していても `yarn dev` が起動していなければ `localhost:3005` は接続拒否になる。
+- ホスト公開 `localhost:3005` とコンテナ内 `localhost:3000` を混同しない。
+- `next` サービスの `5555:5555` は通常運用では不要。Prisma Studio をホストから使う用途がなければ閉じてよい。
+- `docker compose exec -T` と `curl --max-time` を使うと、TTY や長時間待機を避けられる。
+- Docker ソケット権限で失敗することがある。権限付き実行が必要な場合は、ユーザー承認を得る。
+
+## Config Cache
+
+- Laravel で `config:cache` を使っている環境では `.env`、`project.json`、config 変更後に `config:clear` または再 `config:cache` が必要。
+- `route:list` 実行時の vendor Deprecated は PHP バージョン由来のことがある。
+
+## Build / Runtime
+
+- `c4e3a83b` は Next Dockerfile のベースイメージ変更のみだったが、直前の Prisma/Next 更新が実質リスクになった。
+- 本番で `migrate deploy` は成功しても、Next の実行プロセスが古いままだと症状が残ることがある。
+- `node_modules` の `esbuild` が別プラットフォーム向けでローカル build が失敗することがある。Next build の結果と切り分ける。
+- `next/package.json` の `prebuild` で `prisma generate` を常時実行する。`next/generated/prisma` が Git 追跡対象外でも、`yarn build` / `npm run build` 前に generated client を再生成するため。
+
+## Release After Pull
+
+- 本番で `git pull` 後は `git status` と `git log --oneline -5` で反映差分を確認する。
+- 常に `docker compose build`、`docker compose up -d`、`docker compose exec next yarn install --ignore-engines`、`docker compose exec next yarn build`、`docker compose ps`、`docker compose logs --tail=100 next/laravel` を確認する。
+- `next` コンテナは compose 上では常駐のみのため、本番運用中の方法に合わせて `yarn start` または既存プロセス管理で起動・再起動する。
+- Laravel migration がある場合は `docker compose exec laravel php artisan migrate --force` を実行する。
+- Prisma schema/migration 変更がある場合は `docker compose exec next npx prisma migrate deploy` を実行する。generated client は `next/package.json` の `prebuild` で `prisma generate` が自動実行される。
+- DB migration、Seeder、データ修正、Prisma migration を伴う場合は、実行前に DB フルバックアップを取得する。
+- `.env`、`project.json`、compose、Dockerfile、nginx 設定、依存関係に変更がある場合は、設定反映、依存再インストール、コンテナ再ビルド、nginx test/reload を確認する。
+- 反映後はトップページ、ログイン、投稿、主要ランキングを最低限スモークチェックする。

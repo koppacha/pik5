@@ -17,6 +17,10 @@ import {available} from "../../lib/const";
 import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
+import CategoryList from "../../components/record/CategoryList";
+import EventList from "../../components/record/EventList";
+import RankingLimited from "../../components/record/RankingLimited";
+import {en} from "../../locale/en";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate, faStopwatch} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
@@ -34,6 +38,42 @@ export async function getStaticProps({params}){
 
     const query   = params.series
     const series  = query[0]
+
+    if(series === "4"){
+        const category = query[1] || "0"
+        const isValidCategory = /^\d+$/.test(category) && (Number(category) === 0 || category.length === 3)
+        if(!isValidCategory || query[2]){
+            return {
+                notFound: true,
+            }
+        }
+
+        try {
+            const postsRes = await fetch(`http://laravel:8000/api/event-total/${category}`)
+            if(!postsRes.ok){
+                return {notFound: true}
+            }
+
+            const eventTotal = await postsRes.json()
+            const users = await getCachedUsers()
+
+            return {
+                props: {
+                    eventTotalMode: true,
+                    series,
+                    category,
+                    users,
+                    posts: eventTotal.posts ?? [],
+                    events: eventTotal.events ?? [],
+                },
+                revalidate: 3600,
+            }
+        } catch (error) {
+            console.error('Error fetching event total:', error)
+            return {notFound: true}
+        }
+    }
+
     const consoles = query[1] || 0
     let   rule    = query[2] || series
     const year    = query[3] || currentYear()
@@ -130,6 +170,48 @@ export default function Series(param){
             twitchUrl = "";
     }
 
+    const totalCategoryRules = {
+        1: [10, 11, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47],
+        2: [10, 20, 21, 22, 30, 31, 32, 33, 36, 41, 42, 43],
+        3: [11, 23, 24, 25, 29, 35, 44, 45, 46, 47],
+    }
+    const eventCategoryIds = [0, ...Object.keys(t.limited.category ?? {}).map(Number).sort((a, b) => a - b)]
+
+    if(param.eventTotalMode){
+        const categoryId = Number(param.category)
+        const categoryTitle = categoryId ? (t.limited.category?.[categoryId] ?? categoryId) : "イベント総合ランキング"
+        const categorySubtitle = categoryId ? (en.limited.category?.[categoryId] ?? categoryId) : "All Events"
+
+        return (
+            <>
+                <Head>
+                    <title>{`${categoryTitle} - ${t.title[0]}`}</title>
+                </Head>
+                <Box className="page-header">
+                    <BreadCrumb eventMode={true}/>
+                    #4<br/>
+                    <Typography variant="" className="title">{categoryTitle}</Typography><br/>
+                    <Typography variant="" className="subtitle">{categorySubtitle}</Typography>
+                </Box>
+                <Totals props={{...param, info: {series: 0}}}/>
+                <CategoryList currentEvent={param.category} events={eventCategoryIds} type="event"/>
+                {Number(param.category) !== 0 && <EventList events={param.events}/>}
+                <Grid container style={{marginBottom:'1em'}}>
+                    <Grid className="rule-wrapper" container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
+                        <Box className={"rule-box active"}
+                             onClick={handleOpen}
+                             component={Link}
+                             href="#">
+                            {t.g.rule}
+                        </Box>
+                    </Grid>
+                </Grid>
+                <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
+                <RankingLimited posts={param.posts} users={param.users} category={param.category}/>
+            </>
+        )
+    }
+
     return (
         <>
             <Head>
@@ -157,6 +239,9 @@ export default function Series(param){
                 </Link>}
             </Grid>
             <Totals props={param}/>
+            {totalCategoryRules[Number(param.series)] &&
+                <CategoryList currentEvent={param.rule} events={totalCategoryRules[Number(param.series)]} type="total"/>
+            }
             {
                 param.series > 9 &&
                 <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} />
