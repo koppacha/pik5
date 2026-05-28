@@ -79,6 +79,71 @@ $ php artisan serve --host 0.0.0.0 # 終了するときはCtrl+C
 $ docker compose down
 ```
 ---
+## 本番環境でのリリース後作業
+本番環境で `git pull` を実行した後は、差分内容を確認してから以下を実施してください。
+
+### 常に必要
+```shell
+# 取り込まれた差分を確認
+$ git status
+$ git log --oneline -5
+
+# コンテナイメージを再ビルドし、コンテナを起動・再作成
+$ docker compose build
+$ docker compose up -d
+
+# Next.js の依存関係を反映し、本番ビルドを作成
+$ docker compose exec next yarn install --ignore-engines
+$ docker compose exec next yarn build
+
+# 起動状態とログを確認
+$ docker compose ps
+$ docker compose logs --tail=100 next
+$ docker compose logs --tail=100 laravel
+```
+
+- `next` コンテナは `docker-compose.yml` 上では常駐のみ行う構成です。ビルド後は本番運用中の起動方法に合わせて、`next` コンテナ内で `yarn start`（または既存のプロセス管理手順）を起動・再起動してください。
+- `laravel` コンテナは `php artisan serve --host 0.0.0.0` を起動する構成です。`docker compose up -d` 後に API 応答とログを確認してください。
+- `.env`、`project.json`、`docker-compose.yml`、`Dockerfile`、nginx 設定に変更があった場合は、コンテナ再作成やプロセス再起動だけでなく、設定が実行中コンテナへ反映されているか確認してください。
+- 反映後はトップページ、ログイン、投稿、主要ランキングなど、ユーザー影響の大きい画面を最低限スモークチェックしてください。
+
+### 場合によって必要
+```shell
+# Laravel migration が追加・変更された場合
+$ docker compose exec laravel php artisan migrate --force
+
+# Laravel の設定キャッシュを使っている場合、.env や config 変更後に実行
+$ docker compose exec laravel php artisan config:clear
+$ docker compose exec laravel php artisan config:cache
+
+# Prisma schema / migrations / generated client に変更がある場合
+$ docker compose exec next npx prisma migrate deploy
+$ docker compose exec next npx prisma generate
+
+# Seeder 実行が必要なリリースの場合（対象Seeder名はリリース内容に合わせる）
+$ docker compose exec laravel php artisan db:seed --class=ClassName
+```
+
+- DB migration、Seeder、データ修正、Prisma migration を伴う場合は、実行前に DB のフルバックアップを取得してください。
+- DB バックアップは `mysqldump --single-transaction` を基本とし、取得した dump が `log/mysql/` などコンテナ外に残ることを確認してください。
+- Prisma migration 後にログインやサインアップで 500 / 401 が出る場合は、`_prisma_migrations` と `User` テーブルのカラム、Next プロセス再起動、環境変数反映を確認してください。
+- `package.json`、`yarn.lock`、PHP の依存関係、Dockerfile に変更がある場合は、依存関係の再インストールやコンテナ再ビルドを必ず実施してください。
+- `nginx.pik5.conf` や本番 nginx 設定を変更した場合は、設定テスト後に reload してください。
+
+```shell
+$ sudo nginx -t
+$ sudo systemctl reload nginx
+```
+
+- Ubuntu や Docker など基盤環境のセキュリティアップデートは、アプリのリリース作業とは別に定期的に確認してください。必要に応じて再起動時間を確保して実施します。
+
+```shell
+$ sudo apt update
+$ apt list --upgradable
+$ sudo apt upgrade
+```
+
+---
 ## 初回プッシュ前の準備
 ```shell
 # ~/.sshフォルダに移動し秘密鍵を作る

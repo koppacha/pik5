@@ -80,7 +80,6 @@ services:
       - ./project.json:/var/www/project.json:ro
     ports:
       - "3005:3000"
-      - "5555:5555"
     logging:
       driver: json-file
       options:

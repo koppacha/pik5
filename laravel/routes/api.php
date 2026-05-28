@@ -4,6 +4,7 @@ use App\Http\Controllers\ArenaController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\DiscordEventController;
+use App\Http\Controllers\EventResultController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
 use App\Http\Controllers\NewRecordController;
@@ -70,6 +71,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController::class, 'show' ]);
     Route::get ( 'stages/{series}' , [ TotalController::class, 'stage_list' ]);
+    Route::get ( 'event-total/{category?}' , [ EventResultController::class, 'show' ]);
 });
 // ステージ情報取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {

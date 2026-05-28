@@ -6,6 +6,7 @@ wiki
 redis
 /sandbox.md
 /log/
+/.idea/
 /test.md
 /sandbox2.md
 /next/public/games/mitite_shooting_simulator_build/
@@ -13,3 +14,4 @@ redis
 # ブランチ統合するまで一時的に追加
 /next/pages/limited/tricks/
 /next/generated/
+/docs/codex-logs/

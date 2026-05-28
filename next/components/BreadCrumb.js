@@ -9,9 +9,19 @@ import NowLoading from "./NowLoading";
 import {StairIcon} from "../styles/pik5.css";
 import {logger} from "../lib/logger";
 
-export default function BreadCrumb({info, rule}){
+export default function BreadCrumb({info, rule, eventMode = false}){
 
     const {t} = useLocale()
+    if(eventMode){
+        return (
+            <Box style={{marginBottom:"0.5em"}}>
+                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                <FontAwesomeIcon className="stair-icon" icon={faStairs}/>
+                <Link href="/total/4">{t.stage[4]}</Link>
+            </Box>
+        )
+    }
+
     const superParent = () => {
         // 通常ランキング
         if([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))){
