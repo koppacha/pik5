@@ -20,6 +20,7 @@ import {ComponentPreviews, useInitial} from "../dev";
 import SeoHead from "../components/SeoHead"
 import {Backdrop, Box, CircularProgress, Typography} from "@mui/material"
 import RecordNotificationCenter from "../components/notifications/RecordNotificationCenter"
+import {googleFontVariables} from "../lib/googleFonts"
 
 const clientSideEmotionCache = createEmotionCache()
 
@@ -131,7 +132,7 @@ export default function App(props) {
     }
 
     return (
-        <>
+        <div className={googleFontVariables} style={{fontFamily: "var(--font-m-plus-1-code), sans-serif"}}>
             <SeoHead />
             <Script strategy="afterInteractive"
                     src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
@@ -161,7 +162,7 @@ export default function App(props) {
                     </ThemeProvider>
                 </SessionProvider>
             </CacheProvider>
-        </>
+        </div>
     );
 }
 App.propTypes = {

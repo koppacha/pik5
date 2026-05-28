@@ -536,7 +536,7 @@ export default function Battle(props) {
             }}>
                 <Grid container spacing={1} columns={players.length + 1}>
                     <Grid item xs={1} style={{textAlign:"left"}}>
-                        <div style={{backgroundColor:"#333",color:"#eee",minHeight:"111px",borderRadius:"12px",padding:"6px 10px",fontSize:"0.95em",fontFamily:"M PLUS 1 CODE !important"}}>
+                        <div style={{backgroundColor:"#333",color:"#eee",minHeight:"111px",borderRadius:"12px",padding:"6px 10px",fontSize:"0.95em",fontFamily:"var(--font-m-plus-1-code), M PLUS 1 CODE, sans-serif"}}>
                             <div style={{fontSize:"0.85em",opacity:0.9}}>{
                                 (() => {
                                     const latestGrid = grids?.[0] || null
@@ -599,8 +599,8 @@ export default function Battle(props) {
                             : ''
                         return (
                         <Grid item xs={1} key={player} style={{textAlign:"center"}}>
-                            <div style={{backgroundColor:"#333",color:"#eee",borderRadius:"12px",padding:"4px 0",fontSize:"1.1em",cursor:'pointer',fontFamily:"M PLUS 1 CODE !important"}} onClick={() => handlePlayerClick(player)}>{id2name(props.users, player)}</div>
-                            <div style={{marginTop:"4px",fontFamily:"Proza Libre"}}>{rates[player]}<span style={{fontSize:"0.8em",color:"#777"}}> / {iniRates[player]}</span></div>
+                            <div style={{backgroundColor:"#333",color:"#eee",borderRadius:"12px",padding:"4px 0",fontSize:"1.1em",cursor:'pointer',fontFamily:"var(--font-m-plus-1-code), M PLUS 1 CODE, sans-serif"}} onClick={() => handlePlayerClick(player)}>{id2name(props.users, player)}</div>
+                            <div style={{marginTop:"4px",fontFamily:"var(--font-proza-libre), Proza Libre, cursive"}}>{rates[player]}<span style={{fontSize:"0.8em",color:"#777"}}> / {iniRates[player]}</span></div>
                             <div style={{fontSize:"0.85em"}}>{prevReward ? `(${prevRewardStr})` : ""} {borders[player] ? `BEP：${borders[player]}位` : ""}</div>
                             <div style={{fontSize:"0.85em",color:"#333",minHeight:"1.2em",borderTop:"#ccc 1px solid"}}>{latestStatsStr}</div>
                             <div style={{fontSize:"0.8em",color:"#555",marginTop:"2px"}}>{userBestStr}</div>

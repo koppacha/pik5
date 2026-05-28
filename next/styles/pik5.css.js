@@ -111,7 +111,7 @@ export const GlobalStyle = createGlobalStyle`
   body {
     color: ${colors.light.front};
     background-color: ${colors.light.back};
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`font-size: 0.8em`}
     [data-theme='dark'] & {
@@ -122,7 +122,7 @@ export const GlobalStyle = createGlobalStyle`
 
   .title {
     font-size: 3.5em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`font-size: 2em`}
   }
@@ -218,7 +218,7 @@ export const GlobalStyle = createGlobalStyle`
     
     /* Markdownをオーバライドするスタイル */
     code {
-      font-family: "M PLUS 1 CODE", sans-serif;
+      font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     }
 
     h2, h3, h4, h5, h6 {
@@ -263,7 +263,7 @@ export const OffsetContainer = styled(Container)`
   ${pc`margin-top: 80px;`}
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
-  font-family: "M PLUS 1 CODE", sans-serif;
+  font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
   color: ${uiColors.navText};
   background-color: transparent;
   font-size: 0.9em;
@@ -282,7 +282,7 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
   }
 `
 export const AuthButton = styled(Button)`
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     background-color: ${uiColors.buttonAltBg};
     color: ${uiColors.buttonAltText};
     font-weight: bold;
@@ -294,7 +294,7 @@ export const AuthButton = styled(Button)`
     }
 `
 export const CustomButton = styled(Button)`
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     color: ${colors.light.back};
     background-color: ${colors.light.front};
     font-size: 0.9em;
@@ -381,7 +381,7 @@ export const HeaderPopMenu = styled(Paper)`
   background-color: transparent;
 `
 export const StyledMenuItem = styled(MenuItem)`
-  font-family: "M PLUS 1 CODE", sans-serif;
+  font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
   border-left: 10px solid ${uiColors.menuItemBorder};
   background-color: ${uiColors.menuItemBg};
   color: ${uiColors.menuItemBorder};
@@ -433,6 +433,24 @@ export const CellBox = styled(Box)`
   text-align :center;
   [data-theme="dark"] & {
     background-color: ${colors.dark.subBack};
+  }
+`
+export const TrendCellBox = styled(CellBox)`
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.35;
+  overflow: hidden;
+
+  .cell-box-caption {
+    min-height: 1.35em;
+  }
+
+  .trend-fire-row {
+    display: block;
+    min-height: 1.35em;
+    white-space: nowrap;
   }
 `
 export const StairIcon = styled(FontAwesomeIcon)`
@@ -502,7 +520,7 @@ export const TeamScoreType = styled(Typography)`
   font-size: 800%;
   letter-spacing: 10px;
   line-height: 85%;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   
   ${sp`
     font-size: 500%;
@@ -510,7 +528,7 @@ export const TeamScoreType = styled(Typography)`
 `
 export const TeamRpsType = styled(Typography)`
   font-size: 333%;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   color: ${colors.light.subTitle};
 
   ${sp`
@@ -522,37 +540,37 @@ export const TeamRpsType = styled(Typography)`
 `
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
-  font-family:"Quicksand","Proza Libre","cursive";
+  font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
   
   ${sp`
     font-size: 0.9em;
   `}
   [data-theme='dark'] & {
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
   }
 `
 export const ScoreTail = styled(Typography)`
   color: ${colors.light.subTitle};
-  font-family:"Quicksand","Proza Libre","cursive";
+  font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
 
   [data-theme='dark'] & {
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     color: ${colors.dark.subTitle};
   }
 `
 export const CompareType = styled(Typography)`
   color: ${colors.light.compare};
   font-size :0.8em;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   
   [data-theme='dark'] & {
-      font-family:"Proza Libre","cursive";
+      font-family: var(--font-proza-libre), "Proza Libre", "cursive";
       color: ${colors.dark.compare};
   }
 `
 export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
     font-size :1.25em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`
         font-size: 0.9em;
@@ -568,10 +586,10 @@ export const RankType = styled(Typography)`
     font-size: 2em;
     line-height :2em;
     font-weight: 200;
-    font-family: "Krub","cursive";
+    font-family: var(--font-krub), "Krub", "cursive";
 
     [data-theme='dark'] & {
-        font-family:"Kulim Park","cursive";
+        font-family: var(--font-kulim-park), "Kulim Park", "cursive";
     }
 
     ${sp`font-size: 1.2em;`}

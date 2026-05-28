@@ -117,7 +117,7 @@ $light-shadow:
 body {
     color: $light-front;
     background-color: $light-back;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     //${sp`font-size: 0.8em`}
 
@@ -129,7 +129,7 @@ body {
 
 .title {
     font-size: 3.5em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     line-height: 1em;
 
     //${sp`font-size: 2em`}
@@ -211,7 +211,7 @@ body {
 .markdown-content {
 
     code {
-        font-family: "M PLUS 1 CODE", sans-serif;
+        font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     }
 
     h2, h3, h4, h5, h6 {
@@ -342,7 +342,7 @@ body {
     background-color: transparent;
 }
 .styled-menu-item {
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     border-left: 10px solid $menu-item-border;
     background-color: $menu-item-bg;
     color: $menu-item-border;
@@ -377,7 +377,7 @@ body {
     white-space: nowrap;
 }
 .rule-box {
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     font-weight: normal;
     display: inline-block;
     border-radius: 4px;
@@ -520,7 +520,7 @@ body {
 .team-score-type {
     font-size: 1000%;
     letter-spacing: 10px;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -531,9 +531,9 @@ body {
 }
 .score-type {
     font-size: 1.3em;
-    font-family:"Quicksand","Proza Libre","cursive";
+    font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
     [data-theme='dark'] & {
-        font-family:"Proza Libre","cursive";
+        font-family: var(--font-proza-libre), "Proza Libre", "cursive";
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -543,10 +543,10 @@ body {
 }
 .score-tail {
     color: $light-sub-title;
-    font-family:"Quicksand","Proza Libre","cursive";
+    font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
 
     [data-theme='dark'] & {
-        font-family:"Proza Libre","cursive";
+        font-family: var(--font-proza-libre), "Proza Libre", "cursive";
         color: $dark-sub-title;
         text-shadow: $dark-shadow;
     }
@@ -554,7 +554,7 @@ body {
 .compare-type {
     color: $light-compare;
     font-size :0.8em;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
 
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
@@ -563,7 +563,7 @@ body {
 }
 .user-type {
     font-size :1.25em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -584,9 +584,9 @@ body {
     font-size: 2em;
     line-height :2em;
     font-weight: 200;
-    font-family: "Krub","cursive";
+    font-family: var(--font-krub), "Krub", "cursive";
     [data-theme='dark'] & {
-        font-family: "Kulim Park","cursive";
+        font-family: var(--font-kulim-park), "Kulim Park", "cursive";
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -892,7 +892,7 @@ body {
 }
 .team-rps-type {
     font-size: 333%;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     color: $light-sub-title;
 
     [data-theme='dark'] & {
