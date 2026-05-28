@@ -5,7 +5,7 @@ import Record from "../record/Record";
 import * as React from "react";
 import {Box, Grid} from "@mui/material";
 import Link from "next/link";
-import {CellBox} from "../../styles/pik5.css";
+import {TrendCellBox} from "../../styles/pik5.css";
 import {faFire} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -32,9 +32,9 @@ export default function TrendRanking(){
             <Grid container>
                 {Array.from({ length: 12 }).map((_, index) => (
                     <Grid item xs={4} sm={3} md={2} key={index}>
-                        <CellBox>
+                        <TrendCellBox>
                             {index === 0 && <NowLoading />}
-                        </CellBox>
+                        </TrendCellBox>
                     </Grid>
                 ))}
             </Grid>
@@ -48,11 +48,11 @@ export default function TrendRanking(){
 
                     return (
                         <Grid item key={i} xs={4} sm={3} md={2} component={Link} href={"/stage/"+post.stage_id}>
-                            <CellBox className="cell-box" length={t.stage[post.stage_id].length}>
+                            <TrendCellBox className="cell-box">
                                 <span className="cell-box-caption">{post.month}</span><br/>
                                 {t.stage[post.stage_id].length > 10 ? t.stage[post.stage_id].substring(0, 9)+".." : t.stage[post.stage_id]}<br/>
-                                <span className="cell-box-caption">{repeatElement(<FontAwesomeIcon icon={faFire} style={{color:(post.cnt > 52) ? "#e77d7d": "inherit"}} />, post.cnt)}</span>
-                            </CellBox>
+                                <span className="cell-box-caption trend-fire-row">{repeatElement(<FontAwesomeIcon icon={faFire} style={{color:(post.cnt > 52) ? "#e77d7d": "inherit"}} />, post.cnt)}</span>
+                            </TrendCellBox>
                         </Grid>
                     )
                 })

@@ -29,7 +29,7 @@ const chartNoDataPlugin = {
         if (!chartArea) return
         ctx.save()
         ctx.fillStyle = chart.options.plugins.noData.color
-        ctx.font = "14px 'M PLUS 1 CODE', sans-serif"
+        ctx.font = "14px var(--font-m-plus-1-code), 'M PLUS 1 CODE', sans-serif"
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
         ctx.fillText("表示できるデータがありません", (chartArea.left + chartArea.right) / 2, (chartArea.top + chartArea.bottom) / 2)

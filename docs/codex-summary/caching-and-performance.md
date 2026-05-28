@@ -52,6 +52,16 @@
 - `TrendRanking` は SWR ローディング時の空セルから実データセルへ差し替えるため、`CellBox` の高さがコンテンツ依存だと CLS の主因になり得る。トレンド用セルに `min-height`、行高、アイコン行の予約領域を持たせる。
 - `_document.js` の Google Fonts は family/weight が多く、`fonts.gstatic.com` への多数リクエストにつながる。使用箇所を棚卸しし、必要な family/weight のみに削減する。
 - LCP 改善では、フォント削減、トップページ HTML/props 削減、Above the fold の SWR 依存コンテンツの SSR/ISR 化、YouTube iframe 等の遅延読み込みを優先する。
+- 2026-05-28 に `TrendRanking` 専用の `TrendCellBox` で高さ予約を追加し、Google Fonts 外部 `<link>` を削除して `next/font/google` self-host 化へ変更した。
+- トップページの `users` SSR props 削減は、検索モーダル、通知、動画、ランキング名解決にまたがるため軽微ではない。実施する場合は各コンポーネントのユーザー解決方法をまとめて設計する。
+- PageSpeed の forced reflow 指摘で `_next/static` chunk が表示される場合、まず chunk 位置情報でありキャッシュ自体が原因とは限らない。現状コード上は初期ロードで明確に同期レイアウトを強制する箇所は未特定。
+
+## SEO / AI Search
+
+- `stage/[...stage].js` と `total/[...series].js` は 2026-05-28 時点で `SeoHead` ではなく `Head` の title のみを使っている。ページ固有 description、JSON-LD、OG title/description を補う余地が大きい。
+- 主要総合ページ（例: `/total/20`）には「ピクミン2 チャレンジモード」「総合ランキング」「全ステージ集計」「世界記録」など、検索意図を自然文で説明する本文ブロックを追加する方針。
+- `locale` の `info` はルール注意だけでなく、各カテゴリ/ステージの一次ソース説明として拡充できる。ただしヘッダーに長文を出しすぎず、概要・集計対象・採点方法・対象ステージ数・更新頻度・投稿検証方針を構造化して表示する。
+- sitemap は静的で主要ページのみ。ステージページ、総合ページの派生、キーワード記事、英語 alternate を動的生成する余地がある。
 
 ## 負荷注意
 
