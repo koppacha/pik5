@@ -50,3 +50,15 @@
 - 通常イベントは `w=優勝`, `p/e=参加`, `m=MVP`。
 - カテゴリ `151` では表示上 `score=rps_adjust`, `rps=score` のように入れ替える方針がある。
 
+## ピクチャレアリーナ対戦 検討事項
+
+- `docs/idea/event-arena.md` は新規 `next/pages/limited/arena.js` と新規 Laravel API/テーブルを想定する。
+- 旧 `old-arena.js`、既存 `arenas` テーブル、既存 `ArenaController` は関与させない方針。
+- イベントは基本20戦。支払い下限/上限、観戦料下限/上限、勝者赤字防止補正、丸め方は `lab/sim_arena.py` 基準。ただし観戦料は仕様書を正とし、観戦料をポットに含めて勝者・敗者への配分対象にする。
+- 最新状態は `final` フラグではなく、`arena_players.current_point/position/active` と `arena_matches.max(match_no)` で取得する設計案。
+- DB案は `arena_events`、`arena_players`、`arena_matches`、`arena_results`。テーブル名は仮置きだが、旧 `arenas` は使わない。
+- 管理領域はセッションユーザー `role=10` のみ表示。表示更新は SWR polling。
+- ルーレット履歴はDB保存せず、暗号化Cookieに30日保存して同一ステージ3回以上抽選を抑止する。
+- `lab/sim_arena.py` は仕様書に合わせ、基本20戦、観戦料は連勝数1以上のときだけ発生、観戦料をポットに含めて勝者・敗者へ配分する形に更新済み。
+- 初期実装として `next/pages/limited/arena.js`、`next/pages/api/arena/[...path].js`、Laravel `NewArenaController`、`ArenaEvent/ArenaPlayer/ArenaMatch/ArenaResult` モデル、4つの arena 系 migration を追加済み。
+- 管理操作は Next API 側でも `role=10` を要求し、GET state は公開取得できる。

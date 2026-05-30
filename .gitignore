@@ -15,3 +15,4 @@ redis
 /next/pages/limited/tricks/
 /next/generated/
 /docs/codex-logs/
+/lab/__pycache__/

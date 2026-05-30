@@ -7,6 +7,7 @@ use App\Http\Controllers\DiscordEventController;
 use App\Http\Controllers\EventResultController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\NewArenaController;
 use App\Http\Controllers\NewRecordController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PostCountController;
@@ -126,6 +127,14 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: post('battle', [BattleController::class, 'create']);
     Route:: get('battle/rate', [BattleController::class, 'getRate']);
     Route:: get('battle/score', [BattleController::class, 'getScore']);
+});
+// ピクチャレアリーナ対戦API
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route::get('new-arena/state', [NewArenaController::class, 'state']);
+    Route::post('new-arena/player/add', [NewArenaController::class, 'addPlayer']);
+    Route::post('new-arena/player/remove', [NewArenaController::class, 'removePlayer']);
+    Route::post('new-arena/shuffle', [NewArenaController::class, 'shufflePlayers']);
+    Route::post('new-arena/result', [NewArenaController::class, 'submitResult']);
 });
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {

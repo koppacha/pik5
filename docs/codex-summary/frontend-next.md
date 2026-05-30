@@ -25,6 +25,8 @@
 - `_document.js` に初期テーマ反映用インラインスクリプトを置き、描画前に `localStorage.getItem('theme')` から `document.documentElement.dataset.theme` を設定する。
 - 保存値が無い場合の既定テーマは `dark`。
 - `localStorage` を初回レンダリングで直接参照すると SSR と CSR で Hydration mismatch が起きる。マウント後に読む。
+- styled-components は `_document.js` で `ServerStyleSheet` によるSSR収集を行う。直アクセス/リロード時に `data-styled` style タグがHTMLへ出ない場合、styled-components のスタイルが一時的または継続的に未適用になる。
+- `next.config.mjs` は `compiler.styledComponents=true` を有効化している。
 
 ## Speedrun 表示
 
@@ -38,4 +40,3 @@
 - Unity WebGL ビルドは、既存生成 `index.html` が相対パス前提の場合、Next ページへ直接移植せず `public` 配下の HTML を iframe で読むのが参照崩れが少ない。
 - `.data.br`、`.framework.js.br`、`.wasm.br` は通常静的配信だけでは失敗する可能性がある。
 - Next 側で Unity の `.br` ファイルに `Content-Encoding: br` と適切な `Content-Type` を設定する。
-
