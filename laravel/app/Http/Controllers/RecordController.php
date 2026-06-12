@@ -200,24 +200,6 @@ class RecordController extends Controller
         $videoUrl = (string)($request['video_url'] ?: "");
         $commentInput = (string)($request['post_comment'] ?? "");
 
-        // DEBUG LOG (コミット前に削除): 受信直後の生値と正規化値を確認
-        Log::info('RecordController.create.raw_input', [
-            'mode' => (string)$request['mode'],
-            'edit_unique_id' => (string)$request['edit_unique_id'],
-            'raw_score' => $request['score'],
-            'raw_rule' => $request['rule'],
-            'raw_console' => $request['console'],
-            'raw_difficulty' => $request['difficulty'],
-            'raw_region' => $request['region'],
-            'normalized' => [
-                'score' => $score,
-                'rule' => $rule,
-                'console' => $console,
-                'difficulty' => $difficulty,
-                'region' => $region,
-            ],
-        ]);
-
         // 受信した画像の処理
         $fileName = "";
         $img = $request->file('file');
@@ -296,26 +278,6 @@ class RecordController extends Controller
                 $commentInput = (string)$current->post_comment;
             }
 
-            // DEBUG LOG (コミット前に削除): 編集時フォールバック後の値を確認
-            Log::info('RecordController.create.after_edit_fallback', [
-                'current_post_id' => $current->post_id,
-                'current_unique_id' => $current->unique_id,
-                'current_values' => [
-                    'score' => (int)$current->score,
-                    'rule' => (int)$current->rule,
-                    'console' => (int)$current->console,
-                    'difficulty' => (int)$current->difficulty,
-                    'region' => (int)$current->region,
-                ],
-                'resolved_values' => [
-                    'score' => $score,
-                    'rule' => $rule,
-                    'console' => $console,
-                    'difficulty' => $difficulty,
-                    'region' => $region,
-                ],
-            ]);
-
             // 編集前レコードは論理削除し、別unique_idへ付け替える
             $newUniqueIdForCurrent = $this->createUniqueId();
             $postMemo = trim(((string)$current->post_memo)." edited_from:".$targetUniqueId);
@@ -327,26 +289,7 @@ class RecordController extends Controller
         }
 
         // 簡易バリデーション
-        // DEBUG LOG (コミット前に削除): 簡易バリデーション直前の最終値を確認
-        Log::info('RecordController.create.before_validation', [
-            'is_edit' => $isEdit,
-            'edit_unique_id' => $editUniqueId,
-            'score' => $score,
-            'rule' => $rule,
-            'console' => $console,
-            'difficulty' => $difficulty,
-            'region' => $region,
-        ]);
-
         if($score < 1 || $rule < 1 || $console < 1){
-            // DEBUG LOG (コミット前に削除): バリデーション失敗時の値を確認
-            Log::warning('RecordController.create.validation_failed', [
-                'score' => $score,
-                'rule' => $rule,
-                'console' => $console,
-                'is_edit' => $isEdit,
-                'edit_unique_id' => $editUniqueId,
-            ]);
             return response()->json(
                 ["ERROR", 500]
             );

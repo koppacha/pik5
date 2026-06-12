@@ -7,10 +7,28 @@ import * as React from "react";
 import {useLocale} from "../../lib/pik5";
 import ModalKeyword from "../modal/ModalKeyword";
 import {useState} from "react";
+import {additionalStageRules, seriesNavigationRules} from "../../lib/const";
+import {SPECIAL_STAGES_RULE} from "./SpecialStages";
 
-export default function RuleList({param}){
+export default function RuleList({param, displayedRule, onConventionalRuleClick, onAdditionalRuleClick}){
 
     const {t} = useLocale()
+    const isSpecialCategory = Number(param.rule) === 91
+    const additionalRules = isSpecialCategory
+        ? seriesNavigationRules[Number(param.info?.series)] ?? []
+        : additionalStageRules(param.info)
+    const specialStagesRule = (
+        <Grid className="rule-wrapper" item>
+            <Box
+                className={`rule-box ${displayedRule === SPECIAL_STAGES_RULE ? "active" : "not-active"}`}
+                onClick={isSpecialCategory
+                    ? event => onConventionalRuleClick?.(event, SPECIAL_STAGES_RULE)
+                    : () => onAdditionalRuleClick(SPECIAL_STAGES_RULE)}
+            >
+                {t.g.specialStages}
+            </Box>
+        </Grid>
+    )
 
     return (
         <>
@@ -20,8 +38,33 @@ export default function RuleList({param}){
                 }}>
                     {
                         // 通常ステージの場合はステージに含まれるルールをすべて表示
-                        (param.rule < 90) ?
-                            <Rules props={param}/>
+                        (param.rule < 100 && Number(param.info?.series) >= 1 && Number(param.info?.series) <= 4) ?
+                            <>
+                                {!isSpecialCategory && <Rules
+                                    props={param}
+                                    displayedRule={displayedRule}
+                                    onRuleClick={onConventionalRuleClick}
+                                />}
+                                {isSpecialCategory && specialStagesRule}
+                                <Grid
+                                    item
+                                    aria-hidden="true"
+                                    style={{paddingRight: "0.4em", fontSize: "1.4em", color: "var(--color-text-base)", alignContent: "center"}}
+                                >
+                                    |
+                                </Grid>
+                                {additionalRules.map(rule => (
+                                    <Grid className="rule-wrapper" item key={rule}>
+                                        <Box
+                                            className={`rule-box ${Number(displayedRule) === rule ? "active" : "not-active"}`}
+                                            onClick={() => onAdditionalRuleClick(rule)}
+                                        >
+                                            {t.rule[rule]}
+                                        </Box>
+                                    </Grid>
+                                ))}
+                                {!isSpecialCategory && specialStagesRule}
+                            </>
 
                             // 特殊ステージの場合は総合ランキングへのリンクを表示
                             : (param.rule > 150901) ?

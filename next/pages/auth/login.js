@@ -95,7 +95,7 @@ export default function Login(){
                             <TextField
                                 {...register('userId')}
                                 id="userId"
-                                label={t.g.userName}
+                                label={t.g.userId}
                                 type="text"
                                 variant="standard"
                                 error={'userId' in errors}

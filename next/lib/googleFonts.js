@@ -31,7 +31,7 @@ const quicksand = Quicksand({
 })
 
 const krub = Krub({
-    weight: "400",
+    weight: ["200", "300", "400"],
     subsets: ["latin"],
     display: "swap",
     variable: "--font-krub",
@@ -39,7 +39,7 @@ const krub = Krub({
 })
 
 const kulimPark = Kulim_Park({
-    weight: ["400", "700"],
+    weight: ["200", "400", "700"],
     subsets: ["latin"],
     display: "swap",
     variable: "--font-kulim-park",
@@ -53,4 +53,3 @@ export const googleFontVariables = [
     krub.variable,
     kulimPark.variable,
 ].join(" ")
-

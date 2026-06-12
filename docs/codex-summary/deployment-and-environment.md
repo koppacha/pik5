@@ -29,12 +29,23 @@
 - Laravel で `config:cache` を使っている環境では `.env`、`project.json`、config 変更後に `config:clear` または再 `config:cache` が必要。
 - `route:list` 実行時の vendor Deprecated は PHP バージョン由来のことがある。
 
+## Database Protection And Recovery
+
+- 本番Laravelでは `docker-compose.prod.yml` が `DB_PROTECT_DESTRUCTIVE_COMMANDS=true` を強制する。`APP_ENV` に依存せず、`db:wipe`、`migrate:fresh`、`migrate:refresh`、`migrate:reset` は `--force` 付きでも拒否される。
+- MySQLは `docker/mysql/conf.d/pik5.cnf` でROW形式binlogを30日保持し、`sync_binlog=1` と `innodb_flush_log_at_trx_commit=1` を明示する。
+- PITRにはbinlogだけでなく、それ以前のフルバックアップが必要。本番composeは `DB_BACKUP_ENABLED=true` を強制し、専用の `laravel-scheduler` サービスで `schedule:work` を常駐させて `db:backup` を日次実行する。`backups/mysql` は外部・別ホストのストレージへマウントする。
+- LaravelのガードはArtisan経由の破壊的コマンドだけを防ぐ。SQLクライアント、Prisma、アプリケーションコードによる削除にはDB権限分離とバックアップ監視が必要。
+- 現行composeのアプリDBユーザーは `bowsprit.*` に `ALL PRIVILEGES` を持つ。既存migration運用を壊さず権限を縮小するには、ランタイム用ユーザーとmigration用ユーザーを分離して段階的に切り替える。
+- 復旧時は本番DBへ直接binlogを流さず、隔離DBでフルバックアップとbinlogを適用して内容を検証する。詳細は `docs/database-recovery.md` を参照する。
+
 ## Build / Runtime
 
 - `c4e3a83b` は Next Dockerfile のベースイメージ変更のみだったが、直前の Prisma/Next 更新が実質リスクになった。
 - 本番で `migrate deploy` は成功しても、Next の実行プロセスが古いままだと症状が残ることがある。
 - `node_modules` の `esbuild` が別プラットフォーム向けでローカル build が失敗することがある。Next build の結果と切り分ける。
 - `next/package.json` の `prebuild` で `prisma generate` を常時実行する。`next/generated/prisma` が Git 追跡対象外でも、`yarn build` / `npm run build` 前に generated client を再生成するため。
+- dev 起動では `prebuild` が実行されないため、`next/generated/prisma` がない環境では `yarn prisma generate` を実行してから `yarn dev` を起動する必要がある。欠落時は `../generated/prisma/client` の module not found で 500 になる。
+- webpack cache の `*.pack.gz_` rename に関する ENOENT は、Prisma Client 欠落によるコンパイル失敗時にも出る二次的なキャッシュ警告であり、Prisma の module not found とは切り分ける。
 
 ## Release After Pull
 

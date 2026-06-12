@@ -4,6 +4,7 @@
 
 - フロントの基本チェックは `next/` で `yarn lint`。
 - 必要に応じて `yarn build`。
+- `next dev` と `next build` は同じ `.next` を更新するため、同時実行しない。ビルド検証時は開発サーバーを停止し、競合が疑われる場合は `.next` を削除してから `yarn build` を実行する。
 - `next lint` が通っても、モバイル表示や Hydration mismatch は別途ブラウザ確認が必要。
 - 動的ルートファイルはシェルで必ず引用する。
 
@@ -12,6 +13,8 @@
 - 変更した PHP ファイルは `php -l path/to/file.php` で構文確認する。
 - Laravel API ルートは `php artisan route:list --path=...` で確認する。
 - Laravel テストは `laravel/tests/` にあり、コンテナ内で `php artisan test` または `vendor/bin/phpunit`。
+- Laravel 全体テストは `phpunit.xml` で `DB_CONNECTION=sqlite`、`DB_DATABASE=:memory:` を `force="true"` 付きで明示し、`tests/CreatesApplication.php` でもブート後の既定接続と名前付き `mysql` 接続をSQLiteインメモリへ強制する。Docker環境変数と設定キャッシュにMySQL開発DBが固定されているため、phpunit環境変数だけでは `RefreshDatabase` が開発DBに対して `migrate:fresh` を実行する危険がある。
+- 現在のマイグレーションにはSQLite非互換の `alter table ... drop column` が含まれるため、認証系テストは開発DBを変更せず安全に失敗する。SQLite対応またはテスト専用スキーマ整備が別途必要。
 - DB 関連テストは idempotent にし、既存ローカルボリュームへ依存しない。
 - seed 依存テストでは `php artisan migrate:fresh` と対象 Seeder でリセットする。
 

@@ -4,12 +4,35 @@ namespace App\Http\Controllers;
 
 use App\Models\Battle;
 use App\Models\EventResult;
+use App\Services\EventStampService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
 class EventResultController extends Controller
 {
+    private const CATEGORY_NAME_IDS = [
+        '期間限定ランキング' => 151,
+        '旧日替わりチャレンジ' => 161,
+        '全ステージ一本勝負' => 191,
+        'タマゴムシ取り大会' => 211,
+        'RTA並走会' => 231,
+        'ダンドリバトル大会' => 241,
+        'チャレンジリレー' => 242,
+        'その他' => 251,
+        'インスタント研究会' => 261,
+        'ピクチャレアリーナ対戦' => 262,
+    ];
+
+    private const EVENT_CATEGORY_FALLBACKS = [
+        151101 => 151,
+        161022 => 161,
+        190209 => 191,
+        190321 => 191,
+        210829 => 211,
+        260704 => 151,
+    ];
+
     private const CATEGORY_MAP = [
         151 => ['期間限定ランキング'],
         161 => ['旧日替わりチャレンジ'],
@@ -21,11 +44,12 @@ class EventResultController extends Controller
         242 => ['チャレンジリレー'],
         251 => ['その他'],
         261 => ['インスタント研究会'],
+        262 => ['ピクチャレアリーナ対戦'],
     ];
 
-    private const SCORE_RANK_CATEGORY_IDS = [161, 191, 211, 241, 261];
+    private const SCORE_RANK_CATEGORY_IDS = [161, 191, 211, 241, 261, 262];
 
-    public function show(Request $request, ?string $category = null): JsonResponse
+    public function show(Request $request, EventStampService $eventStampService, ?string $category = null): JsonResponse
     {
         $categoryId = $this->normalizeCategory($category);
         if ($categoryId === null) {
@@ -33,7 +57,7 @@ class EventResultController extends Controller
         }
 
         $rows = $this->eventRows($categoryId);
-        $rankedRows = $this->withEventRanks($rows);
+        $rankedRows = $eventStampService->withEventRanks($rows);
         $battleScores = $categoryId === 241 ? $this->latestBattleScores() : [];
 
         $users = [];
@@ -53,7 +77,7 @@ class EventResultController extends Controller
                 ];
             }
 
-            $stamp = $this->stamp($row);
+            $stamp = $eventStampService->stamp($row);
             $eventId = (int)$row['event_id'];
             $users[$userId]['score'] += $this->score($row);
             $users[$userId]['rps'] += (int)$row['rps'];
@@ -99,7 +123,20 @@ class EventResultController extends Controller
             'category' => $categoryId,
             'posts' => $ranking,
             'events' => $this->events($rows),
+            'last_updated_at' => collect($ranking)->max('created_at'),
         ]);
+    }
+
+    public function category(int $event): JsonResponse
+    {
+        $category = EventResult::where('event_id', $event)->value('category');
+        $categoryId = self::CATEGORY_NAME_IDS[$category] ?? self::EVENT_CATEGORY_FALLBACKS[$event] ?? null;
+
+        if ($categoryId === null) {
+            return response()->json(['message' => 'Event category not found'], 404);
+        }
+
+        return response()->json(['category' => $categoryId]);
     }
 
     private function normalizeCategory(?string $category): ?int
@@ -144,81 +181,6 @@ class EventResultController extends Controller
 
                 return $data;
             });
-    }
-
-    private function withEventRanks(Collection $rows): Collection
-    {
-        return $rows
-            ->groupBy('event_id')
-            ->flatMap(static function (Collection $eventRows) {
-                $rank = 1;
-                $count = 1;
-                $beforeScore = null;
-                $members = $eventRows->count();
-
-                return $eventRows
-                    ->sortBy([
-                        ['score', 'desc'],
-                        ['id', 'asc'],
-                    ])
-                    ->values()
-                    ->map(static function (array $row) use (&$rank, &$count, &$beforeScore, $members) {
-                        $score = (int)$row['score'];
-                        if ($beforeScore !== $score) {
-                            $rank = $count;
-                        }
-
-                        $row['event_rank'] = $rank;
-                        $row['event_members'] = $members;
-                        $beforeScore = $score;
-                        $count++;
-
-                        return $row;
-                    });
-            })
-            ->values();
-    }
-
-    private function stamp(array $row): int
-    {
-        $result = (string)$row['result'];
-        $category = (string)$row['category'];
-        $members = (int)$row['event_members'];
-        $rank = (int)$row['event_rank'];
-
-        if ($result === 'm') {
-            return (int)ceil($members / 6) + 7;
-        }
-
-        if ($result === 'e') {
-            return 2;
-        }
-
-        if ($category === 'ダンドリバトル大会') {
-            return $members - $rank + 1;
-        }
-
-        if ($result === 'p') {
-            return 1;
-        }
-
-        if ($category === 'インスタント研究会') {
-            return $members >= 6 && $rank <= ceil($members / 3) ? 5 : 3;
-        }
-
-        if ($category === 'チャレンジリレー') {
-            return (int)$row['team'] !== 0 ? 3 : 5;
-        }
-
-        if ($category === 'RTA並走会') {
-            return (int)$row['team'] !== 0 ? 5 : 7;
-        }
-
-        if ($category === '期間限定ランキング') {
-            return (int)$row['team'] !== 0 ? 4 : 6;
-        }
-
-        return 3;
     }
 
     private function score(array $row): int

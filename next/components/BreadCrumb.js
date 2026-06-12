@@ -9,9 +9,33 @@ import NowLoading from "./NowLoading";
 import {StairIcon} from "../styles/pik5.css";
 import {logger} from "../lib/logger";
 
-export default function BreadCrumb({info, rule, eventMode = false}){
+export default function BreadCrumb({info, rule, eventMode = false, eventCategory = null, eventId = null, userMode = false}){
 
     const {t} = useLocale()
+    if(userMode){
+        return (
+            <Box style={{marginBottom:"0.5em"}}>
+                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                <FontAwesomeIcon className="stair-icon" icon={faStairs}/>
+                <span>{t.g.userPage}</span>
+            </Box>
+        )
+    }
+    if(eventCategory){
+        return (
+            <Box style={{marginBottom:"0.5em"}}>
+                <Link href="/"><FontAwesomeIcon icon={faHouseChimney}/></Link>
+                <FontAwesomeIcon className="stair-icon" icon={faStairs}/>
+                <Link href="/total/4">{t.stage[4]}</Link>
+                <FontAwesomeIcon className="stair-icon" icon={faStairs}/>
+                <Link href={`/total/4/${eventCategory}`}>{t.limited.category?.[eventCategory] ?? eventCategory}</Link>
+                {eventId && <>
+                    <FontAwesomeIcon className="stair-icon" icon={faStairs}/>
+                    <Link href={`/limited/${eventId}`}>{t.limited[eventId] ?? eventId}</Link>
+                </>}
+            </Box>
+        )
+    }
     if(eventMode){
         return (
             <Box style={{marginBottom:"0.5em"}}>

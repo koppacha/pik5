@@ -27,6 +27,7 @@ import {useFetchToken} from "../../hooks/useFetchToken";
 import ConsoleList from "../../components/record/ConsoleList";
 import DifficultyList from "../../components/record/DifficultyList";
 import PullDownDifficulty from "../../components/form/PullDownDifficulty";
+import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
 
 export async function getStaticPaths(){
     return {
@@ -70,7 +71,7 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
-    let info = null, parent = null, stages = [], ruleId = null
+    let info = null, parent = null, stages = [], specialStages = [], ruleId = null, eventCategory = null
 
     // ステージ情報をリクエスト
     const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
@@ -84,9 +85,15 @@ export async function getStaticProps({params}){
             }
             // シリーズ番号に基づくステージ群の配列をリクエスト
             const reqStage = rule || info.parent
-            const res = await fetch(`http://laravel:8000/api/stages/${reqStage}`)
+            const res = await fetch(`http://laravel:8000/api/stages/${reqStage}?include_special=1&series=${info.series}`)
             if(res.status < 300) {
-                stages = await res.json()
+                const stagesPayload = await res.json()
+                stages = stagesPayload.stages ?? stagesPayload
+                specialStages = stagesPayload.specialStages ?? []
+            }
+            if(Number(stage) >= 1000 && Number(stage) <= 9999){
+                const categoryRes = await fetch(`http://laravel:8000/api/event-category/${info.parent}`)
+                eventCategory = categoryRes.ok ? (await categoryRes.json()).category : null
             }
         }
     } else {
@@ -121,7 +128,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            stages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide
+            stages, specialStages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide, eventCategory
         },
         revalidate: 86400,
     }
@@ -129,6 +136,8 @@ export async function getStaticProps({params}){
 export default function Stage(param){
 
     const {t, r, locale} = useLocale()
+    const isSpecialStage = Number(param.stage) >= 900 && Number(param.stage) <= 1000
+    const initialDisplayedRule = isSpecialStage ? SPECIAL_STAGES_RULE : Number(param.rule)
 
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
@@ -136,6 +145,13 @@ export default function Stage(param){
 
     // ボタンフラグ
     const [isProcessing, setIsProcessing] = useState(false)
+    const [displayedRule, setDisplayedRule] = useState(initialDisplayedRule)
+    const [isStageListSwitching, setIsStageListSwitching] = useState(false)
+
+    useEffect(() => {
+        setDisplayedRule(initialDisplayedRule)
+        setIsStageListSwitching(false)
+    }, [initialDisplayedRule])
 
     const handleClose = () => setOpen(false)
 
@@ -214,6 +230,24 @@ export default function Stage(param){
         {fallbackData: {data: param.posts}}
     )
     const rankingPosts = stageRecordRes?.data ?? param.posts
+    const stageListKey = displayedRule !== SPECIAL_STAGES_RULE && Number(displayedRule) !== Number(param.rule)
+        ? `/api/server/stages/${displayedRule}`
+        : null
+    const {data: stageListRes} = useSWR(stageListKey, fetcher)
+    const displayedStages = stageListKey ? (stageListRes?.data ?? []) : param.stages
+
+    const handleConventionalRuleClick = (event, rule) => {
+        if(isStageListSwitching){
+            event.preventDefault()
+            setDisplayedRule(rule)
+            setIsStageListSwitching(false)
+        }
+    }
+
+    const handleAdditionalRuleClick = (rule) => {
+        setDisplayedRule(rule)
+        setIsStageListSwitching(true)
+    }
 
     // キャッシュを再作成するボタン
     const handlePurgeCache = () => {
@@ -233,7 +267,12 @@ export default function Stage(param){
                 <title>{stageName+" ("+t.title[param.info?.series]+") - "+t.title[0]}</title>
             </Head>
             <Box className="page-header">
-                <BreadCrumb info={param.info} rule={param.rule}/>
+                <BreadCrumb
+                    info={param.info}
+                    rule={param.rule}
+                    eventCategory={param.eventCategory}
+                    eventId={Number(param.stage) >= 1000 && Number(param.stage) <= 9999 ? param.info.parent : null}
+                />
                 <Typography variant="" className="subtitle">#{param.stage}</Typography><br/>
                 <Typography variant="" className="title">{stageName}</Typography>{ruleName}<br/>
                 <Typography variant="" className="subtitle">{stageNameR}</Typography><br/><br/>
@@ -259,8 +298,29 @@ export default function Stage(param){
                     <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </Grid>
             </Grid>
-            <RuleList param={param}/>
-            <StageList parent={param.parent.stage_id} currentStage={param.stage} stages={param.stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+            <RuleList
+                param={param}
+                displayedRule={displayedRule}
+                onConventionalRuleClick={handleConventionalRuleClick}
+                onAdditionalRuleClick={handleAdditionalRuleClick}
+            />
+            {
+                displayedRule === SPECIAL_STAGES_RULE
+                    ? <SpecialStages
+                        series={param.info.series}
+                        stages={param.specialStages}
+                        consoles={param.consoles}
+                        year={param.year}
+                    />
+                    : <StageList
+                        parent={param.parent.stage_id}
+                        currentStage={param.stage}
+                        stages={displayedStages}
+                        consoles={param.consoles}
+                        rule={displayedRule}
+                        year={param.year}
+                    />
+            }
             {!pik4range.includes(Number(param.rule)) && <ConsoleList param={param}/>}
             {pik4range.includes(Number(param.rule)) && <DifficultyList param={param}/>}
             <Box

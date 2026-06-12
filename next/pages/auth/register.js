@@ -11,6 +11,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {logger} from "../../lib/logger";
 import SeoHead from "../../components/SeoHead"
+import {passwordPattern} from "../../lib/passwordPolicy"
 
 export async function getServerSideProps(context){
     const { getCachedUsers } = await import("../../lib/usersCache")
@@ -41,11 +42,14 @@ export default function Register() {
         userId: yup
             .string()
             .matches(/^[\w-]+$/, "使える文字種は半角英数字、アンダーバー、ハイフンのみです。")
+            .min(3, "ユーザーIDは3文字以上で入力してください。")
             .max(32, "ユーザーIDは32文字までです。")
             .required(t.yup.required),
         password: yup
             .string()
-            .matches(/^[^<>\\"']*$/, "特殊な文字は使えません。")
+            .matches(passwordPattern, "パスワードは安全な半角英数記号で入力してください。")
+            .min(8, "パスワードは8文字以上で入力してください。")
+            .max(72, "パスワードは72文字以下で入力してください。")
             .required(t.yup.required),
     })
 
@@ -101,7 +105,7 @@ export default function Register() {
                                 type="text"
                                 variant="standard"
                                 error={'name' in errors}
-                                helperText={errors.name?.message}
+                                helperText={errors.name?.message || t.g.registerHandleHelp}
                             /><br/>
                             <TextField
                                 {...register('userId')}
@@ -110,7 +114,7 @@ export default function Register() {
                                 type="text"
                                 variant="standard"
                                 error={'userId' in errors}
-                                helperText={errors.userId?.message}
+                                helperText={errors.userId?.message || t.g.registerUserIdHelp}
                             /><br/>
                             <TextField
                                 {...register('password')}
@@ -119,7 +123,7 @@ export default function Register() {
                                 type="password"
                                 variant="standard"
                                 error={'password' in errors}
-                                helperText={errors.password?.message}
+                                helperText={errors.password?.message || t.g.registerPasswordHelp}
                             /><br/>
                             <AuthButton onClick={handleSubmit(onSubmit)}>{t.g.submit}</AuthButton>
                         </Box>
@@ -146,3 +150,5 @@ export default function Register() {
         </>
     );
 }
+
+Register.hideFooter = true

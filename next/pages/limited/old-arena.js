@@ -168,8 +168,7 @@ export default function Limited(param){
     async function arenaSubmit() {
         const confirm = window.confirm(t.g.confirm)
         if (confirm) {
-            const res = await fetch(`/api/server/arena/update/${currentTeam}`)
-            console.log(res.status)
+            await fetch(`/api/server/arena/update/${currentTeam}`)
         }
     }
 

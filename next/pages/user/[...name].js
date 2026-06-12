@@ -21,6 +21,7 @@ import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useState} from "react";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import DashBoard from "../../components/top/DashBoard";
+import BreadCrumb from "../../components/BreadCrumb";
 
 export async function getStaticPaths(){
     return {
@@ -89,7 +90,8 @@ export async function getStaticProps({params}){
 export default function Stage(param){
 
     const {t} = useLocale()
-    const firstPostDate = new Date(param.info[0].oldest_created_at)
+    const firstPostDate = param.info.first_posted_at ? new Date(param.info.first_posted_at) : null
+    const lastPostDate = param.info.last_posted_at ? new Date(param.info.last_posted_at) : null
 
     const [isProcessing, setIsProcessing] = useState(false)
 
@@ -181,14 +183,17 @@ export default function Stage(param){
                 <title>{param.userName+" - "+t.title[0]}</title>
             </Head>
             <Box className="page-header">
-                {t.stage.user}<br/>
+                <BreadCrumb userMode={true}/>
                 <Typography variant="" className="title">{ param.userName }</Typography><br/>
                 <Typography variant="" className="subtitle">@{param.user}</Typography>
                 <Grid container>
-                    <UserInfoBox className="user-info-box"><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
-                    <UserInfoBox className="user-info-box"><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.totalPosts}：</span>{param.info.post_count}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.firstPostDate}：</span>{firstPostDate ? dateFormat(firstPostDate) : "-"}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.lastPostDate}：</span>{lastPostDate ? dateFormat(lastPostDate) : "-"}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.keywordEditCount}：</span>{param.info.keyword_edit_count}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.eventStampCount}：</span>{param.info.event_stamp_count}</UserInfoBox>
                     <UserInfoBox className="user-info-box">
-                        <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                        <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                     </UserInfoBox>
                 </Grid>
             </Box>

@@ -26,6 +26,7 @@ import {
     RECORD_BROWSER_NOTIFICATION_ENABLED_KEY,
     writeNotificationStorage,
 } from "../../lib/recordNotification"
+import {isValidPassword} from "../../lib/passwordPolicy"
 
 function isValidEmailSimple(rawEmail) {
     const email = String(rawEmail || '').trim()
@@ -169,8 +170,8 @@ export default function AuthConfigPage() {
                 setError('新しいパスワード（確認）が一致しません')
                 return
             }
-            if (newPassword.length < 8) {
-                setError('新しいパスワードは8文字以上にしてください')
+            if (!isValidPassword(newPassword)) {
+                setError('新しいパスワードは8文字以上72文字以下の安全な半角英数記号にしてください')
                 return
             }
         }

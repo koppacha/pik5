@@ -17,6 +17,15 @@ trait CreatesApplication
 
         $app->make(Kernel::class)->bootstrap();
 
+        $config = $app->make('config');
+        $sqlite = $config->get('database.connections.sqlite');
+        $sqlite['database'] = ':memory:';
+        $config->set('database.default', 'sqlite');
+        $config->set('database.connections.sqlite', $sqlite);
+        $config->set('database.connections.mysql', $sqlite);
+        $app->make('db')->purge();
+        $app->make('db')->setDefaultConnection('sqlite');
+
         return $app;
     }
 }

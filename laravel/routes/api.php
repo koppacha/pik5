@@ -71,8 +71,9 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 // 通常総合ランキング取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController::class, 'show' ]);
-    Route::get ( 'stages/{series}' , [ TotalController::class, 'stage_list' ]);
+    Route::get ( 'stages/{series}' , [ TotalController::class, 'stages' ]);
     Route::get ( 'event-total/{category?}' , [ EventResultController::class, 'show' ]);
+    Route::get ( 'event-category/{event}' , [ EventResultController::class, 'category' ]);
 });
 // ステージ情報取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {

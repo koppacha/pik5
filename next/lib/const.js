@@ -13,6 +13,41 @@ export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 3
 // 全総合ランキング集計対象のルールID
 export const totalRankingRules = [10, 11, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
 
+export const eventCategoriesWithStageList = [151, 161, 191, 211]
+
+export const seriesNavigationRules = {
+    1: [10, 11],
+    2: [21, 22, 24, 25, 29],
+    3: [31, 32, 33, 35, 36],
+    4: [41, 42, 43, 47],
+}
+
+export function stageRules(info){
+    const parent = Number(info?.parent < 10 ? info?.stage_id : info?.parent)
+    if(!parent) return []
+
+    const rules = [parent]
+
+    if(Number(info?.series) === 1) rules.push(11)
+    if(parent === 21) rules.push(23, 26, 27, 28)
+    if(parent === 22){
+        if(![209, 214, 216, 223].includes(Number(info?.stage_id))) rules.push(24)
+        rules.push(26, 27, 28)
+    }
+    if(Number(info?.series) === 3 && parent !== 35) rules.push(34)
+    if(parent === 41) rules.push(44)
+    if(parent === 42) rules.push(45)
+    if(parent === 43) rules.push(46)
+
+    return [...new Set(rules)]
+}
+
+export function additionalStageRules(info){
+    const rules = seriesNavigationRules[Number(info?.series)] ?? []
+    const currentRules = stageRules(info)
+    return rules.filter(rule => !currentRules.includes(rule))
+}
+
 // ルールIDから配列に変換する関数
 export function rule2array(rule){
     const number = [1, 2, 3, 10, 11, 20, 21, 22, 23, 24, 25, 29, 91, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
@@ -273,6 +308,9 @@ export function speedrunStageSeries(stage) {
 
 // 期間限定総合・参加者企画
 export const lm = [151101, 160306, 160319, 160423, 160430, 160806, 170101, 170211, 170325, 170429, 171013, 180101, 180901, 190209, 190321, 190802, 200723, 200918, 210829, 211105, 221008]
+
+// イベントカテゴリ
+export const ev = [151, 161, 211, 231, 241, 242, 261, 262, 251]
 
 // その他
 export const ot = [901, 902, 904, 905, 906, 907, 908, 909, 910, 911, 912, 913, 914, 915, 916]

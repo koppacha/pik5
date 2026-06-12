@@ -98,6 +98,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             videoUrl: defaultVideoUrl,
             comment: defaultComment,
             "region-score": defaultScore,
+            pikmin: 0,
+            treasure: 0,
+            caveTime: "00:00:00",
         })
         setUserAgent(window.navigator.userAgent)
         setConsole(defaultConsole)
@@ -245,8 +248,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             success(result) {
                 setImg(result)
             },
-            error(err) {
-                console.log(err.message)
+            error() {
+                setImg(null)
             }
         })
     }
@@ -394,7 +397,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         value={difficulty || ""}
                         margin="normal"
-                        className={isPik4() || "hidden"}
+                        className={isPik4() ? "" : "hidden"}
                     >
                         {
                             [1, 2, 3].map((key) =>
@@ -406,7 +409,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         value="check"
                         selected={regionSelected}
                         color="success"
-                        className={[203, 213, 228].includes(info?.stage_id) || "hidden"}
+                        className={[203, 213, 228].includes(info?.stage_id) ? "" : "hidden"}
                         onChange={() => {
                             const nextSelected = !regionSelected
                             setRegionSelected(nextSelected)
@@ -431,9 +434,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'region-score' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={isRegion() || "hidden"}
+                        className={isRegion() ? "" : "hidden"}
                     />
                     <TextField
                         {...register('pikmin')}
@@ -451,9 +453,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'pikmin' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('treasure')}
@@ -471,9 +472,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'treasure' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('caveTime')}
@@ -491,9 +491,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'caveTime' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="00:00:00"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('time')}
@@ -513,7 +512,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         helperText={errors.time?.message}
                         value={timeValue}
                         margin="normal"
-                        className={isTime() || "hidden"}
+                        className={isTime() ? "" : "hidden"}
                     />
                     <TextField
                         {...register('score')}
@@ -526,7 +525,6 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'score' in errors}
                         helperText={errors.score?.message}
-                        defaultValue={0}
                         value={score}
                         margin="normal"
                         disabled={(isTime() || [25].includes(rule) || isRegion()) && true}

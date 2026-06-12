@@ -41,6 +41,7 @@
 ## NextAuth / Prisma 障害切り分け
 
 - NextAuth credentials の `authorize` が例外を握りつぶして `null` を返すと、DB接続・bcrypt・Prisma例外でも画面上は「ID/パスワード不一致」になる。
+- bcryptは入力の先頭72バイトだけを照合対象にする。多バイト文字や72文字超を許可すると異なる入力が同一パスワードとして照合されうるため、新規登録・パスワード変更・パスワードリセットでは、安全な半角英数記号8文字以上72文字以下に制限する。
 - 本番ログイン 401 とサインアップ 500 が同時に起きる場合は、Prisma疎通、DB migration、環境変数、Next プロセス再起動を優先的に確認する。
 - 一時的に `authorize` の catch へ `logger.error('credentials authorize failed', e)` を入れると、401 の背後の例外を取れる。
 - Prisma migration 未適用の場合、`emailHash` などのカラム不足でサインアップ/ログインが失敗する。

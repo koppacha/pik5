@@ -412,7 +412,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
                                 <Grid item xs={4} sm={3} md={2} style={categoryGridItemStyle}>
                                     {renderCategoryCell(series, true)}
                                 </Grid>
-                                {consoleCategoryRules.includes(Number(series)) && consoleRows(series).map(row => (
+                                {consoleCategoryRules.includes(Number(series)) && consoleRows(series).length > 1 && consoleRows(series).map(row => (
                                     <Grid item xs={4} sm={3} md={2} key={`${series}-${row.console}`} style={categoryGridItemStyle}>
                                         {renderConsoleCell(series, row)}
                                     </Grid>

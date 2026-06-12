@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pik5 Development Statistics</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #0b1020; color: #edf2f7; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1020; }
+    main { width: min(1440px, 100%); margin: 0 auto; padding: 32px 20px 64px; }
+    h1, h2 { margin: 0; letter-spacing: 0; }
+    h1 { font-size: clamp(24px, 4vw, 38px); }
+    h2 { margin-top: 36px; font-size: 20px; }
+    p { margin: 8px 0 0; color: #9aa8bd; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 24px; }
+    .card { padding: 18px; border: 1px solid #26334d; border-radius: 8px; background: #121a2d; }
+    .label { color: #9aa8bd; font-size: 12px; }
+    .value { margin-top: 8px; font-size: 26px; font-weight: 700; }
+    .table-wrap { overflow-x: auto; margin-top: 12px; border: 1px solid #26334d; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; background: #121a2d; font-size: 13px; }
+    th, td { padding: 11px 14px; border-bottom: 1px solid #26334d; text-align: left; white-space: nowrap; }
+    th { position: sticky; top: 0; color: #a9b8d0; background: #18243a; font-size: 12px; }
+    tr:last-child td { border-bottom: 0; }
+    .number { text-align: right; font-variant-numeric: tabular-nums; }
+    code { color: #7dd3fc; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Development Statistics</h1>
+    <p>pik5 repository activity dashboard / 更新: 2026/6/1 22:57:56</p>
+    <section class="cards">
+      <div class="card"><div class="label">Commits</div><div class="value">304</div></div>
+      <div class="card"><div class="label">Changed lines</div><div class="value">7,979,888</div></div>
+      <div class="card"><div class="label">Codex sessions</div><div class="value">32</div></div>
+      <div class="card"><div class="label">User prompt chars</div><div class="value">86,022</div></div>
+    </section>
+    <h2>Monthly Dashboard</h2>
+    <div class="table-wrap"><table><thead><tr><th>Month</th><th class="number">Changed lines</th><th class="number">Prompt chars</th></tr></thead><tbody>
+      <tr><td>2026年06月</td><td class="number">0</td><td class="number">697</td></tr>
+      <tr><td>2026年05月</td><td class="number">5,208</td><td class="number">47,913</td></tr>
+      <tr><td>2026年04月</td><td class="number">17,208</td><td class="number">12,672</td></tr>
+      <tr><td>2026年03月</td><td class="number">1,886</td><td class="number">9,298</td></tr>
+      <tr><td>2026年02月</td><td class="number">4,939</td><td class="number">11,896</td></tr>
+      <tr><td>2026年01月</td><td class="number">3,488</td><td class="number">3,546</td></tr>
+      <tr><td>2025年11月</td><td class="number">1,469</td><td class="number">0</td></tr>
+      <tr><td>2025年10月</td><td class="number">337</td><td class="number">0</td></tr>
+      <tr><td>2025年09月</td><td class="number">3,497</td><td class="number">0</td></tr>
+      <tr><td>2025年07月</td><td class="number">1,456</td><td class="number">0</td></tr>
+      <tr><td>2025年05月</td><td class="number">72</td><td class="number">0</td></tr>
+      <tr><td>2025年04月</td><td class="number">1,254</td><td class="number">0</td></tr>
+      <tr><td>2025年02月</td><td class="number">400</td><td class="number">0</td></tr>
+      <tr><td>2025年01月</td><td class="number">1,235</td><td class="number">0</td></tr>
+      <tr><td>2024年12月</td><td class="number">167</td><td class="number">0</td></tr>
+      <tr><td>2024年11月</td><td class="number">1,259</td><td class="number">0</td></tr>
+      <tr><td>2024年09月</td><td class="number">1,029</td><td class="number">0</td></tr>
+      <tr><td>2024年08月</td><td class="number">560</td><td class="number">0</td></tr>
+      <tr><td>2024年07月</td><td class="number">3,068</td><td class="number">0</td></tr>
+      <tr><td>2024年04月</td><td class="number">812</td><td class="number">0</td></tr>
+      <tr><td>2024年03月</td><td class="number">1,642</td><td class="number">0</td></tr>
+      <tr><td>2024年02月</td><td class="number">1,372</td><td class="number">0</td></tr>
+      <tr><td>2024年01月</td><td class="number">2,372</td><td class="number">0</td></tr>
+      <tr><td>2023年12月</td><td class="number">1,467</td><td class="number">0</td></tr>
+      <tr><td>2023年11月</td><td class="number">2,369</td><td class="number">0</td></tr>
+      <tr><td>2023年10月</td><td class="number">1,159</td><td class="number">0</td></tr>
+      <tr><td>2023年09月</td><td class="number">5,615</td><td class="number">0</td></tr>
+      <tr><td>2023年08月</td><td class="number">2,216</td><td class="number">0</td></tr>
+      <tr><td>2023年07月</td><td class="number">16,581</td><td class="number">0</td></tr>
+      <tr><td>2023年06月</td><td class="number">27,988</td><td class="number">0</td></tr>
+      <tr><td>2023年05月</td><td class="number">6,575</td><td class="number">0</td></tr>
+      <tr><td>2023年04月</td><td class="number">1,582</td><td class="number">0</td></tr>
+      <tr><td>2023年03月</td><td class="number">14,083</td><td class="number">0</td></tr>
+      <tr><td>2023年02月</td><td class="number">7,554</td><td class="number">0</td></tr>
+      <tr><td>2023年01月</td><td class="number">7,837,969</td><td class="number">0</td></tr>
+    </tbody></table></div>
+    <h2>Commit History</h2>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Hash</th><th>Version</th><th class="number">Changed lines</th><th>Comment</th></tr></thead><tbody>
+      <tr><td>2026-05-14</td><td><code>7687c4bb</code></td><td>ver.-.--</td><td class="number">2,151</td><td>テイクした投稿ステージの自動採番と場札UI・投稿導線を強化</td></tr>
+      <tr><td>2026-05-05</td><td><code>f29acab7</code></td><td>ver.-.--</td><td class="number">2,815</td><td>AGENTS, 詳細設計書, Playwright, Phaserの導入とプロトタイプ版の作成（手札操作実装まで）</td></tr>
+      <tr><td>2026-05-05</td><td><code>21d8fab5</code></td><td>ver.-.--</td><td class="number">72</td><td>MSSプロトタイプ版の受け入れテスト</td></tr>
+      <tr><td>2026-05-05</td><td><code>539e978f</code></td><td>ver.3.15</td><td class="number">170</td><td>ver.3.15 ステージ数表示の不具合修正、ライトテーマの一部フォント変更</td></tr>
+      <tr><td>2026-04-29</td><td><code>7ee72b4e</code></td><td>ver.3.15</td><td class="number">950</td><td>ver.3.15 Codex: トップページに次回のイベント、新着キーワード、ピックアップ動画を追加</td></tr>
+      <tr><td>2026-04-25</td><td><code>c4e3a83b</code></td><td>ver.3.15</td><td class="number">2</td><td>ver.3.15 Prod-Build Error Fix</td></tr>
+      <tr><td>2026-04-25</td><td><code>32f19f07</code></td><td>ver.3.15</td><td class="number">31</td><td>ver.3.15 Codex: ソロビンゴでバリデーションが正常に動作していない不具合の修正</td></tr>
+      <tr><td>2026-04-13</td><td><code>d3887a48</code></td><td>ver.3.15</td><td class="number">15,627</td><td>ver.3.15 Codex: Next.js 14.x系、Prisma 7.x系へのアップグレードおよびその依存問題の解消</td></tr>
+      <tr><td>2026-04-12</td><td><code>a1d949a4</code></td><td>ver.3.15</td><td class="number">409</td><td>ver.3.15 Codex: 新着記録一覧や通知領域で変更前の名前が表示されることのある不具合を修正、AGENTS.mdの整理</td></tr>
+      <tr><td>2026-04-07</td><td><code>fc903da4</code></td><td>ver.3.15</td><td class="number">62</td><td>ver.3.15 ユニークIDが正常に発番されない不具合の修正</td></tr>
+      <tr><td>2026-04-04</td><td><code>80504833</code></td><td>ver.3.15</td><td class="number">127</td><td>ver.3.15 軽微修正と本番環境の起動ポリシー関連を整理</td></tr>
+      <tr><td>2026-03-25</td><td><code>b7fee238</code></td><td>ver.3.14</td><td class="number">11</td><td>ver.3.14 異なる順位のシャドウが適用される不具合を修正</td></tr>
+      <tr><td>2026-03-24</td><td><code>0dde747a</code></td><td>ver.3.14</td><td class="number">65</td><td>ver.3.14 ライトテーマでリロードすると一部のスタイルがダークテーマになる不具合の修正</td></tr>
+      <tr><td>2026-03-23</td><td><code>b6266b55</code></td><td>ver.3.14</td><td class="number">12</td><td>ver.3.14 APIに関する軽微修正3</td></tr>
+      <tr><td>2026-03-23</td><td><code>75a51736</code></td><td>ver.3.14</td><td class="number">31</td><td>ver.3.14 APIに関する軽微修正2</td></tr>
+      <tr><td>2026-03-23</td><td><code>c7d8ac89</code></td><td>ver.3.14</td><td class="number">19</td><td>ver.3.14 APIに関する軽微修正</td></tr>
+      <tr><td>2026-03-23</td><td><code>fd5db002</code></td><td>ver.3.14</td><td class="number">125</td><td>ver.3.14 リリース前の軽微修正</td></tr>
+      <tr><td>2026-03-23</td><td><code>985c62a7</code></td><td>ver.3.14</td><td class="number">573</td><td>ver.3.14 Codex: 新着記録の通知機能を追加</td></tr>
+      <tr><td>2026-03-23</td><td><code>17d7af7f</code></td><td>ver.3.14</td><td class="number">1,050</td><td>ver.3.14 Codex: サイトで扱う色情報を一本化してライトテーマの視認性を改善、アクセントカラーをシリーズごとに変化させるようにした</td></tr>
+      <tr><td>2026-02-23</td><td><code>e02bc08a</code></td><td>ver.3.14</td><td class="number">294</td><td>ver.3.14 Codex: 投稿直後の処理を最適化し、ロード画面をBackdropに変更</td></tr>
+      <tr><td>2026-02-20</td><td><code>d8008c73</code></td><td>ver.3.14</td><td class="number">473</td><td>ver.3.14 Codex: 記録個別ページにおいて削除フラグ有効時に投稿内容を編集できるようにした</td></tr>
+      <tr><td>2026-02-17</td><td><code>13205771</code></td><td>ver.3.14</td><td class="number">742</td><td>ver.3.14 Codex: SEOの合理化および共通コンポーネント化、sitemap.xmlとrobots.txtの最新化</td></tr>
+      <tr><td>2026-02-14</td><td><code>43ccbcf7</code></td><td>ver.3.14</td><td class="number">109</td><td>ver.3.14 Codex: ライバルリストが表示されないことがある不具合を修正</td></tr>
+      <tr><td>2026-02-12</td><td><code>703d4807</code></td><td>ver.3.14</td><td class="number">156</td><td>ver.3.14 Codex: 全総合ランキングに段位認定ボーダーラインを追加</td></tr>
+      <tr><td>2026-02-12</td><td><code>ba169f36</code></td><td>ver.3.14</td><td class="number">185</td><td>ver.3.14 Codex: 全総合ランキング系はスコア順ではなくランクポイント順に表示するようにした</td></tr>
+      <tr><td>2026-02-12</td><td><code>97793805</code></td><td>ver.3.14</td><td class="number">501</td><td>ver.3.14 Codex: ユーザーネーム取得処理の共通キャッシュ化</td></tr>
+      <tr><td>2026-02-11</td><td><code>f64b745a</code></td><td>ver.3.14</td><td class="number">154</td><td>ver.3.14 Codex: Pikmin 4 RTAのNG+を除外してランク表示を正常化、他軽微修正</td></tr>
+      <tr><td>2026-02-11</td><td><code>aea72022</code></td><td>ver.3.14</td><td class="number">150</td><td>ver.3.14 Codex: Speedrun.comのユーザーIDを最大90日間キャッシュするようにした</td></tr>
+      <tr><td>2026-02-11</td><td><code>c24b94e5</code></td><td>ver.3.14</td><td class="number">36</td><td>ver.3.14 RTAのプラットフォームが正常表示されない不具合を修正し、Wii U VCとSwitch 2に対応</td></tr>
+      <tr><td>2026-02-07</td><td><code>8043d3b5</code></td><td>ver.3.14</td><td class="number">98</td><td>ver.3.14 Codex: ホスト名等取得に関わる不具合の修正と、バックエンドコンテナのセキュリティ強化</td></tr>
+      <tr><td>2026-02-07</td><td><code>a744e435</code></td><td>ver.3.14</td><td class="number">531</td><td>ver.3.14 Codex: App Versionの定数化と、Next.js汎用APIのセキュリティ向上</td></tr>
+      <tr><td>2026-02-07</td><td><code>f3760efb</code></td><td>ver.3.13</td><td class="number">1,510</td><td>ver.3.13 HTTPリクエストファイル、コマンド一覧ファイルの導入</td></tr>
+      <tr><td>2026-01-12</td><td><code>424a7c44</code></td><td>ver.3.13</td><td class="number">1,615</td><td>ver.3.13 翻訳を強化、70万等参考スコアを改定、ChatGPT Codex対応</td></tr>
+      <tr><td>2026-01-03</td><td><code>16b09607</code></td><td>ver.3.13</td><td class="number">1,375</td><td>ver.3.13 パスワード変更＆リセット機能を実装</td></tr>
+      <tr><td>2026-01-02</td><td><code>fa5a4af6</code></td><td>ver.3.13</td><td class="number">498</td><td>ver.3.13 ストレージ確保のため/recordと/comapreをSSR化</td></tr>
+      <tr><td>2025-11-12</td><td><code>5ebab6f0</code></td><td>ver.3.13</td><td class="number">1,467</td><td>ver.3.13 期間限定トリックテイキング制のプロトタイプ、利用規約改訂、ピクミン4 ver.1.10の難易度変更に対応</td></tr>
+      <tr><td>2025-11-05</td><td><code>3072b908</code></td><td>ver.3.13</td><td class="number">2</td><td>ver.3.13 軽微な不具合の暫定的な修正</td></tr>
+      <tr><td>2025-10-04</td><td><code>4feb73c5</code></td><td>ver.3.13</td><td class="number">337</td><td>ver.3.13 軽微修正とダンバト大会データの最新化</td></tr>
+      <tr><td>2025-09-29</td><td><code>1efac05a</code></td><td>ver.3.13</td><td class="number">29</td><td>ver.3.13 軽微修正</td></tr>
+      <tr><td>2025-09-25</td><td><code>dfcdfca1</code></td><td>ver.3.13</td><td class="number">100</td><td>ver.3.13 不足していた翻訳を追加</td></tr>
+      <tr><td>2025-09-16</td><td><code>6fb7f50e</code></td><td>ver.3.12</td><td class="number">4</td><td>ver.3.12 軽微修正2</td></tr>
+      <tr><td>2025-09-15</td><td><code>9bad41e1</code></td><td>ver.3.12</td><td class="number">30</td><td>ver.3.12 軽微修正</td></tr>
+      <tr><td>2025-09-15</td><td><code>a346e7dd</code></td><td>ver.3.12</td><td class="number">2,433</td><td>ver.3.12 ピクミンキーワードをリニューアル</td></tr>
+      <tr><td>2025-09-10</td><td><code>f5f6fe58</code></td><td>ver.3.12</td><td class="number">11</td><td>ver.3.12 軽微修正3</td></tr>
+      <tr><td>2025-09-10</td><td><code>8fc9d34f</code></td><td>ver.3.12</td><td class="number">68</td><td>ver.3.12 Speedrun系のスコア比較の勝敗が逆になる不具合の修正</td></tr>
+      <tr><td>2025-09-10</td><td><code>cc9e69d1</code></td><td>ver.3.12</td><td class="number">190</td><td>ver.3.12 星取表に「夜の探索RTA」を追加、タマゴムシなし70万RTAにアクセスできない不具合を修正</td></tr>
+      <tr><td>2025-09-07</td><td><code>5aa14114</code></td><td>ver.3.12</td><td class="number">2</td><td>ver.3.12 軽微修正2</td></tr>
+      <tr><td>2025-09-07</td><td><code>6bcff80e</code></td><td>ver.3.12</td><td class="number">32</td><td>ver.3.12 軽微修正</td></tr>
+      <tr><td>2025-09-06</td><td><code>31dfcb62</code></td><td>ver.3.12</td><td class="number">598</td><td>ver.3.12 夜の探索を追加</td></tr>
+      <tr><td>2025-07-31</td><td><code>043b7dc8</code></td><td>ver.3.12</td><td class="number">49</td><td>ver.3.12 ピクミン3・4で特定の遷移をすると投稿フォームが正常表示されない不具合を修正</td></tr>
+      <tr><td>2025-07-26</td><td><code>2e0f4aa4</code></td><td>ver.3.12</td><td class="number">1,407</td><td>ver.3.12 セルボックスにカラーラインを追加、タマゴムシ取り大会の準備、新期間限定のひな型を作成</td></tr>
+      <tr><td>2025-05-08</td><td><code>2cf8751b</code></td><td>ver.3.11</td><td class="number">2</td><td>ver.3.11 軽微修正6</td></tr>
+      <tr><td>2025-05-08</td><td><code>3cb3e3a9</code></td><td>ver.3.11</td><td class="number">3</td><td>ver.3.11 軽微修正5</td></tr>
+      <tr><td>2025-05-08</td><td><code>7a4d921b</code></td><td>ver.3.11</td><td class="number">2</td><td>ver.3.11 軽微修正4</td></tr>
+      <tr><td>2025-05-08</td><td><code>06db7be2</code></td><td>ver.3.11</td><td class="number">3</td><td>ver.3.11 軽微修正3</td></tr>
+      <tr><td>2025-05-06</td><td><code>8fd7aaa3</code></td><td>ver.3.11</td><td class="number">62</td><td>ver.3.11 軽微修正2</td></tr>
+      <tr><td>2025-04-29</td><td><code>26d5ad6a</code></td><td>ver.3.11</td><td class="number">18</td><td>ver.3.11 軽微修正</td></tr>
+      <tr><td>2025-04-29</td><td><code>12c96d99</code></td><td>ver.3.11</td><td class="number">1,236</td><td>ver.3.11 タイム基準ステージで暫定順位表示が逆になる不具合の修正</td></tr>
+      <tr><td>2025-02-04</td><td><code>2171b21e</code></td><td>ver.3.11</td><td class="number">400</td><td>ver.3.11 星取表の各種不具合修正＆全総合に対応、利用規約改訂</td></tr>
+      <tr><td>2025-01-14</td><td><code>88815edc</code></td><td>ver.3.11</td><td class="number">527</td><td>ver.3.11 総合ランキングのレンダリング周りを改善</td></tr>
+      <tr><td>2025-01-07</td><td><code>9cb85618</code></td><td>ver.3.11</td><td class="number">406</td><td>ver.3.11 各種軽微な不具合の修正</td></tr>
+      <tr><td>2025-01-03</td><td><code>1f28e562</code></td><td>ver.3.11</td><td class="number">264</td><td>ver.3.11 ダッシュボードに自動ライバル機能を追加</td></tr>
+      <tr><td>2025-01-01</td><td><code>1f9a0320</code></td><td>ver.3.10</td><td class="number">38</td><td>ver.3.10 ボーダースコアを2025年版に改訂、段位のクラス表記を変更</td></tr>
+      <tr><td>2024-12-02</td><td><code>d6342f83</code></td><td>ver.3.10</td><td class="number">22</td><td>ver.3.10 軽微修正</td></tr>
+      <tr><td>2024-12-01</td><td><code>dd836613</code></td><td>ver.3.10</td><td class="number">145</td><td>ver.3.10 リリース前の軽微修正（利用規約改定あり）</td></tr>
+      <tr><td>2024-11-25</td><td><code>a4082561</code></td><td>ver.3.10</td><td class="number">1,259</td><td>ver.3.10 35万RTA、段位認定システム、ダッシュボード刷新、管理者機能追加、ほか</td></tr>
+      <tr><td>2024-09-23</td><td><code>c61c969a</code></td><td>ver.3.10</td><td class="number">1,029</td><td>ver.3.10 スコアヒストリー機能を追加ほか（利用規約改定を含む）</td></tr>
+      <tr><td>2024-08-18</td><td><code>277c52a3</code></td><td>ver.3.09</td><td class="number">560</td><td>ver.3.09 軽微修正</td></tr>
+      <tr><td>2024-07-30</td><td><code>beab219c</code></td><td>ver.3.09</td><td class="number">48</td><td>ver.3.09 軽微修正</td></tr>
+      <tr><td>2024-07-29</td><td><code>c2aff44f</code></td><td>ver.3.09</td><td class="number">790</td><td>ver.3.09 アカウント作成周りの不具合を修正、週末ダンドリバトル戦績表ベータ版、Prisma Studio導入</td></tr>
+      <tr><td>2024-07-15</td><td><code>5793bc90</code></td><td>ver.3.09</td><td class="number">6</td><td>ver.3.09 軽微修正</td></tr>
+      <tr><td>2024-07-14</td><td><code>1b22576b</code></td><td>ver.3.09</td><td class="number">431</td><td>ver.3.09 リリース前の各種バグ修正</td></tr>
+      <tr><td>2024-07-13</td><td><code>2142ab13</code></td><td>ver.3.09</td><td class="number">488</td><td>ver.3.09 キャッシュ再作成ボタン実装、ユーザー別総合点計算API改善、ミドルウェア導入、特殊ランキング６ステージ＋３ルール追加、他</td></tr>
+      <tr><td>2024-07-12</td><td><code>0e987b38</code></td><td>ver.3.09</td><td class="number">181</td><td>ver.3.09 ユーザーページのクリアマーカーを一時的に廃止して総合点数一覧を追加</td></tr>
+      <tr><td>2024-07-08</td><td><code>7af64379</code></td><td>ver.3.09</td><td class="number">403</td><td>ver.3.09 モバイルメニューの合理化とスワイプ機能のUX向上</td></tr>
+      <tr><td>2024-07-06</td><td><code>d55aaf05</code></td><td>ver.3.09</td><td class="number">721</td><td>ver.3.09 スマホ版のUIを改善、記録のスワイプアクション機能を追加</td></tr>
+      <tr><td>2024-04-10</td><td><code>f56eddc4</code></td><td>ver.3.09</td><td class="number">155</td><td>ver.3.09 アリーナ戦用のミニ記録コンポーネントを作成</td></tr>
+      <tr><td>2024-04-09</td><td><code>9beb0070</code></td><td>ver.3.09</td><td class="number">69</td><td>ver.3.09 アリーナ情報とプレイ中ステージ情報を非同期で取得</td></tr>
+      <tr><td>2024-04-08</td><td><code>6c5f0e69</code></td><td>ver.3.09</td><td class="number">53</td><td>ver.3.09 アリーナ戦のスローボタン押下時のバックエンド処理実装</td></tr>
+      <tr><td>2024-04-05</td><td><code>b36847e4</code></td><td>ver.3.09</td><td class="number">535</td><td>ver.3.09 アリーナ戦状態保存用データベースと基本API作成</td></tr>
+      <tr><td>2024-03-30</td><td><code>08f2ab9e</code></td><td>ver.3.09</td><td class="number">8</td><td>ver.3.09 リージョン差を計算する機能の不具合を修正</td></tr>
+      <tr><td>2024-03-26</td><td><code>3144ea38</code></td><td>ver.3.09</td><td class="number">18</td><td>ver.3.09 一部のステージでSwitch版の投稿ができない不具合を修正</td></tr>
+      <tr><td>2024-03-24</td><td><code>cca4a835</code></td><td>ver.3.08</td><td class="number">543</td><td>ver.3.08 軽微修正</td></tr>
+      <tr><td>2024-03-24</td><td><code>788b7eb8</code></td><td>ver.3.08</td><td class="number">484</td><td>ver.3.08 リリース前の軽微修正</td></tr>
+      <tr><td>2024-03-13</td><td><code>5958d9c5</code></td><td>ver.3.08</td><td class="number">245</td><td>ver.3.08 Wiki.js用のDockerコンテナを追加</td></tr>
+      <tr><td>2024-03-03</td><td><code>09603462</code></td><td>ver.3.08</td><td class="number">344</td><td>ver.3.08 リージョンの異なるステージの特殊仕様を実装</td></tr>
+      <tr><td>2024-02-25</td><td><code>c9839fe7</code></td><td>ver.3.08</td><td class="number">4</td><td>ver.3.08 軽微修正</td></tr>
+      <tr><td>2024-02-23</td><td><code>88b06978</code></td><td>ver.3.08</td><td class="number">92</td><td>ver.3.08 サイドストーリー投稿時、操作方法が選択できない不具合を修正</td></tr>
+      <tr><td>2024-02-18</td><td><code>1df1274b</code></td><td>ver.3.08</td><td class="number">195</td><td>ver.3.08 各ステージの制限時間・初期ピクミン・お宝価値合計を表示、本編地下投稿時に自動計算機能を追加</td></tr>
+      <tr><td>2024-02-14</td><td><code>48014c16</code></td><td>ver.3.07</td><td class="number">17</td><td>ver.3.07 ソロバトル、ソロビンゴのスコア比較ができない不具合を修正</td></tr>
+      <tr><td>2024-02-13</td><td><code>d3165ce0</code></td><td>ver.3.07</td><td class="number">53</td><td>ver.3.07 軽微修正</td></tr>
+      <tr><td>2024-02-13</td><td><code>7fdd6513</code></td><td>ver.3.07</td><td class="number">429</td><td>ver.3.07 軽微な修正とリリース前処理</td></tr>
+      <tr><td>2024-02-12</td><td><code>bb79bb94</code></td><td>ver.3.07</td><td class="number">143</td><td>ver.3.07 ピクチャレ星取表（スコア比較表）に条件変更モーダルを設置、総合ランキングから星取表へのショートカットを追加</td></tr>
+      <tr><td>2024-02-08</td><td><code>daf3e441</code></td><td>ver.3.07</td><td class="number">74</td><td>ver.3.07 スコア比較ページにユーザー選択フォームを追加、その他バグ修正</td></tr>
+      <tr><td>2024-02-05</td><td><code>7ce6d6f7</code></td><td>ver.3.07</td><td class="number">279</td><td>ver.3.07 スコア比較ページを作成</td></tr>
+      <tr><td>2024-02-04</td><td><code>be1bfe40</code></td><td>ver.3.07</td><td class="number">86</td><td>ver.3.07 ISRキャッシュ合理化のためのURL生成規則変更</td></tr>
+      <tr><td>2024-01-11</td><td><code>bfdbc2c9</code></td><td>ver.3.06</td><td class="number">119</td><td>ver.3.06 リリース＆軽微修正</td></tr>
+      <tr><td>2024-01-06</td><td><code>89b3dca4</code></td><td>ver.3.05</td><td class="number">343</td><td>ver.3.05 APIリクエスト中に次のリクエストを発信するとページが壊れる不具合を修正、レンダリング方法をSSRからISRへ変更</td></tr>
+      <tr><td>2024-01-03</td><td><code>83abecf4</code></td><td>ver.3.05</td><td class="number">1,534</td><td>ver.3.05 ステージ別ページでリロードするとスタイルが適用されない不具合の修正</td></tr>
+      <tr><td>2024-01-01</td><td><code>040abda4</code></td><td>ver.3.05</td><td class="number">376</td><td>ver.3.05 プラグインのバージョン差による累積的な不具合の解消（途中）</td></tr>
+      <tr><td>2023-12-28</td><td><code>fc6bba67</code></td><td>ver.3.05</td><td class="number">142</td><td>ver.3.05 ユーザーランキングが見れない不具合の修正</td></tr>
+      <tr><td>2023-12-20</td><td><code>fc809cf6</code></td><td>ver.3.05</td><td class="number">18</td><td>ver.3.05 ユーザー別ページにおける500エラー緊急対策</td></tr>
+      <tr><td>2023-12-17</td><td><code>a17a3774</code></td><td>ver.3.05</td><td class="number">79</td><td>ver.3.05 軽微修正3</td></tr>
+      <tr><td>2023-12-16</td><td><code>5bdf2a20</code></td><td>ver.3.05</td><td class="number">8</td><td>ver.3.05 軽微修正3</td></tr>
+      <tr><td>2023-12-16</td><td><code>ccec677c</code></td><td>ver.3.05</td><td class="number">10</td><td>ver.3.05 軽微修正2</td></tr>
+      <tr><td>2023-12-16</td><td><code>007ff5ec</code></td><td>ver.3.05</td><td class="number">8</td><td>ver.3.05 軽微修正</td></tr>
+      <tr><td>2023-12-16</td><td><code>55e4f5a9</code></td><td>ver.3.05</td><td class="number">774</td><td>ver.3.05 第19回期間限定ランキング開催に伴う改修</td></tr>
+      <tr><td>2023-12-05</td><td><code>87957e44</code></td><td>ver.3.04</td><td class="number">175</td><td>ver.3.04 期間限定専用のランクポイント計算式を該当ステージで適用できるようAPIを修正</td></tr>
+      <tr><td>2023-12-05</td><td><code>e06c4d45</code></td><td>ver.3.05</td><td class="number">85</td><td>ver.3.05 アイデア投稿フォームの微調整</td></tr>
+      <tr><td>2023-12-03</td><td><code>c07d3ba8</code></td><td>ver.3.04</td><td class="number">168</td><td>ver.3.04 アイデア投稿フォームと期間限定ランキングの表示周りの不具合を修正</td></tr>
+      <tr><td>2023-11-28</td><td><code>ba1a29f3</code></td><td>ver.3.04</td><td class="number">2</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-28</td><td><code>1ade92c0</code></td><td>ver.3.04</td><td class="number">1</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-27</td><td><code>f2999849</code></td><td>ver.3.04</td><td class="number">7</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-27</td><td><code>f32a995f</code></td><td>ver.3.04</td><td class="number">194</td><td>ver.3.04 トレンドと年初来投稿数ランキングに前シーズン１位の記録を取得する機能を追加、その他ステージリスト周りの不具合修正</td></tr>
+      <tr><td>2023-11-24</td><td><code>3d9c067a</code></td><td>ver.3.04</td><td class="number">360</td><td>ver.3.04 ステージリスト周りの導線を改善、全回収TA用のバリデーション追加</td></tr>
+      <tr><td>2023-11-22</td><td><code>b030d7e7</code></td><td>ver.3.04</td><td class="number">20</td><td>ver.3.04 URLのパラメータ継承が特定の遷移で効かなくなる不具合を修正</td></tr>
+      <tr><td>2023-11-21</td><td><code>30fa2011</code></td><td>ver.3.04</td><td class="number">10</td><td>ver.3.04 ビルドエラーを解消</td></tr>
+      <tr><td>2023-11-21</td><td><code>d1283f71</code></td><td>ver.3.04</td><td class="number">112</td><td>ver.3.04 ローカル環境で投稿できない不具合を解消</td></tr>
+      <tr><td>2023-11-17</td><td><code>afbf6edf</code></td><td>ver.3.04</td><td class="number">135</td><td>ver.3.04 ユーザー別全ステージクリアマーカーのフロントエンド部分を作成</td></tr>
+      <tr><td>2023-11-16</td><td><code>76443b6f</code></td><td>ver.3.04</td><td class="number">269</td><td>ver.3.04 ユーザー別全ステージクリアマーカーのバックエンド部分を作成</td></tr>
+      <tr><td>2023-11-13</td><td><code>23cb59f1</code></td><td>ver.3.04</td><td class="number">2</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-13</td><td><code>548c9b3d</code></td><td>ver.3.04</td><td class="number">13</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-11</td><td><code>1d1c29a5</code></td><td>ver.3.04</td><td class="number">2</td><td>ver.3.04 軽微修正</td></tr>
+      <tr><td>2023-11-11</td><td><code>a8a3418b</code></td><td>ver.3.04</td><td class="number">769</td><td>ver.3.04 キーワード一覧を五十音順から所属タグ順に変更、イベントセルを暫定追加</td></tr>
+      <tr><td>2023-11-03</td><td><code>53f8a17a</code></td><td>ver.3.04</td><td class="number">473</td><td>ver.3.04 投票ボタン機能作成</td></tr>
+      <tr><td>2023-10-14</td><td><code>f5f8dff6</code></td><td>ver.3.04</td><td class="number">72</td><td>ver.3.04 総合ランキングの各記録にステージ別順位マーカーを追加</td></tr>
+      <tr><td>2023-10-12</td><td><code>2b8322dd</code></td><td>ver.3.04</td><td class="number">304</td><td>ver.3.04 縛りルール投稿モーダルを作成</td></tr>
+      <tr><td>2023-10-11</td><td><code>022a3aaa</code></td><td>ver.3.04</td><td class="number">268</td><td>ver.3.04 記録の単独取得（新着記録等）でも順位・ランクポイントを表示するように関連APIを修正</td></tr>
+      <tr><td>2023-10-09</td><td><code>82f58f56</code></td><td>ver.3.03</td><td class="number">2</td><td>ver.3.03 軽微修正</td></tr>
+      <tr><td>2023-10-09</td><td><code>2b9502e0</code></td><td>ver.3.03</td><td class="number">39</td><td>ver.3.03 クエリが指定された文字数制限を超えるとAPIが実行されない不具合の修正</td></tr>
+      <tr><td>2023-10-08</td><td><code>7845c4cd</code></td><td>ver.3.03</td><td class="number">2</td><td>ver.3.03 軽微修正</td></tr>
+      <tr><td>2023-10-08</td><td><code>c680715f</code></td><td>ver.3.03</td><td class="number">2</td><td>ver.3.03 軽微修正</td></tr>
+      <tr><td>2023-10-08</td><td><code>4e0f3499</code></td><td>ver.3.03</td><td class="number">8</td><td>ver.3.03 Speedrun.com APIの仕様変更に対応</td></tr>
+      <tr><td>2023-10-08</td><td><code>2dfa8a3d</code></td><td>ver.3.03</td><td class="number">462</td><td>ver.3.03 フロントエンドAPI通信時のログをDBに保存するようにした</td></tr>
+      <tr><td>2023-09-29</td><td><code>4a288874</code></td><td>ver.3.03</td><td class="number">151</td><td>ver.3.03 検索結果のスタイルを調整、検索フォーム入力時にEnter押下で１番目の検索結果にジャンプするようにした</td></tr>
+      <tr><td>2023-09-26</td><td><code>e3656854</code></td><td>ver.3.03</td><td class="number">474</td><td>ver.3.03 ステージ名、キーワード、ユーザー名の横断検索機能を追加</td></tr>
+      <tr><td>2023-09-24</td><td><code>8da41bb2</code></td><td>ver.3.02</td><td class="number">111</td><td>ver.3.02 Markdownで生成されるテーブルのスタイルを調整</td></tr>
+      <tr><td>2023-09-22</td><td><code>3615a15f</code></td><td>ver.3.02</td><td class="number">60</td><td>ver.3.02 ピクミン３のタイムボーナス表記を秒数ではなく時間表記に変更し、ピクミン４もタイムボーナス表示に対応</td></tr>
+      <tr><td>2023-09-22</td><td><code>14f9b991</code></td><td>ver.3.02</td><td class="number">709</td><td>ver.3.02 期間限定、参加者企画、その他カテゴリのステージ別ルールを追加</td></tr>
+      <tr><td>2023-09-20</td><td><code>7055a142</code></td><td>ver.3.02</td><td class="number">187</td><td>ver.3.02 カスタムヘッダーとステージリストが画面内に収まらない場合に横スクロールできるようにした</td></tr>
+      <tr><td>2023-09-20</td><td><code>33edda40</code></td><td>ver.3.02</td><td class="number">737</td><td>ver.3.02 期間限定、参加者企画、その他カテゴリのステージを正常表示されるように内部システムを調整</td></tr>
+      <tr><td>2023-09-14</td><td><code>7790c8b1</code></td><td>ver.3.02</td><td class="number">131</td><td>ver.3.02 Speedrun.comのカテゴリ再編に対応ほか</td></tr>
+      <tr><td>2023-09-09</td><td><code>26826006</code></td><td>ver.3.02</td><td class="number">3,020</td><td>ver.3.02 移転前の期間限定ランキングDBを移植してテンプレートページを作成</td></tr>
+      <tr><td>2023-09-01</td><td><code>8f28351f</code></td><td>ver.3.01</td><td class="number">35</td><td>ver.3.01 総合ランキングに投稿ステージ数を表示、ユーザー別ページのAPI周りの不具合修正</td></tr>
+      <tr><td>2023-08-31</td><td><code>b8d22e1e</code></td><td>ver.3.01</td><td class="number">85</td><td>ver.3.01 軽微修正</td></tr>
+      <tr><td>2023-08-20</td><td><code>f7e90fae</code></td><td>ver.3.01</td><td class="number">9</td><td>ver.3.01 ソロバトル・ソロビンゴのソート順が逆になる不具合を修正</td></tr>
+      <tr><td>2023-08-20</td><td><code>040f53ce</code></td><td>ver.3.01</td><td class="number">43</td><td>ver.3.01 モバイルフッターの表示を改善、ピクミン4 本編RTAを追加</td></tr>
+      <tr><td>2023-08-18</td><td><code>2059ac6b</code></td><td>ver.3.01</td><td class="number">2</td><td>ver.3.01 イベントURL追加</td></tr>
+      <tr><td>2023-08-18</td><td><code>02f78940</code></td><td>ver.3.01</td><td class="number">858</td><td>ver.3.01 画像が送信できないことがある不具合を修正、その他携帯版のUIを改善</td></tr>
+      <tr><td>2023-08-06</td><td><code>f6366332</code></td><td>ver.3.01</td><td class="number">1,199</td><td>ver.3.01 初回ロード時にCSSが適用されない不具合を修正、証拠画像の圧縮機能を追加、キーワード投稿できない不具合を修正</td></tr>
+      <tr><td>2023-08-01</td><td><code>b98f4fd1</code></td><td>ver.3.01</td><td class="number">20</td><td>ver.3.01 軽微修正</td></tr>
+      <tr><td>2023-07-31</td><td><code>c4f020ea</code></td><td>ver.-.--</td><td class="number">0</td><td>Merge branch &#39;master&#39; of github.com:koppacha/pik5</td></tr>
+      <tr><td>2023-07-31</td><td><code>bec60827</code></td><td>ver.3.01</td><td class="number">124</td><td>ver.3.01 Redisキャッシュを最適化、証拠画像拡張子取得時の不具合を解消、ランキングの自動再取得を設定</td></tr>
+      <tr><td>2023-07-31</td><td><code>8fed7779</code></td><td>ver.-.--</td><td class="number">16</td><td>Update issue templates</td></tr>
+      <tr><td>2023-07-30</td><td><code>4b1f40dc</code></td><td>ver.3.01</td><td class="number">4</td><td>ver.3.01 軽微修正</td></tr>
+      <tr><td>2023-07-30</td><td><code>2a92ce0b</code></td><td>ver.3.01</td><td class="number">9</td><td>ver.3.01 追加修正 info表示機能を追加</td></tr>
+      <tr><td>2023-07-30</td><td><code>75ec5602</code></td><td>ver.3.01</td><td class="number">100</td><td>ver.3.01 追加修正：サインアップ認証の不具合を修正</td></tr>
+      <tr><td>2023-07-30</td><td><code>47140f79</code></td><td>ver.3.01</td><td class="number">1,198</td><td>ver.3.01 追加修正：証拠写真が送れない不具合を修正</td></tr>
+      <tr><td>2023-07-29</td><td><code>d9c30a18</code></td><td>ver.3.01</td><td class="number">2,168</td><td>ver.3.01 ピクミン4全28ステージを追加、Redisサーバー導入、API通信の不具合修正他</td></tr>
+      <tr><td>2023-07-24</td><td><code>ce39dd48</code></td><td>ver.-.--</td><td class="number">26</td><td>軽微修正その３</td></tr>
+      <tr><td>2023-07-24</td><td><code>b43bc0b6</code></td><td>ver.-.--</td><td class="number">0</td><td>Merge branch &#39;master&#39; of github.com:koppacha/pik5</td></tr>
+      <tr><td>2023-07-24</td><td><code>76e87702</code></td><td>ver.-.--</td><td class="number">33</td><td>軽微修正その２</td></tr>
+      <tr><td>2023-07-24</td><td><code>feeda2ae</code></td><td>ver.-.--</td><td class="number">33</td><td>軽微修正その２</td></tr>
+      <tr><td>2023-07-23</td><td><code>30cb67db</code></td><td>ver.-.--</td><td class="number">6</td><td>軽微修正</td></tr>
+      <tr><td>2023-07-23</td><td><code>19ccd3bd</code></td><td>ver.-.--</td><td class="number">6</td><td>軽微修正</td></tr>
+      <tr><td>2023-07-23</td><td><code>1f60168b</code></td><td>ver.-.--</td><td class="number">6</td><td>Next.js APIサーバーを経由していないリクエストを修正</td></tr>
+      <tr><td>2023-07-23</td><td><code>0ddb1fa8</code></td><td>ver.-.--</td><td class="number">6</td><td>Next.js APIサーバーを経由していないリクエストを修正</td></tr>
+      <tr><td>2023-07-21</td><td><code>1a148724</code></td><td>ver.-.--</td><td class="number">4</td><td>軽微修正</td></tr>
+      <tr><td>2023-07-21</td><td><code>d4376b2c</code></td><td>ver.-.--</td><td class="number">4</td><td>軽微修正</td></tr>
+      <tr><td>2023-07-21</td><td><code>afc19bc6</code></td><td>ver.-.--</td><td class="number">34</td><td>本番環境のスタイル不具合を修正</td></tr>
+      <tr><td>2023-07-21</td><td><code>a96ba8b4</code></td><td>ver.-.--</td><td class="number">34</td><td>本番環境のスタイル不具合を修正</td></tr>
+      <tr><td>2023-07-21</td><td><code>34b0bd08</code></td><td>ver.-.--</td><td class="number">5</td><td>ネットワークエラー対策</td></tr>
+      <tr><td>2023-07-21</td><td><code>133173ef</code></td><td>ver.-.--</td><td class="number">5</td><td>ネットワークエラー対策</td></tr>
+      <tr><td>2023-07-20</td><td><code>d6c5fc96</code></td><td>ver.-.--</td><td class="number">282</td><td>コンパイルエラー対策</td></tr>
+      <tr><td>2023-07-20</td><td><code>bf1f92f0</code></td><td>ver.-.--</td><td class="number">282</td><td>コンパイルエラー対策</td></tr>
+      <tr><td>2023-07-20</td><td><code>507af487</code></td><td>ver.-.--</td><td class="number">59</td><td>ESLint対策</td></tr>
+      <tr><td>2023-07-20</td><td><code>d12fbbbf</code></td><td>ver.-.--</td><td class="number">63</td><td>ESLint対策</td></tr>
+      <tr><td>2023-07-20</td><td><code>c22d0cbf</code></td><td>ver.3.00</td><td class="number">1,517</td><td>ver.3.00リリース直前の累積的な修正</td></tr>
+      <tr><td>2023-07-20</td><td><code>7e6b5194</code></td><td>ver.3.00</td><td class="number">1,519</td><td>ver.3.00リリース直前の累積的な修正</td></tr>
+      <tr><td>2023-07-17</td><td><code>40ee6d0a</code></td><td>ver.-.--</td><td class="number">992</td><td>旧ピクチャレ大会からユーザー情報のインポートと疎通確認、プロキシサーバーのPOSTリクエスト対応</td></tr>
+      <tr><td>2023-07-17</td><td><code>807aa304</code></td><td>ver.-.--</td><td class="number">1,018</td><td>旧ピクチャレ大会からユーザー情報のインポートと疎通確認、プロキシサーバーのPOSTリクエスト対応</td></tr>
+      <tr><td>2023-07-15</td><td><code>d0fe86b0</code></td><td>ver.-.--</td><td class="number">258</td><td>ランクポイント計算・表示周りの不具合を修正</td></tr>
+      <tr><td>2023-07-15</td><td><code>50eddc72</code></td><td>ver.-.--</td><td class="number">258</td><td>ランクポイント計算・表示周りの不具合を修正</td></tr>
+      <tr><td>2023-07-15</td><td><code>d2876c0d</code></td><td>ver.-.--</td><td class="number">297</td><td>ランクポイント計算式ver.3</td></tr>
+      <tr><td>2023-07-15</td><td><code>b249fdd2</code></td><td>ver.-.--</td><td class="number">297</td><td>ランクポイント計算式ver.3</td></tr>
+      <tr><td>2023-07-11</td><td><code>afbfea25</code></td><td>ver.-.--</td><td class="number">474</td><td>不正なパラメータへのアクセス対策、データベースの永続化設定</td></tr>
+      <tr><td>2023-07-11</td><td><code>877e3be2</code></td><td>ver.-.--</td><td class="number">474</td><td>不正なパラメータへのアクセス対策、データベースの永続化設定</td></tr>
+      <tr><td>2023-07-10</td><td><code>38eb3717</code></td><td>ver.-.--</td><td class="number">687</td><td>携帯版メニューを作成、全ページのWarningエラーを一通り解消</td></tr>
+      <tr><td>2023-07-10</td><td><code>0feaeae2</code></td><td>ver.-.--</td><td class="number">687</td><td>携帯版メニューを作成、全ページのWarningエラーを一通り解消</td></tr>
+      <tr><td>2023-07-09</td><td><code>561d15cd</code></td><td>ver.-.--</td><td class="number">320</td><td>クライアントからのフェッチはNext.jsのサーバーを噛ませるようにした</td></tr>
+      <tr><td>2023-07-09</td><td><code>da15b5df</code></td><td>ver.-.--</td><td class="number">320</td><td>クライアントからのフェッチはNext.jsのサーバーを噛ませるようにした</td></tr>
+      <tr><td>2023-07-08</td><td><code>a3fe80b2</code></td><td>ver.-.--</td><td class="number">684</td><td>カラースキームの統一と各テーマ調整、ピクミン３のタイムボーナス表示に対応、本番環境起動スクリプトの作成、Speedrun.comのランキング表示を改善</td></tr>
+      <tr><td>2023-07-08</td><td><code>961a6ebb</code></td><td>ver.-.--</td><td class="number">684</td><td>カラースキームの統一と各テーマ調整、ピクミン３のタイムボーナス表示に対応、本番環境起動スクリプトの作成、Speedrun.comのランキング表示を改善</td></tr>
+      <tr><td>2023-07-02</td><td><code>3653dc58</code></td><td>ver.-.--</td><td class="number">104</td><td>本番環境ビルドテストに伴う基盤設定の微調整</td></tr>
+      <tr><td>2023-07-02</td><td><code>63a2eba8</code></td><td>ver.-.--</td><td class="number">104</td><td>本番環境ビルドテストに伴う基盤設定の微調整</td></tr>
+      <tr><td>2023-07-01</td><td><code>a011c554</code></td><td>ver.-.--</td><td class="number">690</td><td>ランキングをSWRでフェッチするようにした、ログイン専用背景画像を仮設置、カウントアップ方式のRTAランキングに対応</td></tr>
+      <tr><td>2023-07-01</td><td><code>4435b7b8</code></td><td>ver.-.--</td><td class="number">690</td><td>ランキングをSWRでフェッチするようにした、ログイン専用背景画像を仮設置、カウントアップ方式のRTAランキングに対応</td></tr>
+      <tr><td>2023-06-30</td><td><code>b8df0dee</code></td><td>ver.-.--</td><td class="number">18</td><td>JWT WebトークンにユーザーIDを保存するようにした</td></tr>
+      <tr><td>2023-06-30</td><td><code>b8519def</code></td><td>ver.-.--</td><td class="number">18</td><td>JWT WebトークンにユーザーIDを保存するようにした</td></tr>
+      <tr><td>2023-06-29</td><td><code>e620aab7</code></td><td>ver.-.--</td><td class="number">273</td><td>記録投稿フォームのフロントエンドバリデーションと暫定順位取得機能を作成</td></tr>
+      <tr><td>2023-06-29</td><td><code>07e53350</code></td><td>ver.-.--</td><td class="number">273</td><td>記録投稿フォームのフロントエンドバリデーションと暫定順位取得機能を作成</td></tr>
+      <tr><td>2023-06-29</td><td><code>d353aeb6</code></td><td>ver.-.--</td><td class="number">519</td><td>総合ランキングのルール切り替えを改善、ユーザー登録はIDとパスワードのみ入力するように変更</td></tr>
+      <tr><td>2023-06-29</td><td><code>c8b66a6c</code></td><td>ver.-.--</td><td class="number">519</td><td>総合ランキングのルール切り替えを改善、ユーザー登録はIDとパスワードのみ入力するように変更</td></tr>
+      <tr><td>2023-06-26</td><td><code>cd253ea8</code></td><td>ver.-.--</td><td class="number">2,021</td><td>ピクミン2に700.05万点参考スコアを追加、旧認証系コンポーネントを削除、既存コンポーネントの一斉整理</td></tr>
+      <tr><td>2023-06-26</td><td><code>4d935b5f</code></td><td>ver.-.--</td><td class="number">2,021</td><td>ピクミン2に700.05万点参考スコアを追加、旧認証系コンポーネントを削除、既存コンポーネントの一斉整理</td></tr>
+      <tr><td>2023-06-24</td><td><code>aaa2eba8</code></td><td>ver.-.--</td><td class="number">414</td><td>キーワード本文のモーダル表示に対応、目次のフィルタリング機能を追加</td></tr>
+      <tr><td>2023-06-24</td><td><code>a40d4acd</code></td><td>ver.-.--</td><td class="number">414</td><td>キーワード本文のモーダル表示に対応、目次のフィルタリング機能を追加</td></tr>
+      <tr><td>2023-06-22</td><td><code>72a277de</code></td><td>ver.-.--</td><td class="number">663</td><td>スコア表示を時間表記に対応、記録コンポーネントをライトテーマに対応、利用規約作成（途中）</td></tr>
+      <tr><td>2023-06-22</td><td><code>4a7c37d7</code></td><td>ver.-.--</td><td class="number">663</td><td>スコア表示を時間表記に対応、記録コンポーネントをライトテーマに対応、利用規約作成（途中）</td></tr>
+      <tr><td>2023-06-19</td><td><code>f86741c8</code></td><td>ver.-.--</td><td class="number">133</td><td>キーワード画面を目次と本文で分離</td></tr>
+      <tr><td>2023-06-19</td><td><code>78ade95d</code></td><td>ver.-.--</td><td class="number">133</td><td>キーワード画面を目次と本文で分離</td></tr>
+      <tr><td>2023-06-19</td><td><code>e06236e3</code></td><td>ver.-.--</td><td class="number">6,476</td><td>Next-Auth（Credentialsプロパイダ）とPrismaによるパスワード認証を導入</td></tr>
+      <tr><td>2023-06-19</td><td><code>0d10521c</code></td><td>ver.-.--</td><td class="number">6,476</td><td>Next-Auth（Credentialsプロパイダ）とPrismaによるパスワード認証を導入</td></tr>
+      <tr><td>2023-06-15</td><td><code>713300b2</code></td><td>ver.-.--</td><td class="number">269</td><td>ログイン機能の再構築と疎通確認</td></tr>
+      <tr><td>2023-06-15</td><td><code>54fb15e2</code></td><td>ver.-.--</td><td class="number">269</td><td>ログイン機能の再構築と疎通確認</td></tr>
+      <tr><td>2023-06-14</td><td><code>a88971d3</code></td><td>ver.-.--</td><td class="number">595</td><td>サインアップ機能の再構築と疎通確認</td></tr>
+      <tr><td>2023-06-14</td><td><code>4e6d0a9b</code></td><td>ver.-.--</td><td class="number">595</td><td>サインアップ機能の再構築と疎通確認</td></tr>
+      <tr><td>2023-06-12</td><td><code>a7c483aa</code></td><td>ver.-.--</td><td class="number">266</td><td>共通フッターを追加、ログイン画面を単独ページからモーダルに変更</td></tr>
+      <tr><td>2023-06-12</td><td><code>c4f9ab4a</code></td><td>ver.-.--</td><td class="number">266</td><td>共通フッターを追加、ログイン画面を単独ページからモーダルに変更</td></tr>
+      <tr><td>2023-06-11</td><td><code>92c76d79</code></td><td>ver.-.--</td><td class="number">610</td><td>キーワードをMarkdown記法に対応し、同一IDであれば名前を変更できるようにした</td></tr>
+      <tr><td>2023-06-11</td><td><code>74daff1b</code></td><td>ver.-.--</td><td class="number">610</td><td>キーワードをMarkdown記法に対応し、同一IDであれば名前を変更できるようにした</td></tr>
+      <tr><td>2023-06-11</td><td><code>b35cc3ab</code></td><td>ver.-.--</td><td class="number">496</td><td>Speedrun.comに対応</td></tr>
+      <tr><td>2023-06-11</td><td><code>fa834a5d</code></td><td>ver.-.--</td><td class="number">496</td><td>Speedrun.comに対応</td></tr>
+      <tr><td>2023-06-05</td><td><code>6ce8fbde</code></td><td>ver.-.--</td><td class="number">225</td><td>styled componentをstyleファイルに集約しライトテーマを整備</td></tr>
+      <tr><td>2023-06-05</td><td><code>6cc7acf3</code></td><td>ver.-.--</td><td class="number">225</td><td>styled componentをstyleファイルに集約しライトテーマを整備</td></tr>
+      <tr><td>2023-06-04</td><td><code>756fdbfa</code></td><td>ver.-.--</td><td class="number">138</td><td>トレンド機能の作成</td></tr>
+      <tr><td>2023-06-04</td><td><code>52e2a471</code></td><td>ver.-.--</td><td class="number">138</td><td>トレンド機能の作成</td></tr>
+      <tr><td>2023-06-04</td><td><code>1087fad6</code></td><td>ver.-.--</td><td class="number">0</td><td>Merge branch &#39;master&#39; of github.com:koppacha/pik5</td></tr>
+      <tr><td>2023-06-04</td><td><code>95d0f01c</code></td><td>ver.-.--</td><td class="number">0</td><td>Merge branch &#39;master&#39; of github.com:koppacha/pik5</td></tr>
+      <tr><td>2023-06-04</td><td><code>c4a3e24c</code></td><td>ver.-.--</td><td class="number">357</td><td>年初来投稿数ランキングと新着記録一覧を作成</td></tr>
+      <tr><td>2023-06-04</td><td><code>9781c313</code></td><td>ver.-.--</td><td class="number">357</td><td>年初来投稿数ランキングと新着記録一覧を作成</td></tr>
+      <tr><td>2023-06-03</td><td><code>6ddaeae0</code></td><td>ver.-.--</td><td class="number">487</td><td>トップページ整備（途中）、パンくずリストを作成、propsの表記整理</td></tr>
+      <tr><td>2023-06-02</td><td><code>68c15eba</code></td><td>ver.-.--</td><td class="number">304</td><td>バックエンドとのタイムゾーンが一致しない不具合を修正、翻訳ボタンの遷移先を表示中のページに変更、ポップアップ動画機能を追加</td></tr>
+      <tr><td>2023-06-01</td><td><code>3c5e961b</code></td><td>ver.-.--</td><td class="number">251</td><td>継承に関するリファクタリングを実施、証拠画像表示用モーダルを作成</td></tr>
+      <tr><td>2023-05-30</td><td><code>3cf6b622</code></td><td>ver.-.--</td><td class="number">47</td><td>画像取得APIの作成とフロントエンド側の画像取得設定を追加</td></tr>
+      <tr><td>2023-05-29</td><td><code>8d122b06</code></td><td>ver.-.--</td><td class="number">8</td><td>画像取得APIの作成（途中）</td></tr>
+      <tr><td>2023-05-28</td><td><code>80f6dd5d</code></td><td>ver.-.--</td><td class="number">178</td><td>ユーザー別にすべての総合ランキングの点数を取得するAPIを作成</td></tr>
+      <tr><td>2023-05-27</td><td><code>1d7e9fd4</code></td><td>ver.-.--</td><td class="number">753</td><td>Styled-componentsを独自ファイル化して整理、レイヤー２総合ランキングの表示周りの不具合修正</td></tr>
+      <tr><td>2023-05-27</td><td><code>32264cbd</code></td><td>ver.-.--</td><td class="number">25</td><td>Styled-componentsを独自ファイル化して整理、レイヤー２総合ランキングの表示周りの不具合修正</td></tr>
+      <tr><td>2023-05-26</td><td><code>424c4221</code></td><td>ver.-.--</td><td class="number">45</td><td>プルダウンの視認性を改善</td></tr>
+      <tr><td>2023-05-25</td><td><code>b424a930</code></td><td>ver.-.--</td><td class="number">66</td><td>ユーザー別ランキングが正常表示されない不具合を解消、総合ランキングを特殊ランキングにも対応</td></tr>
+      <tr><td>2023-05-24</td><td><code>0895eb08</code></td><td>ver.-.--</td><td class="number">7</td><td>ルールID確定に伴う記録マスタの全クリーニングを実施（途中）</td></tr>
+      <tr><td>2023-05-23</td><td><code>9bf9014e</code></td><td>ver.-.--</td><td class="number">1,252</td><td>ステージ情報DBと総合ランキング情報DBを統合</td></tr>
+      <tr><td>2023-05-22</td><td><code>7c6652d4</code></td><td>ver.-.--</td><td class="number">945</td><td>プルダウンメニューを共通コンポーネント化</td></tr>
+      <tr><td>2023-05-21</td><td><code>4a6a35d7</code></td><td>ver.-.--</td><td class="number">219</td><td>ステージ別ランキングにボーダーラインを追加、投稿ボタンを仮設置</td></tr>
+      <tr><td>2023-05-21</td><td><code>7475ed05</code></td><td>ver.-.--</td><td class="number">1,658</td><td>next-themeとstyled-componentsを導入、テーマ切り替えボタンを設置</td></tr>
+      <tr><td>2023-05-20</td><td><code>6407ccf3</code></td><td>ver.-.--</td><td class="number">266</td><td>翻訳ボタンを追加、ルールの切り替えをプルダウンからボタン式に変更</td></tr>
+      <tr><td>2023-05-19</td><td><code>11c722d9</code></td><td>ver.-.--</td><td class="number">13</td><td>ステージ別ページの動線を修正</td></tr>
+      <tr><td>2023-05-18</td><td><code>73d3bdcd</code></td><td>ver.-.--</td><td class="number">309</td><td>カスタムメニューにタイトルカードを追加</td></tr>
+      <tr><td>2023-05-17</td><td><code>f4db1db5</code></td><td>ver.-.--</td><td class="number">550</td><td>シリーズ別カスタムヘッダーメニューの雛形を作成</td></tr>
+      <tr><td>2023-05-15</td><td><code>6c65e246</code></td><td>ver.-.--</td><td class="number">135</td><td>カスタムヘッダーメニューを作り直し</td></tr>
+      <tr><td>2023-05-07</td><td><code>8f66d995</code></td><td>ver.-.--</td><td class="number">73</td><td>キーワードに必要なカラムを追加しDBを再設計</td></tr>
+      <tr><td>2023-05-01</td><td><code>b61d49d2</code></td><td>ver.-.--</td><td class="number">26</td><td>キーワード投稿後、ページ遷移なしでデータフェッチするようにした</td></tr>
+      <tr><td>2023-04-30</td><td><code>08cf3c6d</code></td><td>ver.-.--</td><td class="number">63</td><td>ステージ別記録の取得不具合を解消し、ユーザー別記録の表示にも対応</td></tr>
+      <tr><td>2023-04-30</td><td><code>6f0f5e74</code></td><td>ver.-.--</td><td class="number">195</td><td>キーワードの編集機能を追加</td></tr>
+      <tr><td>2023-04-29</td><td><code>15cf45fe</code></td><td>ver.-.--</td><td class="number">254</td><td>キーワードのバリデーション機能を追加</td></tr>
+      <tr><td>2023-04-22</td><td><code>5d8a01c8</code></td><td>ver.-.--</td><td class="number">225</td><td>投稿後の自動更新機能（途中）</td></tr>
+      <tr><td>2023-04-20</td><td><code>b53e959d</code></td><td>ver.-.--</td><td class="number">235</td><td>ピクミンキーワードで新規キーワードを作成するフォームを作成</td></tr>
+      <tr><td>2023-04-16</td><td><code>e41b38a5</code></td><td>ver.-.--</td><td class="number">262</td><td>ピクミンキーワードのページを仮作成、旧データの整形とインポート</td></tr>
+      <tr><td>2023-04-16</td><td><code>7c07c68c</code></td><td>ver.-.--</td><td class="number">99</td><td>ステージ情報マスタを整理してインポートするコントローラーを作成</td></tr>
+      <tr><td>2023-04-10</td><td><code>8b729d42</code></td><td>ver.-.--</td><td class="number">15</td><td>記録取得API生成クエリの全面的な修正と年別集計の不具合修正</td></tr>
+      <tr><td>2023-04-08</td><td><code>de50d1c4</code></td><td>ver.-.--</td><td class="number">27</td><td>年別集計機能実装（途中）</td></tr>
+      <tr><td>2023-04-06</td><td><code>7f8bf119</code></td><td>ver.-.--</td><td class="number">207</td><td>旧ピクチャレ大会からの一括インポート用コントローラーを作成</td></tr>
+      <tr><td>2023-03-25</td><td><code>147133d6</code></td><td>ver.-.--</td><td class="number">16</td><td>比較機能のフロントサイドの実装</td></tr>
+      <tr><td>2023-03-25</td><td><code>2cfb439c</code></td><td>ver.-.--</td><td class="number">25</td><td>スコア比較機能を実装</td></tr>
+      <tr><td>2023-03-17</td><td><code>802cfc73</code></td><td>ver.-.--</td><td class="number">187</td><td>ステージ別情報テーブルにコントローラーを追加</td></tr>
+      <tr><td>2023-03-09</td><td><code>b77ec280</code></td><td>ver.-.--</td><td class="number">13,569</td><td>総合ランキングにフィルター機能を追加</td></tr>
+      <tr><td>2023-03-07</td><td><code>9df98085</code></td><td>ver.-.--</td><td class="number">130</td><td>フィルター機能のバックエンド処理âââ</td></tr>
+      <tr><td>2023-03-04</td><td><code>a9aaa998</code></td><td>ver.-.--</td><td class="number">133</td><td>フィルタリング機能のバックエンド処理</td></tr>
+      <tr><td>2023-03-01</td><td><code>dbb8acd3</code></td><td>ver.-.--</td><td class="number">23</td><td>AWS Cloud9基盤からプッシュテスト</td></tr>
+      <tr><td>2023-02-25</td><td><code>cfe6bd87</code></td><td>ver.-.--</td><td class="number">166</td><td>軽微修正</td></tr>
+      <tr><td>2023-02-19</td><td><code>7731c308</code></td><td>ver.-.--</td><td class="number">190</td><td>ユーザー情報のキーをユーザーIDに変更しユーザー別ページを作成</td></tr>
+      <tr><td>2023-02-16</td><td><code>4cfd6b17</code></td><td>ver.-.--</td><td class="number">73</td><td>日本語フォントを変更し記録コンポーネントのデザインを刷新</td></tr>
+      <tr><td>2023-02-12</td><td><code>af53979a</code></td><td>ver.-.--</td><td class="number">124</td><td>総合ランキングの記録コンポーネントを共通化</td></tr>
+      <tr><td>2023-02-10</td><td><code>ce9f815d</code></td><td>ver.-.--</td><td class="number">256</td><td>記録別コンポーネント整形、Google Fonts導入</td></tr>
+      <tr><td>2023-02-09</td><td><code>fb95f71b</code></td><td>ver.-.--</td><td class="number">88</td><td>総合ランキングヘッダーの整形と記録別コンポーネント作成（途中）</td></tr>
+      <tr><td>2023-02-08</td><td><code>62419a73</code></td><td>ver.-.--</td><td class="number">242</td><td>総合ランキングの集計対象ステージを整理</td></tr>
+      <tr><td>2023-02-04</td><td><code>9c45c285</code></td><td>ver.-.--</td><td class="number">197</td><td>ヘッダープルダウンメニュー実装</td></tr>
+      <tr><td>2023-02-03</td><td><code>b6ab5dd5</code></td><td>ver.-.--</td><td class="number">118</td><td>総合ランキングにナビゲーションを設置</td></tr>
+      <tr><td>2023-02-02</td><td><code>cc23d3ef</code></td><td>ver.-.--</td><td class="number">5,500</td><td>Nuxtディレクトリを削除</td></tr>
+      <tr><td>2023-02-01</td><td><code>1297f1fc</code></td><td>ver.-.--</td><td class="number">600</td><td>Font Awesome導入、総合ランキングのAPIとフロントエンド集計機能作成</td></tr>
+      <tr><td>2023-01-27</td><td><code>29cf99f8</code></td><td>ver.-.--</td><td class="number">680</td><td>ステージ一覧DBのmigrationとseed作成、記録コンポーネント仮作成、総合ページ仮作成</td></tr>
+      <tr><td>2023-01-26</td><td><code>26a9afe1</code></td><td>ver.-.--</td><td class="number">302</td><td>MUIのAppBar仮導入</td></tr>
+      <tr><td>2023-01-24</td><td><code>382b99bc</code></td><td>ver.-.--</td><td class="number">13</td><td>mailhog導入、メール認証の通過確認</td></tr>
+      <tr><td>2023-01-24</td><td><code>f7248e9b</code></td><td>ver.-.--</td><td class="number">1,201</td><td>ログイン機能リベンジ（Laravel Breeze）ユーザー作成成功</td></tr>
+      <tr><td>2023-01-23</td><td><code>166b67bb</code></td><td>ver.-.--</td><td class="number">221</td><td>Next-Auth導入（途中）</td></tr>
+      <tr><td>2023-01-23</td><td><code>0a40dde4</code></td><td>ver.-.--</td><td class="number">36</td><td>API Routeの設定したけど接続拒否される（作業保留中）</td></tr>
+      <tr><td>2023-01-17</td><td><code>db3cf173</code></td><td>ver.-.--</td><td class="number">3,686</td><td>NuxtからNextへ移行、Next版データフェッチ機能実装</td></tr>
+      <tr><td>2023-01-17</td><td><code>bd87eaf5</code></td><td>ver.-.--</td><td class="number">18,620</td><td>ログイン機能Nuxt版</td></tr>
+      <tr><td>2023-01-16</td><td><code>a055513e</code></td><td>ver.-.--</td><td class="number">8,131</td><td>Laravel Sanctum導入、ログイン機能実装（途中）</td></tr>
+      <tr><td>2023-01-07</td><td><code>d6303669</code></td><td>ver.-.--</td><td class="number">309</td><td>３ステージ分のSeederを用意しback側のshowメソッドを作成</td></tr>
+      <tr><td>2023-01-06</td><td><code>78650d4b</code></td><td>ver.-.--</td><td class="number">3,315</td><td>ホットリロードが効かない問題を修正</td></tr>
+      <tr><td>2023-01-06</td><td><code>798674bb</code></td><td>ver.-.--</td><td class="number">162</td><td>QuasarからVuetify3へ移行</td></tr>
+      <tr><td>2023-01-05</td><td><code>45b32598</code></td><td>ver.-.--</td><td class="number">170</td><td>レイアウトテンプレートの作成と簡易ルーティング</td></tr>
+      <tr><td>2023-01-05</td><td><code>b6ef227e</code></td><td>ver.-.--</td><td class="number">190</td><td>基本テーブルのマイグレーション設計</td></tr>
+      <tr><td>2023-01-05</td><td><code>188dc56f</code></td><td>ver.-.--</td><td class="number">35</td><td>投稿フォームのモーダル化</td></tr>
+      <tr><td>2023-01-04</td><td><code>e0971f9c</code></td><td>ver.-.--</td><td class="number">21</td><td>CRUDのリアルタイム反映機能完成</td></tr>
+      <tr><td>2023-01-03</td><td><code>6afc652d</code></td><td>ver.-.--</td><td class="number">21,313</td><td>Readme改修、CRUDのリアルタイム反映とConfirm追加</td></tr>
+      <tr><td>2023-01-01</td><td><code>923ebe51</code></td><td>ver.-.--</td><td class="number">16</td><td>new branch</td></tr>
+      <tr><td>2023-01-01</td><td><code>974ee2c3</code></td><td>ver.-.--</td><td class="number">6</td><td>プロジェクトファイル名の修正</td></tr>
+      <tr><td>2023-01-01</td><td><code>cc88c4dd</code></td><td>ver.3.00</td><td class="number">3,881,081</td><td>ver.3.00 first commit</td></tr>
+      <tr><td>2023-01-01</td><td><code>4007de1e</code></td><td>ver.3.00</td><td class="number">3,864,559</td><td>ver.3.00 first commit</td></tr>
+      <tr><td>2023-01-01</td><td><code>101823e5</code></td><td>ver.3.00</td><td class="number">16,951</td><td>Revert &quot;ver.3.00 first commit&quot;</td></tr>
+      <tr><td>2023-01-01</td><td><code>e2ed33df</code></td><td>ver.3.00</td><td class="number">16,951</td><td>ver.3.00 first commit</td></tr>
+    </tbody></table></div>
+    <h2>Codex Sessions</h2>
+    <div class="table-wrap"><table><thead><tr><th>Date</th><th>Session ID</th><th class="number">User prompt chars</th></tr></thead><tbody>
+      <tr><td>2026-01-11</td><td><code>019bad53-3c0a-7d61-a2fa-72c05b5fa5e2</code></td><td class="number">249</td></tr>
+      <tr><td>2026-01-11</td><td><code>019bad57-c2cc-7cb2-b005-22937b2b4820</code></td><td class="number">249</td></tr>
+      <tr><td>2026-01-11</td><td><code>019bad58-51cb-71f3-ba95-7de03673d6d5</code></td><td class="number">249</td></tr>
+      <tr><td>2026-01-12</td><td><code>019bb0b3-3d24-7aa1-bb9e-56ed27dd6d44</code></td><td class="number">2,045</td></tr>
+      <tr><td>2026-01-22</td><td><code>019be399-e998-7820-81bc-39554c1efe21</code></td><td class="number">754</td></tr>
+      <tr><td>2026-02-06</td><td><code>019c3369-30e8-71c3-9aa0-65ec1e532fba</code></td><td class="number">108</td></tr>
+      <tr><td>2026-02-06</td><td><code>019c336d-5209-7991-badd-43a1d9e5439f</code></td><td class="number">2,878</td></tr>
+      <tr><td>2026-02-12</td><td><code>019c4f9c-ed17-7ff3-ba14-063f04a52f11</code></td><td class="number">3,460</td></tr>
+      <tr><td>2026-02-17</td><td><code>019c6a2a-22bc-7863-b387-47e2c452b6e5</code></td><td class="number">201</td></tr>
+      <tr><td>2026-02-17</td><td><code>019c6a2c-b0ee-7953-a2f1-f83231ed5b42</code></td><td class="number">201</td></tr>
+      <tr><td>2026-02-17</td><td><code>019c6a2e-617d-7bb2-a56b-62d14328ff1c</code></td><td class="number">5,048</td></tr>
+      <tr><td>2026-03-22</td><td><code>019d140d-ca86-7160-9cb6-90cc5acf97b7</code></td><td class="number">3,979</td></tr>
+      <tr><td>2026-03-23</td><td><code>019d190d-2c8c-7780-bac3-6ad58374c4c8</code></td><td class="number">5,319</td></tr>
+      <tr><td>2026-04-07</td><td><code>019d6584-cbe0-7b50-84ea-a6ff4a1fbfa0</code></td><td class="number">574</td></tr>
+      <tr><td>2026-04-12</td><td><code>019d811c-97ae-7a73-a565-ef6e84c08b9b</code></td><td class="number">2,631</td></tr>
+      <tr><td>2026-04-12</td><td><code>019d8200-47ef-7252-9233-1120e061544e</code></td><td class="number">1,093</td></tr>
+      <tr><td>2026-04-19</td><td><code>019da457-0ce8-7f72-824f-31c5c8b281d8</code></td><td class="number">241</td></tr>
+      <tr><td>2026-04-25</td><td><code>019dc46e-3bf7-7e11-96ba-284ba325299d</code></td><td class="number">308</td></tr>
+      <tr><td>2026-04-25</td><td><code>019dc49f-2285-7630-b0b6-a06b1ec96b2d</code></td><td class="number">1,528</td></tr>
+      <tr><td>2026-04-29</td><td><code>019dd75b-85d1-7613-993b-b3e8e34cdebf</code></td><td class="number">5,253</td></tr>
+      <tr><td>2026-04-29</td><td><code>019dd994-c857-7391-98fd-621d3785fd29</code></td><td class="number">1,044</td></tr>
+      <tr><td>2026-05-05</td><td><code>019df6d9-9fee-7113-b9a8-fb0ae8ab5a95</code></td><td class="number">437</td></tr>
+      <tr><td>2026-05-14</td><td><code>019e252b-fb55-7223-aec8-328a0a0cd714</code></td><td class="number">393</td></tr>
+      <tr><td>2026-05-14</td><td><code>019e2677-1d56-7b70-acd1-72da373774f6</code></td><td class="number">1,030</td></tr>
+      <tr><td>2026-05-18</td><td><code>019e39d1-cbdd-71c3-b638-56386684a07c</code></td><td class="number">1,513</td></tr>
+      <tr><td>2026-05-18</td><td><code>019e3a30-ac91-7180-9e55-83e1c31e21e1</code></td><td class="number">9,728</td></tr>
+      <tr><td>2026-05-23</td><td><code>019e53be-d9ea-7162-bce3-69454367fefd</code></td><td class="number">22,673</td></tr>
+      <tr><td>2026-05-23</td><td><code>019e55ec-7b37-7db1-803a-df19738945f1</code></td><td class="number">8,738</td></tr>
+      <tr><td>2026-05-25</td><td><code>019e5c99-1ba1-7331-8d77-a0f8bcc4f4f0</code></td><td class="number">0</td></tr>
+      <tr><td>2026-05-28</td><td><code>019e6da5-d013-7a51-a3db-ae5c67d0656e</code></td><td class="number">1,023</td></tr>
+      <tr><td>2026-05-28</td><td><code>019e6efc-4a3c-7ba2-ba16-f47886d0feb4</code></td><td class="number">2,378</td></tr>
+      <tr><td>2026-06-01</td><td><code>019e8360-19aa-7db3-b57e-d42ab98ded90</code></td><td class="number">697</td></tr>
+    </tbody></table></div>
+  </main>
+</body>
+</html>

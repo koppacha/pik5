@@ -15,7 +15,19 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('user:fetch-totals')->monthlyOn(1, '00:10');
+        $schedule->command('user:fetch-totals')
+            ->monthlyOn(1, '00:10')
+            ->withoutOverlapping();
+
+        $schedule->command('user:fetch-totals --latest')
+            ->dailyAt('00:30')
+            ->withoutOverlapping();
+
+        if (config('database.backup.enabled')) {
+            $schedule->command('db:backup')
+                ->dailyAt(config('database.backup.time'))
+                ->withoutOverlapping();
+        }
     }
 
     /**

@@ -1,0 +1,8 @@
+[mysqld]
+# Keep point-in-time recovery data durable. Full backups must be stored outside
+# /var/lib/mysql so they survive a database volume failure.
+log_bin=/var/lib/mysql/binlog
+binlog_format=ROW
+binlog_expire_logs_seconds=2592000
+sync_binlog=1
+innodb_flush_log_at_trx_commit=1

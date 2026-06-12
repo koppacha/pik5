@@ -12,11 +12,19 @@
 - 今後の開発で参照すべき重要事項は `docs/codex-summary/` に集約されている前提で扱う。
 - 必要に応じて `docs/codex-summary/` 配下のカテゴリ別要約を参照する。
 - `docs/codex-summary/` のファイル名は英語ケバブケースの `{category-name}.md` とする。
-- ユーザーのプロンプトを処理するたび、出力後に Codex が読み取れる範囲の transcript を `docs/codex-logs/{yyyy-mm-dd-sessionId}.md` に追記する。
+- ユーザーのプロンプトを処理するたび、出力後に Codex が読み取れる範囲の transcript を `docs/codex-logs/{yyyy}-{mm}-{dd}-{sessionId}.md` に追記する。日付にはセッション開始日を使う。
+- ログは要約ではなく transcript を原則とし、ユーザーのプロンプトは省略・言い換えせず記録する。ローカル JSONL から再生成する場合は `node docs/scripts/export-codex-log.mjs <JSONLファイル>` を使う。
 - ログ追記時に、新しい開発ルール、構造上の重要概念、禁止事項、出力ルール、セキュリティポリシー、Git 運用ポリシーなどが含まれる場合は、`docs/codex-summary/` へ抽出・追記・更新する。
 - ユーザーが「このセッションは記録しないで」と指示した場合、そのセッションでは以後ログ書き込みを行わない。
 - 通常のやりとりでは `docs/codex-logs/` を読まない。
 - ユーザーが「セッションログを読み取って」と明示した場合のみ、その指示の処理範囲で `docs/codex-logs/` を読んでよい。
+
+## 開発統計
+
+- 開発統計ページは `docs/stats.html` とする。
+- ユーザーが「統計情報を更新して」と指示した場合は、`node docs/scripts/update-stats.mjs` で既存データを再集計して上書きする。
+- commit ごとの短縮ハッシュ、commit 日、`ver.x.xx` 相当文字列、変更行数、およびセッションごとの開始日、セッションID、ユーザープロンプト文字数を出力する。
+- `yyyy年mm月` ごとの変更行数とユーザープロンプト文字数の合計をダッシュボードに出力する。
 
 ## 禁止/注意行為
 

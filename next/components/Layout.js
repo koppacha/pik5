@@ -11,7 +11,7 @@ import Link from "next/link";
 import {Box, Container, Grid, Typography} from "@mui/material";
 import MobileFooter from "./menu/MobileFooter";
 
-export default function Layout({children}) {
+export default function Layout({children, hideFooter = false}) {
 
     return (
         <>
@@ -19,8 +19,8 @@ export default function Layout({children}) {
                     <Container className="offset-container">
                         <main>{children}</main>
                     </Container>
-            <Footer/>
-            <MobileFooter users={children?.props?.users}/>
+            {!hideFooter && <Footer/>}
+            {!hideFooter && <MobileFooter users={children?.props?.users}/>}
         </>
     )
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Record;
+use App\Models\Keyword;
+use App\Services\EventStampService;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,19 +36,22 @@ class PostCountController extends Controller
         );
     }
     // ユーザーごとの全期間の投稿数を集計して参加日を算出する
-    public function getUserAllPostCount(Request $request): JsonResponse
+    public function getUserAllPostCount(Request $request, EventStampService $eventStampService): JsonResponse
     {
-        $dataset = Record::select('user_id', Record::raw('MIN(created_at) as oldest_created_at'))
-            ->selectRaw('COUNT(user_id) as cnt')
+        $dataset = Record::selectRaw('COUNT(user_id) as post_count')
+            ->selectRaw('MIN(created_at) as first_posted_at')
+            ->selectRaw('MAX(created_at) as last_posted_at')
             ->where('flg','<', 2)
             ->where('user_id', $request["id"])
-            ->orderBy('cnt', "DESC")
-            ->get()
-            ->toArray();
+            ->first();
 
-        return response()->json(
-            $dataset
-        );
+        return response()->json([
+            'post_count' => (int)($dataset?->post_count ?? 0),
+            'first_posted_at' => $dataset?->first_posted_at,
+            'last_posted_at' => $dataset?->last_posted_at,
+            'keyword_edit_count' => Keyword::where('last_editor', $request['id'])->count(),
+            'event_stamp_count' => $eventStampService->totalForUser((string)$request['id']),
+        ]);
     }
     public function getTrendPostCount(): JsonResponse
     {
