@@ -18,6 +18,14 @@ DB_BACKUP_TIME=03:20
 
 The production Compose override enables backups and runs Laravel `schedule:work` in the dedicated `laravel-scheduler` service. The scheduled backup uses `mysqldump`, which is installed when the Laravel image is rebuilt.
 
+If `db:backup` reports that `mysqldump or mariadb-dump is not installed`, the production Laravel container is using an old image. Pulling source files does not install Dockerfile packages. Rebuild and recreate both Laravel services:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml build laravel laravel-scheduler
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --force-recreate laravel laravel-scheduler
+docker compose -f docker-compose.yml -f docker-compose.prod.yml exec laravel sh -lc 'command -v mysqldump || command -v mariadb-dump'
+```
+
 Create and verify a backup manually:
 
 ```bash
