@@ -63,3 +63,17 @@
 - `App\Providers\TelescopeServiceProvider` を `config/app.php` へ常時登録すると、本番の Artisan ブート時に `TelescopeApplicationServiceProvider not found` で停止する。
 - Telescope は `AppServiceProvider::register()` から、`Laravel\Telescope\TelescopeApplicationServiceProvider` が存在する場合だけ登録する。
 - 修正前の設定キャッシュが本番に残って Artisan が起動できない場合は、先に `bootstrap/cache/config.php`、`services.php`、`packages.php` を削除してから `composer install --no-dev --optimize-autoloader` と `php artisan package:discover` を実行する。
+
+## DB バックアップ用 MySQL クライアント
+
+- `db:backup` は Laravel コンテナ内の `mysqldump` または `mariadb-dump` を使用する。
+- `laravel/Dockerfile` は `default-mysql-client` を導入済み。`mysqldump or mariadb-dump is not installed` は、通常、本番が Dockerfile 更新前の古い Laravel イメージを使用していることを示す。
+- `git pull` だけでは Dockerfile のパッケージは導入されない。本番 Compose で `laravel` と `laravel-scheduler` を build し、`--force-recreate` で再作成する。
+- 再構築後は `command -v mysqldump || command -v mariadb-dump`、`php artisan db:backup`、生成された `.sql.gz` の `gzip -t` を確認する。
+
+## Next 本番ビルドと Prisma Seed
+
+- `next/prisma/data/` は既存ユーザー投入用のローカルデータを含むため Git 管理外。
+- `next/prisma/seed.ts` はこのローカルデータを静的 import するため、Next の本番ビルド型検査へ含めない。`next/tsconfig.json` の `exclude` に `prisma/seed.ts` を指定する。
+- `docker-compose.prod.yml` の Next は `yarn build && exec yarn start` と `restart: unless-stopped` を使用する。ビルド失敗時はコンテナが再起動され、同じエラーがループする。
+- ローカルで `next dev` と `next build` を同時実行すると共有 `.next` が競合し、存在するページに対して `PageNotFoundError` が出ることがある。ビルド検証時は dev サーバーを停止する。
