@@ -30,8 +30,8 @@ export function hasEvidenceImage(image) {
 export function normalizeCountInfo(countInfo) {
     const source = Array.isArray(countInfo) ? countInfo[0] : countInfo
     return {
-        count: Number(source?.cnt || 0),
-        oldestCreatedAt: source?.oldest_created_at || null,
+        count: Number(source?.post_count ?? source?.cnt ?? 0),
+        oldestCreatedAt: source?.first_posted_at ?? source?.oldest_created_at ?? null,
     }
 }
 

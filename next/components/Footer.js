@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {Grid} from "@mui/material";
 
 export default function Footer(){
@@ -5,7 +6,7 @@ export default function Footer(){
         <>
             <Grid container style={{backgroundColor:"var(--color-surface-inverse-bg)",width:'100%', padding:'5px 20px'}}>
                 <Grid item xs={12} style={{fontSize:"0.75em",textAlign:"right"}}>
-                    the Pikmin Series Leaderboards | Copyright © 2006-2026 @koppachappy
+                    the Pikmin Challenge Leaderboards | Copyright © 2006-2026 <Link href="https://x.com/koppachappy">@koppachappy</Link>
                 </Grid>
             </Grid>
         </>

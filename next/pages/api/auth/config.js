@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt'
 import prisma from '../../../lib/prisma'
 import {authOptions} from './[...nextauth]'
 import {invalidateUsersCache} from '../../../lib/usersCache'
+import {isValidPassword} from '../../../lib/passwordPolicy'
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -63,9 +64,8 @@ export default async function handler(req, res) {
     }
 
     if (typeof nextPassword === 'string' && nextPassword.length > 0) {
-        // ここは要件に合わせて調整してください（長さ/複雑性など）
-        if (nextPassword.length < 8) {
-            return res.status(400).json({ ok: false, message: 'New password must be at least 8 characters' })
+        if (!isValidPassword(nextPassword)) {
+            return res.status(400).json({ ok: false, message: 'New password must be 8-72 safe printable ASCII characters' })
         }
         data.password = await bcrypt.hash(nextPassword, 10)
     }

@@ -43,13 +43,22 @@ export async function getStaticProps({params}){
     if(stage_res.status < 300) {
         info = await stage_res.json()
     }
-    if(!info){
+    if(!info || Object.keys(info).length === 0){
         return {
             notFound: true,
         }
     }
+    const categoryRes = await fetch(`http://laravel:8000/api/event-category/${limited}`)
+    const eventCategory = categoryRes.ok ? (await categoryRes.json()).category : null
+
     // ランキングをリクエスト
-    const posts = await fetch(`http://laravel:8000/api/total/${limited}`).then(res => res.json())
+    const postsRes = await fetch(`http://laravel:8000/api/total/${limited}`)
+    if (!postsRes.ok) {
+        return {
+            notFound: true,
+        }
+    }
+    const posts = await postsRes.json()
 
     let stages = []
     // シリーズ番号に基づくステージ群の配列をリクエスト
@@ -63,7 +72,7 @@ export async function getStaticProps({params}){
 
     return {
         props: {
-            stages, limited, info, users, posts
+            stages, limited, info, users, posts, eventCategory
         },
         revalidate: 1,
     }
@@ -71,7 +80,8 @@ export async function getStaticProps({params}){
 
 export default function Limited(param){
 
-    const {t, r} = useLocale()
+    const {t, r, locale} = useLocale()
+    const subtitle = locale === "en" ? param.info.name : param.info.eng
 
     const stages = param.stages
 
@@ -90,10 +100,10 @@ export default function Limited(param){
                 <title>{t.limited[param.limited]+" - "+t.title[0]}</title>
             </Head>
             <Box className="page-header">
-                <BreadCrumb eventMode={true}/>
+                <BreadCrumb eventMode={!param.eventCategory} eventCategory={param.eventCategory}/>
                 <Typography variant="" className="subtitle">#{param.limited}</Typography><br/>
                 <Typography variant="" className="title">{t.limited[param.limited]}</Typography><br/>
-                <Typography variant="" className="subtitle">{param.info.eng}</Typography>
+                <Typography variant="" className="subtitle">{subtitle ?? r.limited[param.limited]}</Typography>
             </Box>
             <StageList stages={stages} />
             <RuleWrapper container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>

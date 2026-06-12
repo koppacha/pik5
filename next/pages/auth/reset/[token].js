@@ -12,6 +12,7 @@ import TextField from '@mui/material/TextField'
 import Typography from '@mui/material/Typography'
 import {useLocale} from "../../../lib/pik5";
 import SeoHead from "../../../components/SeoHead"
+import {isValidPassword} from "../../../lib/passwordPolicy"
 
 export default function ResetTokenPage() {
 
@@ -45,7 +46,9 @@ export default function ResetTokenPage() {
     const onSubmit = async (e) => {
         e.preventDefault()
         setErr(null)
-        if (pw.length < 8) return setErr('パスワードは8文字以上にしてください')
+        if (!isValidPassword(pw)) {
+            return setErr('パスワードは8文字以上72文字以下の安全な半角英数記号にしてください')
+        }
         if (pw !== pw2) return setErr('確認用パスワードが一致しません')
 
         setBusy(true)
@@ -130,7 +133,7 @@ export default function ResetTokenPage() {
                                 {t.g.newPassword}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                8文字以上の新しいパスワードを入力してください。
+                                8文字以上72文字以下の安全な半角英数記号で新しいパスワードを入力してください。
                             </Typography>
                         </Box>
 
@@ -146,7 +149,7 @@ export default function ResetTokenPage() {
                                     fullWidth
                                     autoComplete="new-password"
                                     disabled={busy}
-                                    helperText="8文字以上"
+                                    helperText="安全な半角英数記号8文字以上72文字以下"
                                 />
                                 <TextField
                                     label={t.g.confirmPassword}

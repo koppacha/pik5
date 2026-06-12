@@ -1,6 +1,7 @@
 import crypto from 'crypto'
 import bcrypt from 'bcrypt'
 import prisma from '../../../../lib/prisma'
+import {isValidPassword} from '../../../../lib/passwordPolicy'
 
 function hashToken(token) {
     return crypto.createHash('sha256').update(token).digest('hex')
@@ -12,7 +13,9 @@ export default async function handler(req, res) {
     const token = String(req.body?.token || '').trim()
     const newPassword = String(req.body?.newPassword || '')
     if (!token) return res.status(400).json({ ok: false })
-    if (newPassword.length < 8) return res.status(400).json({ ok: false, message: 'Password too short' })
+    if (!isValidPassword(newPassword)) {
+        return res.status(400).json({ ok: false, message: 'Password must be 8-72 safe printable ASCII characters' })
+    }
 
     const tokenHash = hashToken(token)
 

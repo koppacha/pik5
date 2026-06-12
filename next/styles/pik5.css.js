@@ -180,7 +180,8 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
   
-  .form-helper-text {
+  .form-helper-text,
+  .MuiFormHelperText-root {
     color: ${colors.light.front};
 
     div, input, label {
@@ -188,10 +189,10 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     [data-theme='dark'] & {
-      color: ${colors.dark.front};
+      color: ${colors.dark.front} !important;
 
       div, input, label {
-        color: ${colors.dark.front};
+        color: ${colors.dark.front} !important;
       }
 
     }
@@ -408,14 +409,13 @@ export const InfoBox = styled(Box)`
 export const RuleWrapper = styled(Grid)`
   margin-bottom: 8px;
   min-width: 1200px;
-  overflow: scroll;
-  white-space: nowrap;
   
   ${sp`margin-bottom: 15px;`}
 `
 
 export const RuleBox = styled(Grid)`
   border-radius: 4px;
+  line-height: 1.5;
   padding: 12px 6px;
   margin-right: 6px;
   cursor: pointer;
@@ -426,6 +426,7 @@ export const RuleBox = styled(Grid)`
   }
 `
 export const CellBox = styled(Box)`
+  font-size: 0.9em;
   margin :4px;
   padding :4px;
   background-color: ${colors.light.subBack};
@@ -585,11 +586,12 @@ export const UserType = styled(Typography).attrs(props => ({$length: props.lengt
 export const RankType = styled(Typography)`
     font-size: 2em;
     line-height :2em;
-    font-weight: 200;
+    font-weight: 300;
     font-family: var(--font-krub), "Krub", "cursive";
 
     [data-theme='dark'] & {
         font-family: var(--font-kulim-park), "Kulim Park", "cursive";
+        font-weight: 200;
     }
 
     ${sp`font-size: 1.2em;`}

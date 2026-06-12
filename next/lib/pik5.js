@@ -38,22 +38,29 @@ export const convertToSeconds = (timeString) => {
     return parseInt(hours) * 3600 + parseInt(minutes) * 60 + parseInt(seconds);
 }
 // 日付をフォーマットする関数
-export function dateFormat(date){
+export function dateFormat(date) {
+    if (!date) return '-'
+
+    const targetDate = date instanceof Date ? date : new Date(date)
+
+    if (Number.isNaN(targetDate.getTime())) {
+        return '-'
+    }
 
     const now = new Date()
-    const diff = now.getTime() - date?.getTime()
+    const diff = now.getTime() - targetDate.getTime()
 
-    if(diff > (1000 * 60 * 60 * 12)) {
+    if (diff > (1000 * 60 * 60 * 12)) {
         // 12時間以上前なら日付で表示
-        const y = date.getFullYear()
-        const mo = ('0' + (date.getMonth() + 1)).slice(-2)
-        const d = ('0' + date.getDate()).slice(-2)
+        const y = targetDate.getFullYear()
+        const mo = ('0' + (targetDate.getMonth() + 1)).slice(-2)
+        const d = ('0' + targetDate.getDate()).slice(-2)
         return y + '/' + mo + '/' + d
     } else {
         // 12時間以内なら時間で表示
-        const h = ('0' + date.getHours()).slice(-2)
-        const mi = ('0' + date.getMinutes()).slice(-2)
-        const s = ('0' + date.getSeconds()).slice(-2)
+        const h = ('0' + targetDate.getHours()).slice(-2)
+        const mi = ('0' + targetDate.getMinutes()).slice(-2)
+        const s = ('0' + targetDate.getSeconds()).slice(-2)
         return h + ':' + mi + ':' + s
     }
 }

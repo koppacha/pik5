@@ -10,6 +10,7 @@ services:
     volumes:
       - ./laravel:/var/www/laravel
       - ./project.json:/var/www/project.json:ro
+      - ./backups/mysql:/var/backups/mysql
     expose:
       - "8000"
     restart:
@@ -29,6 +30,10 @@ services:
       - TZ=${TZ}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
+      - DB_PROTECT_DESTRUCTIVE_COMMANDS=${DB_PROTECT_DESTRUCTIVE_COMMANDS:-false}
+      - DB_BACKUP_ENABLED=${DB_BACKUP_ENABLED:-false}
+      - DB_BACKUP_KEEP_DAYS=${DB_BACKUP_KEEP_DAYS:-14}
+      - DB_BACKUP_TIME=${DB_BACKUP_TIME:-03:20}
 
   mysql:
     container_name: mysql
@@ -49,6 +54,7 @@ services:
     volumes:
       - ./mysql:/var/lib/mysql
       - ./log/mysql:/var/log
+      - ./docker/mysql/conf.d/pik5.cnf:/etc/mysql/conf.d/pik5.cnf:ro
     restart:
       always
     logging:

@@ -187,7 +187,8 @@ body {
 //    }
 //}
 
-.form-helper-text {
+.form-helper-text,
+.MuiFormHelperText-root {
     color: $light-front;
 
     div, input, label {
@@ -195,10 +196,10 @@ body {
     }
 
     [data-theme='dark'] & {
-        color: $dark-front;
+        color: $dark-front !important;
 
         div, input, label {
-            color: $dark-front;
+            color: $dark-front !important;
         }
 
     }
@@ -277,6 +278,63 @@ body {
 }
 .welcome-block {
     text-align: center;
+    margin-top: 1em !important;
+}
+.welcome-intro-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+.welcome-auth-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 0.5em;
+
+    a {
+        text-decoration: none !important;
+    }
+}
+.welcome-signup-button {
+    background-image: linear-gradient(
+        90deg,
+        var(--page-theme-series-2-main) 0,
+        var(--page-theme-series-4-main) 15%,
+        var(--page-theme-series-3-main) 40%,
+        var(--page-theme-series-1-main) 50%,
+        var(--page-theme-series-3-main) 75%,
+        var(--page-theme-series-4-main) 85%,
+        var(--page-theme-series-2-main) 100%
+    ) !important;
+    background-size: 300% 100% !important;
+    animation: welcome-signup-gradient 16s linear infinite;
+    color: var(--color-text-on-main) !important;
+}
+.welcome-signup-button:hover {
+    filter: brightness(1.1);
+}
+@keyframes welcome-signup-gradient {
+    0% {
+        background-position: 0 50%;
+    }
+    100% {
+        background-position: 150% 50%;
+    }
+}
+@media(prefers-reduced-motion: reduce) {
+    .welcome-signup-button {
+        animation: none;
+    }
+}
+.welcome-discord-icon {
+    margin-right: 0.4em;
+}
+@media(max-width: 600px) {
+    .welcome-intro-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 .record-post-button {
     border-radius: 4px;
@@ -379,6 +437,7 @@ body {
 .rule-box {
     font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     font-weight: normal;
+    line-height: 1.5;
     display: inline-block;
     border-radius: 4px;
     padding: 12px 6px;
@@ -399,6 +458,7 @@ body {
     }
 }
 .cell-box {
+    font-size: 0.9em;
     margin: 4px;
     padding: 4px;
     background-color: $light-sub-back;
@@ -583,10 +643,11 @@ body {
 .rank-type {
     font-size: 2em;
     line-height :2em;
-    font-weight: 200;
+    font-weight: 300;
     font-family: var(--font-krub), "Krub", "cursive";
     [data-theme='dark'] & {
         font-family: var(--font-kulim-park), "Kulim Park", "cursive";
+        font-weight: 200;
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -994,12 +1055,12 @@ body {
     z-index: 0;
 }
 .top-series-mini-box {
+    display: block;
     border-radius: 4px;
     padding: 6px 12px;
-    margin: 3px 3px;
     cursor: pointer;
     text-decoration: none !important;
-    border: 1px solid $light-border;
+    border: 2px solid var(--welcome-accent, #{$light-border});
     color: $light-front;
 
     [data-theme='dark'] & {

@@ -22,7 +22,7 @@ export default function CategoryList({currentEvent = 0, events = [], type = "eve
         if(type === "event"){
             return t.limited.category?.[id] ?? id
         }
-        return t.ru?.[id] ?? t.rule?.[id] ?? id
+        return t.rule?.[id] ?? id
     }
 
     const href = (id) => {

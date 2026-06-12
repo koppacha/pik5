@@ -1,19 +1,20 @@
-import Record from "../../components/record/Record";
 import useSWR from "swr";
-import NowLoading from "../../components/NowLoading";
 import {fetcher, useLocale} from "../../lib/pik5";
-import BreadCrumb from "../../components/BreadCrumb";
 import * as React from "react";
-import {FormControl, FormHelperText, Grid, MenuItem, Typography} from "@mui/material";
-import {RuleBox, StairIcon, StyledSelect} from "../../styles/pik5.css";
+import {Typography, Box} from "@mui/material";
+import {StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import SpeedRunWrapper from "../../components/record/SpeedRunWrapper";
-import SpeedRunRules from "../../components/form/SpeedRunRules";
 import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
-import {buildSpeedrunLeaderboardPath, getSpeedrunConsoleIds} from "../../lib/const";
+import {buildSpeedrunLeaderboardPath, getSpeedrunConsoleIds, speedrunStageSeries} from "../../lib/const";
+import RuleList from "../../components/record/RuleList";
+import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
+import StageList from "../../components/record/StageList";
+import {useState} from "react";
+import {currentYear} from "../../lib/pik5";
 
 export async function getStaticPaths(){
     return {
@@ -30,6 +31,7 @@ export async function getStaticProps({params}){
 
     const q = buildSpeedrunLeaderboardPath(stage, console)
     const consoles = getSpeedrunConsoleIds(stage)
+    const series = speedrunStageSeries(stage)
 
     if (!q) {
         return {
@@ -48,18 +50,46 @@ export async function getStaticProps({params}){
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()
+    let specialStages = []
+    const stagesRes = await fetch(`http://laravel:8000/api/stages/91?include_special=1&series=${series}`)
+    if(stagesRes.ok){
+        const stagesPayload = await stagesRes.json()
+        specialStages = stagesPayload.specialStages ?? []
+    }
 
     return {
         props: {
-            users, data, stage, console, consoles
+            users, data, stage, console, consoles, series, specialStages
         },
         revalidate: 600,
     }
 }
 
-export default function Run({data, stage, console, consoles}){
+export default function Run({data, stage, console, consoles, series, specialStages}){
 
     const {t, r} = useLocale()
+    const [displayedRule, setDisplayedRule] = useState(SPECIAL_STAGES_RULE)
+    const stageListKey = displayedRule !== SPECIAL_STAGES_RULE
+        ? `/api/server/stages/${displayedRule}`
+        : null
+    const {data: stageListRes} = useSWR(stageListKey, fetcher)
+    const displayedStages = stageListRes?.data ?? []
+    const year = currentYear()
+    const handleConventionalRuleClick = (event, rule) => {
+        event.preventDefault()
+        setDisplayedRule(rule)
+    }
+    const navigationParam = {
+        rule: 91,
+        consoles: console,
+        year,
+        info: {
+            series,
+            parent: 91,
+            stage_id: Number(stage),
+            type: "speedrun",
+        },
+    }
 
     const dates = data.data?.runs
     const displayRuns = (dates || []).reduce((acc, post) => {
@@ -88,12 +118,30 @@ export default function Run({data, stage, console, consoles}){
             #S{stage}<br/>
             <Typography variant="" className="title">{ t.speedrun[stage] }</Typography><br/>
             <Typography variant="" className="subtitle">{r.speedrun[stage]}</Typography><br/>
-            <SpeedRunConsole stage={stage} console={console} consoles={consoles}/>
-            <Grid item style={{
-                marginTop:"20px",marginBottom:"20px"
-            }}>
-                <SpeedRunRules stage={stage} console={console}/>
-            </Grid>
+            <RuleList
+                param={navigationParam}
+                displayedRule={displayedRule}
+                onConventionalRuleClick={handleConventionalRuleClick}
+                onAdditionalRuleClick={setDisplayedRule}
+            />
+            {
+                displayedRule === SPECIAL_STAGES_RULE
+                    ? <SpecialStages
+                        series={series}
+                        stages={specialStages}
+                        consoles={console}
+                        year={year}
+                    />
+                    : <StageList
+                        stages={displayedStages}
+                        consoles={console}
+                        rule={displayedRule}
+                        year={year}
+                    />
+            }
+            <Box sx={{paddingTop: '1em', paddingBottom: '8px'}}>
+                <SpeedRunConsole stage={stage} console={console} consoles={consoles}/>
+            </Box>
             {displayRuns.map(({post, rank}) => (
                 <SpeedRunWrapper
                     key={post?.run?.id || `${post?.run?.submitted || "run"}-${rank}`}

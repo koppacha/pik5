@@ -28,6 +28,14 @@ export default function HeaderMenu({users}){
     const {t, locale} = useLocale()
     const r = (locale === "en") ? "ja" : "en"
     const router = useRouter()
+    const menuDestinations = {
+        1: {href: "/total/10"},
+        2: {href: "/total/20"},
+        3: {href: "/total/30"},
+        4: {href: "/total/40"},
+        5: {href: "/total/4"},
+        6: {href: "https://www.speedrun.com/series/pikmin", external: true},
+    }
 
     const handleSearchClick = () => {
         setSearchOpen(true)
@@ -39,7 +47,7 @@ export default function HeaderMenu({users}){
 
     function handleRandomClick(){
         const targetStageId = p0[Math.floor(Math.random() * p0.length)]
-        router.push(`/stage/${targetStageId}`).then(r => (!r) && console.log("Response Error from Header Menu"))
+        router.push(`/stage/${targetStageId}`)
     }
 
     useEffect(() => {
@@ -55,12 +63,12 @@ export default function HeaderMenu({users}){
                 <Toolbar className="spHidden">
                     <LeftAppBar>
                         <CustomMenu series={0}/>
-                        <CustomMenu series={1}/>
-                        <CustomMenu series={2}/>
-                        <CustomMenu series={3}/>
-                        <CustomMenu series={4}/>
-                        <CustomMenu series={5}/>
-                        <CustomMenu series={6}/>
+                        <CustomMenu series={1} destination={menuDestinations[1]}/>
+                        <CustomMenu series={2} destination={menuDestinations[2]}/>
+                        <CustomMenu series={3} destination={menuDestinations[3]}/>
+                        <CustomMenu series={4} destination={menuDestinations[4]}/>
+                        <CustomMenu series={5} destination={menuDestinations[5]}/>
+                        <CustomMenu series={6} destination={menuDestinations[6]}/>
                         <CustomMenu series={9}/>
                         <CustomMenuButton
                             series={7}

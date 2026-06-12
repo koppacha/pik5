@@ -343,7 +343,6 @@ export default function Battle(props) {
                     },
                     body: JSON.stringify(payload),
                 })
-                console.log(`Successfully submitted for ${player.name}`)
             } catch (e) {
                 console.error(e)
             }

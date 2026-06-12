@@ -7,25 +7,25 @@ import * as React from "react";
 import Totals from "../../components/rule/Totals";
 import {createContext, useEffect, useState} from "react";
 import Rules from "../../components/rule/Rules";
-import {currentYear, fetcher, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
+import {currentYear, dateFormat, fetcher, formattedDate, purgeCache, useLocale} from "../../lib/pik5";
 import BreadCrumb from "../../components/BreadCrumb";
 import RankingTotal from "../../components/record/RankingTotal";
 import Head from "next/head";
 import {PageHeader, RuleBox, RuleWrapper, StageListBox, UserInfoBox} from "../../styles/pik5.css";
 import {logger} from "../../lib/logger";
-import {available} from "../../lib/const";
+import {available, eventCategoriesWithStageList} from "../../lib/const";
 import StageList from "../../components/record/StageList";
 import ModalKeyword from "../../components/modal/ModalKeyword";
 import RuleList from "../../components/record/RuleList";
 import CategoryList from "../../components/record/CategoryList";
 import EventList from "../../components/record/EventList";
 import RankingLimited from "../../components/record/RankingLimited";
-import {en} from "../../locale/en";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRotate, faStopwatch} from "@fortawesome/free-solid-svg-icons";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import useSWR from "swr";
 import {faTwitch} from "@fortawesome/free-brands-svg-icons";
+import SpecialStages from "../../components/record/SpecialStages";
 
 export async function getStaticPaths(){
     return {
@@ -65,6 +65,7 @@ export async function getStaticProps({params}){
                     users,
                     posts: eventTotal.posts ?? [],
                     events: eventTotal.events ?? [],
+                    lastUpdatedAt: eventTotal.last_updated_at ?? null,
                 },
                 revalidate: 3600,
             }
@@ -91,10 +92,14 @@ export async function getStaticProps({params}){
         }
     }
     try {
+        const isSeriesTop = ["10", "20", "30", "40"].includes(series) && rule === series
+        const stagesUrl = isSeriesTop
+            ? `http://laravel:8000/api/stages/${series}?include_special=1&series=${Number(series) / 10}`
+            : `http://laravel:8000/api/stages/${series}`
         const [stage_res, posts_res, stages_res] = await Promise.all([
             fetch(`http://laravel:8000/api/stage/${series}`),
             fetch(`http://laravel:8000/api/total/${series}/${consoles}/${rule}/${year}`),
-            fetch(`http://laravel:8000/api/stages/${series}`)
+            fetch(stagesUrl)
         ]);
 
         if (!stage_res.ok || !posts_res.ok || !stages_res.ok) {
@@ -102,17 +107,19 @@ export async function getStaticProps({params}){
             return { notFound: true };
         }
 
-        const [info, posts, stages] = await Promise.all([
+        const [info, posts, stagesPayload] = await Promise.all([
             stage_res.json(),
             posts_res.json(),
             stages_res.json()
         ]);
+        const stages = Array.isArray(stagesPayload) ? stagesPayload : stagesPayload.stages
+        const specialStages = Array.isArray(stagesPayload) ? [] : stagesPayload.specialStages
 
         const users = await getCachedUsers();
 
         const fDate = formattedDate();
         return {
-            props: { stages, series, rule, consoles, year, info, users, fDate, posts },
+            props: { stages, specialStages, series, rule, consoles, year, info, users, fDate, posts },
             revalidate: 604800
         };
     } catch (error) {
@@ -179,8 +186,11 @@ export default function Series(param){
 
     if(param.eventTotalMode){
         const categoryId = Number(param.category)
-        const categoryTitle = categoryId ? (t.limited.category?.[categoryId] ?? categoryId) : "イベント総合ランキング"
-        const categorySubtitle = categoryId ? (en.limited.category?.[categoryId] ?? categoryId) : "All Events"
+        const categoryTitle = categoryId ? (t.limited.categoryRanking?.[categoryId] ?? categoryId) : t.stage[4]
+        const categorySubtitle = categoryId ? (r.limited.categoryRanking?.[categoryId] ?? categoryId) : r.stage[4]
+        const lastUpdatedAt = param.lastUpdatedAt
+            ? String(param.lastUpdatedAt).replace(/-/g, "/")
+            : "-"
 
         return (
             <>
@@ -193,9 +203,15 @@ export default function Series(param){
                     <Typography variant="" className="title">{categoryTitle}</Typography><br/>
                     <Typography variant="" className="subtitle">{categorySubtitle}</Typography>
                 </Box>
+                <Grid container style={{marginBottom:"8px"}}>
+                    <Grid className="user-info-box" item>
+                        <span>{t.g.lastUpdate}：</span>{dateFormat(lastUpdatedAt)}
+                    </Grid>
+                </Grid>
                 <Totals props={{...param, info: {series: 0}}}/>
                 <CategoryList currentEvent={param.category} events={eventCategoryIds} type="event"/>
-                {Number(param.category) !== 0 && <EventList events={param.events}/>}
+                {Number(param.category) !== 0 && eventCategoriesWithStageList.includes(Number(param.category)) &&
+                    <EventList events={param.events}/>}
                 <Grid container style={{marginBottom:'1em'}}>
                     <Grid className="rule-wrapper" container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                         <Box className={"rule-box active"}
@@ -245,6 +261,15 @@ export default function Series(param){
             {
                 param.series > 9 &&
                 <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+            }
+            {
+                ["10", "20", "30", "40"].includes(param.series) && param.rule === param.series &&
+                <SpecialStages
+                    series={Number(param.series) / 10}
+                    stages={param.specialStages}
+                    consoles={param.consoles}
+                    year={param.year}
+                />
             }
             <Grid container style={{marginBottom:'1em'}}>
                 <Grid item xs={6}>

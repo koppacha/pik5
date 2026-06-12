@@ -1,11 +1,12 @@
 .env
 node_modules
-mysql
+/mysql/
 wiki
 /next/users/data/
 redis
 /sandbox.md
 /log/
+/backups/
 /.idea/
 /test.md
 /sandbox2.md

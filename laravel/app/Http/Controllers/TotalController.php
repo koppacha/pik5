@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Library\Func;
 use App\Models\Record;
+use App\Models\Stage;
 use App\Models\Total;
 use DateTime;
 use Illuminate\Http\JsonResponse;
@@ -87,6 +88,32 @@ class TotalController extends Controller
             return [];
         }
         return $stage_list[$request];
+    }
+
+    public function stages(Request $request, string $series): JsonResponse
+    {
+        $stages = self::stage_list($series);
+
+        if (!$request->boolean('include_special')) {
+            return response()->json($stages);
+        }
+
+        $seriesId = (int)$request->query('series', 0);
+        $specialStages = [];
+
+        if ($seriesId >= 1 && $seriesId <= 4) {
+            $specialStages = Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'series')
+                ->where('series', $seriesId)
+                ->whereBetween('stage_id', [900, 1000])
+                ->where('stage_id', '!=', 903)
+                ->orderBy('stage_id')
+                ->get();
+        }
+
+        return response()->json([
+            'stages' => $stages,
+            'specialStages' => $specialStages,
+        ]);
     }
     /**
      * Display a listing of the resource.

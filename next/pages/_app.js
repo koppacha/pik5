@@ -150,7 +150,7 @@ export default function App(props) {
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
-                        <Layout>
+                        <Layout hideFooter={Component.hideFooter}>
                             <RecordNotificationCenter initialUsers={pageProps?.users || []} />
                             {pageLoading && <Loading/>}
                             <DevSupport ComponentPreviews={ComponentPreviews}

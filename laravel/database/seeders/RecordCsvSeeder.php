@@ -34,6 +34,7 @@ class RecordCsvSeeder extends Seeder
             }
 
             $values = array_combine($headers, $row);
+            $values['difficulty'] = (int)$values['console'] === 3 ? 3 : 2;
 
             Record::create($values);
         }

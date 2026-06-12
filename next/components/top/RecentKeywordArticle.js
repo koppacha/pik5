@@ -119,7 +119,7 @@ export default function RecentKeywordArticle() {
                         <div style={{fontWeight: "bold", lineHeight: 1.35}}>{dateFormat(updatedAt)}</div>
                     </Box>
                     <Box style={{minWidth: 0}}>
-                        <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>編集ユーザー名</div>
+                        <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>編集ハンドルネーム</div>
                         <div style={{fontWeight: "bold", lineHeight: 1.35, overflowWrap: "anywhere"}}>{item.last_editor || "guest"}</div>
                     </Box>
                 </Box>
