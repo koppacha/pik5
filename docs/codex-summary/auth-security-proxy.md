@@ -46,3 +46,12 @@
 - 一時的に `authorize` の catch へ `logger.error('credentials authorize failed', e)` を入れると、401 の背後の例外を取れる。
 - Prisma migration 未適用の場合、`emailHash` などのカラム不足でサインアップ/ログインが失敗する。
 - 本番では `npx prisma migrate deploy` の成功、`_prisma_migrations`、`User` テーブルのカラム、`NODE_ENV=production`、Next プロセス再起動を確認する。
+
+## Laravel 標準認証の扱い
+
+- 現行の主認証は NextAuth / Prisma。画面の登録、ログイン、パスワードリセットは Next.js API を使用する。
+- `laravel/routes/auth.php`、`app/Http/Controllers/Auth/*`、`next/hooks/auth.js` は現行画面から参照されない旧 Laravel Breeze / Sanctum 系経路。
+- Laravel 標準認証ルートは nginx から直接外部公開されず、Laravel コンテナも `ports` ではなく `expose` のみ。ただし内部ネットワークでは登録されている。
+- 標準認証ルートを廃止する場合、`routes/auth.php` だけでなく、未使用の `auth:sanctum /api/user`、`Authenticate::redirectTo()` の名前付き `login` 依存、旧 Auth コントローラ・Request・テスト・Blade・`next/hooks/auth.js` を一括整理する。
+- Laravel の `App\Models\User` と lowercase `users` テーブルは `UserNameController` や `Record::user()` で現役のため、標準認証廃止時も削除しない。
+- リリース直前は、外部公開されておらず緊急の権限昇格経路も確認されていないため静観可能。廃止は独立した整理タスクとして実施する。

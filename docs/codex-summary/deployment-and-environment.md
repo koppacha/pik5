@@ -57,3 +57,9 @@
 - DB migration、Seeder、データ修正、Prisma migration を伴う場合は、実行前に DB フルバックアップを取得する。
 - `.env`、`project.json`、compose、Dockerfile、nginx 設定、依存関係に変更がある場合は、設定反映、依存再インストール、コンテナ再ビルド、nginx test/reload を確認する。
 - 反映後はトップページ、ログイン、投稿、主要ランキングを最低限スモークチェックする。
+# Telescope / Artisan
+
+- `laravel/telescope` は `require-dev` のため、本番の `composer install --no-dev` では存在しない。
+- `App\Providers\TelescopeServiceProvider` を `config/app.php` へ常時登録すると、本番の Artisan ブート時に `TelescopeApplicationServiceProvider not found` で停止する。
+- Telescope は `AppServiceProvider::register()` から、`Laravel\Telescope\TelescopeApplicationServiceProvider` が存在する場合だけ登録する。
+- 修正前の設定キャッシュが本番に残って Artisan が起動できない場合は、先に `bootstrap/cache/config.php`、`services.php`、`packages.php` を削除してから `composer install --no-dev --optimize-autoloader` と `php artisan package:discover` を実行する。
