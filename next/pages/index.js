@@ -32,6 +32,9 @@ import MonthlyMnp from "../components/top/MonthlyMnp"
 
 export async function getServerSideProps(context) {
     const { getCachedUsers } = await import("../lib/usersCache")
+    const {getServerSession} = await import("next-auth/next")
+    const {authOptions} = await import("./api/auth/[...nextauth]")
+    const prisma = (await import("../lib/prisma")).default
 
     // 前回のトレンドをリクエスト
     const res = await fetch(`http://laravel:8000/api/prev`)
@@ -39,15 +42,29 @@ export async function getServerSideProps(context) {
 
     // スクリーンネームをリクエスト
     const users = await getCachedUsers()
+    const session = await getServerSession(context.req, context.res, authOptions)
+    const userSettings = session?.user?.dbId
+        ? await prisma.user.findUnique({
+            where: {id: session.user.dbId},
+            select: {disablePickupVideoAutoplay: true},
+        })
+        : session?.user?.userId
+            ? await prisma.user.findFirst({
+                where: {userId: session.user.userId},
+                select: {disablePickupVideoAutoplay: true},
+            })
+            : null
 
     return {
         props: {
-            users, prev
+            users,
+            prev,
+            disablePickupVideoAutoplay: userSettings?.disablePickupVideoAutoplay ?? false,
         }
     }
 }
 
-export default function Home({users, prev}) {
+export default function Home({users, prev, disablePickupVideoAutoplay}) {
 
     const {t,r} = useLocale()
     const {data: session, status: sessionStatus} = useSession()
@@ -164,12 +181,12 @@ export default function Home({users, prev}) {
                           <NextEvent/>
                       </WrapTopBox>
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
-                          <RecentKeywordArticle/>
+                          <RecentKeywordArticle users={users}/>
                       </WrapTopBox>
                   </Grid>
               </WrapTopBox>
               <WrapTopBox item xs={12} sm={6} className="wrap-top-box">
-                  <PickupVideo users={users}/>
+                  <PickupVideo users={users} disableInitialAutoplay={disablePickupVideoAutoplay}/>
               </WrapTopBox>
               <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox className="top-box">
@@ -185,7 +202,7 @@ export default function Home({users, prev}) {
               <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox className="top-box">
                       <TopBoxHeader className="top-box-header">
-                          <span><FontAwesomeIcon icon={faRankingStar}/> 今月のMVP</span>
+                          <span><FontAwesomeIcon icon={faRankingStar}/> 月間MVP</span>
                       </TopBoxHeader>
                       <TopBoxContent className="top-box-content">
                           <MonthlyMnp users={users}/>

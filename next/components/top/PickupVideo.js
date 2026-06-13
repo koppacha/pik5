@@ -4,7 +4,7 @@ import {faForward, faVideo} from "@fortawesome/free-solid-svg-icons"
 import YouTube from "react-youtube"
 import useSWR from "swr"
 import {useEffect, useMemo, useState} from "react"
-import {fetcher, id2name, useLocale} from "../../lib/pik5"
+import {fetcher, getUserName, useLocale} from "../../lib/pik5"
 import {TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
 import {score2str} from "../../lib/factory"
 
@@ -60,9 +60,7 @@ const createWeightedQueue = (records) => {
     return queue
 }
 
-const getPlayerName = (record, users) => record?.user_name || id2name(users, record?.user_id)
-
-const hiddenRuleIds = [10, 21, 22]
+const hiddenRuleIds = [10, 21, 22, 41, 42, 43]
 
 const getRuleName = (record, t) => {
     if (hiddenRuleIds.includes(Number(record?.rule))) return ""
@@ -92,16 +90,54 @@ const getStageWithRuleLabel = (record, t) => {
     )
 }
 
+const getCharacterWidth = (character) => /^[\x20-\x7E]$/.test(character) ? 0.5 : 1
+
+const getTextWidth = (value) => Array.from(value).reduce((width, character) => width + getCharacterWidth(character), 0)
+
+const truncateByWidth = (value, maxWidth) => {
+    let width = 0
+    let result = ""
+
+    for (const character of Array.from(value)) {
+        const characterWidth = getCharacterWidth(character)
+        if (width + characterWidth > maxWidth) break
+
+        width += characterWidth
+        result += character
+    }
+
+    return result
+}
+
+const truncatePlayerAndStage = (playerName, stageName, maxLength = 21) => {
+    const playerWidth = getTextWidth(playerName)
+    const stageWidth = getTextWidth(stageName)
+
+    if (Math.floor(playerWidth + stageWidth) <= maxLength) {
+        return `${playerName} - ${stageName}`
+    }
+
+    const visibleLength = maxLength - 1
+    const truncatedPlayer = truncateByWidth(playerName, visibleLength)
+    const remainingStageLength = visibleLength - getTextWidth(truncatedPlayer)
+
+    if (remainingStageLength <= 0) return `${truncatedPlayer}…`
+
+    return `${playerName} - ${truncateByWidth(stageName, remainingStageLength)}…`
+}
+
 const getVideoLabel = (record, users, t) => {
     if (!record) return "この動画が最後です"
 
+    const playerName = getUserName(users, record?.user_id, record?.user_name)
     const ruleName = getRuleName(record, t)
     const stageName = ruleName ? `${getStageName(record, t)}（${ruleName}）` : getStageName(record, t)
+    const playerAndStage = truncatePlayerAndStage(playerName, stageName)
 
-    return `${getPlayerName(record, users)} - ${stageName} - ${score2str(record.score, record.rule, record.stage_id)}`
+    return `${playerAndStage} - ${score2str(record.score, record.rule, record.stage_id)}`
 }
 
-export default function PickupVideo({users}) {
+export default function PickupVideo({users, disableInitialAutoplay = false}) {
     const {t} = useLocale()
     const [queue, setQueue] = useState([])
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -192,7 +228,7 @@ export default function PickupVideo({users}) {
                                     height: "100%",
                                     width: "100%",
                                     playerVars: {
-                                        autoplay: 1,
+                                        autoplay: disableInitialAutoplay && currentIndex === 0 ? 0 : 1,
                                         mute: 1,
                                         playsinline: 1,
                                         controls: 1,
@@ -206,11 +242,11 @@ export default function PickupVideo({users}) {
                                 iframeClassName="pickup-video-iframe"
                             />
                         </Box>
-                        <Box style={{display: "grid", gap: "8px", fontSize: "0.86em", marginTop: "10px"}}>
-                            <Box style={{display: "grid", gridTemplateColumns: "2fr 2fr 1fr 1fr", gap: "8px"}}>
+                        <Box style={{display: "grid", height:"92px", fontSize: "0.86em", marginTop: "10px"}}>
+                            <Box style={{display: "grid", height: "50px", gridTemplateColumns: "2fr 2fr 1fr 1fr", gap: "8px"}}>
                                 <Box style={{minWidth: 0}}>
                                     <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>プレイヤー名</div>
-                                    <div style={{fontWeight: "bold", lineHeight: 1.35, overflowWrap: "anywhere"}}>{getPlayerName(selected, users)}</div>
+                                    <div style={{fontWeight: "bold", lineHeight: 1.35, overflowWrap: "anywhere"}}>{getUserName(users, selected?.user_id, selected?.user_name)}</div>
                                 </Box>
                                 <Box style={{minWidth: 0}}>
                                     <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>ステージ名</div>

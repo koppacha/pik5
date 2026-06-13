@@ -95,6 +95,7 @@ export default function AuthConfigPage() {
                 setSrcUserId(data.srcUserId ?? '')
                 setSavedSrcUserId(data.srcUserId ?? '')
                 setUserCatSelect(Number(data.userCatSelect || 0))
+                setDisablePickupVideoAutoplay(Boolean(data.disablePickupVideoAutoplay))
             })
             .catch(() => {
                 if (active) setSettingsErr('設定の取得に失敗しました')
@@ -119,6 +120,7 @@ export default function AuthConfigPage() {
     const [srcUserId, setSrcUserId] = useState('')
     const [savedSrcUserId, setSavedSrcUserId] = useState('')
     const [userCatSelect, setUserCatSelect] = useState(0)
+    const [disablePickupVideoAutoplay, setDisablePickupVideoAutoplay] = useState(false)
     const [settingsBusy, setSettingsBusy] = useState(false)
     const [settingsMsg, setSettingsMsg] = useState(null)
     const [settingsErr, setSettingsErr] = useState(null)
@@ -356,6 +358,7 @@ export default function AuthConfigPage() {
             setSrcUserId(data.srcUserId ?? '')
             setSavedSrcUserId(data.srcUserId ?? '')
             setUserCatSelect(Number(data.userCatSelect || 0))
+            setDisablePickupVideoAutoplay(Boolean(data.disablePickupVideoAutoplay))
             setSettingsMsg('設定を保存しました')
             return data
         } catch (e) {
@@ -378,6 +381,12 @@ export default function AuthConfigPage() {
         const value = Number(event.target.value || 0)
         setUserCatSelect(value)
         await patchUserSettings({userCatSelect: value})
+    }
+
+    const changeDisablePickupVideoAutoplay = async (event) => {
+        const checked = event.target.checked
+        setDisablePickupVideoAutoplay(checked)
+        await patchUserSettings({disablePickupVideoAutoplay: checked})
     }
 
     if (status === 'loading') {
@@ -554,6 +563,19 @@ export default function AuthConfigPage() {
                                 </MenuItem>
                             ))}
                         </TextField>
+                        <FormControlLabel
+                            control={
+                                <Switch
+                                    checked={disablePickupVideoAutoplay}
+                                    onChange={changeDisablePickupVideoAutoplay}
+                                    disabled={settingsBusy}
+                                />
+                            }
+                            label="ピックアップ動画を自動再生しない"
+                        />
+                        <Typography variant="body2" color="text.secondary">
+                            トップページで最初に抽選された動画だけ自動再生を停止します。手動再生後に読み込まれる次の動画は自動再生されます。
+                        </Typography>
                     </Stack>
                 </Paper>
 

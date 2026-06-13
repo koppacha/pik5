@@ -509,6 +509,15 @@ class UserTotalController extends Controller
         $output = [];
         foreach ($rules as $rule) {
             $rule = (int)$rule;
+            if (in_array($rule, [29, 35, 47], true)) {
+                $ranking = $this->getCategoryRanking($rule, 0);
+                $rankingRow = $this->findUserTotal($ranking, $userId);
+                if ($rankingRow) {
+                    $output[$rule] = $this->formatRankingRow($rankingRow, count($ranking));
+                }
+                continue;
+            }
+
             $row = Total::where('user', $userId)
                 ->where('rule', $rule)
                 ->where('console', 0)
@@ -869,7 +878,9 @@ class UserTotalController extends Controller
 
         foreach ($array as $data) {
             $rule = $data["rule"];
-            $score = ($mode === "score") ? $data["score"] : $data["rps"];
+            $score = ($mode === "score")
+                ? TotalController::scoreForTotal((int)$rule, (int)$data["score"])
+                : $data["rps"];
 
             // 各ruleごとに初期化
             if (!isset($output[$rule])) {

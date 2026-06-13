@@ -10,7 +10,7 @@ class EventStampService
 {
     public function totalForUser(string $userId): int
     {
-        return Cache::remember("event-stamp-total:{$userId}", 300, function () use ($userId) {
+        return Cache::remember("event-stamp-total:{$userId}", 60, function () use ($userId) {
             return $this->withEventRanks(EventResult::all())
                 ->where('user_id', $userId)
                 ->sum(fn (array $row) => $this->stamp($row));

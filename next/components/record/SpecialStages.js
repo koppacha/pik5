@@ -44,8 +44,8 @@ export default function SpecialStages({series, stages = [], consoles = 0, year})
             <Box
                 style={{
                     display: "grid",
-                    gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
-                    minWidth: "600px",
+                    gridTemplateColumns: "repeat(8, minmax(0, 1fr))",
+                    minWidth: "800px",
                 }}
             >
                 {items.map(item => (

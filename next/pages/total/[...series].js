@@ -67,7 +67,7 @@ export async function getStaticProps({params}){
                     events: eventTotal.events ?? [],
                     lastUpdatedAt: eventTotal.last_updated_at ?? null,
                 },
-                revalidate: 3600,
+                revalidate: 60,
             }
         } catch (error) {
             console.error('Error fetching event total:', error)

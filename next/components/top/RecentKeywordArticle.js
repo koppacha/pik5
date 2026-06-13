@@ -3,7 +3,7 @@ import {Box, Typography} from "@mui/material"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {faNewspaper} from "@fortawesome/free-solid-svg-icons"
 import useSWR from "swr"
-import {dateFormat, fetcher} from "../../lib/pik5"
+import {dateFormat, fetcher, getUserName} from "../../lib/pik5"
 import {TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
 
 const buildPlainText = (value) => String(value || "")
@@ -19,14 +19,13 @@ const buildPlainText = (value) => String(value || "")
 
 const truncateText = (value, maxLength = 200) => {
     if (!value) return ""
-    if (value.length <= maxLength) return `${value}...`
 
-    return value.slice(0, maxLength - 3) + "..."
+    return value.slice(0, maxLength) + "..."
 }
 
 const buildPreview = (value) => truncateText(buildPlainText(value))
 
-export default function RecentKeywordArticle() {
+export default function RecentKeywordArticle({users}) {
     const {data, error} = useSWR("/api/server/keyword/resolve/recent", fetcher)
     const item = data?.data?.items?.[0] ?? null
 
@@ -106,8 +105,6 @@ export default function RecentKeywordArticle() {
                         fontSize: "0.82em",
                         lineHeight: 1.45,
                         marginTop: "4px",
-                        maxHeight: "5.9em",
-                        overflow: "hidden",
                         overflowWrap: "anywhere",
                     }}
                 >
@@ -119,8 +116,10 @@ export default function RecentKeywordArticle() {
                         <div style={{fontWeight: "bold", lineHeight: 1.35}}>{dateFormat(updatedAt)}</div>
                     </Box>
                     <Box style={{minWidth: 0}}>
-                        <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>編集ハンドルネーム</div>
-                        <div style={{fontWeight: "bold", lineHeight: 1.35, overflowWrap: "anywhere"}}>{item.last_editor || "guest"}</div>
+                        <div style={{color: "#888", fontSize: "0.78em", lineHeight: 1.2}}>編集者名</div>
+                        <div style={{fontWeight: "bold", lineHeight: 1.35, overflowWrap: "anywhere"}}>
+                            {getUserName(users, item.last_editor)}
+                        </div>
                     </Box>
                 </Box>
             </TopBoxContent>

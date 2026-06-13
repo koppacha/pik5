@@ -13,6 +13,7 @@
 - `migrate deploy` が成功し、`User` に `emailHash` 等が存在すれば、DB カラム不足は解消見込み。
 - `20260103121031_add_email_verify_and_reset`、`20260103132402_fixed_email_otp` などメール認証/OTP系 migration が重要。
 - `migrate deploy` 後も失敗する場合は、Next プロセス再起動、環境変数反映、Cookie/NextAuth 設定に切り分ける。
+- `User.disablePickupVideoAutoplay` はトップページのピックアップ動画で最初の動画だけ自動再生を止める設定。既定値は `false`。
 
 ## ユーザー一覧キャッシュ
 
@@ -34,4 +35,3 @@
 - `total_snapshots` は前年比ランクポイント差分計算に使う。
 - `totals` が空のユーザーでも API は `score/rps/mark` の初期値を返すべき。フロントは `totals.rps` を数値正規化し、非数なら `0` にフォールバックする。
 - `totals` テーブルへ `console` を追加した経緯がある。集計・ダッシュボード改修時は console 条件を確認する。
-

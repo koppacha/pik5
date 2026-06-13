@@ -47,6 +47,11 @@
 - Discord API では「取得失敗」と「イベント0件」を区別する。0件なら「予定されているイベントはありません。」等の空表示にする。
 - 月別 MVP と最近のトレンドは、投稿がない月をスキップしながら直近12件/12ヶ月分を揃える仕様がある。
 
+## イベント総合
+
+- `/total/4` 系は `event_results` 再計算後の反映を早めるため、Next.js ISR を60秒にする。
+- ユーザー別イベントスタンプ総数の Laravel キャッシュは60秒にする。
+
 ## PageSpeed / Core Web Vitals
 
 - 2026-05-28 時点の本番トップページは `getServerSideProps` のため HTML が `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` で返る。

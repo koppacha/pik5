@@ -52,6 +52,7 @@ model User {
   password           String?              @db.VarChar(255)
   srcUserId          String?              @db.VarChar(191)
   userCatSelect      Int?
+  disablePickupVideoAutoplay Boolean      @default(false)
   accounts           Account[]
   sessions           Session[]
   date               DateTime             @default(now())

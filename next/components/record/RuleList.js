@@ -22,8 +22,8 @@ export default function RuleList({param, displayedRule, onConventionalRuleClick,
             <Box
                 className={`rule-box ${displayedRule === SPECIAL_STAGES_RULE ? "active" : "not-active"}`}
                 onClick={isSpecialCategory
-                    ? event => onConventionalRuleClick?.(event, SPECIAL_STAGES_RULE)
-                    : () => onAdditionalRuleClick(SPECIAL_STAGES_RULE)}
+                    ? event => onConventionalRuleClick?.(event, SPECIAL_STAGES_RULE, displayedRule === SPECIAL_STAGES_RULE)
+                    : () => onAdditionalRuleClick(SPECIAL_STAGES_RULE, displayedRule === SPECIAL_STAGES_RULE)}
             >
                 {t.g.specialStages}
             </Box>
@@ -57,7 +57,7 @@ export default function RuleList({param, displayedRule, onConventionalRuleClick,
                                     <Grid className="rule-wrapper" item key={rule}>
                                         <Box
                                             className={`rule-box ${Number(displayedRule) === rule ? "active" : "not-active"}`}
-                                            onClick={() => onAdditionalRuleClick(rule)}
+                                            onClick={() => onAdditionalRuleClick(rule, Number(displayedRule) === rule)}
                                         >
                                             {t.rule[rule]}
                                         </Box>
