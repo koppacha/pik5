@@ -122,6 +122,10 @@ export function id2name(users, target){
     })
     return result?.name || "名無し"
 }
+// APIレスポンス内のユーザー名を優先し、なければユーザーIDから名前を解決する
+export function getUserName(users, userId, userName) {
+    return userName || id2name(users, userId)
+}
 // カード表示用に名前を短縮表示する
 export function truncateSmart(str) {
     if (typeof str !== 'string') return ''

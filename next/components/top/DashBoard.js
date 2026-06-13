@@ -131,7 +131,8 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
         .filter(series => !simple || [10, 20, 30, 40].includes(Number(series)))
     const consoleCategoryRules = [10, 20, 30]
     const smallMetaStyle = {fontSize: "0.85em"}
-    const rankStarStyle = {color: "var(--color-rank-1-border)"}
+    const completedMarkStyle = {color: "#fff"}
+    const firstRankStyle = {color: "var(--color-rank-1-border)"}
     const speedrunStarStyle = {color: "#f5c542"}
     const formatSpeedrunTime = (seconds) => {
         const total = Math.floor(Number(seconds || 0))
@@ -144,13 +145,13 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
     }
     const renderCategoryMeta = ({marks, stageCount, rank = null, participants = null}) => (
         <>
-            {marks >= stageCount && <FontAwesomeIcon icon={faStar} style={{color: "#fff"}} />}
-            {marks}<span style={smallMetaStyle}>/{stageCount}</span>
+            <span style={marks >= stageCount ? completedMarkStyle : undefined}>{marks}</span>
+            <span style={smallMetaStyle}>/{stageCount}</span>
             {rank !== null && (
                 <>
                     {" - "}
-                    {outputRank(rank ?? "-")}<span style={smallMetaStyle}>/{participants ?? "-"}</span>
-                    {rank === 1 && <FontAwesomeIcon icon={faStar} style={rankStarStyle} />}
+                    <span style={rank === 1 ? firstRankStyle : undefined}>{outputRank(rank ?? "-")}</span>
+                    <span style={smallMetaStyle}>/{participants ?? "-"}</span>
                 </>
             )}
         </>
@@ -351,7 +352,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
                         rivals.map(player => {
                             const isActive = player?.user === user?.id
                             const isCheckPoint = player?.user === "checkPoint"
-                            const cellLink = (isActive || isCheckPoint) ? `/user/${user?.id}` : `/compare/${user?.id}/0/1/${currentYear()}/${player?.user}/0/1/${currentYear()}`
+                            const cellLink = isCheckPoint ? `/user/${user?.id}` : `/user/${player?.user}`
                             const deltaText = Number.isFinite(rpsDelta)
                                 ? `${rpsDelta > 0 ? "+" : ""}${Number(rpsDelta).toLocaleString()}`
                                 : null

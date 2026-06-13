@@ -12,7 +12,7 @@ async function findSessionUser(session) {
     if (dbId != null) {
         const user = await prisma.user.findUnique({
             where: {id: dbId},
-            select: {id: true, userId: true, srcUserId: true, userCatSelect: true},
+            select: {id: true, userId: true, srcUserId: true, userCatSelect: true, disablePickupVideoAutoplay: true},
         })
         if (user) return user
     }
@@ -20,7 +20,7 @@ async function findSessionUser(session) {
     if (loginUserId) {
         return prisma.user.findFirst({
             where: {userId: loginUserId},
-            select: {id: true, userId: true, srcUserId: true, userCatSelect: true},
+            select: {id: true, userId: true, srcUserId: true, userCatSelect: true, disablePickupVideoAutoplay: true},
         })
     }
 
@@ -50,6 +50,7 @@ export default async function handler(req, res) {
             ok: true,
             srcUserId: user.srcUserId ?? '',
             userCatSelect: user.userCatSelect ?? 0,
+            disablePickupVideoAutoplay: user.disablePickupVideoAutoplay,
         })
     }
 
@@ -82,6 +83,13 @@ export default async function handler(req, res) {
         data.userCatSelect = userCatSelect || null
     }
 
+    if (Object.prototype.hasOwnProperty.call(body, 'disablePickupVideoAutoplay')) {
+        if (typeof body.disablePickupVideoAutoplay !== 'boolean') {
+            return res.status(400).json({ok: false, message: '自動再生設定が正しくありません'})
+        }
+        data.disablePickupVideoAutoplay = body.disablePickupVideoAutoplay
+    }
+
     if (Object.keys(data).length === 0) {
         return res.status(400).json({ok: false, message: 'No changes'})
     }
@@ -89,7 +97,7 @@ export default async function handler(req, res) {
     const updated = await prisma.user.update({
         where: {id: user.id},
         data,
-        select: {srcUserId: true, userCatSelect: true},
+        select: {srcUserId: true, userCatSelect: true, disablePickupVideoAutoplay: true},
     })
 
     invalidateUsersCache()
@@ -99,5 +107,6 @@ export default async function handler(req, res) {
         ok: true,
         srcUserId: updated.srcUserId ?? '',
         userCatSelect: updated.userCatSelect ?? 0,
+        disablePickupVideoAutoplay: updated.disablePickupVideoAutoplay,
     })
 }

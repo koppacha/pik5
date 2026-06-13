@@ -77,3 +77,10 @@
 - `next/prisma/seed.ts` はこのローカルデータを静的 import するため、Next の本番ビルド型検査へ含めない。`next/tsconfig.json` の `exclude` に `prisma/seed.ts` を指定する。
 - `docker-compose.prod.yml` の Next は `yarn build && exec yarn start` と `restart: unless-stopped` を使用する。ビルド失敗時はコンテナが再起動され、同じエラーがループする。
 - ローカルで `next dev` と `next build` を同時実行すると共有 `.next` が競合し、存在するページに対して `PageNotFoundError` が出ることがある。ビルド検証時は dev サーバーを停止する。
+
+## Discord イベント API
+
+- Laravel の `/api/discord/events` は `DISCORD_BOT_TOKEN` と `DISCORD_GUILD_ID` が未設定の場合だけ 503 `Discord events are not available.` を返す。Discord 側の認証・通信失敗は 502。
+- Discord 設定は Git 管理外の `laravel/.env` に設定する。再構築後の 503 は、同ファイルの欠落または古い設定キャッシュを優先して確認する。
+- 値を変更した後は `php artisan config:clear` を実行し、長時間稼働する `laravel` / `laravel-scheduler` コンテナを再起動する。
+- トークン自体をログ、Git 管理ファイル、確認コマンドの出力へ表示しない。設定確認は `filled(config('services.discord.bot_token'))` で行う。

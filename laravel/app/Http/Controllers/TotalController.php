@@ -264,9 +264,7 @@ class TotalController extends Controller
                     $user_id = $record['user_id'];
 
                     // スコア計算（ルールIDがSpeedrun系の場合の特別処理を含む）
-                    $score = $rule_id === 29 || $rule_id === 35 || $rule_id === 47
-                        ? max(0, 600 - $record['score'])
-                        : $record['score'];
+                    $score = self::scoreForTotal((int)$rule_id, (int)$record['score']);
 
                     // 初期化
                     if (!isset($users[$user_id])) {
@@ -327,6 +325,13 @@ class TotalController extends Controller
 
         // 結果を出力
         return Func::rank_calc("total", $users, [$req["console"], $rules, $date]);
+    }
+
+    public static function scoreForTotal(int $rule, int $score): int
+    {
+        return in_array($rule, [29, 35, 47], true)
+            ? max(0, 600 - $score)
+            : $score;
     }
 
     /**

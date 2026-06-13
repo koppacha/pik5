@@ -28,6 +28,7 @@ import ConsoleList from "../../components/record/ConsoleList";
 import DifficultyList from "../../components/record/DifficultyList";
 import PullDownDifficulty from "../../components/form/PullDownDifficulty";
 import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
+import {useRouter} from "next/router";
 
 export async function getStaticPaths(){
     return {
@@ -136,6 +137,7 @@ export async function getStaticProps({params}){
 export default function Stage(param){
 
     const {t, r, locale} = useLocale()
+    const router = useRouter()
     const isSpecialStage = Number(param.stage) >= 900 && Number(param.stage) <= 1000
     const initialDisplayedRule = isSpecialStage ? SPECIAL_STAGES_RULE : Number(param.rule)
 
@@ -236,15 +238,26 @@ export default function Stage(param){
     const {data: stageListRes} = useSWR(stageListKey, fetcher)
     const displayedStages = stageListKey ? (stageListRes?.data ?? []) : param.stages
 
-    const handleConventionalRuleClick = (event, rule) => {
+    const totalRuleId = (rule) => rule === SPECIAL_STAGES_RULE ? 91 : rule
+
+    const handleConventionalRuleClick = (event, rule, isActive) => {
         if(isStageListSwitching){
             event.preventDefault()
             setDisplayedRule(rule)
             setIsStageListSwitching(false)
+            return
+        }
+        if(isActive){
+            event.preventDefault()
+            void router.push(`/total/${totalRuleId(rule)}`)
         }
     }
 
-    const handleAdditionalRuleClick = (rule) => {
+    const handleAdditionalRuleClick = (rule, isActive) => {
+        if(isStageListSwitching && isActive){
+            void router.push(`/total/${totalRuleId(rule)}`)
+            return
+        }
         setDisplayedRule(rule)
         setIsStageListSwitching(true)
     }
