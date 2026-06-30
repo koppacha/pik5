@@ -93,6 +93,69 @@ export const compareTricksFieldCards = (a, b, nowValue = Date.now()) => {
 
     return 0
 }
+// プレイヤーをランクポイント降順、同点時は名前順で比較する。
+export const compareTricksPlayers = (a, b) => {
+    const rankDiff = Number(b?.rank_points || 0) - Number(a?.rank_points || 0)
+    if (rankDiff !== 0) return rankDiff
+
+    return String(a?.name || "").localeCompare(String(b?.name || ""))
+}
+// 現在のID順を最新プレイヤー一覧と同期する。
+export const syncTricksOrder = (currentOrder = [], items = [], key = "id") => {
+    const ids = items.map((item) => item?.[key]).filter((id) => id !== undefined && id !== null)
+
+    return [
+        ...currentOrder.filter((id) => ids.includes(id)),
+        ...ids.filter((id) => !currentOrder.includes(id)),
+    ]
+}
+// 目標順への隣接交換手順をシェーカーソートで生成する。
+export const buildTricksShakerSortSteps = (currentOrder = [], nextOrder = []) => {
+    const rank = new Map(nextOrder.map((id, index) => [id, index]))
+    const order = [...currentOrder]
+    const steps = []
+    let left = 0
+    let right = order.length - 1
+    let swapped = true
+
+    while (swapped && steps.length < 240) {
+        swapped = false
+        for (let i = left; i < right; i += 1) {
+            if ((rank.get(order[i]) ?? i) > (rank.get(order[i + 1]) ?? i + 1)) {
+                const tmp = order[i]
+                order[i] = order[i + 1]
+                order[i + 1] = tmp
+                steps.push([i, i + 1])
+                swapped = true
+            }
+        }
+        right -= 1
+        for (let i = right; i > left; i -= 1) {
+            if ((rank.get(order[i - 1]) ?? i - 1) > (rank.get(order[i]) ?? i)) {
+                const tmp = order[i - 1]
+                order[i - 1] = order[i]
+                order[i] = tmp
+                steps.push([i - 1, i])
+                swapped = true
+            }
+        }
+        left += 1
+    }
+
+    return steps
+}
+// プレイヤー一覧の目標表示順を算出する。
+export const targetTricksPlayerOrder = (players = [], currentOrder = []) => {
+    const playersByName = new Map(players.map((player) => [player.name, player]))
+    const stableIndex = new Map(currentOrder.map((id, index) => [id, index]))
+
+    return [...currentOrder].sort((aName, bName) => {
+        const result = compareTricksPlayers(playersByName.get(aName), playersByName.get(bName))
+        if (result !== 0) return result
+
+        return (stableIndex.get(aName) ?? 0) - (stableIndex.get(bName) ?? 0)
+    })
+}
 // 表示テキストを指定文字数へ短縮する。
 export const shortenTricksText = (value, max) => {
     const text = String(value || "")

@@ -7,6 +7,7 @@ const executablePath = process.env.TRICKS_E2E_CHROME_EXECUTABLE
 
 module.exports = defineConfig({
     testDir: "./tests",
+    testMatch: "*.spec.cjs",
     timeout: 30000,
     expect: {
         timeout: 10000,

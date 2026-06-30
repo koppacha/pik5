@@ -10,6 +10,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TotalController extends Controller
@@ -86,7 +87,20 @@ class TotalController extends Controller
         if(!isset($request) || !$request){
             return [];
         }
-        return $stage_list[$request];
+        if (isset($stage_list[$request])) {
+            return $stage_list[$request];
+        }
+        if ((int) $request === 260704) {
+            return DB::table('stages')
+                ->where('parent', 260704)
+                ->where('stage_id', '>=', 1313)
+                ->orderBy('stage_id')
+                ->pluck('stage_id')
+                ->map(static fn ($stageId) => (int) $stageId)
+                ->all();
+        }
+
+        return [];
     }
     /**
      * Display a listing of the resource.

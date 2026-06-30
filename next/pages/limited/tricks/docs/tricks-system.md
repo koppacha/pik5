@@ -294,12 +294,14 @@
 
 ## 7. テスト工程
 
-### 7.1 Playwright UIテスト
-- 本サブプロジェクト専用のPlaywright設定は`next/pages/limited/tricks/playwright.config.js`、テスト本体は`next/pages/limited/tricks/tests/`に配置する
+### 7.1 Playwright UI/APIテスト
+- 本サブプロジェクト専用のPlaywright設定は`next/pages/limited/tricks/playwright.config.cjs`、テスト本体は`next/pages/limited/tricks/tests/*.cjs`に配置する
+- `pages`配下でもNext.jsの既定`pageExtensions`に含まれない`.cjs`へ統一し、PlaywrightやMySQLクライアントをNextのページとしてbuildしない
+- APIテストは一意なプレイヤー・カード・投稿をMySQLへ投入し、各テストの`finally`で関連データを削除する。既存の大会データを前提にしたり変更したりしない
 - Nextコンテナ内から実行する場合、`next/`を作業ディレクトリとして以下を実行する
 
 ```bash
-npx playwright test -c pages/limited/tricks/playwright.config.js
+npx playwright test -c pages/limited/tricks/playwright.config.cjs
 ```
 
 - Dockerサービス経由で確認する標準手順は以下とする
@@ -310,13 +312,13 @@ docker compose exec laravel php artisan migrate --force
 docker compose exec laravel php artisan db:seed --class=TrickDummyDeckSeeder
 docker compose exec -d next yarn dev -H 0.0.0.0
 docker compose exec next apk add chromium
-docker compose exec -e TRICKS_E2E_CHROME_EXECUTABLE=/usr/bin/chromium-browser next npx playwright test -c pages/limited/tricks/playwright.config.js
+docker compose exec -e TRICKS_E2E_CHROME_EXECUTABLE=/usr/bin/chromium-browser next npx playwright test -c pages/limited/tricks/playwright.config.cjs
 ```
 
 - ホスト側から`localhost:3005`へ接続して実行する場合は、`TRICKS_E2E_BASE_URL`を指定する
 
 ```bash
-TRICKS_E2E_BASE_URL=http://localhost:3005 npx playwright test -c pages/limited/tricks/playwright.config.js
+TRICKS_E2E_BASE_URL=http://localhost:3005 npx playwright test -c pages/limited/tricks/playwright.config.cjs
 ```
 
 - Playwright側で開発サーバーも起動したい場合は、`TRICKS_E2E_START_SERVER=1`を指定する。ただしDocker運用時は既存の`next`コンテナで`yarn dev`を起動してからテストする運用を優先する
@@ -329,7 +331,10 @@ TRICKS_E2E_CHROME_EXECUTABLE=/usr/bin/chromium-browser npx playwright test -c pa
 
 - 現在のUIテストでは以下を確認する
     - `/api/server/tricks/state`がNextプロキシ経由でイベント状態スナップショットを返す
-    - `/api/server/tricks/maintenance/collect-expired`が冪等な期限切れ回収APIとして疎通する
+    - 初回投稿で90分タイマーが開始し、条件を満たす次の投稿で15分延長される
+    - 最下位ではない順位上昇投稿に対してDPが一度だけ付与される
+    - 同じ場札を複数回回収してもポイントと回収ログが重複しない
+    - 大会終了後は手札・山札を描画せず、回収済み場札を表示する
     - `/limited/tricks`を開いたとき、Phaserのcanvasが表示され、描画済みピクセルを持つ
 - レンダリング関連の改修時は、上記に加えて以下を確認する
     - ページを開いたままにしてもPhaser GameObjectやDOM要素が継続的に増え続けない
