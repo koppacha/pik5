@@ -304,7 +304,7 @@ export default function Stage(param){
                 }
                 {param.info?.treasure > 0 &&
                     <Grid className="user-info-box" item>
-                        <span>{t.g.value}：</span>{param.info?.treasure}
+                        <span>{Number(param.stage) < 200 ? t.g.max : t.g.value}：</span>{param.info?.treasure}
                     </Grid>
                 }
                 <Grid className="user-info-box" item>
