@@ -75,18 +75,25 @@ class RecordController extends Controller
     // ステージID・ルール・コンソールの組み合わせでトップ記録を取得する関数
     public function getTopRecord(Request $request): JsonResponse
     {
-        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $orderBy = Func::orderByRule($request['stage_id'], $request['rule']);
         $diff_operator = $request["difficulty"] ? "=" : ">";
         $cnsl_operator = $request["console"] ? "=" : ">";
 
-        $record = Record::select(config('const.selected'))
+        $query = Record::select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
             ->where('console', $cnsl_operator, $request['console'] ?: 0)
             ->where('difficulty',$diff_operator, $request['difficulty'] ?: 0)
-            ->where('flg','<', 2)
-            ->orderBy('score', $scoreOrder)
+            ->where('flg','<', 2);
+
+        $topScore = $orderBy[1] === 'ASC'
+            ? (clone $query)->min('score')
+            : (clone $query)->max('score');
+
+        $record = $query
+            ->where('score', $topScore)
             ->orderBy('created_at', 'ASC')
+            ->orderBy('post_id', 'ASC')
             ->first();
 
         $data = $record ? $record->toArray() : [];
@@ -478,10 +485,12 @@ class RecordController extends Controller
                 ->where('flg','<', 2)
                 ->orderBy($orderBy[0],$orderBy[1])
                 ->orderBy('created_at', 'ASC')
+                ->orderBy('post_id', 'ASC')
             ->get()
             ->toArray();
 
         $new_data = Func::duplicates_cleaner($new_data, $group);
+        $new_data = Func::sortRecordsByRule($new_data, $request['id'], $request['rule']);
 
         if($where === "stage_id") {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する

@@ -36,6 +36,27 @@ class Func extends Facade
         }
         return ['score','DESC'];
     }
+
+    public static function sortRecordsByRule(array $records, $id, $rule): array
+    {
+        $scoreDirection = self::orderByRule($id, $rule)[1] === 'ASC' ? 1 : -1;
+
+        usort($records, static function (array $a, array $b) use ($scoreDirection): int {
+            $scoreComparison = ((int)$a['score'] <=> (int)$b['score']) * $scoreDirection;
+            if ($scoreComparison !== 0) {
+                return $scoreComparison;
+            }
+
+            $createdAtComparison = strcmp((string)$a['created_at'], (string)$b['created_at']);
+            if ($createdAtComparison !== 0) {
+                return $createdAtComparison;
+            }
+
+            return (int)$a['post_id'] <=> (int)$b['post_id'];
+        });
+
+        return $records;
+    }
     // 対象ステージ群のうち最大参加者数を求める
     public static function memberCount ($total = 0, $option = [0, 0, 2025]): array
     {

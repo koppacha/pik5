@@ -67,6 +67,7 @@ export const ja = {
         guide: "攻略情報",
         lastUpdate: "最終更新",
         value: "お宝価値",
+        max: "理論値",
         time: "時間",
         topRecordByController: "操作方法別トップ記録",
         specialStages: "その他・RTA",

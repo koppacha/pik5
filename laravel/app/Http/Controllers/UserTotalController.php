@@ -409,13 +409,14 @@ class UserTotalController extends Controller
             return null;
         }
 
-        $scoreOrder = in_array($rule, [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $orderBy = Func::orderByRule(0, $rule);
         $records = Record::where('user_id', $userId)
             ->where('rule', $rule)
             ->whereIn('stage_id', $stages)
             ->where('flg', '<', 2)
-            ->orderBy('score', $scoreOrder)
+            ->orderBy($orderBy[0], $orderBy[1])
             ->orderBy('created_at')
+            ->orderBy('post_id')
             ->get()
             ->groupBy('stage_id')
             ->map(static fn ($rows) => $rows->first())
@@ -482,14 +483,15 @@ class UserTotalController extends Controller
 
     private function getPersonalBestRecord(string $userId, int $stageId, int $rule): ?Record
     {
-        $scoreOrder = in_array($rule, [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $orderBy = Func::orderByRule($stageId, $rule);
 
         return Record::where('user_id', $userId)
             ->where('stage_id', $stageId)
             ->where('rule', $rule)
             ->where('flg', '<', 2)
-            ->orderBy('score', $scoreOrder)
+            ->orderBy($orderBy[0], $orderBy[1])
             ->orderBy('created_at')
+            ->orderBy('post_id')
             ->first();
     }
 
