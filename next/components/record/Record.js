@@ -31,7 +31,7 @@ import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
 import {stageUrlOutput} from "../../lib/factory";
 
-export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history, swapScoreRpsLabel = false}) {
+export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history, swapScoreRpsLabel = false, showMiniRps = false}) {
 
     const router = useRouter()
     const {t} = useLocale()
@@ -138,7 +138,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}]</RankPointType>}
+                        {(!mini || showMiniRps) && <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>

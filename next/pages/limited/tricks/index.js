@@ -4,13 +4,16 @@ import dynamic from "next/dynamic"
 import useSWR from "swr"
 import {useSession} from "next-auth/react"
 import {useCallback, useEffect, useMemo, useState} from "react"
+import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
+import Dialog from "@mui/material/Dialog"
+import DialogContent from "@mui/material/DialogContent"
 import {postTricks, tricksApi, tricksFetcher} from "../../../lib/tricks"
 import RecordForm from "../../../components/modal/RecordForm"
 import TricksHud from "../../../components/tricks/TricksHud"
 import Record from "../../../components/record/Record"
 
-const TricksGame = dynamic(() => import("../../../components/tricks/TricksGame"), {
+const TricksGame = dynamic(() => import("./TricksLayeredGame"), {
     ssr: false,
 })
 
@@ -27,6 +30,7 @@ export default function TricksPage() {
     const [selectedField, setSelectedField] = useState(null)
     const [postingCard, setPostingCard] = useState(null)
     const [postOpen, setPostOpen] = useState(false)
+    const [loginRequiredOpen, setLoginRequiredOpen] = useState(false)
     const [fieldSorting, setFieldSorting] = useState(false)
     const [sortTick, setSortTick] = useState(0)
     const stateKey = useMemo(() => tricksApi.state(userId), [userId])
@@ -74,9 +78,15 @@ export default function TricksPage() {
 
     const me = state?.me
     const canJoin = status === "authenticated" && !me && state?.tournament?.available
+    const showLoginRequired = useCallback(() => {
+        setLoginRequiredOpen(true)
+    }, [])
+    const closeLoginRequired = useCallback(() => {
+        setLoginRequiredOpen(false)
+    }, [])
     const runAction = useCallback(async (action) => {
         if (!userId) {
-            setMessage("参加・ドローにはログインが必要です")
+            showLoginRequired()
             return
         }
         setBusy(true)
@@ -89,7 +99,7 @@ export default function TricksPage() {
         } finally {
             setBusy(false)
         }
-    }, [mutate, userId])
+    }, [mutate, showLoginRequired, userId])
 
     const join = () => runAction(() => postTricks(tricksApi.join, userId))
     const draw = useCallback(() => runAction(() => postTricks(tricksApi.draw, userId)), [runAction, userId])
@@ -198,12 +208,12 @@ export default function TricksPage() {
                 >
                     ホームに戻る
                 </Link>
-                <TricksHud state={state} dimmed={Boolean(selectedCard) && !postOpen} />
+                <TricksHud state={state} dimmed={Boolean(selectedCard) && !postOpen} currentUserId={userId} />
                 <div
                     style={{
                         position: "absolute",
-                        left: 330,
-                        top: 72,
+                        left: 24,
+                        top: 122,
                         display: "flex",
                         alignItems: "center",
                         gap: 12,
@@ -215,13 +225,13 @@ export default function TricksPage() {
                         <button
                             type="button"
                             onClick={join}
-                            disabled={!canJoin || busy}
+                            disabled={busy || !state?.tournament?.available}
                             style={{
                                 border: "1px solid #6edb9a",
                                 background: canJoin ? "#1f7a43" : "#253044",
                                 color: "#fff",
                                 padding: "10px 16px",
-                                cursor: canJoin && !busy ? "pointer" : "not-allowed",
+                                cursor: !busy && state?.tournament?.available ? "pointer" : "not-allowed",
                             }}
                         >
                             参加
@@ -293,6 +303,8 @@ export default function TricksPage() {
                                         <Record
                                             key={row.unique_id || row.post_id || `${row.post_rank}-${row.user_id}`}
                                             mini
+                                            showMiniRps
+                                            swapScoreRpsLabel
                                             data={{
                                                 ...row,
                                                 user_name: usersById[row.user_id]?.name || row.user_name || row.user_id,
@@ -329,6 +341,13 @@ export default function TricksPage() {
                         onPosted={handlePosted}
                     />
                 )}
+                <Dialog open={loginRequiredOpen} onClose={closeLoginRequired}>
+                    <Box style={{width: "min(600px, 86vw)"}}>
+                        <DialogContent>
+                            <Link href="/auth/login">イベントに参加するにはログインする必要があります</Link>
+                        </DialogContent>
+                    </Box>
+                </Dialog>
                 <style jsx global>{`
                     @keyframes tricksFieldPanelOpenRight {
                         0% { transform: scaleX(0); opacity: 0.5; }
@@ -336,12 +355,27 @@ export default function TricksPage() {
                         100% { transform: scaleX(1); opacity: 1; }
                     }
                     .tricks-field-detail-panel {
-                        background: #ffffff;
-                        border: 1px solid #d1d5db;
+                        background: var(--color-bg-base);
+                        border: 1px solid var(--color-border-base);
+                        border-radius: 14px;
                         box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
-                        color: #111827;
+                        color: var(--color-text-base);
                         overflow: hidden;
                         animation: tricksFieldPanelOpenRight 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+                    }
+                    .tricks-field-detail-panel .record-container,
+                    .tricks-field-detail-panel .record-container div,
+                    .tricks-field-detail-panel .record-container span,
+                    .tricks-field-detail-panel .record-container time,
+                    .tricks-field-detail-panel .record-container svg {
+                        color: var(--color-text-base);
+                    }
+                    .tricks-field-detail-panel .record-container a {
+                        color: var(--color-text-base);
+                        text-decoration-color: currentColor;
+                    }
+                    .tricks-field-detail-panel .record-container .compare-type {
+                        color: var(--color-compare);
                     }
                 `}</style>
             </div>

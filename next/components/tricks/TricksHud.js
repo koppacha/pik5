@@ -1,14 +1,73 @@
-import {formatRemaining, shortenTricksText} from "../../lib/tricks"
+import {useEffect, useMemo, useRef, useState} from "react"
+import {
+    buildTricksShakerSortSteps,
+    shortenTricksText,
+    syncTricksOrder,
+    targetTricksPlayerOrder,
+} from "../../lib/tricks"
 
 function logText(log) {
     if (typeof log === "string") return log
     return log?.message || log?.text || log?.event || JSON.stringify(log)
 }
 
-export default function TricksHud({state, nowValue = Date.now(), dimmed = false}) {
-    const tournament = state?.tournament || {}
-    const players = state?.players || []
+export default function TricksHud({state, dimmed = false, currentUserId = ""}) {
+    const players = useMemo(() => state?.players || [], [state?.players])
     const logs = state?.logs || []
+    const [playerOrder, setPlayerOrder] = useState([])
+    const sortTimerRef = useRef(null)
+    const playersByName = useMemo(() => {
+        return players.reduce((acc, player) => {
+            if (player?.name) acc[player.name] = player
+            return acc
+        }, {})
+    }, [players])
+    const orderedPlayers = playerOrder
+        .map((name) => playersByName[name])
+        .filter(Boolean)
+
+    useEffect(() => {
+        setPlayerOrder((currentOrder) => {
+            const syncedOrder = syncTricksOrder(currentOrder, players, "name")
+            const targetOrder = targetTricksPlayerOrder(players, syncedOrder)
+            if (syncedOrder.length === 0) return targetOrder
+            if (targetOrder.every((name, index) => name === syncedOrder[index])) return syncedOrder
+
+            const steps = buildTricksShakerSortSteps(syncedOrder, targetOrder)
+            if (sortTimerRef.current) {
+                clearInterval(sortTimerRef.current)
+                sortTimerRef.current = null
+            }
+            if (steps.length === 0) return targetOrder
+
+            let nextOrder = [...syncedOrder]
+            sortTimerRef.current = setInterval(() => {
+                const step = steps.shift()
+                if (!step) {
+                    clearInterval(sortTimerRef.current)
+                    sortTimerRef.current = null
+                    setPlayerOrder(targetOrder)
+                    return
+                }
+                const [leftIndex, rightIndex] = step
+                nextOrder = [...nextOrder]
+                const tmp = nextOrder[leftIndex]
+                nextOrder[leftIndex] = nextOrder[rightIndex]
+                nextOrder[rightIndex] = tmp
+                setPlayerOrder(nextOrder)
+            }, 180)
+
+            return syncedOrder
+        })
+
+        return undefined
+    }, [players])
+
+    useEffect(() => {
+        return () => {
+            if (sortTimerRef.current) clearInterval(sortTimerRef.current)
+        }
+    }, [])
 
     return (
         <>
@@ -58,10 +117,9 @@ export default function TricksHud({state, nowValue = Date.now(), dimmed = false}
             <div
                 style={{
                     position: "absolute",
+                    left: 320,
                     right: 24,
-                    top: 14,
-                    width: 420,
-                    maxHeight: 238,
+                    top: 0,
                     zIndex: 2,
                     color: "#e6edf8",
                     pointerEvents: "auto",
@@ -70,55 +128,47 @@ export default function TricksHud({state, nowValue = Date.now(), dimmed = false}
             >
                 <div
                     style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "baseline",
-                        gap: 12,
-                        marginBottom: 7,
+                        overflowX: "auto",
+                        overflowY: "hidden",
+                        padding: "8px 0 0",
+                        whiteSpace: "nowrap",
                     }}
                 >
-                    <div style={{fontSize: 15, fontWeight: 700}}>ダッシュボード</div>
-                    <div style={{fontSize: 12, color: tournament.debug ? "#88f0b0" : "#ffcf6e"}}>
-                        残り {formatRemaining(tournament.end_at, nowValue)}
+                    {orderedPlayers.length === 0 && (
+                        <div style={{padding: "6px 0", color: "#718096", fontSize: 12}}>参加者はまだいません</div>
+                    )}
+                    <div style={{display: "flex", gap: 8, minWidth: "max-content"}}>
+                        {orderedPlayers.map((player, index) => {
+                            const isMe = currentUserId && player.name === currentUserId
+
+                            return (
+                                <div
+                                    key={player.name || index}
+                                    style={{
+                                        minWidth: 112,
+                                        padding: "7px 10px",
+                                        borderRadius: 10,
+                                        border: isMe ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)",
+                                        background: isMe ? "rgba(255, 255, 255, 0.16)" : "rgba(148, 163, 184, 0.09)",
+                                        color: isMe ? "#ffffff" : "#9aa8bd",
+                                        boxShadow: isMe ? "0 0 12px rgba(255, 255, 255, 0.18)" : "none",
+                                        transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
+                                    }}
+                                >
+                                    <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
+                                        <span>#{index + 1}</span>
+                                        <span>RP {player.rank_points}</span>
+                                    </div>
+                                    <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
+                                        {shortenTricksText(player.name, 14)}
+                                    </div>
+                                    <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
+                                        DP {player.draw_points} / H {player.card_count}
+                                    </div>
+                                </div>
+                            )
+                        })}
                     </div>
-                </div>
-                <div
-                    style={{
-                        maxHeight: 204,
-                        overflowY: "auto",
-                        border: "1px solid rgba(154, 168, 189, 0.35)",
-                        background: "rgba(13, 18, 28, 0.82)",
-                    }}
-                >
-                    <table style={{width: "100%", borderCollapse: "collapse", fontSize: 12}}>
-                        <thead>
-                        <tr style={{color: "#aab7c9"}}>
-                            <th style={{textAlign: "right", padding: "7px 8px", width: 34}}>#</th>
-                            <th style={{textAlign: "left", padding: "7px 8px"}}>Player</th>
-                            <th style={{textAlign: "right", padding: "7px 8px"}}>DP</th>
-                            <th style={{textAlign: "right", padding: "7px 8px"}}>RP</th>
-                            <th style={{textAlign: "right", padding: "7px 8px"}}>H</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        {players.length === 0 && (
-                            <tr>
-                                <td colSpan={5} style={{padding: "12px 10px", color: "#718096"}}>
-                                    参加者はまだいません
-                                </td>
-                            </tr>
-                        )}
-                        {players.map((player, index) => (
-                            <tr key={player.name || index}>
-                                <td style={{textAlign: "right", padding: "6px 8px", color: "#94a3b8"}}>{index + 1}</td>
-                                <td style={{padding: "6px 8px"}}>{shortenTricksText(player.name, 18)}</td>
-                                <td style={{textAlign: "right", padding: "6px 8px"}}>{player.draw_points}</td>
-                                <td style={{textAlign: "right", padding: "6px 8px"}}>{player.rank_points}</td>
-                                <td style={{textAlign: "right", padding: "6px 8px"}}>{player.card_count}</td>
-                            </tr>
-                        ))}
-                        </tbody>
-                    </table>
                 </div>
             </div>
         </>

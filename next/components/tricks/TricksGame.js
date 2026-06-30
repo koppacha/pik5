@@ -445,7 +445,7 @@ function drawDeck(scene, x, y, deckCount, onDraw) {
     graphics.fillStyle(0x101620, 1)
     graphics.fillRoundedRect(10, 10, HAND_CARD_WIDTH - 20, HAND_CARD_HEIGHT - 20, 8)
     group.add(graphics)
-    group.add(scene.add.text(HAND_CARD_WIDTH / 2, 82, `山札 ${deckCount ?? 0}枚`, {
+    group.add(scene.add.text(HAND_CARD_WIDTH / 2, 82, "山札", {
         fontFamily: "Arial",
         fontSize: "24px",
         color: "#ffffff",
@@ -467,6 +467,12 @@ function drawDeck(scene, x, y, deckCount, onDraw) {
         fontFamily: "Arial",
         fontSize: "18px",
         color: "#ffffff",
+        fontStyle: "bold",
+    }).setOrigin(0.5))
+    group.add(scene.add.text(HAND_CARD_WIDTH / 2, buttonY + 68, `残り ${deckCount ?? 0}枚`, {
+        fontFamily: "Arial",
+        fontSize: "15px",
+        color: "#c7d2e6",
         fontStyle: "bold",
     }).setOrigin(0.5))
 }
@@ -1328,10 +1334,9 @@ export default function TricksGame({
                             group,
                             x,
                             y,
-                            width: FIELD_CARD_WIDTH,
-                            height: FIELD_CARD_HEIGHT,
+                            width: FIELD_CARD_WIDTH + (group.stackBacks || 0) * FIELD_STACK_OFFSET,
+                            height: FIELD_CARD_HEIGHT + (group.stackBacks || 0) * FIELD_STACK_OFFSET,
                             angle,
-                            hitPadding: 24,
                             depth: group.depth,
                             order: index,
                             disabled: isTricksCardLimitExpired(card, nowValue),
