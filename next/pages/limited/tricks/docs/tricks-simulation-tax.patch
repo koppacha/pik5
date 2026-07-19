@@ -1,0 +1,256 @@
+--- a/lab/tricks_rule_simulation.py
++++ b/lab/tricks_rule_simulation.py
+@@ -33,6 +33,12 @@
+ EXTEND_LIMIT = timedelta(minutes=15)
+ SUBSIDY_INTERVAL = timedelta(minutes=30)
+ SUBSIDY_THRESHOLD = 5
++DRAW_TAX_THRESHOLD = 27
++DRAW_TAX_BAND = 5
++RARITY_BOOST_INTERVAL_MINUTES = 60
++RARITY_BOOST_PEAK_HOUR = 47
++RARITY_INITIAL_RATE = 10.0
++RARITY_BOOST_PER_STEP = (100.0 - RARITY_INITIAL_RATE) / RARITY_BOOST_PEAK_HOUR
+ 
+ RARITY_DISTRIBUTION = [
+     (1, 90.0),
+@@ -92,6 +98,9 @@
+     private_practice: dict[int, int] = field(default_factory=dict)
+     actions: dict[str, int] = field(default_factory=dict)
+     max_stack_count: int = 0
++    pending_draw_tax: int = 0
++    draw_tax_paid: int = 0
++    draw_tax_stacked: int = 0
+ 
+     def is_active(self, at: datetime) -> bool:
+         if not self.joined:
+@@ -156,6 +165,9 @@
+         self.events_written = 0
+         self.collections = 0
+         self.subsidy_payments = 0
++        self.draw_tax_paid = 0
++        self.draw_tax_stacked = 0
++        self.rarity_draw_counts = {rarity: 0 for rarity in range(1, 6)}
+         self.invariant_errors: list[str] = []
+         self.half_hour_snapshots: list[dict[str, Any]] = []
+         self._setup_players()
+@@ -351,7 +363,7 @@
+ 
+     def _legal_actions(self, player: Player) -> list[dict[str, Any]]:
+         actions: list[dict[str, Any]] = []
+-        if player.points >= 1 and self.deck_or_trash_available():
++        if player.points >= draw_cost(player.points) and self.deck_or_trash_available():
+             actions.append({"type": "draw"})
+         if self._can_take(player):
+             card_id = self._select_take_card(player)
+@@ -543,7 +555,9 @@
+         return bool(self.deck or self.trash)
+ 
+     def _draw(self, player: Player) -> None:
+-        if player.points < 1 or not self.deck_or_trash_available():
++        tax = draw_tax(player.points)
++        cost = 1 + tax
++        if player.points < cost or not self.deck_or_trash_available():
+             self._record("wait", player.name, {"reason": "draw_not_allowed"})
+             return
+         if not self.deck:
+@@ -553,12 +567,26 @@
+         card_id = self.deck.pop()
+         card = self.cards[card_id]
+         card.state = player.name
+-        card.rarity = self._weighted_choice(RARITY_DISTRIBUTION)
++        rarity_distribution = rarity_distribution_at(self.elapsed_minutes())
++        card.rarity = self._weighted_choice(rarity_distribution)
+         card.difficulty = self._weighted_choice(DIFFICULTY_DISTRIBUTION)
+-        player.points -= 1
++        player.points -= cost
++        player.pending_draw_tax += tax
++        player.draw_tax_paid += tax
++        self.draw_tax_paid += tax
++        self.rarity_draw_counts[card.rarity] += 1
+         player.hand.append(card_id)
+         player.actions["draw"] = player.actions.get("draw", 0) + 1
+-        self._record("draw", player.name, {"card_id": card_id, "rarity": card.rarity, "difficulty": card.difficulty})
++        self._record("draw", player.name, {
++            "card_id": card_id,
++            "rarity": card.rarity,
++            "difficulty": card.difficulty,
++            "base_cost": 1,
++            "draw_tax": tax,
++            "total_cost": cost,
++            "pending_draw_tax": player.pending_draw_tax,
++            "rare_probability": round(sum(weight for rarity, weight in rarity_distribution if rarity >= 2), 6),
++        })
+ 
+     def _can_take(self, player: Player) -> bool:
+         if len(player.hand) < 3:
+@@ -585,7 +613,12 @@
+         card = self.cards[card_id]
+         card.state = "_field"
+         card.taker = player.name
+-        card.stack_count = len(stack_cards)
++        physical_stack_count = len(stack_cards)
++        draw_tax_stack_bonus = player.pending_draw_tax
++        card.stack_count = physical_stack_count + draw_tax_stack_bonus
++        player.draw_tax_stacked += draw_tax_stack_bonus
++        player.pending_draw_tax = 0
++        self.draw_tax_stacked += draw_tax_stack_bonus
+         player.max_stack_count = max(player.max_stack_count, card.stack_count)
+         card.stack_ids = [cid for cid in stack_cards if cid != card_id]
+         card.paid_points_total = 0
+@@ -598,6 +631,8 @@
+         self._record("take", player.name, {
+             "card_id": card_id,
+             "stack_count": card.stack_count,
++            "physical_stack_count": physical_stack_count,
++            "draw_tax_stack_bonus": draw_tax_stack_bonus,
+             "stack_ids": card.stack_ids,
+         })
+ 
+@@ -792,6 +827,9 @@
+ 
+     def participant_count(self) -> int:
+         return sum(1 for player in self.players.values() if player.joined)
++
++    def elapsed_minutes(self) -> int:
++        return int((self.now - self.start_at).total_seconds() // 60)
+ 
+     def _weighted_choice(self, distribution: list[tuple[int, float]]) -> int:
+         total = sum(weight for _value, weight in distribution)
+@@ -856,6 +894,7 @@
+             "hand_count": len(player.hand),
+             "hand": player.hand[:],
+             "subsidy_flag_slot_at": self._iso(player.subsidy_flag_slot_at),
++            "pending_draw_tax": player.pending_draw_tax,
+         }
+ 
+     def _check_invariants(self, context: str) -> None:
+@@ -882,6 +921,9 @@
+                     "total_active_minutes": p.total_active_minutes(),
+                     "total_active_hours": round(p.total_active_minutes() / 60, 2),
+                     "max_stack_count": p.max_stack_count,
++                    "pending_draw_tax": p.pending_draw_tax,
++                    "draw_tax_paid": p.draw_tax_paid,
++                    "draw_tax_stacked": p.draw_tax_stacked,
+                     "actions": p.actions,
+                     "joined": p.joined,
+                 }
+@@ -899,6 +941,19 @@
+             "events_written": self.events_written,
+             "collections": self.collections,
+             "subsidy_payments": self.subsidy_payments,
++            "policy": {
++                "draw_tax_threshold": DRAW_TAX_THRESHOLD,
++                "draw_tax_band": DRAW_TAX_BAND,
++                "rarity_boost_interval_minutes": RARITY_BOOST_INTERVAL_MINUTES,
++                "rarity_boost_per_step": RARITY_BOOST_PER_STEP,
++                "rarity_boost_peak_hour": RARITY_BOOST_PEAK_HOUR,
++            },
++            "draw_tax": {
++                "paid": self.draw_tax_paid,
++                "stacked": self.draw_tax_stacked,
++                "pending": sum(player.pending_draw_tax for player in self.players.values()),
++            },
++            "rarity_draw_counts": self.rarity_draw_counts,
+             "players": players,
+             "deck_count": len(self.deck),
+             "trash_count": len(self.trash),
+@@ -910,6 +965,7 @@
+             summary["half_hour_snapshots"] = self.half_hour_snapshots
+         if not minimal:
+             summary["fixed_reward_tests"] = fixed_reward_tests()
++            summary["fixed_policy_tests"] = fixed_policy_tests()
+         return summary
+ 
+     def _half_hour_summary_snapshot(self) -> dict[str, Any]:
+@@ -925,6 +981,7 @@
+                     "rank_points": player.rank_points,
+                     "draw_count": player.actions.get("draw", 0),
+                     "max_stack_count": player.max_stack_count,
++                    "pending_draw_tax": player.pending_draw_tax,
+                 }
+                 for player in sorted(self.players.values(), key=lambda p: p.name)
+             },
+@@ -957,6 +1014,27 @@
+     return slot
+ 
+ 
++def draw_tax(points: int) -> int:
++    return max(0, points - DRAW_TAX_THRESHOLD) // DRAW_TAX_BAND
++
++
++def draw_cost(points: int) -> int:
++    return 1 + draw_tax(points)
++
++
++def rarity_distribution_at(elapsed_minutes: int) -> list[tuple[int, float]]:
++    step = min(
++        max(0, elapsed_minutes // RARITY_BOOST_INTERVAL_MINUTES),
++        RARITY_BOOST_PEAK_HOUR,
++    )
++    rare_rate = min(100.0, RARITY_INITIAL_RATE + step * RARITY_BOOST_PER_STEP)
++    rare_scale = rare_rate / RARITY_INITIAL_RATE
++    return [
++        (1, 100.0 - rare_rate),
++        *((rarity, weight * rare_scale) for rarity, weight in RARITY_DISTRIBUTION if rarity >= 2),
++    ]
++
++
+ def distribute_rank_rewards(total: int, groups: list[list[str]]) -> tuple[dict[str, int], int]:
+     if total <= 0 or not groups:
+         return {}, total
+@@ -1068,6 +1146,44 @@
+     return results
+ 
+ 
++def fixed_policy_tests() -> list[dict[str, Any]]:
++    initial_distribution = dict(rarity_distribution_at(0))
++    peak_distribution = dict(rarity_distribution_at(RARITY_BOOST_PEAK_HOUR * 60))
++    initial_rare = sum(weight for rarity, weight in initial_distribution.items() if rarity >= 2)
++    peak_rare = sum(weight for rarity, weight in peak_distribution.items() if rarity >= 2)
++    ratio_preserved = all(
++        math.isclose(
++            peak_distribution[rarity] / peak_rare,
++            dict(RARITY_DISTRIBUTION)[rarity] / RARITY_INITIAL_RATE,
++        )
++        for rarity in range(2, 6)
++    )
++    return [
++        {
++            "name": "draw_tax_boundaries",
++            "ok": [
++                draw_tax(DRAW_TAX_THRESHOLD),
++                draw_tax(DRAW_TAX_THRESHOLD + DRAW_TAX_BAND - 1),
++                draw_tax(DRAW_TAX_THRESHOLD + DRAW_TAX_BAND),
++            ] == [0, 0, 1],
++        },
++        {
++            "name": "rarity_initial_rate",
++            "ok": math.isclose(initial_rare, RARITY_INITIAL_RATE),
++            "rare_rate": initial_rare,
++        },
++        {
++            "name": "rarity_peak_at_47_hours",
++            "ok": math.isclose(peak_rare, 100.0) and math.isclose(peak_distribution[1], 0.0),
++            "rare_rate": peak_rare,
++        },
++        {
++            "name": "rarity_mix_ratio_preserved",
++            "ok": ratio_preserved,
++        },
++    ]
++
++
+ def parse_args() -> argparse.Namespace:
+     parser = argparse.ArgumentParser(description="トリックテイキング制ルール検証シミュレーション")
+     parser.add_argument("--seed", type=int, default=260704, help="乱数シード")
+@@ -1091,6 +1207,9 @@
+         "collections": summary["collections"],
+         "invariant_errors": summary["invariant_errors"],
+         "fixed_reward_tests": summary["fixed_reward_tests"],
++        "fixed_policy_tests": summary["fixed_policy_tests"],
++        "draw_tax": summary["draw_tax"],
++        "rarity_draw_counts": summary["rarity_draw_counts"],
+     }, ensure_ascii=False, indent=2))
+ 
+ 
+

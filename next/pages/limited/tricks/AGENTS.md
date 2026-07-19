@@ -5,6 +5,7 @@
 
 - ルール仕様書：`next/pages/limited/tricks/docs/tricks-rules.md`
 - UI等設計書：`next/pages/limited/tricks/docs/tricks-system.md`
+- シミュレーション仕様書：`next/pages/limited/tricks/docs/tricks-simulation.md`
 
 ## 概要・ディレクトリ構成
 - 以下のディレクトリはプロジェクトルートから見た相対パスです。必要に応じてファイル・ディレクトリを作成してください。
