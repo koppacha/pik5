@@ -1,0 +1,271 @@
+{
+  "seed": 260704,
+  "jsonl_path": "/Users/main/IdeaProjects/pik5/lab/outputs/tricks_simulation_20260709_182918.jsonl",
+  "summary_path": "/Users/main/IdeaProjects/pik5/lab/outputs/tricks_simulation_20260709_182918_summary.json",
+  "start_at": "2026-01-01T00:00:00+09:00",
+  "end_at": "2026-01-03T00:00:00+09:00",
+  "events_written": 569,
+  "collections": 19,
+  "subsidy_payments": 106,
+  "players": [
+    {
+      "name": "player_11",
+      "personality": "借金派",
+      "points": 68,
+      "rank_points": 30,
+      "actions": {
+        "draw": 43,
+        "take": 2,
+        "initial_post": 10,
+        "practice": 1,
+        "update": 2,
+        "wait": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_02",
+      "personality": "正統派",
+      "points": 34,
+      "rank_points": 30,
+      "actions": {
+        "initial_post": 6,
+        "update": 8,
+        "wait": 4,
+        "draw": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_01",
+      "personality": "借金派",
+      "points": 18,
+      "rank_points": 29,
+      "actions": {
+        "draw": 42,
+        "initial_post": 13,
+        "practice": 5,
+        "take": 1,
+        "update": 5,
+        "wait": 3
+      },
+      "joined": true
+    },
+    {
+      "name": "player_03",
+      "personality": "正統派",
+      "points": 41,
+      "rank_points": 14,
+      "actions": {
+        "draw": 6,
+        "take": 2,
+        "initial_post": 5,
+        "wait": 8
+      },
+      "joined": true
+    },
+    {
+      "name": "player_04",
+      "personality": "借金派",
+      "points": 10,
+      "rank_points": 14,
+      "actions": {
+        "initial_post": 9,
+        "draw": 20,
+        "wait": 2
+      },
+      "joined": true
+    },
+    {
+      "name": "player_12",
+      "personality": "正統派",
+      "points": 9,
+      "rank_points": 13,
+      "actions": {
+        "initial_post": 2,
+        "update": 2,
+        "wait": 6,
+        "draw": 3,
+        "take": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_07",
+      "personality": "借金派",
+      "points": 7,
+      "rank_points": 12,
+      "actions": {
+        "initial_post": 6,
+        "draw": 31,
+        "practice": 1,
+        "wait": 3,
+        "take": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_10",
+      "personality": "正統派",
+      "points": 11,
+      "rank_points": 10,
+      "actions": {
+        "draw": 2,
+        "initial_post": 2,
+        "update": 1,
+        "wait": 9
+      },
+      "joined": true
+    },
+    {
+      "name": "player_06",
+      "personality": "スタック派",
+      "points": 8,
+      "rank_points": 9,
+      "actions": {
+        "draw": 36,
+        "take": 6,
+        "practice": 15,
+        "initial_post": 3,
+        "wait": 5
+      },
+      "joined": true
+    },
+    {
+      "name": "player_05",
+      "personality": "正統派",
+      "points": 18,
+      "rank_points": 6,
+      "actions": {
+        "draw": 4,
+        "take": 1,
+        "initial_post": 2,
+        "update": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_13",
+      "personality": "ネガティブ派",
+      "points": 14,
+      "rank_points": 6,
+      "actions": {
+        "wait": 16,
+        "initial_post": 2,
+        "draw": 1,
+        "practice": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_16",
+      "personality": "借金派",
+      "points": 18,
+      "rank_points": 4,
+      "actions": {
+        "draw": 3,
+        "initial_post": 1,
+        "update": 2
+      },
+      "joined": true
+    },
+    {
+      "name": "player_14",
+      "personality": "スタック派",
+      "points": 9,
+      "rank_points": 3,
+      "actions": {
+        "draw": 6,
+        "take": 1,
+        "initial_post": 2,
+        "wait": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_15",
+      "personality": "スタック派",
+      "points": 4,
+      "rank_points": 2,
+      "actions": {
+        "draw": 6,
+        "take": 1,
+        "initial_post": 2,
+        "wait": 3
+      },
+      "joined": true
+    },
+    {
+      "name": "player_09",
+      "personality": "ネガティブ派",
+      "points": 9,
+      "rank_points": 1,
+      "actions": {
+        "wait": 30,
+        "draw": 4,
+        "take": 1,
+        "initial_post": 1
+      },
+      "joined": true
+    },
+    {
+      "name": "player_08",
+      "personality": "スタック派",
+      "points": 7,
+      "rank_points": 0,
+      "actions": {
+        "draw": 14,
+        "take": 2,
+        "practice": 3,
+        "wait": 4
+      },
+      "joined": true
+    }
+  ],
+  "deck_count": 0,
+  "trash_count": 5,
+  "field_count": 0,
+  "collected_count": 19,
+  "invariant_errors": [],
+  "fixed_reward_tests": [
+    {
+      "name": "single_poster_special",
+      "ok": true,
+      "distribution": {
+        "A": 8
+      },
+      "taker_remainder": 0
+    },
+    {
+      "name": "last_place_excluded_three_above",
+      "ok": true,
+      "distribution": {
+        "A": 7,
+        "B": 2,
+        "C": 1
+      },
+      "taker_remainder": 0
+    },
+    {
+      "name": "same_rank_taker_remainder",
+      "ok": true,
+      "distribution": {
+        "A": 2,
+        "B": 2,
+        "C": 2
+      },
+      "taker_remainder": 2
+    },
+    {
+      "name": "two_tied_groups",
+      "ok": true,
+      "distribution": {
+        "A": 3,
+        "B": 3,
+        "C": 1,
+        "D": 1
+      },
+      "taker_remainder": 0
+    }
+  ]
+}
