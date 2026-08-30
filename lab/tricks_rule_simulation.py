@@ -195,7 +195,10 @@ class Simulation:
         stamp = datetime.now(JST).strftime("%Y%m%d_%H%M%S_%f")
         self.jsonl_path = self.output_dir / f"tricks_simulation_{stamp}.jsonl"
         self.summary_path = self.output_dir / f"tricks_simulation_{stamp}_summary.json"
-        self.cards = {i: Card(id=i) for i in range(1, DECK_SIZE + 1)}
+        self.cards = {
+            i: Card(id=i, difficulty=self._weighted_choice(DIFFICULTY_DISTRIBUTION))
+            for i in range(1, DECK_SIZE + 1)
+        }
         self.deck = list(self.cards.keys())
         self.trash: list[int] = []
         self.field: list[int] = []
@@ -1169,13 +1172,15 @@ class Simulation:
             self.deck = self.trash[:]
             self.trash = []
             self.rng.shuffle(self.deck)
-        card_id = self.deck.pop()
+        difficulty = self._draw_available_difficulty()
+        candidates = [card_id for card_id in self.deck if self.cards[card_id].difficulty == difficulty]
+        card_id = self.rng.choice(candidates)
+        self.deck.remove(card_id)
         card = self.cards[card_id]
         card.state = player.name
         card.drawn_at = self.now
         rarity_distribution = rarity_distribution_at(self.elapsed_minutes())
         card.rarity = self._weighted_choice(rarity_distribution)
-        card.difficulty = self._weighted_choice(DIFFICULTY_DISTRIBUTION)
         player.points -= 1
         self.rarity_draw_counts[card.rarity] += 1
         player.hand.append(card_id)
@@ -1187,6 +1192,15 @@ class Simulation:
             "cost": 1,
             "rare_probability": round(sum(weight for rarity, weight in rarity_distribution if rarity >= 2), 6),
         })
+
+    def _draw_available_difficulty(self) -> int:
+        available = {self.cards[card_id].difficulty for card_id in self.deck}
+        weights = dict(DIFFICULTY_DISTRIBUTION)
+        missing_weight = sum(weight for difficulty, weight in weights.items() if difficulty not in available)
+        weights = {difficulty: weight for difficulty, weight in weights.items() if difficulty in available}
+        lowest = min(weights)
+        weights[lowest] += missing_weight
+        return self._weighted_choice(list(weights.items()))
 
     def _can_take(self, player: Player) -> bool:
         return self._take_block_reason(player) is None
@@ -1701,6 +1715,8 @@ class Simulation:
                 "rank_point_first_bonus": 1,
                 "rank_point_basis": "participant_count",
                 "rank_point_display": "confirmed + live field provisional",
+                "difficulty_assignment": "intrinsic_card_value",
+                "missing_difficulty_weight": "lowest_available_difficulty",
             },
             "rarity_draw_counts": self.rarity_draw_counts,
             "players": players,
@@ -1724,6 +1740,7 @@ class Simulation:
         if not minimal:
             summary["fixed_reward_tests"] = fixed_reward_tests()
             summary["fixed_rarity_tests"] = fixed_rarity_tests()
+            summary["fixed_difficulty_tests"] = fixed_difficulty_tests()
             summary["fixed_rank_point_tests"] = fixed_rank_point_tests()
             summary["fixed_prediction_tests"] = fixed_prediction_tests()
             summary["fixed_time_model_tests"] = fixed_time_model_tests()
@@ -2085,6 +2102,26 @@ def fixed_rarity_tests() -> list[dict[str, Any]]:
     ]
 
 
+def fixed_difficulty_tests() -> list[dict[str, Any]]:
+    base = dict(DIFFICULTY_DISTRIBUTION)
+    available = {1, 2, 4}
+    missing_weight = sum(weight for difficulty, weight in base.items() if difficulty not in available)
+    adjusted = {difficulty: weight for difficulty, weight in base.items() if difficulty in available}
+    adjusted[min(adjusted)] += missing_weight
+    return [
+        {
+            "name": "difficulty_distribution_total",
+            "ok": math.isclose(sum(base.values()), 100.0),
+            "distribution": base,
+        },
+        {
+            "name": "missing_difficulty_moves_to_lowest_available",
+            "ok": adjusted == {1: 65.0, 2: 30.0, 4: 5.0},
+            "distribution": adjusted,
+        },
+    ]
+
+
 def fixed_rank_point_tests() -> list[dict[str, Any]]:
     cases = [
         ("first_place_uses_participants_plus_bonus", 1, 3, 8, 4),
@@ -2292,6 +2329,7 @@ def main() -> None:
         "invariant_errors": summary["invariant_errors"],
         "fixed_reward_tests": summary["fixed_reward_tests"],
         "fixed_rarity_tests": summary["fixed_rarity_tests"],
+        "fixed_difficulty_tests": summary["fixed_difficulty_tests"],
         "fixed_rank_point_tests": summary["fixed_rank_point_tests"],
         "fixed_prediction_tests": summary["fixed_prediction_tests"],
         "fixed_time_model_tests": summary["fixed_time_model_tests"],

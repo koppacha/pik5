@@ -1,185 +1,135 @@
 const {expect, test} = require("@playwright/test")
-const {createTricksFixture} = require("./tricks-fixture")
+const {createTricksFixture, testIdentityHeaders} = require("./tricks-fixture")
 
-const sameOriginHeaders = (baseURL) => ({
-    origin: baseURL,
-    referer: `${baseURL}/limited/tricks`,
-    "sec-fetch-site": "same-origin",
-    "sec-fetch-mode": "cors",
-})
-
-async function postApi(request, baseURL, path, data = {}) {
-    return request.post(path, {
-        headers: {...sameOriginHeaders(baseURL), "content-type": "application/json"},
-        data,
+test.describe("limited tricks phase 6", () => {
+    test("unauthenticated visitors cannot join or draw", async ({page}) => {
+        await page.goto("/limited/tricks")
+        await expect(page.getByText("ログインが必要です", {exact: true})).toBeVisible()
+        await expect(page.getByRole("button", {name: "参加", exact: true})).toHaveCount(0)
+        await expect(page.getByRole("button", {name: "ドロー", exact: true})).toBeDisabled()
     })
-}
 
-test.describe("limited tricks", () => {
-    test("state API returns the normalized event snapshot", async ({request, baseURL}) => {
-        const res = await request.get("/api/server/tricks/state?userId=codex_playwright", {
-            headers: sameOriginHeaders(baseURL),
+    test("fixture API creates 200 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        try {
+            expect(fixture.result.counts).toEqual(expect.objectContaining({
+                events: 1,
+                decks: 200,
+                event_cards: 200,
+                players: 2,
+            }))
+            const [alice, bob] = await Promise.all([
+                fixture.get(fixture.players[0], "/api/server/tricks/state"),
+                fixture.get(fixture.players[1], "/api/server/tricks/state"),
+            ])
+            expect(alice.tournament.event_id).toBe(fixture.eventId)
+            expect(alice.me.name).toBe(fixture.players[0])
+            expect(alice.hand).toHaveLength(3)
+            expect(bob.me.name).toBe(fixture.players[1])
+            expect(bob.hand).toHaveLength(0)
+            expect(alice.deck_count).toBe(197)
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("two browser sessions render the same event without sharing private hands", async ({browser, request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        const contexts = await Promise.all([browser.newContext(), browser.newContext()])
+        try {
+            const pages = await Promise.all(contexts.map((context) => context.newPage()))
+            for (let index = 0; index < pages.length; index += 1) {
+                const userId = fixture.players[index]
+                await pages[index].route("**/api/server/tricks/**", async (route) => {
+                    await route.continue({headers: {...route.request().headers(), ...testIdentityHeaders(userId, fixture.eventId)}})
+                })
+            }
+            await Promise.all(pages.map((page) => page.goto("/limited/tricks")))
+            await Promise.all(pages.map((page) => expect(page.locator("canvas")).toBeVisible()))
+            await expect(pages[0].getByText("P 20 / 手札 3 / 捨て札 0", {exact: true})).toBeVisible()
+            await expect(pages[1].getByText("P 20 / 手札 0 / 捨て札 0", {exact: true})).toBeVisible()
+            expect(await pages[0].locator("canvas").count()).toBe(1)
+            expect(await pages[1].locator("canvas").count()).toBe(1)
+        } finally {
+            await Promise.all(contexts.map((context) => context.close()))
+            await fixture.cleanup()
+        }
+    })
+
+    test("controlled time advances through take expiry without natural waiting", async ({request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        try {
+            const state = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            const selected = state.hand[0]
+            const taken = await fixture.post(
+                fixture.players[0],
+                `/api/server/tricks/cards/${selected.id}/take`,
+            )
+            expect(taken.card.state).toBe("_field")
+            expect(taken.card.stack_count).toBe(3)
+
+            const advanced = await fixture.post(fixture.admin, "/api/server/tricks/debug/time/advance", {minutes: 90})
+            expect(advanced.collected).toBeGreaterThanOrEqual(1)
+            const after = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            expect(after.field).toHaveLength(0)
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("canvas remains idle and bounded during a 30 second observation", async ({page, request, baseURL}) => {
+        test.setTimeout(60000)
+        const fixture = await createTricksFixture(request, baseURL)
+        const errors = []
+        page.on("console", (message) => {
+            if (message.type() === "error") errors.push(message.text())
         })
-        expect(res.ok()).toBeTruthy()
-        const body = await res.json()
-        const state = body.data || body
-        expect(state.tournament).toEqual(expect.objectContaining({
-            event_id: expect.any(Number),
-            title: expect.any(String),
-            available: expect.any(Boolean),
-        }))
-        expect(state).toEqual(expect.objectContaining({
-            players: expect.any(Array),
-            field: expect.any(Array),
-            hand: expect.any(Array),
-            deck_count: expect.any(Number),
-            logs: expect.any(Array),
-        }))
-    })
-
-    test("first post starts 90 minutes and the next eligible post extends 15 minutes", async ({request, baseURL}) => {
-        const fixture = await createTricksFixture()
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
         try {
-            await fixture.addRecord(fixture.playerA, 100, "NOW() - INTERVAL 2 MINUTE")
-            const first = await postApi(request, baseURL, "/api/server/tricks/records/posted", {
-                userId: fixture.playerA,
-                stage_id: fixture.stageId,
+            await page.goto("/limited/tricks")
+            await expect(page.locator("canvas")).toBeVisible()
+            await page.waitForFunction(() => typeof window.__TRICKS_DEBUG_SNAPSHOT__ === "function")
+            await page.waitForFunction(() => {
+                const snapshot = window.__TRICKS_DEBUG_SNAPSHOT__?.()
+                return snapshot?.canvasCount === 2
+                    && Number.isFinite(snapshot?.phaserGameObjects)
+                    && snapshot?.phaserLoopSleeping === true
             })
-            expect(first.ok()).toBeTruthy()
-            const firstLimit = new Date((await fixture.card()).limit_at).getTime()
+            const before = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
+            await page.waitForTimeout(30000)
+            const after = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
 
-            await fixture.addRecord(fixture.playerB, 200, "NOW() - INTERVAL 1 MINUTE")
-            const second = await postApi(request, baseURL, "/api/server/tricks/records/posted", {
-                userId: fixture.playerB,
-                stage_id: fixture.stageId,
-            })
-            expect(second.ok()).toBeTruthy()
-            const secondLimit = new Date((await fixture.card()).limit_at).getTime()
-            expect(secondLimit - firstLimit).toBe(15 * 60 * 1000)
+            expect(after.canvasCount).toBe(before.canvasCount)
+            expect(after.canvasCount).toBeLessThanOrEqual(2)
+            expect(after.phaserGameObjects).toBe(before.phaserGameObjects)
+            expect(after.domCards).toBe(before.domCards)
+            expect(after.activeRaf).toBe(0)
+            expect(after.activeTimers).toBe(0)
+            expect(after.stateFetchCount - before.stateFetchCount).toBeLessThanOrEqual(11)
+            expect(after.phaserRenderCount - before.phaserRenderCount).toBe(0)
+            expect(errors).toEqual([])
         } finally {
             await fixture.cleanup()
         }
     })
 
-    test("a rank-improving non-last post grants DP once", async ({request, baseURL}) => {
-        const fixture = await createTricksFixture({rarity: 2, stackCount: 3})
-        try {
-            await fixture.addRecord(fixture.playerA, 100, "NOW() - INTERVAL 3 MINUTE")
-            await fixture.addRecord(fixture.playerB, 200, "NOW() - INTERVAL 2 MINUTE")
-            await fixture.addRecord(fixture.playerA, 300, "NOW() - INTERVAL 1 MINUTE")
-
-            const first = await postApi(request, baseURL, "/api/server/tricks/records/posted", {
-                userId: fixture.playerA,
-                stage_id: fixture.stageId,
-            })
-            expect(first.ok()).toBeTruthy()
-            expect(Number((await fixture.player(fixture.playerA)).draw_points)).toBe(1)
-
-            const duplicate = await postApi(request, baseURL, "/api/server/tricks/records/posted", {
-                userId: fixture.playerA,
-                stage_id: fixture.stageId,
-            })
-            expect(duplicate.ok()).toBeTruthy()
-            expect(Number((await fixture.player(fixture.playerA)).draw_points)).toBe(1)
-        } finally {
-            await fixture.cleanup()
-        }
-    })
-
-    test("collecting the same card twice does not duplicate points or logs", async ({request, baseURL}) => {
-        const fixture = await createTricksFixture({difficulty: 3, stackCount: 3})
-        try {
-            await fixture.addRecord(fixture.playerA, 300, "NOW() - INTERVAL 2 MINUTE")
-            await fixture.addRecord(fixture.playerB, 200, "NOW() - INTERVAL 1 MINUTE")
-
-            const first = await postApi(request, baseURL, `/api/server/tricks/cards/${fixture.deckId}/collect`, {
-                userId: fixture.playerA,
-            })
-            expect(first.ok()).toBeTruthy()
-            const afterFirst = {
-                a: await fixture.player(fixture.playerA),
-                b: await fixture.player(fixture.playerB),
-                logs: await fixture.collectionLogCount(),
-            }
-
-            const second = await postApi(request, baseURL, `/api/server/tricks/cards/${fixture.deckId}/collect`, {
-                userId: fixture.playerA,
-            })
-            expect(second.ok()).toBeTruthy()
-            const afterSecond = {
-                a: await fixture.player(fixture.playerA),
-                b: await fixture.player(fixture.playerB),
-                logs: await fixture.collectionLogCount(),
-            }
-
-            expect((await fixture.card()).state).toBe("_collected")
-            expect(afterSecond).toEqual(afterFirst)
-            expect(afterSecond.logs).toBe(1)
-        } finally {
-            await fixture.cleanup()
-        }
-    })
-
-    test("ended tournament hides the deck and hand while keeping collected cards visible", async ({page}) => {
-        const endedState = {
-            tournament: {
-                event_id: 251227,
-                title: "Playwright ended tournament",
-                start_at: "2026-05-03T00:00:00+09:00",
-                end_at: "2026-05-05T00:00:00+09:00",
-                server_now: "2026-05-05T00:01:00+09:00",
-                available: false,
-                debug: false,
+    test("invalid test signature is rejected", async ({request, baseURL}) => {
+        const eventId = 990099
+        const response = await request.post("/api/server/tricks/debug/fixtures", {
+            headers: {
+                origin: baseURL,
+                referer: `${baseURL}/limited/tricks`,
+                "x-tricks-test-user": "mallory",
+                "x-tricks-test-event": String(eventId),
+                "x-tricks-test-timestamp": String(Math.floor(Date.now() / 1000)),
+                "x-tricks-test-signature": "invalid",
             },
-            me: {name: "pw-ended", draw_points: 3, rank_points: 0, card_count: 1},
-            players: [],
-            deck_count: 4,
-            trash_count: 2,
-            hand: [{id: 8001, card_id: 8001, title: "Hidden hand", state: "pw-ended"}],
-            field: [{
-                id: 8002, card_id: 8002, stage_id: 9802,
-                title: "Collected card", rule_name: "Rule", text: "Result",
-                state: "_collected", difficulty: 1, rarity: 1, stack_count: 3,
-                collected_at: "2026-05-05T00:00:00+09:00",
-            }],
-            logs: [],
-        }
-        let stateResponse = endedState
-        await page.route("**/api/server/tricks/state**", async (route) => route.fulfill({
-            contentType: "application/json",
-            body: JSON.stringify(stateResponse),
-        }))
-        await page.route("**/api/users", async (route) => route.fulfill({contentType: "application/json", body: "[]"}))
-        await page.goto("/limited/tricks")
-
-        await expect(page.locator("canvas")).toBeVisible()
-        await page.waitForTimeout(500)
-        const withPrivateCards = await page.locator("canvas").evaluate((canvas) => canvas.toDataURL())
-
-        stateResponse = {...endedState, deck_count: 0, hand: [], me: {...endedState.me, card_count: 0}}
-        await page.reload()
-        await expect(page.locator("canvas")).toBeVisible()
-        await page.waitForTimeout(500)
-        const withoutPrivateCards = await page.locator("canvas").evaluate((canvas) => canvas.toDataURL())
-
-        expect(withPrivateCards).toBe(withoutPrivateCards)
-        await expect(page.getByRole("button", {name: "参加"})).toBeDisabled()
-    })
-
-    test("page renders a non-empty Phaser canvas", async ({page}) => {
-        await page.goto("/limited/tricks")
-        await expect(page.locator("canvas")).toBeVisible()
-        await page.waitForFunction(() => {
-            const canvas = document.querySelector("canvas")
-            if (!canvas || canvas.width < 100 || canvas.height < 100) return false
-            const context = canvas.getContext("2d")
-            if (!context) return false
-            return [[0.18, 0.22], [0.5, 0.5], [0.82, 0.78]].some(([x, y]) => {
-                const pixel = context.getImageData(
-                    Math.floor(canvas.width * x), Math.floor(canvas.height * y), 1, 1
-                ).data
-                return pixel[3] > 0 && (pixel[0] > 0 || pixel[1] > 0 || pixel[2] > 0)
-            })
+            data: {event_id: eventId},
         })
+        expect(response.status()).toBe(401)
     })
 })

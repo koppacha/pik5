@@ -23,7 +23,7 @@ class TrickDummyDeckSeeder extends Seeder
         $query->where('creator', 'codex_dummy')->delete();
 
         $rows = [];
-        for ($i = 1; $i <= 100; $i++) {
+        for ($i = 1; $i <= 200; $i++) {
             $originStageId = 200 + (($i - 1) % 30) + 1;
             $difficulty = (($i - 1) % 5) + 1;
             $rarity = (($i - 1) % 5) + 1;
@@ -32,7 +32,7 @@ class TrickDummyDeckSeeder extends Seeder
                 'stageId' => $originStageId,
                 'title' => "ダミートリック{$i}",
                 'ruleName' => "チャレンジルール{$i}",
-                'state' => '_deck',
+                'state' => '_eligible',
                 'text' => "制限時間内に指定ステージでできるだけ高いスコアを投稿するダミールールです。カード番号{$i}。",
                 'difficulty' => $difficulty,
                 'rarity' => $rarity,
@@ -47,10 +47,10 @@ class TrickDummyDeckSeeder extends Seeder
             ];
 
             if (Schema::hasColumn('decks', 'event_id')) {
-                $row['event_id'] = $eventId;
+                $row['event_id'] = null;
             }
             if (Schema::hasColumn('decks', 'card_id')) {
-                $row['card_id'] = $i;
+                $row['card_id'] = null;
             }
             if (Schema::hasColumn('decks', 'stage_id')) {
                 $row['stage_id'] = null;
@@ -90,6 +90,5 @@ class TrickDummyDeckSeeder extends Seeder
         }
 
         DB::table('decks')->insert($rows);
-        DB::table('players')->update(['draw_points' => 99]);
     }
 }

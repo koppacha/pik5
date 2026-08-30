@@ -1,11 +1,15 @@
 export const tricksApi = {
-    state: (userId) => `/api/server/tricks/state${userId ? `?userId=${encodeURIComponent(userId)}` : ""}`,
+    state: "/api/server/tricks/state",
+    collected: (eventId) => `/api/server/tricks/collected${eventId ? `?event_id=${eventId}` : ""}`,
     join: "/api/server/tricks/join",
     draw: "/api/server/tricks/draw",
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
     scores: (deckId) => `/api/server/tricks/cards/${deckId}/scores`,
-    recordPosted: "/api/server/tricks/records/posted",
-    collectExpired: "/api/server/tricks/maintenance/collect-expired",
+    debugCollect: (deckId) => `/api/server/tricks/cards/${deckId}/debug-collect`,
+    debugTimeFreeze: "/api/server/tricks/debug/time/freeze",
+    debugTimeSet: "/api/server/tricks/debug/time/set",
+    debugTimeAdvance: "/api/server/tricks/debug/time/advance",
+    debugTimeReset: "/api/server/tricks/debug/time/reset",
 }
 
 export const tricksActions = {
@@ -26,11 +30,11 @@ export const tricksFetcher = async (url) => {
     return body?.data ?? body
 }
 // Tricks APIへJSONのPOSTを送り、失敗時はメッセージ付きで例外化する。
-export const postTricks = async (url, userId, payload = {}) => {
+export const postTricks = async (url, payload = {}) => {
     const res = await fetch(url, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify({userId, ...payload}),
+        body: JSON.stringify(payload),
     })
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
@@ -93,9 +97,11 @@ export const compareTricksFieldCards = (a, b, nowValue = Date.now()) => {
 
     return 0
 }
-// プレイヤーをランクポイント降順、同点時は名前順で比較する。
+// プレイヤーを確定・暫定の合計ランクポイント降順、同点時は名前順で比較する。
 export const compareTricksPlayers = (a, b) => {
-    const rankDiff = Number(b?.rank_points || 0) - Number(a?.rank_points || 0)
+    const aTotal = Number(a?.total_rank_points ?? a?.rank_points ?? 0)
+    const bTotal = Number(b?.total_rank_points ?? b?.rank_points ?? 0)
+    const rankDiff = bTotal - aTotal
     if (rankDiff !== 0) return rankDiff
 
     return String(a?.name || "").localeCompare(String(b?.name || ""))
@@ -192,7 +198,50 @@ export const normalizeTricksState = (state, options = {}) => {
         hand: orderedHand.hand,
         handOrder: orderedHand.order,
         deckCount: state?.deck_count ?? 0,
+        trashCount: state?.trash_count ?? 0,
         logs: state?.logs || [],
         me: state?.me || null,
+    }
+}
+
+// 現在状態からドロー・テイクの可否とユーザー向け理由を算出する。
+export const tricksOperationState = (state, options = {}) => {
+    const nowValue = Number(options.nowValue || Date.now())
+    const tournament = state?.tournament || {}
+    const me = state?.me
+    const fieldCount = state?.field?.length || 0
+    const handCount = state?.hand?.length || 0
+    const playerCount = state?.players?.length || 0
+    const requiredHand = 3 + fieldCount
+    const fieldCap = Math.min(Math.max(1, playerCount - 1), 16)
+    const endAt = tournament.end_at ? new Date(tournament.end_at).getTime() : 0
+    const nextTakeAt = me?.next_take_at ? new Date(me.next_take_at).getTime() : 0
+    const available = Boolean(tournament.available) && tournament.state !== "ended"
+
+    let drawReason = ""
+    if (!me) drawReason = "大会へ参加してください"
+    else if (!available) drawReason = "大会開催時間外です"
+    else if (Number(me.draw_points) <= 0) drawReason = "ポイントが0P以下です"
+    else if (Number(state?.deck_count || 0) + Number(state?.trash_count || 0) <= 0) drawReason = "山札と捨て札が空です"
+
+    let takeReason = ""
+    if (!me) takeReason = "大会へ参加してください"
+    else if (!available) takeReason = "大会開催時間外です"
+    else if (endAt && nowValue >= endAt - 60 * 60 * 1000) takeReason = "大会終了1時間前以降はテイクできません"
+    else if (nextTakeAt && nowValue < nextTakeAt) takeReason = `次回テイク可能 ${new Date(nextTakeAt).toLocaleTimeString("ja-JP")}`
+    else if (fieldCount >= fieldCap) takeReason = `場札上限 ${fieldCap}枚に達しています`
+    else if (handCount < requiredHand) takeReason = `手札が${requiredHand}枚必要です（現在${handCount}枚）`
+
+    return {
+        available,
+        canDraw: drawReason === "",
+        drawReason,
+        canTake: takeReason === "",
+        takeReason,
+        requiredHand,
+        fieldCap,
+        fieldCount,
+        handCount,
+        nextTakeAt: me?.next_take_at || null,
     }
 }

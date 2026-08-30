@@ -3,57 +3,70 @@
 namespace App\Http\Controllers;
 
 use App\Library\Func;
-use App\Models\Keyword;
 use App\Models\Record;
 use App\Models\Stage;
+use App\Services\Tricks\TrickRecordService;
 use DateTime;
 use Exception;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Foundation\Http\FormRequest;
-use InvalidArgumentException;
 
 class RecordController extends Controller
 {
     public function __invoke(): string
     {
         // TODO: Implement __invoke() method.
-        return "invoke";
+        return 'invoke';
     }
+
     /**
      * Display a listing of the resource.
-     *
-     * @return JsonResponse
      */
     public function index(): JsonResponse
     {
         $data = Record::all();
+
         return response()->json(
             $data
         );
     }
+
     // スコア比較時の条件分岐（RecordForm.jsと共通）
     public function isTime($rule, $stage): bool
     {
         $ruleArray = [11, 29, 33, 35, 43, 46, 47, 91];
         $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
-        return in_array((int)$rule, $ruleArray, true) ||
-            in_array((int)$stage, $stageArray, true);
+
+        return in_array((int) $rule, $ruleArray, true) ||
+            in_array((int) $stage, $stageArray, true);
     }
 
     private function createUniqueId(): int
     {
         do {
-            $uniqueId = (int)(config('version.record_prefix') . sprintf('%06d', random_int(0, 999999)));
+            $uniqueId = (int) (config('version.record_prefix').sprintf('%06d', random_int(0, 999999)));
             $exists = Record::where('unique_id', $uniqueId)->exists();
         } while ($exists);
 
         return $uniqueId;
     }
+
+    private function containsNgWord(string $text, array $words): bool
+    {
+        foreach ($words as $word) {
+            if (str_contains($text, $word)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
@@ -63,41 +76,45 @@ class RecordController extends Controller
             ->orderBy('post_id', 'DESC')
             ->first();
         $data = $record ? $record->toArray() : [];
-        $data["post_rank"] = $this->getRankArray($data, false);
+        $data['post_rank'] = $this->getRankArray($data, false);
 
-        if(!$data){
-            $data = collect(['message' => "Record Not Found"]);
+        if (! $data) {
+            $data = collect(['message' => 'Record Not Found']);
         }
+
         return response()->json(
             $data
         );
     }
+
     // ステージID・ルール・コンソールの組み合わせでトップ記録を取得する関数
     public function getTopRecord(Request $request): JsonResponse
     {
-        $scoreOrder = in_array((int)$request['rule'], [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
-        $diff_operator = $request["difficulty"] ? "=" : ">";
-        $cnsl_operator = $request["console"] ? "=" : ">";
+        $scoreOrder = in_array((int) $request['rule'], [11, 29, 35, 47, 91], true) ? 'ASC' : 'DESC';
+        $diff_operator = $request['difficulty'] ? '=' : '>';
+        $cnsl_operator = $request['console'] ? '=' : '>';
 
         $record = Record::select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
             ->where('console', $cnsl_operator, $request['console'] ?: 0)
-            ->where('difficulty',$diff_operator, $request['difficulty'] ?: 0)
-            ->where('flg','<', 2)
+            ->where('difficulty', $diff_operator, $request['difficulty'] ?: 0)
+            ->where('flg', '<', 2)
             ->orderBy('score', $scoreOrder)
             ->orderBy('created_at', 'ASC')
             ->first();
 
         $data = $record ? $record->toArray() : [];
-        $data["post_rank"] = 1; // トップ記録なので順位は1
-        if(!$data){
-            $data = collect(['message' => "Record Not Found"]);
+        $data['post_rank'] = 1; // トップ記録なので順位は1
+        if (! $data) {
+            $data = collect(['message' => 'Record Not Found']);
         }
+
         return response()->json(
             $data
         );
     }
+
     // 単一記録と同じ組み合わせのデータを取得する関数
     public function getRecordHistory(Request $request): JsonResponse
     {
@@ -106,7 +123,7 @@ class RecordController extends Controller
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
             ->where('user_id', $request['user_id'])
-            ->where('flg','<', 2)
+            ->where('flg', '<', 2)
             ->orderBy('created_at', 'DESC')
             ->get()
             ->toArray();
@@ -114,10 +131,10 @@ class RecordController extends Controller
         $new_data = [];
 
         // 当時の順位を追加
-        foreach($data as $record){
+        foreach ($data as $record) {
             $history = $this->getRankArray($record, true);
-            $record["post_rank"] = $history[0];
-            $record["rps"] = $history[1];
+            $record['post_rank'] = $history[0];
+            $record['rps'] = $history[1];
             $new_data[] = $record;
         }
 
@@ -125,15 +142,16 @@ class RecordController extends Controller
             $new_data
         );
     }
+
     // 暫定順位を取得する関数
     public function getRank(Request $request): JsonResponse
     {
-        $operator = $this->isTime($request["rule"], $request["stage"]) ? "<" : ">";
+        $operator = $this->isTime($request['rule'], $request['stage']) ? '<' : '>';
 
         $data = Record::select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
-            ->where('score', $operator, (int)$request['score'])
-            ->where('flg','<', 2)
+            ->where('score', $operator, (int) $request['score'])
+            ->where('flg', '<', 2)
             ->get()
             ->unique('user_id')
             ->count();
@@ -145,10 +163,11 @@ class RecordController extends Controller
             $data
         );
     }
+
     // 暫定順位を取得する関数バックエンド版：第２引数がtrueの場合は投稿時点の順位を取得、falseの場合は現在時刻
     public function getRankArray(array $request, bool $history): int|array
     {
-        if (!$request) {
+        if (! $request) {
             return 0;
         }
         $orderBy = Func::orderByRule($request['stage_id'], $request['rule']);
@@ -162,222 +181,156 @@ class RecordController extends Controller
         $data->select('user_id')
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
-            ->where('flg','<', 2);
+            ->where('flg', '<', 2);
 
         // ヒストリーモードの場合、ここで処理をぶった斬ってクローンし、別プロセスで当時の参加者数も取得する
-        if($history){
+        if ($history) {
             $dataClone = clone $data;
             $countAll = $dataClone->distinct('user_id')->count('user_id');
         }
 
         // 順位取得の後続処理
-        $count = $data->where('score', $inequality, (int)$request['score'])
+        $count = $data->where('score', $inequality, (int) $request['score'])
             ->distinct('user_id')
             ->count('user_id');
         $count++;
 
-        if($history){
+        if ($history) {
             return [$count, $countAll];
         }
+
         return $count;
     }
 
     /**
      * Show the form for creating a new resource.
      *
-     * @param FormRequest $request
-     * @return JsonResponse
+     * @param  FormRequest  $request
      */
-    public function create(Request $request): JsonResponse
+    public function create(Request $request, TrickRecordService $trickRecords): JsonResponse
     {
-        $isEdit = ($request['mode'] === 'edit') && !empty($request['edit_unique_id']);
-        $editUniqueId = (int)($request['edit_unique_id'] ?: 0);
-        $score = (int)($request['score'] ?: 0);
-        $rule = (int)($request['rule'] ?: 0);
-        $console = (int)($request['console'] ?: 0);
-        $difficulty = (int)($request['difficulty'] ?: 0);
-        $region = (int)($request['region'] ?: 0);
-        $videoUrl = (string)($request['video_url'] ?: "");
-        $commentInput = (string)($request['post_comment'] ?? "");
-
-        // DEBUG LOG (コミット前に削除): 受信直後の生値と正規化値を確認
-        Log::info('RecordController.create.raw_input', [
-            'mode' => (string)$request['mode'],
-            'edit_unique_id' => (string)$request['edit_unique_id'],
-            'raw_score' => $request['score'],
-            'raw_rule' => $request['rule'],
-            'raw_console' => $request['console'],
-            'raw_difficulty' => $request['difficulty'],
-            'raw_region' => $request['region'],
-            'normalized' => [
-                'score' => $score,
-                'rule' => $rule,
-                'console' => $console,
-                'difficulty' => $difficulty,
-                'region' => $region,
-            ],
-        ]);
+        $isEdit = ($request['mode'] === 'edit') && ! empty($request['edit_unique_id']);
+        $editUniqueId = (int) ($request['edit_unique_id'] ?: 0);
+        $score = (int) ($request['score'] ?: 0);
+        $rule = (int) ($request['rule'] ?: 0);
+        $console = (int) ($request['console'] ?: 0);
+        $difficulty = (int) ($request['difficulty'] ?: 0);
+        $region = (int) ($request['region'] ?: 0);
+        $videoUrl = (string) ($request['video_url'] ?: '');
+        $commentInput = (string) ($request['post_comment'] ?? '');
 
         // 受信した画像の処理
-        $fileName = "";
+        $fileName = '';
         $img = $request->file('file');
-        if($img) {
+        if ($img) {
             try {
                 $extension = $img->extension();
-                $dots = ($extension) ? "." : "";
-                $fileName = date("Ymd-His") . '-' . random_int(1000000000, 9999999999) . $dots . $extension;
+                $dots = ($extension) ? '.' : '';
+                $fileName = date('Ymd-His').'-'.random_int(1000000000, 9999999999).$dots.$extension;
                 $path = $img->storeAs('img', $fileName, 'public');
-                if(!$path){
-                    return response()->json("画像の保存に失敗しました。");
+                if (! $path) {
+                    return response()->json('画像の保存に失敗しました。');
                 }
-            } catch (Exception $e){
-                return response()->json("error:".$e);
+            } catch (Exception $e) {
+                return response()->json('error:'.$e);
             }
         }
 
         $current = null;
         $newUniqueIdForCurrent = null;
         $targetUniqueId = $this->createUniqueId();
-        $postMemo = "";
+        $postMemo = '';
 
-        if($isEdit){
+        if ($isEdit) {
             $current = Record::where('unique_id', $editUniqueId)
                 ->where('flg', '<', 2)
                 ->orderBy('post_id', 'DESC')
                 ->first();
 
-            if(!$current){
-                return response()->json(["Record Not Found"], 404);
+            if (! $current) {
+                return response()->json(['Record Not Found'], 404);
             }
 
             // 削除権限と同じ条件
             $postDate = new DateTime($current->created_at);
             $now = new DateTime();
             $canEdit = false;
-            $editorRole = (int)($request['editor_role'] ?: 0);
-            $editorUserId = (string)($request['user_id'] ?: "");
+            $editorRole = (int) ($request['editor_role'] ?: 0);
+            $editorUserId = (string) ($request['user_id'] ?: '');
 
-            if($editorRole === 10){
+            if ($editorRole === 10) {
                 $canEdit = true;
             } else {
                 $expired = ($postDate->getTimestamp() + 86400) < $now->getTimestamp();
-                if(!$expired){
-                    $canEdit = ($editorUserId === (string)$current->user_id) || ($editorRole > 0);
+                if (! $expired) {
+                    $canEdit = ($editorUserId === (string) $current->user_id) || ($editorRole > 0);
                 }
             }
 
-            if(!$canEdit){
-                return response()->json(["Forbidden"], 403);
+            if (! $canEdit) {
+                return response()->json(['Forbidden'], 403);
             }
 
             // 編集後レコードは編集前unique_idを引き継ぐ
-            $targetUniqueId = (int)$current->unique_id;
+            $targetUniqueId = (int) $current->unique_id;
 
             // 未編集項目は旧値を引き継ぐ
-            if($score < 1){
-                $score = (int)$current->score;
+            if ($score < 1) {
+                $score = (int) $current->score;
             }
-            if($rule < 1){
-                $rule = (int)$current->rule;
+            if ($rule < 1) {
+                $rule = (int) $current->rule;
             }
-            if($console < 1){
-                $console = (int)$current->console;
+            if ($console < 1) {
+                $console = (int) $current->console;
             }
-            if($difficulty < 1){
-                $difficulty = (int)$current->difficulty;
+            if ($difficulty < 1) {
+                $difficulty = (int) $current->difficulty;
             }
-            if($region < 0){
-                $region = (int)$current->region;
+            if ($region < 0) {
+                $region = (int) $current->region;
             }
-            if($videoUrl === ""){
-                $videoUrl = (string)$current->video_url;
+            if ($videoUrl === '') {
+                $videoUrl = (string) $current->video_url;
             }
-            if($commentInput === ""){
-                $commentInput = (string)$current->post_comment;
+            if ($commentInput === '') {
+                $commentInput = (string) $current->post_comment;
             }
-
-            // DEBUG LOG (コミット前に削除): 編集時フォールバック後の値を確認
-            Log::info('RecordController.create.after_edit_fallback', [
-                'current_post_id' => $current->post_id,
-                'current_unique_id' => $current->unique_id,
-                'current_values' => [
-                    'score' => (int)$current->score,
-                    'rule' => (int)$current->rule,
-                    'console' => (int)$current->console,
-                    'difficulty' => (int)$current->difficulty,
-                    'region' => (int)$current->region,
-                ],
-                'resolved_values' => [
-                    'score' => $score,
-                    'rule' => $rule,
-                    'console' => $console,
-                    'difficulty' => $difficulty,
-                    'region' => $region,
-                ],
-            ]);
 
             // 編集前レコードは論理削除し、別unique_idへ付け替える
             $newUniqueIdForCurrent = $this->createUniqueId();
-            $postMemo = trim(((string)$current->post_memo)." edited_from:".$targetUniqueId);
+            $postMemo = trim(((string) $current->post_memo).' edited_from:'.$targetUniqueId);
 
             // 画像は新規添付がなければ既存を引き継ぐ
-            if(!$fileName){
-                $fileName = (string)($current->img_url ?: $request['old_img_url'] ?: "");
+            if (! $fileName) {
+                $fileName = (string) ($current->img_url ?: $request['old_img_url'] ?: '');
             }
         }
 
         // 簡易バリデーション
-        // DEBUG LOG (コミット前に削除): 簡易バリデーション直前の最終値を確認
-        Log::info('RecordController.create.before_validation', [
-            'is_edit' => $isEdit,
-            'edit_unique_id' => $editUniqueId,
-            'score' => $score,
-            'rule' => $rule,
-            'console' => $console,
-            'difficulty' => $difficulty,
-            'region' => $region,
-        ]);
-
-        if($score < 1 || $rule < 1 || $console < 1){
-            // DEBUG LOG (コミット前に削除): バリデーション失敗時の値を確認
-            Log::warning('RecordController.create.validation_failed', [
-                'score' => $score,
-                'rule' => $rule,
-                'console' => $console,
-                'is_edit' => $isEdit,
-                'edit_unique_id' => $editUniqueId,
-            ]);
+        if ($score < 1 || $rule < 1 || $console < 1) {
             return response()->json(
-                ["ERROR", 500]
+                ['ERROR', 500]
             );
         }
 
         // コメントのNGワード処理（NGの場合は問答無用で「コメントなし」とする）
-        function ng_word_check($test, $array): bool
-        {
-            foreach ($array as $word){
-                if(str_contains($test, $word)){
-                    return true;
-                }
-            }
-            return false;
-        }
-        if(ng_word_check($commentInput, HiddenController::ngWords())){
-            $comment = "コメントなし ";
+        if ($this->containsNgWord($commentInput, HiddenController::ngWords())) {
+            $comment = 'コメントなし ';
         } else {
-            $comment = $commentInput ?: "コメントなし";
+            $comment = $commentInput ?: 'コメントなし';
         }
 
         // 画像以外の処理
         try {
-            DB::transaction(function () use ($request, $comment, $fileName, $targetUniqueId, $postMemo, $isEdit, $current, $newUniqueIdForCurrent, $score, $rule, $console, $difficulty, $region, $videoUrl) {
-                $clientIp = $request->ip() ?: "";
-                $clientHost = "";
+            DB::transaction(function () use ($request, $comment, $fileName, $targetUniqueId, $postMemo, $isEdit, $current, $newUniqueIdForCurrent, $score, $rule, $console, $difficulty, $region, $videoUrl, $trickRecords) {
+                $clientIp = $request->ip() ?: '';
+                $clientHost = '';
                 if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
-                    $clientHost = gethostbyaddr($clientIp) ?: "";
+                    $clientHost = gethostbyaddr($clientIp) ?: '';
                 }
 
-                if($isEdit && $current){
+                if ($isEdit && $current) {
                     $current->fill([
                         'flg' => 2,
                         'unique_id' => $newUniqueIdForCurrent,
@@ -403,40 +356,27 @@ class RecordController extends Controller
                     'img_url' => $fileName,
                     'video_url' => $videoUrl,
                     'post_memo' => $postMemo,
-                    'flg' => 0
+                    'flg' => 0,
                 ]);
                 $posts->save();
+                $trickRecords->saved($posts, $current, $request);
             });
+        } catch (HttpResponseException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error('RecordController.create.failed', ['error' => $e->getMessage()]);
 
-            // イベントの場合の処理（stage_id が 1000 以上 10000 未満）
-            $stageId = (int) $request['stage_id'];
-            if ($stageId >= 1000 && $stageId < 10000) {
-                try {
-                    // DI コンテナ経由で呼び出し（内部依存があっても安全）
-                    app(CardController::class)->updateStageOnRecord($stageId);
-                    // 成功ログ（必要に応じてコメントアウト可）
-                    Log::info('updateStageOnRecord executed', ['stage_id' => $stageId]);
-                } catch (\Throwable $e) {
-                    // 記録投稿は成功させつつ、イベント更新失敗はログに残す
-                    Log::error('updateStageOnRecord failed', [
-                        'stage_id' => $stageId,
-                        'error'    => $e->getMessage(),
-                    ]);
-                }
-            }
-
-        } catch (Exception $e) {
-            return response()->json($e);
+            return response()->json(['message' => '記録の保存に失敗しました'], 500);
         }
+
         return response()->json(
-            ["OK", 200]
+            ['OK', 200]
         );
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param Request $request
      * @return void
      */
     public function store(Request $request)
@@ -446,9 +386,6 @@ class RecordController extends Controller
 
     /**
      * Display the specified resource.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function show(Request $request): JsonResponse
     {
@@ -461,53 +398,53 @@ class RecordController extends Controller
          * difficulty: 難易度（任意）
         */
         // ステージIDの種別判定
-        $where = is_numeric($request['id'])? 'stage_id' : 'user_id';
+        $where = is_numeric($request['id']) ? 'stage_id' : 'user_id';
 
         // 重複削除対象
-        $group = is_numeric($request['id'])? 'user_id' : 'stage_id';
+        $group = is_numeric($request['id']) ? 'user_id' : 'stage_id';
 
         // オプション引数
-        $console = $request['console']    ?: 0;
-        $rule    = $request['rule']       ?: 0;
-        $year    = $request['year']       ?: date("Y");
-        $diff    = $request['difficulty'] ?: 0;
-        $compare = $request['compare']    ?: 'timebonus';
+        $console = $request['console'] ?: 0;
+        $rule = $request['rule'] ?: 0;
+        $year = $request['year'] ?: date('Y');
+        $diff = $request['difficulty'] ?: 0;
+        $compare = $request['compare'] ?: 'timebonus';
 
         // ステージ情報を取得
         $stage = Stage::where('stage_id', $request['id'])->first();
 
-        $orderBy = Func::orderByRule($request["id"], $rule);
+        $orderBy = Func::orderByRule($request['id'], $rule);
 
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
-        if($rule === "1"){
+        if ($rule === '1') {
             // 全総合（2P、TAS、無差別級を除く）
             $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
 
-        } elseif($rule === "2"){
+        } elseif ($rule === '2') {
             // 通常総合
             $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
 
-        } elseif($rule === "3"){
+        } elseif ($rule === '3') {
             // 特殊総合（期間限定を除く）
             $rule = [11, 23, 24, 25, 29, 35, 44, 45, 46, 47];
 
-        } elseif($rule === "20"){
+        } elseif ($rule === '20') {
             // ピクミン2総合
             $rule = [20, 21, 22];
 
-        } elseif($rule === "30"){
+        } elseif ($rule === '30') {
             // ピクミン3総合
             $rule = [30, 31, 32, 33, 36];
 
-        } elseif($rule === "40"){
+        } elseif ($rule === '40') {
             // ピクミン4総合
             $rule = [40, 41, 42, 43];
 
-        } elseif(!$rule && $where === "stage_id") {
+        } elseif (! $rule && $where === 'stage_id') {
             // TODO: 一部のページ読み込み時にparentが存在しないエラーを吐いている
             $rule = [Stage::where('stage_id', $request['id'])->first()?->parent];
 
-        } elseif(!$rule && $where === "user_id") {
+        } elseif (! $rule && $where === 'user_id') {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
             $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
 
@@ -517,71 +454,71 @@ class RecordController extends Controller
         }
 
         // オプション引数を加工する
-        $year = (int)$year + 1;
-        $console_operation = $console ? "=" : ">";
-        $diff_operation    = $diff ? "=" : ">";
+        $year = (int) $year + 1;
+        $console_operation = $console ? '=' : '>';
+        $diff_operation = $diff ? '=' : '>';
 
         // 対象年からフィルターする年月日を算出
         $datetime = new DateTime("{$year}-01-01 00:00:00");
-        $date = $datetime->format("Y-m-d H:i:s");
+        $date = $datetime->format('Y-m-d H:i:s');
 
         // 記録をリクエスト
         $new_data = Record::select(config('const.selected'))
-                ->where($where, $request['id'])
-                ->where('console', $console_operation, $console)
-                ->where('difficulty', $diff_operation, $diff)
-                ->whereIn('rule', $rule)
-                ->where('created_at','<', $date)
-                ->where('flg','<', 2)
-                ->orderBy($orderBy[0],$orderBy[1])
-                ->orderBy('created_at', 'ASC')
+            ->where($where, $request['id'])
+            ->where('console', $console_operation, $console)
+            ->where('difficulty', $diff_operation, $diff)
+            ->whereIn('rule', $rule)
+            ->where('created_at', '<', $date)
+            ->where('flg', '<', 2)
+            ->orderBy($orderBy[0], $orderBy[1])
+            ->orderBy('created_at', 'ASC')
             ->get()
             ->toArray();
 
         $new_data = Func::duplicates_cleaner($new_data, $group);
 
-        if($where === "stage_id") {
+        if ($where === 'stage_id') {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する
-            $new_data = Func::rank_calc("stage", $new_data, [$console, $rule, $date]);
+            $new_data = Func::rank_calc('stage', $new_data, [$console, $rule, $date]);
 
         } else {
             // セット単位ではない場合は個別に計算する（ユーザー別、総合ランキング）
             $member_count_map = Func::memberCount($rule, [$console, $rule, $date]);
             $max = 1;
-            if (!empty($member_count_map)) {
+            if (! empty($member_count_map)) {
                 // If associative array like [stage_id => count], take the maximum value
                 $max = max($member_count_map);
             }
 
-            foreach($new_data as $key => $value){
+            foreach ($new_data as $key => $value) {
 
-                $orderBy = Func::orderByRule($value["stage_id"], $value["rule"]);
+                $orderBy = Func::orderByRule($value['stage_id'], $value['rule']);
 
                 // 絞り込み条件を再定義
-                $score_operation = ($orderBy[1] === "ASC") ? "<" : ">";
+                $score_operation = ($orderBy[1] === 'ASC') ? '<' : '>';
 
                 $temp = Record::selectRaw('COUNT(DISTINCT user_id) as user_rank')
-                    ->where('stage_id', $value["stage_id"])
+                    ->where('stage_id', $value['stage_id'])
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
-                    ->where('created_at','<', $date)
-                    ->where('flg','<', 2)
-                    ->where('score', $score_operation, $value["score"])
+                    ->where('created_at', '<', $date)
+                    ->where('flg', '<', 2)
+                    ->where('score', $score_operation, $value['score'])
                     ->first();
 
                 $rank = $temp->user_rank + 1;
-                $new_data[$key]["post_rank"] = $rank;
+                $new_data[$key]['post_rank'] = $rank;
                 $option = [$console, $rule, $date];
                 $member_count = Func::memberCount(0, $option);
-                $member = array_key_exists($value["stage_id"], $member_count) ? $member_count[$value["stage_id"]] : 1;
-                $new_data[$key]["rps"] = Func::rankPoint_calc($value["stage_id"], $rank, $member, $max);
+                $member = array_key_exists($value['stage_id'], $member_count) ? $member_count[$value['stage_id']] : 1;
+                $new_data[$key]['rps'] = Func::rankPoint_calc($value['stage_id'], $rank, $member, $max);
             }
         }
         // 比較値を付与
         $dataset = Func::compare_calc($new_data, $compare);
 
         // ユーザーページの場合は最後にステージID順にソートする
-        if($where === "user_id"){
+        if ($where === 'user_id') {
             array_multisort(array_column($dataset, 'stage_id'), SORT_ASC, $dataset);
         }
 
@@ -593,7 +530,6 @@ class RecordController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Record $record
      * @return Response
      */
     public function edit(Record $record)
@@ -604,8 +540,6 @@ class RecordController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param Request $request
-     * @param Record $product
      * @return Response
      */
     public function update(Request $request, Record $product)
@@ -616,46 +550,45 @@ class RecordController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Request $request
-     * @return JsonResponse
      * @throws Exception
      */
-    public function destroy(Request $request): JsonResponse
+    public function destroy(Request $request, TrickRecordService $trickRecords): JsonResponse
     {
-        $unique_id = $request["id"];
+        $unique_id = $request['id'];
+        $editorRole = (int) ($request['editor_role'] ?: 0);
 
-        // 現在時刻
-        $datetime = new DateTime();
-        $now_date = $datetime->format("Y-m-d H:i:s");
+        $result = DB::transaction(function () use ($unique_id, $editorRole, $trickRecords) {
+            $target = Record::where('unique_id', $unique_id)
+                ->where('flg', '<', 2)
+                ->orderBy('post_id', 'DESC')
+                ->lockForUpdate()
+                ->first();
+            if ($target === null) {
+                return 'missing';
+            }
+            if ($editorRole !== 10
+                && (new DateTime())->getTimestamp() - (new DateTime($target->created_at))->getTimestamp() >= 86400) {
+                return 'expired';
+            }
 
-        // 投稿時刻を取得
-        $target = Record::where('unique_id', $unique_id)
-            ->where('flg', '<', 2)
-            ->orderBy('post_id', 'DESC')
-            ->first();
-        $data = $target ? ['created_at' => $target->created_at] : null;
-        if(!$data){
+            $target->flg = 2;
+            $target->save();
+            $trickRecords->deleted($target);
+
+            return 'deleted';
+        });
+        if ($result === 'missing') {
             return response()->json(
-                ["Request Error"]
+                ['Request Error']
             );
         }
-        $post_date = new DateTime($data["created_at"]);
-        $diff_date = $datetime->diff($post_date)->format('%s');
-
-        if($diff_date < 86400) {
-
-            Record::where("post_id", $target->post_id)->update(
-                [
-                    'flg' => 2,
-                    'updated_at' => $now_date
-                ]);
-
+        if ($result === 'deleted') {
             return response()->json(
-                ["deleted"]
+                ['deleted']
             );
         }
+
         return response()->json(
-            ["24時間経過した記録は削除できません"]
-        , 500);
+            ['24時間経過した記録は削除できません'], 500);
     }
 }

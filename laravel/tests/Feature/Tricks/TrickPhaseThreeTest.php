@@ -1,0 +1,258 @@
+<?php
+
+namespace Tests\Feature\Tricks;
+
+use App\Models\Deck;
+use App\Models\Player;
+use App\Models\Record;
+use App\Models\TrickCardPayment;
+use App\Models\TrickEvent;
+use App\Models\TrickEventCard;
+use App\Models\TrickEventRecord;
+use App\Services\Tricks\TrickRecordService;
+use App\Services\Tricks\TrickStateService;
+use Carbon\CarbonImmutable;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Tests\TestCase;
+
+class TrickPhaseThreeTest extends TestCase
+{
+    use DatabaseTransactions;
+
+    public function test_initial_posts_charge_extend_rank_and_update_provisional_points(): void
+    {
+        [$event, $card] = $this->fixture();
+        $records = app(TrickRecordService::class);
+        foreach (['alice' => 100, 'bob' => 100, 'carol' => 80, 'dave' => 70] as $player => $score) {
+            $records->saved($this->record($card, $player, $score));
+        }
+
+        self::assertSame(
+            ['alice' => 3, 'bob' => 0, 'carol' => 0, 'dave' => 3],
+            TrickCardPayment::query()->where('event_id', $event->event_id)
+                ->orderBy('id')->pluck('points_paid', 'player_name')->all(),
+        );
+        self::assertSame(-1, Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->value('draw_points'));
+        self::assertSame(6, $card->fresh()->paid_points_total);
+        self::assertSame('2026-07-20 16:15:00', $card->fresh()->limit_at->format('Y-m-d H:i:s'));
+
+        $rankings = $records->rankings($card);
+        self::assertSame([1, 1, 3, 4], collect($rankings)->pluck('rank')->all());
+        self::assertSame([5, 5, 2, 1], collect($rankings)->pluck('rps')->all());
+        self::assertNotContains(false, collect($rankings)->pluck('initial_payment_recorded')->all(), true);
+
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['rank_points' => 2]);
+        $snapshot = app(TrickStateService::class)->snapshot($event, 'alice');
+        self::assertSame(5, $snapshot['me']['provisional_rank_points']);
+        self::assertSame(7, $snapshot['me']['total_rank_points']);
+        self::assertSame(4, $snapshot['field'][0]['participant_count']);
+        self::assertTrue($snapshot['field'][0]['my_initial_payment_recorded']);
+        self::assertSame(0, $snapshot['field'][0]['my_initial_post_cost']);
+    }
+
+    public function test_edit_and_delete_recalculate_without_repayment_or_reextension(): void
+    {
+        [$event, $card] = $this->fixture();
+        $records = app(TrickRecordService::class);
+        $original = $this->record($card, 'alice', 100);
+        $records->saved($original);
+        $limit = $card->fresh()->limit_at->toDateTimeString();
+        $points = Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->value('draw_points');
+
+        $original->update(['flg' => 2]);
+        $updated = $this->record($card, 'alice', 120);
+        $records->saved($updated, $original);
+        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame($points, Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->value('draw_points'));
+        self::assertSame($limit, $card->fresh()->limit_at->toDateTimeString());
+        self::assertSame(120, $records->rankings($card)[0]['score']);
+
+        $updated->update(['flg' => 2]);
+        $records->deleted($updated);
+        self::assertSame([], $records->rankings($card));
+        self::assertSame(0, $card->fresh()->post_count);
+        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+
+        $repost = $this->record($card, 'alice', 90);
+        $records->saved($repost);
+        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame($limit, $card->fresh()->limit_at->toDateTimeString());
+    }
+
+    public function test_event_record_link_prevents_historical_stage_records_from_mixing(): void
+    {
+        [$event, $card] = $this->fixture();
+        $records = app(TrickRecordService::class);
+        $current = $this->record($card, 'alice', 100);
+        $records->saved($current);
+        $unlinkedHistorical = $this->record($card, 'mallory', 999);
+
+        self::assertSame(['alice'], collect($records->rankings($card))->pluck('user_id')->all());
+        self::assertFalse(TrickEventRecord::query()->where('record_id', $unlinkedHistorical->post_id)->exists());
+        self::assertSame($event->event_id, TrickEventRecord::query()
+            ->where('record_id', $current->post_id)->value('event_id'));
+    }
+
+    public function test_record_endpoint_rolls_back_normal_record_when_event_validation_fails(): void
+    {
+        [$event, $card] = $this->fixture();
+        $payload = $this->recordPayload($card, 'mallory', 101);
+        $this->postJson('/api/record', $payload)->assertStatus(403);
+        self::assertFalse(Record::query()->where('user_id', 'mallory')
+            ->where('stage_id', $card->deck->stage_id)->exists());
+
+        $this->postJson('/api/record', $this->recordPayload($card, 'alice', 102))
+            ->assertOk()->assertExactJson(['OK', 200]);
+        $saved = Record::query()->where('user_id', 'alice')
+            ->where('stage_id', $card->deck->stage_id)->firstOrFail();
+        self::assertSame($event->event_id, TrickEventRecord::query()
+            ->where('record_id', $saved->post_id)->value('event_id'));
+        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+
+        $invalidEdit = $this->recordPayload($card, 'alice', 103);
+        $invalidEdit['mode'] = 'edit';
+        $invalidEdit['edit_unique_id'] = $saved->unique_id;
+        $invalidEdit['stage_id'] = $card->deck->stage_id + 1;
+        $this->postJson('/api/record', $invalidEdit)->assertStatus(422);
+        self::assertSame('0', (string) $saved->fresh()->flg);
+        self::assertSame(1, Record::query()->where('user_id', 'alice')->where('flg', '<', 2)->count());
+
+        $saved->forceFill(['created_at' => now()->subHours(25)])->save();
+        $this->deleteJson('/api/record/'.$saved->unique_id, ['editor_role' => 0])->assertStatus(500);
+        self::assertSame('0', (string) $saved->fresh()->flg);
+        $this->deleteJson('/api/record/'.$saved->unique_id, ['editor_role' => 10])
+            ->assertOk()->assertExactJson(['deleted']);
+        self::assertSame('2', (string) $saved->fresh()->flg);
+        self::assertSame(0, $card->fresh()->post_count);
+        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+    }
+
+    public function test_non_event_record_is_not_blocked_by_event_domain_validation(): void
+    {
+        $this->fixture();
+        $deck = Deck::query()->create([
+            'eventId' => 0,
+            'event_id' => 0,
+            'stageId' => 399,
+            'stage_id' => 7199,
+            'origin_stage_id' => 399,
+            'card_id' => 920199,
+            'title' => 'Non-event card',
+            'ruleName' => 'Rule',
+            'rule_name' => 'Rule',
+            'state' => '_eligible',
+            'text' => 'Normal record',
+            'difficulty' => 1,
+            'rarity' => 1,
+            'rewards' => 0,
+        ]);
+        $payload = $this->recordPayloadForStage($deck->stage_id, 'outsider', 101);
+
+        $this->postJson('/api/record', $payload)->assertOk();
+        self::assertTrue(Record::query()->where('user_id', 'outsider')->where('stage_id', 7199)->exists());
+        self::assertSame(0, TrickEventRecord::query()->whereHas('record', fn ($query) => $query
+            ->where('user_id', 'outsider'))->count());
+    }
+
+    /** @return array{0: TrickEvent, 1: TrickEventCard} */
+    private function fixture(): array
+    {
+        $now = CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Tokyo');
+        $event = TrickEvent::query()->create([
+            'event_id' => 990101,
+            'title' => 'Phase 3 test',
+            'start_at' => $now->subHour(),
+            'end_at' => $now->addHours(47),
+            'state' => 'active',
+            'debug' => true,
+            'test_mode' => true,
+            'debug_now' => $now,
+            'initialized_at' => $now->subHour(),
+        ]);
+        $deck = Deck::query()->create([
+            'eventId' => $event->event_id,
+            'event_id' => $event->event_id,
+            'stageId' => 399,
+            'stage_id' => 7101,
+            'origin_stage_id' => 399,
+            'card_id' => 920101,
+            'title' => 'Phase 3 card',
+            'ruleName' => 'Rule',
+            'rule_name' => 'Rule',
+            'state' => '_in_event',
+            'text' => 'Test rule',
+            'difficulty' => 2,
+            'rarity' => 3,
+            'rewards' => 0,
+        ]);
+        $card = TrickEventCard::query()->create([
+            'event_id' => $event->event_id,
+            'deck_id' => $deck->id,
+            'state' => '_field',
+            'difficulty' => 2,
+            'rarity' => 3,
+            'stack_count' => 3,
+            'taker' => 'taker',
+            'taken_at' => $now,
+            'limit_at' => $now->addMinutes(90),
+        ]);
+        foreach (['alice', 'bob', 'carol', 'dave'] as $name) {
+            Player::query()->create([
+                'event_id' => $event->event_id,
+                'name' => $name,
+                'draw_points' => 2,
+                'rank_points' => 0,
+                'card_count' => 0,
+            ]);
+        }
+
+        return [$event, $card];
+    }
+
+    private function record(TrickEventCard $card, string $userId, int $score): Record
+    {
+        return Record::query()->create([
+            'user_id' => $userId,
+            'score' => $score,
+            'stage_id' => $card->deck->stage_id,
+            'rule' => 1,
+            'console' => 1,
+            'difficulty' => 2,
+            'region' => '1',
+            'team' => 0,
+            'unique_id' => random_int(100000000, 999999999),
+            'post_comment' => 'phase 3 test',
+            'user_ip' => '127.0.0.1',
+            'user_host' => 'localhost',
+            'user_agent' => 'phpunit',
+            'img_url' => '',
+            'video_url' => '',
+            'post_memo' => '',
+            'flg' => 0,
+        ]);
+    }
+
+    private function recordPayload(TrickEventCard $card, string $userId, int $score): array
+    {
+        return $this->recordPayloadForStage($card->deck->stage_id, $userId, $score);
+    }
+
+    private function recordPayloadForStage(int $stageId, string $userId, int $score): array
+    {
+        return [
+            'user_id' => $userId,
+            'score' => $score,
+            'stage_id' => $stageId,
+            'rule' => 1,
+            'console' => 1,
+            'difficulty' => 2,
+            'region' => 1,
+            'post_comment' => 'phase 3 endpoint test',
+            'user_agent' => 'phpunit',
+            'video_url' => '',
+            'mode' => 'create',
+        ];
+    }
+}

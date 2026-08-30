@@ -11,7 +11,7 @@
 - 以下のディレクトリはプロジェクトルートから見た相対パスです。必要に応じてファイル・ディレクトリを作成してください。
 - このディレクトリ（`next/pages/limited/tricks`）はwebサイト内のイベントページを表示することを目的としています。
 - 当該イベントに使用するコンポーネントは`next/components/tricks/`に格納してください。
-- 当該イベントに使用するライブラリ（共通関数）は`next/lib/tricks.js`に定義してください。
+- 当該イベントに使用するライブラリ（共通関数）は`next/lib/tricks/`配下に定義してください。
 - 当該イベントに使用する静的ファイルは`next/public/limited/tricks/`に格納してください。
 - 当該イベントに関連するAPIは`laravel/app/Http/Controllers/TrickController.php`に定義してください。
 

@@ -6,7 +6,23 @@ use App\Models\Deck;
 use App\Models\LimitLog;
 use App\Models\Player;
 use App\Models\Record;
+use App\Models\TrickCardHolder;
+use App\Models\TrickCollectionReward;
+use App\Models\TrickEvent;
+use App\Models\TrickEventCard;
+use App\Services\Tricks\TrickCollectionService;
+use App\Services\Tricks\TrickDebugTimeService;
+use App\Services\Tricks\TrickEventFinalizer;
+use App\Services\Tricks\TrickEventResolver;
+use App\Services\Tricks\TrickGameService;
+use App\Services\Tricks\TrickOperationAuthorizer;
+use App\Services\Tricks\TrickRecordService;
+use App\Services\Tricks\TrickRequestIdentity;
+use App\Services\Tricks\TrickStateService;
+use App\Services\Tricks\TrickSubsidyService;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use DomainException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,281 +33,252 @@ use Illuminate\Support\Str;
 class TrickController extends Controller
 {
     private const EVENT_ID = 251227;
+
     private const START_AT = '2026-05-03 00:00:00';
+
     private const END_AT = '2026-05-05 00:00:00';
+
     private const POLL_LIMIT = 100;
+
     private const STAGE_ID_START = 1313;
+
     private const STAGE_ID_END = 9999;
 
     private array $deckColumns = [];
 
-    public function tournament(): JsonResponse
+    public function tournament(Request $request, TrickEventResolver $events, TrickRequestIdentity $identity, TrickStateService $state): JsonResponse
     {
-        return response()->json($this->tournamentPayload());
+        return response()->json($state->tournament($events->forRequest($request, $identity)));
     }
 
-    public function state(Request $request): JsonResponse
+    public function state(Request $request, TrickEventResolver $events, TrickStateService $state): JsonResponse
     {
-        $this->collectExpiredCards($request);
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
 
-        $userId = $this->userId($request);
-        $players = Player::query()
-            ->orderByDesc('rank_points')
-            ->orderBy('name')
-            ->get();
+        return response()->json($state->snapshot($event, $this->userId($request, $event)));
+    }
 
-        $fieldStates = $this->isEnded() && !$this->isDebug()
-            ? ['_field', '_collected']
-            : ['_field'];
+    public function players(Request $request, TrickEventResolver $events, TrickRequestIdentity $identity, TrickStateService $state): JsonResponse
+    {
+        return response()->json($state->players($events->forRequest($request, $identity)));
+    }
 
-        return response()->json([
-            'tournament' => $this->tournamentPayload(),
-            'me' => $userId ? Player::where('name', $userId)->first() : null,
-            'players' => $players,
-            'deck_count' => $this->deckQuery()->where('state', '_deck')->count(),
-            'trash_count' => $this->deckQuery()->where('state', '_trash')->count(),
-            'field' => $this->normalizeCards($this->deckQuery()->whereIn('state', $fieldStates)->get()),
-            'hand' => $userId ? $this->normalizeCards($this->handQuery($userId)->orderBy($this->deckColumn('drawn_order', 'updated_at'))->orderBy('updated_at')->get()) : [],
-            'logs' => $this->logsPayload(),
-            'server_now' => Carbon::now()->toIso8601String(),
+    public function hand(Request $request, TrickEventResolver $events, TrickStateService $state): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($state->cards($event, $userId));
+    }
+
+    public function field(Request $request, TrickEventResolver $events, TrickRequestIdentity $identity, TrickStateService $state): JsonResponse
+    {
+        return response()->json($state->cards($events->forRequest($request, $identity), '_field'));
+    }
+
+    public function logs(Request $request, TrickEventResolver $events, TrickRequestIdentity $identity, TrickStateService $state): JsonResponse
+    {
+        return response()->json($state->logs($events->forRequest($request, $identity)));
+    }
+
+    public function collected(
+        Request $request,
+        TrickEventResolver $events,
+        TrickStateService $state,
+        TrickRecordService $records,
+    ): JsonResponse {
+        $eventId = (int) $request->query('event_id', 0);
+        $event = app(TrickRequestIdentity::class)->isTest($request)
+            ? $events->forRequest($request, app(TrickRequestIdentity::class))
+            : ($eventId > 0
+            ? TrickEvent::query()->where('event_id', $eventId)->firstOrFail()
+            : $events->current());
+        $cards = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)
+            ->where('state', '_collected')->orderBy('collected_at')->get();
+        $rankings = $records->rankingsByCards($cards);
+        $collectionLogs = LimitLog::query()->where('event_id', $event->event_id)
+            ->where('event', 'collect')->whereIn('event_card_id', $cards->pluck('id'))
+            ->get()->keyBy('event_card_id');
+        $holders = TrickCardHolder::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
+        $rewards = TrickCollectionReward::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
+
+        return response()->json($cards->map(function (TrickEventCard $card) use (
+            $state,
+            $rankings,
+            $collectionLogs,
+            $holders,
+            $rewards,
+        ) {
+            $cardHolders = $holders->get($card->id, collect())->pluck('player_name')->values()->all();
+            $finalRankings = $collectionLogs->get($card->id)?->context['final_rankings'] ?? null;
+
+            return [
+                ...$state->normalizeCard($card),
+                'holders' => $cardHolders,
+                'holder_label' => $cardHolders === [] ? 'ホルダーなし' : implode(' / ', $cardHolders),
+                'returns_next_event' => $cardHolders === [],
+                'rankings' => is_array($finalRankings) ? $finalRankings : ($rankings[$card->id] ?? []),
+                'rewards' => $rewards->get($card->id, collect())->values()->all(),
+            ];
+        })->values());
+    }
+
+    public function join(Request $request, TrickEventResolver $events, TrickGameService $game): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($game->join($event, $userId, $request));
+    }
+
+    public function draw(Request $request, TrickEventResolver $events, TrickGameService $game): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($game->draw($event, $userId, $request));
+    }
+
+    public function take(Request $request, int $deckId, TrickEventResolver $events, TrickGameService $game): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($game->take($event, $userId, $deckId, $request));
+    }
+
+    public function scores(Request $request, int $deckId, TrickEventResolver $events, TrickRequestIdentity $identity, TrickRecordService $records): JsonResponse
+    {
+        $event = $events->forRequest($request, $identity);
+        $card = TrickEventCard::query()->where('event_id', $event->event_id)
+            ->where('deck_id', $deckId)->firstOrFail();
+
+        return response()->json($records->rankings($card));
+    }
+
+    public function collect(
+        Request $request,
+        int $deckId,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickCollectionService $collections,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertAdminForEvent($event, $request);
+
+        return response()->json($collections->collect($event, $deckId, true, $actor, $request));
+    }
+
+    public function debugCollect(
+        Request $request,
+        int $deckId,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickCollectionService $collections,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertDebugAdmin($event, $request);
+
+        return response()->json($collections->collect($event, $deckId, true, $actor, $request));
+    }
+
+    public function collectExpired(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickCollectionService $collections,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertAdminForEvent($event, $request);
+
+        return response()->json($collections->collectExpired($event, $actor, $request));
+    }
+
+    public function subsidy(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickSubsidyService $subsidies,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertAdminForEvent($event, $request);
+
+        return response()->json($subsidies->processCurrent($event, $actor, $request));
+    }
+
+    public function finalize(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickEventFinalizer $finalizer,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertAdminForEvent($event, $request);
+
+        return response()->json($finalizer->finalize($event, false, $actor, $request));
+    }
+
+    public function debugTimeFreeze(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickDebugTimeService $time,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $authorization->assertDebugAdmin($event, $request);
+
+        return response()->json($time->freeze($event));
+    }
+
+    public function debugTimeSet(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickDebugTimeService $time,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $authorization->assertDebugAdmin($event, $request);
+        $request->validate(['now' => ['required', 'date']]);
+
+        try {
+            return response()->json($time->set($event, CarbonImmutable::parse((string) $request->input('now'))));
+        } catch (DomainException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function debugTimeAdvance(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickDebugTimeService $time,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertDebugAdmin($event, $request);
+        $request->validate([
+            'seconds' => ['nullable', 'integer', 'min:0'],
+            'minutes' => ['nullable', 'integer', 'min:0'],
+            'hours' => ['nullable', 'integer', 'min:0'],
         ]);
+        $seconds = (int) $request->input('seconds', 0)
+            + (int) $request->input('minutes', 0) * 60
+            + (int) $request->input('hours', 0) * 3600;
+
+        return response()->json($time->advance($event, $seconds, $actor, $request));
     }
 
-    public function players(): JsonResponse
-    {
-        return response()->json(Player::query()->orderByDesc('rank_points')->orderBy('name')->get());
-    }
+    public function debugTimeReset(
+        Request $request,
+        TrickEventResolver $events,
+        TrickOperationAuthorizer $authorization,
+        TrickDebugTimeService $time,
+    ): JsonResponse {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $authorization->assertDebugAdmin($event, $request);
 
-    public function hand(Request $request): JsonResponse
-    {
-        $userId = $this->requireUserId($request);
-
-        return response()->json($this->normalizeCards($this->handQuery($userId)->orderBy($this->deckColumn('drawn_order', 'updated_at'))->orderBy('updated_at')->get()));
-    }
-
-    public function field(): JsonResponse
-    {
-        return response()->json($this->normalizeCards($this->deckQuery()->where('state', '_field')->get()));
-    }
-
-    public function logs(): JsonResponse
-    {
-        return response()->json($this->logsPayload());
-    }
-
-    public function join(Request $request): JsonResponse
-    {
-        $this->assertAvailable();
-        $userId = $this->requireUserId($request);
-        $payload = null;
-
-        DB::transaction(function () use ($userId, $request, &$payload) {
-            $player = Player::where('name', $userId)->lockForUpdate()->first();
-            $created = false;
-
-            if (!$player) {
-                $player = Player::create([
-                    'name' => $userId,
-                    'draw_points' => 3,
-                    'rank_points' => 0,
-                    'card_count' => 0,
-                ]);
-                $created = true;
-            }
-
-            if ($created && $this->handQuery($userId)->count() === 0) {
-                for ($i = 0; $i < 3; $i++) {
-                    $this->drawOne($player, false);
-                }
-            }
-
-            $player->card_count = $this->handQuery($userId)->count();
-            $player->save();
-
-            $this->writeLog([
-                'event' => $created ? 'join' : 'join_existing',
-                'actor_name' => $userId,
-                'player_snapshot' => $player->toArray(),
-            ], $request);
-
-            $payload = [
-                'player' => $player->fresh(),
-                'created' => $created,
-                'hand' => $this->normalizeCards($this->handQuery($userId)->get()),
-            ];
-        });
-
-        return response()->json($payload);
-    }
-
-    public function draw(Request $request): JsonResponse
-    {
-        $this->assertAvailable();
-        $userId = $this->requireUserId($request);
-        $payload = null;
-
-        DB::transaction(function () use ($userId, $request, &$payload) {
-            $player = Player::where('name', $userId)->lockForUpdate()->firstOrFail();
-            $card = $this->drawOne($player, true);
-            $player->card_count = $this->handQuery($userId)->count();
-            $player->save();
-
-            $this->writeLog([
-                'event' => 'draw',
-                'actor_name' => $userId,
-                'card_id' => $card ? $this->eventCardId($card) : null,
-                'stage_id' => $card ? $this->postingStageId($card) : null,
-                'remaining_draw_points' => $player->draw_points,
-                'remaining_deck_count' => $this->deckQuery()->where('state', '_deck')->count(),
-                'card_snapshot' => $card?->toArray(),
-                'player_snapshot' => $player->toArray(),
-            ], $request);
-
-            $payload = [
-                'card' => $card ? $this->normalizeCard($card) : null,
-                'player' => $player->fresh(),
-                'hand' => $this->normalizeCards($this->handQuery($userId)->get()),
-            ];
-        });
-
-        return response()->json($payload);
-    }
-
-    public function take(Request $request, int $deckId): JsonResponse
-    {
-        $this->assertAvailable();
-        $userId = $this->requireUserId($request);
-        $payload = null;
-
-        $this->withStageAllocationLock(function () use ($userId, $deckId, $request, &$payload) {
-            DB::transaction(function () use ($userId, $deckId, $request, &$payload) {
-                $player = Player::where('name', $userId)->lockForUpdate()->firstOrFail();
-                $hand = $this->handQuery($userId)->lockForUpdate()->get();
-                $selected = $hand->firstWhere('id', $deckId);
-
-                if (!$selected) {
-                    abort(response()->json(['message' => '対象カードが手札にありません'], 409));
-                }
-                if ($hand->count() < 3) {
-                    abort(response()->json(['message' => 'テイクには手札が3枚以上必要です'], 422));
-                }
-                if (!$this->isDebug() && Carbon::now()->greaterThanOrEqualTo($this->eventEnd()->subHour())) {
-                    abort(response()->json(['message' => '大会終了1時間前以降はテイクできません'], 403));
-                }
-
-                $fieldCount = $this->deckQuery()->where('state', '_field')->lockForUpdate()->count();
-                $participantCount = max(Player::count(), 1);
-                if ($fieldCount >= $participantCount + 5 || $fieldCount > 15) {
-                    abort(response()->json(['message' => '場札の上限に達しています'], 409));
-                }
-
-                $stackIds = $hand->where('id', '!=', $deckId)->pluck('id')->values()->all();
-                $this->deckQuery()->whereIn('id', $stackIds)->update(array_filter([
-                    'state' => '_stack',
-                    'stack_parent_id' => $this->hasDeckColumn('stack_parent_id') ? $deckId : null,
-                ], static fn ($value) => $value !== null));
-
-                $stageId = $this->ensureStageForCard($selected);
-                $selected->state = '_field';
-                $this->setCardValue($selected, 'taker', $userId);
-                $this->setCardValue($selected, 'stack_count', $hand->count(), 'rewards');
-                $this->setCardValue($selected, 'taken_at', Carbon::now()->toDateTimeString());
-                $this->setCardValue($selected, 'limit_at', null, 'limit');
-                $selected->save();
-
-                $player->card_count = 0;
-                $player->save();
-
-                $this->writeLog([
-                    'event' => 'take',
-                    'actor_name' => $userId,
-                    'card_id' => $this->eventCardId($selected),
-                    'stage_id' => $stageId,
-                    'to_state' => '_field',
-                    'hand_count' => $hand->count(),
-                    'rewards' => $hand->count(),
-                    'stacked_card_ids' => $stackIds,
-                    'card_snapshot' => $selected->toArray(),
-                    'player_snapshot' => $player->toArray(),
-                ], $request);
-
-                $payload = [
-                    'card' => $this->normalizeCard($selected->fresh()),
-                    'player' => $player->fresh(),
-                ];
-            });
-        });
-
-        return response()->json($payload);
-    }
-
-    public function scores(int $deckId): JsonResponse
-    {
-        $card = Deck::findOrFail($deckId);
-        $stageId = $this->postingStageId($card);
-        if (!$stageId) {
-            return response()->json([]);
-        }
-
-        return response()->json($this->rankingsForStage($stageId));
-    }
-
-    public function recordPosted(Request $request): JsonResponse
-    {
-        $stageId = (int) $request->input('stage_id');
-        if (!$stageId) {
-            return response()->json(['message' => 'stage_id is required'], 422);
-        }
-
-        $payload = null;
-        DB::transaction(function () use ($stageId, $request, &$payload) {
-            $card = $this->deckByStage($stageId)->where('state', '_field')->lockForUpdate()->firstOrFail();
-            $rankings = $this->rankingsForStage($stageId);
-            $now = Carbon::now();
-            $previousLimit = $this->cardValue($card, 'limit_at', 'limit');
-            $newLimit = $previousLimit ? Carbon::parse($previousLimit)->addMinutes(15) : $now->copy()->addMinutes(90);
-            if (!$this->isDebug() && $now->greaterThanOrEqualTo($this->eventEnd()->subHour())) {
-                $newLimit = $previousLimit ? Carbon::parse($previousLimit) : null;
-            }
-
-            $this->setCardValue($card, 'limit_at', $newLimit?->toDateTimeString(), 'limit');
-            $this->setCardValue($card, 'post_count', count($rankings), 'count');
-            $this->setCardValue($card, 'top_player', $rankings[0]['user_id'] ?? null, 'topPlayer');
-            $card->save();
-
-            $this->recalculateRankPoints();
-            $this->writeLog([
-                'event' => $previousLimit ? 'limit_extended' : 'first_record_posted',
-                'actor_name' => $this->userId($request),
-                'card_id' => $this->eventCardId($card),
-                'stage_id' => $stageId,
-                'previous_limit' => $previousLimit,
-                'new_limit' => $newLimit?->toDateTimeString(),
-                'records_count' => count($rankings),
-                'top_user_id' => $rankings[0]['user_id'] ?? null,
-                'top_score' => $rankings[0]['score'] ?? null,
-                'card_snapshot' => $card->toArray(),
-            ], $request);
-
-            $payload = ['card' => $this->normalizeCard($card->fresh()), 'rankings' => $rankings];
-        });
-
-        return response()->json($payload);
-    }
-
-    public function collect(Request $request, int $deckId): JsonResponse
-    {
-        $card = Deck::findOrFail($deckId);
-        $this->collectCard($card, $request);
-
-        return response()->json(['card' => $this->normalizeCard($card->fresh())]);
-    }
-
-    public function collectExpired(Request $request): JsonResponse
-    {
-        $count = $this->collectExpiredCards($request);
-
-        return response()->json(['collected' => $count]);
+        return response()->json($time->reset($event));
     }
 
     private function drawOne(Player $player, bool $consumePoint): ?Deck
@@ -307,12 +294,12 @@ class TrickController extends Controller
         $difficulty = $this->drawDifficulty();
         $rarity = $this->drawRarity();
         $query = $this->deckQuery()->where('state', '_deck')->where($this->deckColumn('difficulty'), $difficulty);
-        if (!$query->exists()) {
+        if (! $query->exists()) {
             $query = $this->deckQuery()->where('state', '_deck');
         }
 
         $card = $query->inRandomOrder()->lockForUpdate()->first();
-        if (!$card) {
+        if (! $card) {
             return null;
         }
 
@@ -322,7 +309,7 @@ class TrickController extends Controller
         $card->save();
 
         if ($consumePoint) {
-            --$player->draw_points;
+            $player->draw_points--;
         }
 
         return $card;
@@ -343,7 +330,7 @@ class TrickController extends Controller
 
         $missingWeight = 0;
         foreach ($base as $difficulty => $weight) {
-            if (!in_array($difficulty, $existing, true)) {
+            if (! in_array($difficulty, $existing, true)) {
                 $missingWeight += $weight;
                 unset($base[$difficulty]);
             }
@@ -370,7 +357,7 @@ class TrickController extends Controller
 
     private function nextDrawnOrder(string $userId): int
     {
-        if (!$this->hasDeckColumn('drawn_order')) {
+        if (! $this->hasDeckColumn('drawn_order')) {
             return 0;
         }
 
@@ -389,7 +376,7 @@ class TrickController extends Controller
         $count = 0;
         foreach ($expired as $card) {
             if ($this->collectCard($card, $request)) {
-                ++$count;
+                $count++;
             }
         }
 
@@ -409,7 +396,7 @@ class TrickController extends Controller
             }
 
             $stageId = $this->postingStageId($card);
-            if (!$stageId) {
+            if (! $stageId) {
                 return;
             }
             $stackCount = max((int) $this->cardValue($card, 'stack_count', 'rewards'), 1);
@@ -486,7 +473,7 @@ class TrickController extends Controller
         $cards = $this->deckQuery()->whereIn('state', ['_field', '_collected'])->get();
         foreach ($cards as $card) {
             $stageId = $this->postingStageId($card);
-            if (!$stageId) {
+            if (! $stageId) {
                 continue;
             }
             $stackCount = max((int) $this->cardValue($card, 'stack_count', 'rewards'), 1);
@@ -503,6 +490,7 @@ class TrickController extends Controller
         $stageId = $this->postingStageId($card);
         if ($stageId) {
             $this->createEventStage($card, $stageId);
+
             return $stageId;
         }
 
@@ -515,7 +503,7 @@ class TrickController extends Controller
 
     private function withStageAllocationLock(callable $callback)
     {
-        $lockName = 'tricks_stage_' . $this->configuredEventId();
+        $lockName = 'tricks_stage_'.$this->configuredEventId();
         $result = DB::selectOne('SELECT GET_LOCK(?, 10) AS locked', [$lockName]);
         if ((int) ($result->locked ?? 0) !== 1) {
             abort(response()->json(['message' => 'ステージ番号の採番に失敗しました'], 409));
@@ -548,7 +536,7 @@ class TrickController extends Controller
         $usedIds = array_flip(array_merge($used, $usedDeckIds));
 
         for ($stageId = $start; $stageId <= $end; $stageId++) {
-            if (!isset($usedIds[$stageId])) {
+            if (! isset($usedIds[$stageId])) {
                 return $stageId;
             }
         }
@@ -560,7 +548,7 @@ class TrickController extends Controller
     {
         $now = Carbon::now()->toDateTimeString();
         $config = $this->eventStageConfig();
-        $title = (string) ($this->cardValue($card, 'title') ?: ('カード' . $this->eventCardId($card)));
+        $title = (string) ($this->cardValue($card, 'title') ?: ('カード'.$this->eventCardId($card)));
         DB::table('stages')->updateOrInsert(
             ['stage_id' => $stageId],
             [
@@ -602,7 +590,7 @@ class TrickController extends Controller
 
     private function seriesFromOriginStageId(?int $originStageId): int
     {
-        if (!$originStageId) {
+        if (! $originStageId) {
             return 0;
         }
 
@@ -617,12 +605,14 @@ class TrickController extends Controller
     private function postingStageId(Deck $card): ?int
     {
         $value = $this->cardValue($card, 'stage_id');
+
         return $value ? (int) $value : null;
     }
 
     private function originStageId(Deck $card): ?int
     {
         $value = $this->cardValue($card, 'origin_stage_id', 'stageId');
+
         return $value ? (int) $value : null;
     }
 
@@ -648,7 +638,7 @@ class TrickController extends Controller
 
     private function normalizeCard(?Deck $card): ?array
     {
-        if (!$card) {
+        if (! $card) {
             return null;
         }
 
@@ -705,7 +695,7 @@ class TrickController extends Controller
             ->all();
     }
 
-    private function writeLog(array $data, ?Request $request = null): void
+    private function writeLog(array $data, Request $request = null): void
     {
         LimitLog::create(array_merge([
             'route' => $request?->path(),
@@ -715,17 +705,18 @@ class TrickController extends Controller
         ], $data));
     }
 
-    private function userId(Request $request): ?string
+    private function userId(Request $request, TrickEvent $event = null): ?string
     {
-        $value = $request->input('userId') ?? $request->query('userId') ?? $request->header('X-User-Id');
-        return $value ? (string) $value : null;
+        return $event === null
+            ? app(TrickRequestIdentity::class)->resolve($request)
+            : app(TrickRequestIdentity::class)->resolveForEvent($request, $event);
     }
 
-    private function requireUserId(Request $request): string
+    private function requireUserId(Request $request, TrickEvent $event = null): string
     {
-        $userId = $this->userId($request);
-        if (!$userId) {
-            abort(response()->json(['message' => 'userId is required'], 401));
+        $userId = $this->userId($request, $event);
+        if (! $userId) {
+            abort(response()->json(['message' => '認証が必要です'], 401));
         }
 
         return $userId;
@@ -733,7 +724,7 @@ class TrickController extends Controller
 
     private function assertAvailable(): void
     {
-        if (!$this->isAvailable()) {
+        if (! $this->isAvailable()) {
             abort(response()->json(['message' => '大会開催時間外です'], 403));
         }
     }
@@ -750,7 +741,7 @@ class TrickController extends Controller
 
     private function isDebug(): bool
     {
-        return filter_var(env('TRICKS_DEBUG', true), FILTER_VALIDATE_BOOLEAN);
+        return filter_var(env('TRICKS_DEBUG', false), FILTER_VALIDATE_BOOLEAN);
     }
 
     private function configuredEventId(): int
@@ -790,7 +781,7 @@ class TrickController extends Controller
         return Carbon::parse(env('TRICKS_END_AT', self::END_AT), 'Asia/Tokyo');
     }
 
-    private function deckColumn(string $preferred, ?string $fallback = null): string
+    private function deckColumn(string $preferred, string $fallback = null): string
     {
         if ($this->hasDeckColumn($preferred)) {
             return $preferred;
@@ -801,14 +792,14 @@ class TrickController extends Controller
 
     private function hasDeckColumn(string $column): bool
     {
-        if (!$this->deckColumns) {
+        if (! $this->deckColumns) {
             $this->deckColumns = Schema::getColumnListing('decks');
         }
 
         return in_array($column, $this->deckColumns, true);
     }
 
-    private function cardValue(Deck $card, string $preferred, ?string $fallback = null)
+    private function cardValue(Deck $card, string $preferred, string $fallback = null)
     {
         if ($this->hasDeckColumn($preferred)) {
             return $card->{$preferred};
@@ -820,10 +811,11 @@ class TrickController extends Controller
         return null;
     }
 
-    private function setCardValue(Deck $card, string $preferred, $value, ?string $fallback = null): void
+    private function setCardValue(Deck $card, string $preferred, $value, string $fallback = null): void
     {
         if ($this->hasDeckColumn($preferred)) {
             $card->{$preferred} = $value;
+
             return;
         }
         if ($fallback && $this->hasDeckColumn($fallback)) {

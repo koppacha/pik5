@@ -2,7 +2,7 @@ const fs = require("fs")
 const path = require("path")
 const {chromium} = require("@playwright/test")
 
-const outDir = path.resolve(__dirname, "../../../../public/limited/tricks/fx")
+const outDir = path.resolve(__dirname, "../../public/limited/tricks/fx")
 const width = 260
 const height = Math.round(width * 88 / 63)
 const border = 8
