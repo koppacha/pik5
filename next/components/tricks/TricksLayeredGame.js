@@ -9,7 +9,7 @@ import {
     normalizeTricksState,
     orderTricksHand,
     shortenTricksText,
-} from "../../../lib/tricks"
+} from "../../lib/tricks"
 
 const CARD_RATIO = 88 / 63
 const HAND_CARD_WIDTH = 260
@@ -184,14 +184,26 @@ function PhaserBaseLayer({state, size}) {
     const gameRef = useRef(null)
     const sceneRef = useRef(null)
     const stateRef = useRef(state)
+    const sleepTimerRef = useRef(null)
+    const renderKey = useMemo(() => JSON.stringify({
+        title: state?.tournament?.title,
+        endAt: state?.tournament?.end_at,
+        eventState: state?.tournament?.state,
+        debug: state?.tournament?.debug,
+        fieldEmpty: !state?.field?.length,
+        minute: Math.floor(new Date(state?.server_now || state?.tournament?.server_now || 0).getTime() / 60000),
+    }), [state])
 
     useEffect(() => {
         stateRef.current = state
-        sceneRef.current?.renderBase?.(state)
     }, [state])
 
     useEffect(() => {
-        sceneRef.current?.renderBase?.(stateRef.current)
+        sceneRef.current?.requestRender?.(stateRef.current)
+    }, [renderKey])
+
+    useEffect(() => {
+        sceneRef.current?.requestRender?.(stateRef.current)
     }, [size])
 
     useEffect(() => {
@@ -208,7 +220,25 @@ function PhaserBaseLayer({state, size}) {
 
                 create() {
                     sceneRef.current = this
-                    this.renderBase(stateRef.current)
+                    this.requestRender(stateRef.current)
+                }
+
+                requestRender(nextState) {
+                    this.game.loop.wake()
+                    window.__TRICKS_RENDER_METRICS__ = {
+                        ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                        phaserLoopSleeping: false,
+                    }
+                    this.renderBase(nextState)
+                    if (sleepTimerRef.current) window.clearTimeout(sleepTimerRef.current)
+                    sleepTimerRef.current = window.setTimeout(() => {
+                        this.game.loop.sleep()
+                        window.__TRICKS_RENDER_METRICS__ = {
+                            ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                            phaserLoopSleeping: true,
+                        }
+                        sleepTimerRef.current = null
+                    }, 80)
                 }
 
                 renderBase(nextState) {
@@ -217,7 +247,8 @@ function PhaserBaseLayer({state, size}) {
                     const height = this.scale.height
                     const view = normalizeTricksState(nextState || {}, {})
                     const tournament = view.tournament || {}
-                    const nowValue = Date.now()
+                    const serverNow = nextState?.server_now || tournament.server_now
+                    const nowValue = serverNow ? new Date(serverNow).getTime() : Date.now()
 
                     this.add.rectangle(0, 0, width, height, 0x0c1016, 1).setOrigin(0, 0)
                     this.add.rectangle(0, 0, width, HEADER_HEIGHT, 0x141b26, 0.82).setOrigin(0, 0)
@@ -246,6 +277,14 @@ function PhaserBaseLayer({state, size}) {
                             color: "#778399",
                         })
                     }
+                    if (typeof window !== "undefined") {
+                        const current = window.__TRICKS_RENDER_METRICS__ || {}
+                        window.__TRICKS_RENDER_METRICS__ = {
+                            ...current,
+                            phaserGameObjects: this.children.length,
+                            phaserRenderCount: Number(current.phaserRenderCount || 0) + 1,
+                        }
+                    }
                 }
             }
 
@@ -272,6 +311,8 @@ function PhaserBaseLayer({state, size}) {
         return () => {
             disposed = true
             sceneRef.current = null
+            if (sleepTimerRef.current) window.clearTimeout(sleepTimerRef.current)
+            sleepTimerRef.current = null
             if (gameRef.current) {
                 gameRef.current.destroy(true)
                 gameRef.current = null
@@ -294,11 +335,6 @@ function PhaserBaseLayer({state, size}) {
 // 上層FX canvasで短時間のパーティクルだけを描画する。
 function FxLayer({burst, stackFlames = []}) {
     const canvasRef = useRef(null)
-    const stackFlamesRef = useRef(stackFlames)
-
-    useEffect(() => {
-        stackFlamesRef.current = stackFlames
-    }, [stackFlames])
 
     useEffect(() => {
         const canvas = canvasRef.current
@@ -325,29 +361,45 @@ function FxLayer({burst, stackFlames = []}) {
                 }
             })
             : []
+        const drawStaticFlames = () => {
+            stackFlames.forEach((flame) => {
+                const flameCount = Math.min(9, Math.max(5, Number(flame.stackCount || 6)))
+                for (let index = 0; index < flameCount; index += 1) {
+                    const angle = -Math.PI * 0.88 + (Math.PI * 1.76 * index) / Math.max(flameCount - 1, 1)
+                    const radius = 27 + (index % 2) * 5
+                    context.globalAlpha = 0.46
+                    context.fillStyle = index % 2 ? "#ff593d" : "#ffdf4d"
+                    context.beginPath()
+                    context.ellipse(
+                        flame.x + Math.cos(angle) * radius,
+                        flame.y + Math.sin(angle) * radius - 7,
+                        5,
+                        11,
+                        angle,
+                        0,
+                        Math.PI * 2
+                    )
+                    context.fill()
+                }
+            })
+            context.globalAlpha = 1
+        }
+        drawStaticFlames()
+        if (!burst) {
+            window.__TRICKS_RENDER_METRICS__ = {
+                ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                activeRaf: 0,
+            }
+            return () => context.clearRect(0, 0, rect.width, rect.height)
+        }
+
         const start = performance.now()
         let frameId = 0
 
         const draw = (time) => {
             const t = Math.min(1, (time - start) / FX_DURATION_MS)
-            const activeStackFlames = stackFlamesRef.current
             context.clearRect(0, 0, rect.width, rect.height)
-            activeStackFlames.forEach((flame, flameIndex) => {
-                const flameCount = Math.min(14, Math.max(7, Number(flame.stackCount || 6)))
-                for (let index = 0; index < flameCount; index += 1) {
-                    const cycle = ((time / 980) + index / flameCount + flameIndex * 0.13) % 1
-                    const angle = -Math.PI * 0.88 + (Math.PI * 1.76 * index) / Math.max(flameCount - 1, 1)
-                    const radius = 22 + cycle * 38
-                    const lift = Math.sin(cycle * Math.PI) * 30
-                    const x = flame.x + Math.cos(angle) * radius
-                    const y = flame.y + Math.sin(angle) * radius - lift
-                    context.globalAlpha = (1 - cycle) * 0.62
-                    context.fillStyle = cycle < 0.46 ? "#ffdf4d" : "#ff593d"
-                    context.beginPath()
-                    context.ellipse(x, y, 4 + cycle * 4, 10 - cycle * 3, angle, 0, Math.PI * 2)
-                    context.fill()
-                }
-            })
+            drawStaticFlames()
             particles.forEach((particle) => {
                 const eased = 1 - Math.pow(1 - t, 3)
                 context.globalAlpha = 1 - t
@@ -363,16 +415,28 @@ function FxLayer({burst, stackFlames = []}) {
                 context.fill()
             })
             context.globalAlpha = 1
-            if (activeStackFlames.length > 0 || t < 1) frameId = requestAnimationFrame(draw)
+            if (t < 1) frameId = requestAnimationFrame(draw)
+            else window.__TRICKS_RENDER_METRICS__ = {
+                ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                activeRaf: 0,
+            }
         }
 
+        window.__TRICKS_RENDER_METRICS__ = {
+            ...(window.__TRICKS_RENDER_METRICS__ || {}),
+            activeRaf: 1,
+        }
         frameId = requestAnimationFrame(draw)
 
         return () => {
             cancelAnimationFrame(frameId)
+            window.__TRICKS_RENDER_METRICS__ = {
+                ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                activeRaf: 0,
+            }
             context.clearRect(0, 0, rect.width, rect.height)
         }
-    }, [burst])
+    }, [burst, stackFlames])
 
     return (
         <canvas
@@ -390,7 +454,7 @@ function FxLayer({burst, stackFlames = []}) {
 }
 
 // DOMカード1枚を表示する。
-function TricksDomCard({card, type, layout, usersById, selected, disabled, hidden, motionStyle, onClick}) {
+function TricksDomCard({card, type, layout, usersById, selected, disabled, hidden, motionStyle, nowValue, onClick}) {
     const rarity = Number(card?.rarity || 1)
     const isField = type === "field"
     const stackCount = Math.max(Number(card?.stack_count || 1), 1)
@@ -398,7 +462,7 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
     const width = isField ? FIELD_CARD_WIDTH : HAND_CARD_WIDTH
     const height = isField ? FIELD_CARD_HEIGHT : HAND_CARD_HEIGHT
     const borderColor = rarityColors[rarity] || rarityColors[1]
-    const expired = isField && isTricksCardLimitExpired(card)
+    const expired = isField && isTricksCardLimitExpired(card, nowValue)
 
     return (
         <button
@@ -448,7 +512,7 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                             <span><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
                         </span>
                         <span className="tricks-dom-card-footer">
-                            <span>{cardLimitLabel(card)}</span>
+                            <span>{cardLimitLabel(card, nowValue)}</span>
                             <span className="tricks-dom-stack">{stackCount}</span>
                         </span>
                     </>
@@ -466,7 +530,7 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
 }
 
 // 山札DOMを表示する。
-function TricksDeck({layout, deckCount, onDraw}) {
+function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, onDraw}) {
     return (
         <div
             className="tricks-dom-deck"
@@ -482,8 +546,10 @@ function TricksDeck({layout, deckCount, onDraw}) {
             }}
         >
             <div className="tricks-dom-deck-title">山札</div>
-            <button type="button" onClick={onDraw}>ドロー</button>
+            <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
             <div className="tricks-dom-deck-count">残り {deckCount ?? 0}枚</div>
+            <div className="tricks-dom-deck-trash">捨て札 {trashCount ?? 0}枚</div>
+            {disabledReason && <div className="tricks-dom-deck-reason">{disabledReason}</div>}
         </div>
     )
 }
@@ -526,6 +592,9 @@ function DomCardsLayer({
     onSelectField,
     drawMotion,
     takingMotion,
+    operation,
+    busy,
+    nowValue,
 }) {
     const fieldById = useMemo(() => new Map((view.field || []).map((card) => [card.id, card])), [view.field])
     const orderedField = fieldOrder.map((id) => fieldById.get(id)).filter(Boolean)
@@ -557,7 +626,8 @@ function DomCardsLayer({
                         }}
                         usersById={usersById}
                         selected={selectedFieldId === card.id}
-                        disabled={isTricksCardLimitExpired(card)}
+                        disabled={isTricksCardLimitExpired(card, nowValue) || !card.limit_at}
+                        nowValue={nowValue}
                         onClick={() => {
                             const side = base.x + FIELD_CARD_WIDTH / 2 > size.width / 2 ? "left" : "right"
                             onSelectField?.({
@@ -574,7 +644,16 @@ function DomCardsLayer({
                     />
                 )
             })}
-            <TricksDeck layout={baseDeckLayout} deckCount={view.deckCount} onDraw={onDraw} />
+            {view.tournament?.state !== "ended" && (
+                <TricksDeck
+                    layout={baseDeckLayout}
+                    deckCount={view.deckCount}
+                    trashCount={view.trashCount}
+                    disabled={busy || !operation.canDraw}
+                    disabledReason={operation.drawReason}
+                    onDraw={onDraw}
+                />
+            )}
             <DrawGhost motion={drawMotion} />
             {(view.hand || []).map((card, index, list) => {
                 const home = handLayout(size.width, size.height, list.length, index)
@@ -596,6 +675,8 @@ function DomCardsLayer({
                         usersById={usersById}
                         selected={isSelected}
                         hidden={isTaking}
+                        disabled={busy}
+                        nowValue={nowValue}
                         onClick={() => onSelectHand(card)}
                     />
                 )
@@ -612,6 +693,7 @@ function DomCardsLayer({
                     }}
                     usersById={usersById}
                     disabled
+                    nowValue={nowValue}
                     motionStyle={{
                         "--from-x": `${takingMotion.from.x}px`,
                         "--from-y": `${takingMotion.from.y}px`,
@@ -651,9 +733,18 @@ function DomCardsLayer({
                             pointerEvents: "auto",
                         }}
                     >
-                        <button type="button" className="tricks-hand-action tricks-hand-action-take" onClick={() => onTake(selectedHand)}>
+                        <button
+                            type="button"
+                            className="tricks-hand-action tricks-hand-action-take"
+                            disabled={busy || !operation.canTake}
+                            title={operation.takeReason}
+                            onClick={() => onTake(selectedHand)}
+                        >
                             場に出す
                         </button>
+                        {!operation.canTake && (
+                            <div style={{maxWidth: 220, color: "#ffcf6e", fontSize: 12}}>{operation.takeReason}</div>
+                        )}
                         <button type="button" className="tricks-hand-action" onClick={onCancelHand}>
                             キャンセル
                         </button>
@@ -674,6 +765,9 @@ export default function TricksLayeredGame({
     onTake,
     onSelectField,
     onFieldSortingChange,
+    operation,
+    busy = false,
+    nowValue = Date.now(),
 }) {
     const rootRef = useRef(null)
     const size = useElementSize(rootRef)
@@ -684,9 +778,40 @@ export default function TricksLayeredGame({
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)
     const [takingMotion, setTakingMotion] = useState(null)
-    const view = useMemo(() => normalizeTricksState(state || {}, {handOrder}), [handOrder, state])
+    const motionTimersRef = useRef(new Set())
+    const interactionBusy = busy || Boolean(drawMotion) || Boolean(takingMotion)
+    const view = useMemo(() => normalizeTricksState(state || {}, {handOrder, nowValue}), [handOrder, nowValue, state])
     const handOrderKey = view.handOrder.join(",")
     const fieldIdsKey = (view.field || []).map((card) => card.id).join(",")
+
+    const scheduleMotionEnd = useCallback((callback) => {
+        const timer = window.setTimeout(() => {
+            motionTimersRef.current.delete(timer)
+            window.__TRICKS_RENDER_METRICS__ = {
+                ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                activeTimers: motionTimersRef.current.size,
+            }
+            callback()
+        }, CARD_MOTION_MS)
+        motionTimersRef.current.add(timer)
+        window.__TRICKS_RENDER_METRICS__ = {
+            ...(window.__TRICKS_RENDER_METRICS__ || {}),
+            activeTimers: motionTimersRef.current.size,
+        }
+    }, [])
+
+    useEffect(() => {
+        const timers = motionTimersRef.current
+
+        return () => {
+            timers.forEach((timer) => window.clearTimeout(timer))
+            timers.clear()
+            window.__TRICKS_RENDER_METRICS__ = {
+                ...(window.__TRICKS_RENDER_METRICS__ || {}),
+                activeTimers: 0,
+            }
+        }
+    }, [])
 
     useEffect(() => {
         setHandOrder((current) => {
@@ -699,8 +824,8 @@ export default function TricksLayeredGame({
     }, [handOrderKey, view.handOrder])
 
     useEffect(() => {
-        setFieldOrder((current) => targetFieldOrder(view.field, syncCardOrder(current, view.field), Date.now()))
-    }, [fieldIdsKey, sortTick, view.field])
+        setFieldOrder((current) => targetFieldOrder(view.field, syncCardOrder(current, view.field), nowValue))
+    }, [fieldIdsKey, nowValue, sortTick, view.field])
 
     useEffect(() => {
         setFieldScrollY((current) => Math.max(0, Math.min(
@@ -721,7 +846,10 @@ export default function TricksLayeredGame({
         setFieldScrollY((current) => Math.max(0, Math.min(maxScroll, current + event.deltaY)))
     }, [selectedFieldId, selectedHand, size.height, size.width, view.field])
 
-    const handleDraw = useCallback(() => {
+    const handleDraw = useCallback(async () => {
+        if (!operation.canDraw || interactionBusy) return
+        const succeeded = await onDraw?.()
+        if (!succeeded) return
         const from = deckLayout(size.height)
         const to = handLayout(size.width, size.height, Math.max(view.hand.length + 1, 1), view.hand.length)
         const id = `draw-${Date.now()}`
@@ -734,13 +862,15 @@ export default function TricksLayeredGame({
             },
             to,
         })
-        window.setTimeout(() => {
+        scheduleMotionEnd(() => {
             setDrawMotion((current) => (current?.id === id ? null : current))
-        }, CARD_MOTION_MS)
-        onDraw?.()
-    }, [onDraw, size.height, size.width, view.hand.length])
+        })
+    }, [interactionBusy, onDraw, operation.canDraw, scheduleMotionEnd, size.height, size.width, view.hand.length])
 
-    const handleTake = useCallback((card) => {
+    const handleTake = useCallback(async (card) => {
+        if (!operation.canTake || interactionBusy) return
+        const succeeded = await onTake?.(card)
+        if (!succeeded) return
         const fieldIndex = Math.min(view.field.length, 15)
         const target = fieldLayout(fieldIndex, fieldScrollY, size.width)
         const start = selectedHandLayout(size.width, size.height)
@@ -768,12 +898,11 @@ export default function TricksLayeredGame({
             color: rarityColors[Number(card?.rarity || 1)] || "#ffd447",
             count: Math.min(30, 14 + stackCount * 2),
         })
-        window.setTimeout(() => {
+        scheduleMotionEnd(() => {
             setTakingMotion((current) => (current?.id === id ? null : current))
             setSelectedHand(null)
-            onTake?.(card)
-        }, CARD_MOTION_MS)
-    }, [fieldScrollY, onTake, size.height, size.width, view.field.length, view.hand.length])
+        })
+    }, [fieldScrollY, interactionBusy, onTake, operation.canTake, scheduleMotionEnd, size.height, size.width, view.field.length, view.hand.length])
 
     useEffect(() => {
         onFieldSortingChange?.(false)
@@ -785,7 +914,7 @@ export default function TricksLayeredGame({
             .map((id, index) => {
                 const card = fieldById.get(id)
                 const stackCount = Number(card?.stack_count || 1)
-                if (!card || stackCount < 6 || isTricksCardLimitExpired(card)) return null
+                if (!card || stackCount < 6 || isTricksCardLimitExpired(card, nowValue)) return null
                 const layout = fieldLayout(index, fieldScrollY, size.width)
                 const visible = layout.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
                     && layout.y <= fieldViewportBottom(size.height) + 48
@@ -810,7 +939,7 @@ export default function TricksLayeredGame({
         }
 
         return fieldFlames
-    }, [fieldOrder, fieldScrollY, size.height, size.width, takingMotion, view.field, view.hand.length])
+    }, [fieldOrder, fieldScrollY, nowValue, size.height, size.width, takingMotion, view.field, view.hand.length])
 
     return (
         <div
@@ -839,6 +968,9 @@ export default function TricksLayeredGame({
                 onSelectField={onSelectField}
                 drawMotion={drawMotion}
                 takingMotion={takingMotion}
+                operation={operation}
+                busy={interactionBusy}
+                nowValue={nowValue}
             />
             <FxLayer burst={fxBurst} stackFlames={stackFlames} />
             <style jsx global>{`
@@ -888,10 +1020,10 @@ export default function TricksLayeredGame({
                     box-shadow: inset 0 0 0 2px rgba(26, 102, 255, 0.26), 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-card.rarity-4 .tricks-dom-card-face {
-                    animation: tricksRarePulse 1500ms ease-in-out infinite;
+                    box-shadow: inset 0 0 14px rgba(139, 224, 94, 0.34), 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-card.rarity-5 .tricks-dom-card-face {
-                    animation: tricksLegendaryPulse 1200ms ease-in-out infinite;
+                    box-shadow: inset 0 0 18px rgba(255, 212, 71, 0.46), 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-card-meta,
                 .tricks-dom-card-users,
@@ -970,7 +1102,7 @@ export default function TricksLayeredGame({
                 }
                 .tricks-dom-deck {
                     display: grid;
-                    grid-template-rows: 1fr auto auto 1fr;
+                    grid-template-rows: 1fr auto auto auto auto 1fr;
                     align-items: center;
                     justify-items: center;
                     border-radius: 10px;
@@ -1028,6 +1160,23 @@ export default function TricksLayeredGame({
                     font-weight: 800;
                     margin-top: 12px;
                 }
+                .tricks-dom-deck-trash {
+                    color: #9aa8bd;
+                    font-size: 13px;
+                    font-weight: 700;
+                }
+                .tricks-dom-deck-reason {
+                    max-width: 210px;
+                    color: #ffcf6e;
+                    font-size: 11px;
+                    line-height: 1.3;
+                    text-align: center;
+                }
+                .tricks-dom-deck button:disabled,
+                .tricks-hand-action:disabled {
+                    cursor: not-allowed;
+                    opacity: 0.45;
+                }
                 .tricks-hand-action {
                     background: #253044;
                     border-color: #7f8da3;
@@ -1035,14 +1184,6 @@ export default function TricksLayeredGame({
                 .tricks-hand-action-take {
                     background: #1f7a43;
                     border-color: #6edb9a;
-                }
-                @keyframes tricksRarePulse {
-                    0%, 100% { box-shadow: inset 0 0 0 2px rgba(139, 224, 94, 0.2), 0 12px 30px rgba(0, 0, 0, 0.26); }
-                    50% { box-shadow: inset 0 0 18px rgba(139, 224, 94, 0.42), 0 12px 30px rgba(0, 0, 0, 0.26); }
-                }
-                @keyframes tricksLegendaryPulse {
-                    0%, 100% { box-shadow: inset 0 0 0 2px rgba(255, 212, 71, 0.24), 0 12px 30px rgba(0, 0, 0, 0.26); }
-                    50% { box-shadow: inset 0 0 22px rgba(255, 212, 71, 0.56), 0 12px 30px rgba(0, 0, 0, 0.26); }
                 }
                 @keyframes tricksDrawFromDeck {
                     0% {

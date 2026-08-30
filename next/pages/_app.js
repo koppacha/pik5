@@ -22,6 +22,7 @@ import {Backdrop, Box, CircularProgress, Typography} from "@mui/material"
 import RecordNotificationCenter from "../components/notifications/RecordNotificationCenter"
 
 const clientSideEmotionCache = createEmotionCache()
+const analyticsEnabled = process.env.NODE_ENV === "production" && Boolean(ga)
 
 export default function App(props) {
     const {Component, emotionCache = clientSideEmotionCache, pageProps: {session, ...pageProps}} = props
@@ -145,18 +146,22 @@ export default function App(props) {
     return (
         <>
             <SeoHead />
-            <Script strategy="afterInteractive"
-                    src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
-            <Script id="gtag-init" strategy="afterInteractive"
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                      window.dataLayer = window.dataLayer || [];
-                      function gtag(){dataLayer.push(arguments);}
-                      gtag('js', new Date());
-                      gtag('config', '${ga}');
-                      `,
-                    }}
-            />
+            {analyticsEnabled && (
+                <>
+                    <Script strategy="afterInteractive"
+                            src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
+                    <Script id="gtag-init" strategy="afterInteractive"
+                            dangerouslySetInnerHTML={{
+                                __html: `
+                              window.dataLayer = window.dataLayer || [];
+                              function gtag(){dataLayer.push(arguments);}
+                              gtag('js', new Date());
+                              gtag('config', '${ga}');
+                              `,
+                            }}
+                    />
+                </>
+            )}
             <GlobalStyle/>
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>

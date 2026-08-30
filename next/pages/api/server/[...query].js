@@ -8,8 +8,9 @@ import {networkInterfaces} from "os";
 import {getServerSession} from "next-auth/next";
 import {authOptions} from "../auth/[...nextauth]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
+import {tricksIdentityHeaders, tricksTestIdentityHeaders} from "../../../lib/tricks/proxyAuth";
 
-const LARAVEL_API_BASE = 'http://laravel:8000/api'
+const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || 'http://laravel:8000/api'
 
 async function readRawBody(req) {
   return new Promise((resolve, reject) => {
@@ -85,11 +86,16 @@ export default async function handle(req, res){
 
   const searchParams = buildSearchParams(req.query)
   const upstreamUrl = `${LARAVEL_API_BASE}/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
-
+  const testIdentityHeaders = tricksTestIdentityHeaders(req.headers)
+  const identityHeaders = path.startsWith('tricks/')
+    ? Object.keys(testIdentityHeaders).length > 0
+      ? testIdentityHeaders
+      : tricksIdentityHeaders(session?.user?.userId || session?.user?.id, session?.user?.role)
+    : {}
   try {
     switch (req.method) {
       case "GET": {
-        const upstreamRes = await fetch(upstreamUrl)
+        const upstreamRes = await fetch(upstreamUrl, {headers: identityHeaders})
         const data = await parseUpstreamResponse(upstreamRes)
 
         if (!upstreamRes.ok) {
@@ -121,6 +127,7 @@ export default async function handle(req, res){
               'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
               'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
               'x-forwarded-host': String(req.headers.host || ''),
+              ...identityHeaders,
             },
             body: req,
             duplex: 'half',
@@ -135,6 +142,7 @@ export default async function handle(req, res){
               'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
               'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
               'x-forwarded-host': String(req.headers.host || ''),
+              ...identityHeaders,
             },
             body: raw,
           })

@@ -1,28 +1,67 @@
-import fetch from "node-fetch";
-import {getServerSession} from "next-auth/next";
-import {authOptions} from "../../auth/[...nextauth]";
-import {prismaLogging} from "../[...query]";
+import fetch from "node-fetch"
+import {getServerSession} from "next-auth/next"
+import {authOptions} from "../../auth/[...nextauth]"
+import {prismaLogging} from "../[...query]"
+import {ensureServerApiAccess} from "../../../../lib/serverApiAccess"
+import prisma from "../../../../lib/prisma"
+
+function canDeleteRecord(sessionUserId, role, createdAt, ownerUserId) {
+    if (Number(role) === 10) return true
+
+    const postDate = new Date(createdAt)
+    if (Number.isNaN(postDate.getTime())) return false
+    if ((postDate.getTime() + 86400000) < Date.now()) return false
+
+    return sessionUserId === ownerUserId || Number(role) > 0
+}
 
 export default async function handler(req, res){
 
     const session = await getServerSession(req, res, authOptions)
 
-    if(!session){
-        res.status(405).json({error: "ログインしていません。"})
+    if (!ensureServerApiAccess(req, res)) {
+        res.status(403).json({error: true, message: "forbidden"})
+        return
     }
 
-    if(req.method === "GET"){
+    if(!session){
+        res.status(401).json({error: true, message: "unauthorized"})
+        return
+    }
 
-        const [uniqueId, userId] = req.query.delete
-        await prismaLogging(session.user.userId, "delete", uniqueId)
+    if(req.method === "DELETE"){
 
-        const del = await fetch(`http://laravel:8000/api/record/${uniqueId}`,
+        const [uniqueId] = req.query.delete
+        const currentUserId = String(session.user.userId || session.user.id || "")
+        let role = Number(session.user.role || 0)
+        if (!Number.isFinite(role) || role === 0) {
+            const user = await prisma.user.findFirst({
+                where: {userId: currentUserId},
+                select: {role: true},
+            })
+            role = Number(user?.role || 0)
+        }
+        const recordRes = await fetch(`http://laravel:8000/api/record/id/${encodeURIComponent(uniqueId)}`)
+        const record = await recordRes.json().catch(() => ({}))
+        if (!recordRes.ok || !record?.unique_id || Number(record.flg) > 1) {
+            res.status(404).json({error: true, message: "record not found"})
+            return
+        }
+        if (!canDeleteRecord(currentUserId, role, record.created_at, String(record.user_id || ""))) {
+            res.status(403).json({error: true, message: "forbidden"})
+            return
+        }
+        await prismaLogging(currentUserId, "delete", uniqueId)
+
+        const params = new URLSearchParams({user_id: currentUserId, editor_role: String(role)})
+        const del = await fetch(`http://laravel:8000/api/record/${encodeURIComponent(uniqueId)}?${params}`,
             {method: "DELETE"})
 
         const data = await del.json()
-        res.status(200).json({data})
+        res.status(del.status).json({data})
 
     } else {
+        res.setHeader("Allow", "DELETE")
         res.status(405).json({error: "Method not allowed"})
     }
 }

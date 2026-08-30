@@ -11,7 +11,7 @@ function logText(log) {
     return log?.message || log?.text || log?.event || JSON.stringify(log)
 }
 
-export default function TricksHud({state, dimmed = false, currentUserId = ""}) {
+export default function TricksHud({state, dimmed = false, currentUserId = "", nowValue = Date.now()}) {
     const players = useMemo(() => state?.players || [], [state?.players])
     const logs = state?.logs || []
     const [playerOrder, setPlayerOrder] = useState([])
@@ -145,7 +145,7 @@ export default function TricksHud({state, dimmed = false, currentUserId = ""}) {
                                 <div
                                     key={player.name || index}
                                     style={{
-                                        minWidth: 112,
+                                        minWidth: 132,
                                         padding: "7px 10px",
                                         borderRadius: 10,
                                         border: isMe ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)",
@@ -157,14 +157,24 @@ export default function TricksHud({state, dimmed = false, currentUserId = ""}) {
                                 >
                                     <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
                                         <span>#{index + 1}</span>
-                                        <span>RP {player.rank_points}</span>
+                                        <span>R {player.total_rank_points ?? player.rank_points ?? 0}</span>
                                     </div>
                                     <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
                                         {shortenTricksText(player.name, 14)}
                                     </div>
                                     <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                        DP {player.draw_points} / H {player.card_count}
+                                        確定 {player.confirmed_rank_points ?? player.rank_points ?? 0}
+                                        {" / "}
+                                        暫定 {player.provisional_rank_points ?? 0}
                                     </div>
+                                    <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
+                                        P {player.draw_points} / 手札 {player.card_count}
+                                    </div>
+                                    {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
+                                        <div style={{fontSize: 10, marginTop: 2, color: "#ffcf6e"}}>
+                                            次回テイク {new Date(player.next_take_at).toLocaleTimeString("ja-JP")}
+                                        </div>
+                                    )}
                                 </div>
                             )
                         })}

@@ -1,8 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
-const outputsDir = path.resolve(__dirname, '../../../../../lab/outputs')
-const reportPath = path.resolve(__dirname, '../simulation-report.html')
+const outputsDir = path.resolve(__dirname, '../../../lab/outputs')
+const reportPath = path.resolve(__dirname, '../../pages/limited/tricks/simulation-report.html')
 const intervalMinutes = 30
 
 const readJson = filePath => JSON.parse(fs.readFileSync(filePath, 'utf8'))

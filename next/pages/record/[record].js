@@ -96,7 +96,7 @@ export default function RecordPage({users, data, history}){
     async function handleOpen() {
         const confirm = window.confirm("本当に削除してよろしいですか？")
         if (confirm) {
-            const res = await fetch(`/api/server/delete/${data.unique_id}/${users.userId}`)
+            const res = await fetch(`/api/server/delete/${data.unique_id}`, {method: "DELETE"})
             if(res.status < 300) {
                 await router.push("/stage/" + data.stage_id)
                 return null

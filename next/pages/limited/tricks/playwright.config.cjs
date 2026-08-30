@@ -12,11 +12,11 @@ module.exports = defineConfig({
     expect: {
         timeout: 10000,
     },
-    outputDir: path.join(__dirname, "test-results"),
+    outputDir: path.join(__dirname, "output/playwright/results"),
     fullyParallel: false,
     reporter: process.env.CI ? "github" : [["list"], ["html", {
         open: "never",
-        outputFolder: path.join(__dirname, "playwright-report"),
+        outputFolder: path.join(__dirname, "output/playwright/report"),
     }]],
     use: {
         baseURL,

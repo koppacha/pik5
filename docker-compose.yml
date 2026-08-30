@@ -1,4 +1,3 @@
-
 services:
   laravel:
     build:
@@ -29,6 +28,7 @@ services:
       - TZ=${TZ}
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
+      - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
 
   mysql:
     container_name: mysql
@@ -82,3 +82,5 @@ services:
       options:
         max-size: 10m
         max-file: '100'
+    environment:
+      - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}

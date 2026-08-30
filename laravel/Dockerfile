@@ -37,4 +37,4 @@ RUN if [ -f composer.json ]; then \
       echo "composer.json not found; skipping telescope install"; \
     fi
 
-CMD ["php","artisan","serve","--host","0.0.0.0"]
+CMD ["php","artisan","serve","--host","0.0.0.0","--no-reload"]
