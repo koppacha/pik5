@@ -8,6 +8,8 @@ const adapter = new PrismaMariaDb(getMariaDbConnectionString())
 const prisma = new PrismaClient({adapter})
 
 const exitUsers = data
+const postApiTestUserId = 'codex_post_api_test'
+const postApiTestUserName = 'Codex Post API Test'
 
 async function main() {
     const saltRounds = 10
@@ -25,6 +27,25 @@ async function main() {
         data: users,
         skipDuplicates: true,
     })
+
+    if(process.env.PIK5_POST_TEST_PASSWORD){
+        const hashedPassword = bcrypt.hashSync(process.env.PIK5_POST_TEST_PASSWORD, saltRounds)
+
+        await prisma.user.upsert({
+            where: {userId: postApiTestUserId},
+            update: {
+                name: postApiTestUserName,
+                password: hashedPassword,
+                role: '',
+            },
+            create: {
+                userId: postApiTestUserId,
+                name: postApiTestUserName,
+                password: hashedPassword,
+                role: '',
+            },
+        })
+    }
 }
 
 main()
