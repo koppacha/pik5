@@ -3,6 +3,12 @@
 ## 全般
 - 回答は日本語で簡潔かつ丁寧に記述してください。
 
+## 認証情報・秘密情報の取り扱い
+- Git 管理外・ignore 対象のファイル、ローカル DB、DB ダンプ、ログ、環境変数、セッション履歴にある認証情報は、実在ユーザーの秘密情報として扱ってください。
+- これらに含まれるパスワード、API キー、トークン、Cookie、復号結果を、回答、コマンド、テスト、ソースコード、ドキュメント、コミットへ引用・転記・再利用してはいけません。値の確認が必要な場合も出力せず、一致・不一致などの非秘密情報だけを報告してください。
+- 実在ユーザーの認証情報を調査・復号してテストへ流用してはいけません。認証が必要なテストには専用テストユーザーだけを使い、パスワードは Git 管理外の環境変数から与えてください。
+- 認証情報らしき値を発見した場合は内容を表示せず、対象ファイルと種類だけを報告し、専用テストデータまたはプレースホルダーへ置き換えてください。
+
 ## プロジェクト構成・モジュール構成
 - next/ は Next.js フロントエンドを格納します（React、MUI、styled-components、Prisma クライアント利用など）。
 - laravel/ は PHP/Laravel の API バックエンドです（コントローラ、モデル、ルーティング、マイグレーションなど）。
@@ -40,12 +46,14 @@
 ### 記録投稿APIの再現手順
 - `/api/server/post` の疎通確認は、NextAuth の認証 cookie を取得した上で multipart の `POST` を送る必要があります。
 - 前提として `docker compose up -d` 済み、`next` コンテナ内で `yarn install --ignore-engines` 済み、`yarn dev` 起動済みであることを確認してください。
-- 既存のローカルデータを使う場合、seed 済みユーザー `mercysnow` / `[REMOVED_CREDENTIAL]` でログインできます。未投入環境では先に seed を投入してください。
+- 記録投稿APIの再現には、専用テストユーザー `codex_post_api_test` を使ってください。実在ユーザーのアカウントやパスワードを使ってはいけません。
+- 専用テストユーザーのパスワードは Git に記録せず、`PIK5_POST_TEST_PASSWORD` 環境変数で指定してください。
+- 専用テストユーザーが未投入の場合、またはパスワードを更新する場合は、`next` コンテナ内で `PIK5_POST_TEST_PASSWORD='<ローカル専用の任意パスワード>' npx prisma db seed` を実行してください。`next/prisma/seed.ts` は、この環境変数がある場合のみ専用ユーザーを作成・更新します。
 - 投稿APIの再現では、`stage_id` は `399` を使ってください。
 - 実行場所はホストではなく `next` コンテナ内に揃えてください。`docker compose exec next bash` で入った後、下記のコマンドを実行すると、認証取得から `/api/server/post` 送信まで一度に再現できます。
 
 ```bash
-node -e "(async()=>{ const base='http://localhost:3000'; let cookies=[]; const addCookies=(res)=>{ const vals = res.headers.getSetCookie ? res.headers.getSetCookie() : []; for (const v of vals) { const kv = v.split(';')[0]; const key = kv.split('=')[0]; cookies = cookies.filter(c=>!c.startsWith(key + '=')); cookies.push(kv); } }; const cookieHeader=()=>cookies.join('; '); const csrfRes = await fetch(base + '/api/auth/csrf'); addCookies(csrfRes); const {csrfToken} = await csrfRes.json(); const loginBody = new URLSearchParams({ csrfToken, userId:'mercysnow', password:'[REMOVED_CREDENTIAL]', callbackUrl: base + '/', json:'true' }); const loginRes = await fetch(base + '/api/auth/callback/credentials', { method:'POST', headers:{ 'content-type':'application/x-www-form-urlencoded', cookie: cookieHeader() }, body: loginBody, redirect:'manual' }); addCookies(loginRes); const form = new FormData(); form.append('stage_id','399'); form.append('rule','1'); form.append('region','1'); form.append('score','123'); form.append('console','1'); form.append('difficulty','0'); form.append('video_url',''); form.append('post_comment','codex api post test'); form.append('created_at', new Date().toISOString().slice(0,19).replace('T',' ')); form.append('user_agent','codex'); form.append('mode','create'); const postRes = await fetch(base + '/api/server/post', { method:'POST', headers:{ cookie: cookieHeader(), origin: base, referer: base + '/', host:'localhost:3000' }, body: form }); console.log('postStatus', postRes.status); console.log(await postRes.text()); })().catch(e=>{ console.error(e); process.exit(1) })"
+node -e "(async()=>{ const base='http://localhost:3000'; const userId='codex_post_api_test'; const password=process.env.PIK5_POST_TEST_PASSWORD; if(!password) throw new Error('PIK5_POST_TEST_PASSWORD is required'); let cookies=[]; const addCookies=(res)=>{ const vals = res.headers.getSetCookie ? res.headers.getSetCookie() : []; for (const v of vals) { const kv = v.split(';')[0]; const key = kv.split('=')[0]; cookies = cookies.filter(c=>!c.startsWith(key + '=')); cookies.push(kv); } }; const cookieHeader=()=>cookies.join('; '); const csrfRes = await fetch(base + '/api/auth/csrf'); addCookies(csrfRes); const {csrfToken} = await csrfRes.json(); const loginBody = new URLSearchParams({ csrfToken, userId, password, callbackUrl: base + '/', json:'true' }); const loginRes = await fetch(base + '/api/auth/callback/credentials', { method:'POST', headers:{ 'content-type':'application/x-www-form-urlencoded', cookie: cookieHeader() }, body: loginBody, redirect:'manual' }); addCookies(loginRes); const form = new FormData(); form.append('stage_id','399'); form.append('rule','1'); form.append('region','1'); form.append('score','123'); form.append('console','1'); form.append('difficulty','0'); form.append('video_url',''); form.append('post_comment','codex api post test'); form.append('created_at', new Date().toISOString().slice(0,19).replace('T',' ')); form.append('user_agent','codex'); form.append('mode','create'); const postRes = await fetch(base + '/api/server/post', { method:'POST', headers:{ cookie: cookieHeader(), origin: base, referer: base + '/', host:'localhost:3000' }, body: form }); console.log('postStatus', postRes.status); console.log(await postRes.text()); })().catch(e=>{ console.error(e); process.exit(1) })"
 ```
 
 - 正常系では `postStatus 200` と `["OK",200]` が返ります。
