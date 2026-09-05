@@ -30,6 +30,36 @@ services:
       - MAIL_PORT=${MAIL_PORT}
       - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
 
+  scheduler:
+    build:
+      context: .
+      dockerfile: ./laravel/Dockerfile
+      args:
+        - TZ=${TZ}
+    container_name: laravel-scheduler
+    working_dir: /var/www/laravel
+    command: php artisan schedule:work
+    volumes:
+      - ./laravel:/var/www/laravel
+      - ./project.json:/var/www/project.json:ro
+    depends_on:
+      - laravel
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: '10'
+    environment:
+      - FRONTEND_URL=next
+      - DB_CONNECTION=${DB_CONNECTION}
+      - DB_HOST=mysql
+      - DB_DATABASE=${DB_NAME}
+      - DB_USERNAME=${DB_USER}
+      - DB_PASSWORD=${DB_PASS}
+      - TZ=${TZ}
+      - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
+
   mysql:
     container_name: mysql
     image: mysql:8.0

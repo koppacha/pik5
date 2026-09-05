@@ -12,6 +12,7 @@ use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
 use App\Services\Tricks\TrickCollectionService;
 use App\Services\Tricks\TrickEventFinalizer;
+use App\Services\Tricks\TrickGameService;
 use App\Services\Tricks\TrickRecordService;
 use App\Services\Tricks\TrickStateService;
 use App\Services\Tricks\TrickSubsidyService;
@@ -37,9 +38,12 @@ class TrickPhaseFourTest extends TestCase
             ->where('name', 'alice')->value('rank_points'));
         self::assertSame(13, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
-        self::assertSame('single_fixed', TrickCollectionReward::query()->value('reward_type'));
-        self::assertSame(5, TrickCollectionReward::query()->value('points_delta'));
-        self::assertSame(['alice'], TrickCardHolder::query()->pluck('player_name')->all());
+        self::assertSame('single_fixed', TrickCollectionReward::query()
+            ->where('event_id', $event->event_id)->value('reward_type'));
+        self::assertSame(5, TrickCollectionReward::query()
+            ->where('event_id', $event->event_id)->value('points_delta'));
+        self::assertSame(['alice'], TrickCardHolder::query()
+            ->where('event_id', $event->event_id)->pluck('player_name')->all());
         self::assertSame('_held', $card->deck->fresh()->state);
         self::assertSame('_collected', $card->fresh()->state);
         self::assertSame('_trash', $stack->fresh()->state);
@@ -77,11 +81,16 @@ class TrickPhaseFourTest extends TestCase
         );
         self::assertSame(
             ['alice' => 3, 'bob' => 3, 'carol' => 1],
-            TrickCollectionReward::query()->where('reward_type', 'rank_distribution')
+            TrickCollectionReward::query()->where('event_id', $event->event_id)
+                ->where('reward_type', 'rank_distribution')
                 ->orderBy('player_name')->pluck('points_delta', 'player_name')->all(),
         );
-        self::assertSame(['alice', 'bob'], TrickCardHolder::query()->orderBy('player_name')
+        self::assertSame(['alice', 'bob'], TrickCardHolder::query()->where('event_id', $event->event_id)->orderBy('player_name')
             ->pluck('player_name')->all());
+        $publicCollectLog = collect(app(TrickStateService::class)->logs($event->fresh()))
+            ->last(fn (array $log) => $log['event'] === 'collect');
+        self::assertSame('alice', $publicCollectLog['top_user_id']);
+        self::assertSame($card->deck->title, $publicCollectLog['card_title']);
     }
 
     public function test_tied_group_remainder_is_returned_to_taker(): void
@@ -97,8 +106,10 @@ class TrickPhaseFourTest extends TestCase
         $records->saved($this->record($card, 'bob', 100));
 
         app(TrickCollectionService::class)->collect($event, $card->deck_id, true);
-        self::assertSame(7, (int) TrickCollectionReward::query()->sum('points_delta'));
-        self::assertSame(1, TrickCollectionReward::query()->where('reward_type', 'taker_remainder')->value('points_delta'));
+        self::assertSame(7, (int) TrickCollectionReward::query()
+            ->where('event_id', $event->event_id)->sum('points_delta'));
+        self::assertSame(1, TrickCollectionReward::query()->where('event_id', $event->event_id)
+            ->where('reward_type', 'taker_remainder')->value('points_delta'));
         self::assertSame(13, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
         self::assertSame(13, Player::query()->where('event_id', $event->event_id)
@@ -124,6 +135,9 @@ class TrickPhaseFourTest extends TestCase
 
         self::assertSame(1, $subsidies->processCurrent($event->fresh())['paid']);
         self::assertSame(0, $subsidies->processCurrent($event->fresh())['paid']);
+        $publicSubsidyLog = collect(app(TrickStateService::class)->logs($event->fresh()))
+            ->firstWhere('event', 'subsidy_paid');
+        self::assertStringStartsWith('2026-07-20T09:00:00', $publicSubsidyLog['subsidy_slot']);
         self::assertSame(6, Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->value('draw_points'));
         self::assertSame(-2, Player::query()->where('event_id', $event->event_id)->where('name', 'carol')->value('draw_points'));
 
@@ -221,6 +235,50 @@ class TrickPhaseFourTest extends TestCase
             putenv('TRICKS_EVENT_ID');
             putenv('TRICKS_INTERNAL_SECRET');
         }
+    }
+
+    public function test_three_players_can_score_collect_and_continue_with_another_taker(): void
+    {
+        [$event, $firstCard] = $this->fixture(['alice', 'bob', 'carol'], [
+            'stack_count' => 3,
+            'taker' => 'alice',
+        ]);
+        $firstCard->update(['limit_at' => $event->debug_now->addMinute()]);
+        $records = app(TrickRecordService::class);
+        foreach (['alice' => 300, 'bob' => 200, 'carol' => 100] as $player => $score) {
+            $records->saved($this->record($firstCard, $player, $score));
+        }
+
+        $event->update(['debug_now' => $firstCard->fresh()->limit_at]);
+        self::assertSame(1, app(TrickCollectionService::class)->collectExpired($event->fresh())['count']);
+
+        $bobHand = collect([
+            $this->eventCard($event->fresh(), 'bob', 930011, 7211),
+            $this->eventCard($event->fresh(), 'bob', 930012, 7212),
+            $this->eventCard($event->fresh(), 'bob', 930013, 7213),
+        ]);
+        Player::query()->where('event_id', $event->event_id)->where('name', 'bob')
+            ->update(['card_count' => 3]);
+        $secondTake = app(TrickGameService::class)->take($event->fresh(), 'bob', $bobHand->first()->deck_id);
+        self::assertSame('bob', $secondTake['card']['taker']);
+        self::assertSame(3, $secondTake['card']['stack_count']);
+
+        $secondCard = TrickEventCard::query()->whereKey($secondTake['card']['event_card_id'])->firstOrFail();
+        foreach (['bob' => 300, 'carol' => 200, 'alice' => 100] as $player => $score) {
+            $records->saved($this->record($secondCard, $player, $score));
+        }
+        $event->update(['debug_now' => $secondCard->fresh()->limit_at]);
+        self::assertSame(1, app(TrickCollectionService::class)->collectExpired($event->fresh())['count']);
+
+        self::assertSame(
+            ['alice' => 5, 'bob' => 6, 'carol' => 3],
+            Player::query()->where('event_id', $event->event_id)->orderBy('name')
+                ->pluck('rank_points', 'name')->all(),
+        );
+        self::assertTrue(Player::query()->where('event_id', $event->event_id)
+            ->where('draw_points', '>', 0)->exists());
+        self::assertSame(2, TrickEventCard::query()->where('event_id', $event->event_id)
+            ->where('state', '_collected')->count());
     }
 
     /** @return array{0: TrickEvent, 1: TrickEventCard} */

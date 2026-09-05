@@ -11,11 +11,23 @@ import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import {tricksIdentityHeaders, tricksTestIdentityHeaders} from "../../../lib/tricks/proxyAuth";
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || 'http://laravel:8000/api'
+const MAX_RAW_BODY_BYTES = 1024 * 1024
 
 async function readRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = []
-    req.on('data', (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)))
+    let totalBytes = 0
+    req.on('data', (c) => {
+      const chunk = Buffer.isBuffer(c) ? c : Buffer.from(c)
+      totalBytes += chunk.length
+      if (totalBytes > MAX_RAW_BODY_BYTES) {
+        const error = new Error('request body too large')
+        error.code = 'REQUEST_BODY_TOO_LARGE'
+        reject(error)
+        return
+      }
+      chunks.push(chunk)
+    })
     req.on('end', () => resolve(Buffer.concat(chunks)))
     req.on('error', reject)
   })
@@ -84,12 +96,20 @@ export default async function handle(req, res){
     return
   }
 
+  // 記録更新は認証と本人性を強制する専用 /api/server/post だけに限定する
+  if (req.method === 'POST' && (path === 'record' || path.startsWith('record/'))) {
+    res.status(405).json({error: true, message: 'use authenticated record endpoint'})
+    return
+  }
+
   const searchParams = buildSearchParams(req.query)
   const upstreamUrl = `${LARAVEL_API_BASE}/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
   const testIdentityHeaders = tricksTestIdentityHeaders(req.headers)
   const identityHeaders = path.startsWith('tricks/')
     ? Object.keys(testIdentityHeaders).length > 0
       ? testIdentityHeaders
+      : path === 'tricks/maintenance/collect-expired'
+        ? tricksIdentityHeaders('system', 10)
       : tricksIdentityHeaders(session?.user?.userId || session?.user?.id, session?.user?.role)
     : {}
   try {
@@ -133,6 +153,11 @@ export default async function handle(req, res){
             duplex: 'half',
           })
         } else {
+          const contentLength = Number(req.headers['content-length'] || 0)
+          if (Number.isFinite(contentLength) && contentLength > MAX_RAW_BODY_BYTES) {
+            res.status(413).json({error: true, message: 'request body too large'})
+            return
+          }
           const raw = await readRawBody(req)
           upstreamRes = await fetch(upstreamUrl, {
             method: 'POST',
@@ -165,6 +190,10 @@ export default async function handle(req, res){
       }
     }
   } catch (error) {
+    if (error?.code === 'REQUEST_BODY_TOO_LARGE') {
+      res.status(413).json({error: true, message: 'request body too large'})
+      return
+    }
     await prismaLogging(session?.user?.id ?? "guest", "queryProxyError", String(error))
     res.status(502).json({error: true, message: 'proxy error'})
   }
@@ -183,20 +212,25 @@ export function getIpAddress() {
 }
 // 各リクエストをログテーブルへ送信
 export async function prismaLogging(id, page, query) {
-
-    await prisma.log?.create({
-        data: {
-            userId: id,
-            page: page,
-            query: stringifyQuery(query),
-            ip: getIpAddress()
-        },
-    });
+    try {
+        await prisma.log?.create({
+            data: {
+                userId: id,
+                page: page,
+                query: stringifyQuery(query),
+                ip: getIpAddress()
+            },
+        })
+        return true
+    } catch (error) {
+        // 監査ログの一時障害でゲームAPI自体を停止させない
+        return false
+    }
 }
 // ログの文字数はmediumTextを超えてはならない
 function truncateIfTooLong(input) {
-    if (input.length > 16777215 ) {
-        return input.substring(0, 16777215);
+    if (input.length > 16384 ) {
+        return input.substring(0, 16384);
     } else {
         return input;
     }

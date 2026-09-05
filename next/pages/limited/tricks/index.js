@@ -54,7 +54,9 @@ export default function TricksPage() {
     const [loginRequiredOpen, setLoginRequiredOpen] = useState(false)
     const [fieldSorting, setFieldSorting] = useState(false)
     const [nowValue, setNowValue] = useState(Date.now())
+    const clockInitializedRef = useRef(false)
     const debugMetricsRef = useRef({stateFetchCount: 0, stateChangeCount: 0})
+    const collectingExpiredRef = useRef(false)
     const stateKey = tricksApi.state
     const selectedCard = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
@@ -167,6 +169,12 @@ export default function TricksPage() {
     const debugCollect = useCallback((card) => {
         return runAction(() => postTricks(tricksApi.debugCollect(card.id)), {collected: true})
     }, [runAction])
+    const expiredFieldKey = useMemo(() => {
+        return (state?.field || [])
+            .filter((card) => card?.limit_at && new Date(card.limit_at).getTime() <= nowValue)
+            .map((card) => card.id)
+            .join(",")
+    }, [nowValue, state?.field])
     const handlePosted = async () => {
         setPostOpen(false)
         setPostingCard(null)
@@ -207,19 +215,49 @@ export default function TricksPage() {
     }, [nowValue, selectedCard, state?.field])
 
     useEffect(() => {
-        const serverNow = state?.server_now || state?.tournament?.server_now
-        if (!serverNow) return undefined
-        const anchorServer = new Date(serverNow).getTime()
-        const anchorClient = Date.now()
-        setNowValue(anchorServer)
-        if (state?.debug_state?.frozen) return undefined
+        if (!expiredFieldKey || collectingExpiredRef.current) return undefined
+        let cancelled = false
+        collectingExpiredRef.current = true
+        postTricks(tricksApi.collectExpired)
+            .then(async () => {
+                if (!cancelled) await mutate()
+            })
+            .catch((collectionError) => {
+                if (!cancelled) setMessage(collectionError.message || "期限切れカードの回収に失敗しました")
+            })
+            .finally(() => {
+                collectingExpiredRef.current = false
+            })
 
+        return () => {
+            cancelled = true
+        }
+    }, [expiredFieldKey, mutate])
+
+    useEffect(() => {
+        const serverNow = state?.server_now || state?.tournament?.server_now
+        if (!serverNow) return
+        const serverTime = new Date(serverNow).getTime()
+        if (!Number.isFinite(serverTime)) return
+
+        setNowValue((current) => {
+            const shouldReanchor = !clockInitializedRef.current
+                || state?.debug_state?.frozen
+                || Math.abs(serverTime - current) >= 5000
+            clockInitializedRef.current = true
+
+            return shouldReanchor ? serverTime : current
+        })
+    }, [state?.debug_state?.frozen, state?.server_now, state?.tournament?.server_now])
+
+    useEffect(() => {
+        if (state?.debug_state?.frozen) return undefined
         const timer = window.setInterval(() => {
-            setNowValue(anchorServer + Date.now() - anchorClient)
+            setNowValue((current) => current + 1000)
         }, 1000)
 
         return () => window.clearInterval(timer)
-    }, [state?.debug_state?.frozen, state?.server_now, state?.tournament?.server_now])
+    }, [state?.debug_state?.frozen])
 
     const stateSignature = stateContentSignature(state)
     useEffect(() => {
@@ -293,7 +331,7 @@ export default function TricksPage() {
                 >
                     ホームに戻る
                 </Link>
-                <TricksHud state={state} dimmed={Boolean(selectedCard) && !postOpen} currentUserId={userId} nowValue={nowValue} />
+                <TricksHud state={state} usersById={usersById} dimmed={Boolean(selectedCard) && !postOpen} currentUserId={userId} nowValue={nowValue} />
                 {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} />}
                 {isDebugAdmin && <TricksDebugPanel state={state} busy={busy} onOperation={runDebugOperation} />}
                 <div
@@ -324,15 +362,15 @@ export default function TricksPage() {
                             参加
                         </button>
                     )}
-                    <div style={{fontSize: 14, color: "#d8e0ef"}}>
-                        {me
-                            ? `P ${me.draw_points} / 手札 ${me.card_count} / 捨て札 ${state?.trash_count || 0}`
-                            : status === "loading"
+                    {!me && (
+                        <div style={{fontSize: 14, color: "#d8e0ef"}}>
+                            {status === "loading"
                                 ? "参加状況を確認中"
                                 : authenticated
                                     ? "未参加"
                                     : "ログインが必要です"}
-                    </div>
+                        </div>
+                    )}
                     {(message || error || isLoading) && (
                         <div style={{fontSize: 13, color: error ? "#ff8a8a" : "#ffcf6e"}}>
                             {isLoading ? "読み込み中..." : message || error?.message}

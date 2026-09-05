@@ -4,7 +4,6 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {
     cardLimitLabel,
     compareTricksFieldCards,
-    formatRemaining,
     isTricksCardLimitExpired,
     normalizeTricksState,
     orderTricksHand,
@@ -191,7 +190,6 @@ function PhaserBaseLayer({state, size}) {
         eventState: state?.tournament?.state,
         debug: state?.tournament?.debug,
         fieldEmpty: !state?.field?.length,
-        minute: Math.floor(new Date(state?.server_now || state?.tournament?.server_now || 0).getTime() / 60000),
     }), [state])
 
     useEffect(() => {
@@ -247,8 +245,6 @@ function PhaserBaseLayer({state, size}) {
                     const height = this.scale.height
                     const view = normalizeTricksState(nextState || {}, {})
                     const tournament = view.tournament || {}
-                    const serverNow = nextState?.server_now || tournament.server_now
-                    const nowValue = serverNow ? new Date(serverNow).getTime() : Date.now()
 
                     this.add.rectangle(0, 0, width, height, 0x0c1016, 1).setOrigin(0, 0)
                     this.add.rectangle(0, 0, width, HEADER_HEIGHT, 0x141b26, 0.82).setOrigin(0, 0)
@@ -263,11 +259,6 @@ function PhaserBaseLayer({state, size}) {
                         fontFamily: "Arial",
                         fontSize: "15px",
                         color: "#b7c1d8",
-                    })
-                    this.add.text(24, 96, `残り時間 ${formatRemaining(tournament.end_at, nowValue)}${tournament.debug ? " / DEBUG" : ""}`, {
-                        fontFamily: "Arial",
-                        fontSize: "14px",
-                        color: tournament.debug ? "#88f0b0" : "#ffcf6e",
                     })
 
                     if (!view.field?.length) {
@@ -332,8 +323,8 @@ function PhaserBaseLayer({state, size}) {
     )
 }
 
-// 上層FX canvasで短時間のパーティクルだけを描画する。
-function FxLayer({burst, stackFlames = []}) {
+// カードの下層FX canvasで短時間の放射光だけを描画する。
+function FxLayer({burst}) {
     const canvasRef = useRef(null)
 
     useEffect(() => {
@@ -348,43 +339,17 @@ function FxLayer({burst, stackFlames = []}) {
         if (!context) return undefined
         context.setTransform(dpr, 0, 0, dpr, 0, 0)
 
-        const particles = burst
+        const rays = burst
             ? Array.from({length: burst.count || 18}, (_, index) => {
                 const angle = (Math.PI * 2 * index) / (burst.count || 18)
                 const distance = 38 + Math.random() * 46
                 return {
-                    x: burst.x,
-                    y: burst.y,
-                    tx: burst.x + Math.cos(angle) * distance,
-                    ty: burst.y + Math.sin(angle) * distance,
-                    size: 3 + Math.random() * 4,
+                    angle,
+                    distance,
+                    width: 1.5 + Math.random() * 2.5,
                 }
             })
             : []
-        const drawStaticFlames = () => {
-            stackFlames.forEach((flame) => {
-                const flameCount = Math.min(9, Math.max(5, Number(flame.stackCount || 6)))
-                for (let index = 0; index < flameCount; index += 1) {
-                    const angle = -Math.PI * 0.88 + (Math.PI * 1.76 * index) / Math.max(flameCount - 1, 1)
-                    const radius = 27 + (index % 2) * 5
-                    context.globalAlpha = 0.46
-                    context.fillStyle = index % 2 ? "#ff593d" : "#ffdf4d"
-                    context.beginPath()
-                    context.ellipse(
-                        flame.x + Math.cos(angle) * radius,
-                        flame.y + Math.sin(angle) * radius - 7,
-                        5,
-                        11,
-                        angle,
-                        0,
-                        Math.PI * 2
-                    )
-                    context.fill()
-                }
-            })
-            context.globalAlpha = 1
-        }
-        drawStaticFlames()
         if (!burst) {
             window.__TRICKS_RENDER_METRICS__ = {
                 ...(window.__TRICKS_RENDER_METRICS__ || {}),
@@ -399,20 +364,22 @@ function FxLayer({burst, stackFlames = []}) {
         const draw = (time) => {
             const t = Math.min(1, (time - start) / FX_DURATION_MS)
             context.clearRect(0, 0, rect.width, rect.height)
-            drawStaticFlames()
-            particles.forEach((particle) => {
+            rays.forEach((ray) => {
                 const eased = 1 - Math.pow(1 - t, 3)
                 context.globalAlpha = 1 - t
-                context.fillStyle = burst.color || "#ffd447"
+                context.strokeStyle = burst.color || "#ffd447"
+                context.lineWidth = ray.width * (1 - t * 0.5)
+                context.lineCap = "round"
                 context.beginPath()
-                context.arc(
-                    particle.x + (particle.tx - particle.x) * eased,
-                    particle.y + (particle.ty - particle.y) * eased,
-                    Math.max(0.5, particle.size * (1 - t * 0.65)),
-                    0,
-                    Math.PI * 2
+                context.moveTo(
+                    burst.x + Math.cos(ray.angle) * 24,
+                    burst.y + Math.sin(ray.angle) * 24
                 )
-                context.fill()
+                context.lineTo(
+                    burst.x + Math.cos(ray.angle) * ray.distance * eased,
+                    burst.y + Math.sin(ray.angle) * ray.distance * eased
+                )
+                context.stroke()
             })
             context.globalAlpha = 1
             if (t < 1) frameId = requestAnimationFrame(draw)
@@ -436,7 +403,7 @@ function FxLayer({burst, stackFlames = []}) {
             }
             context.clearRect(0, 0, rect.width, rect.height)
         }
-    }, [burst, stackFlames])
+    }, [burst])
 
     return (
         <canvas
@@ -513,7 +480,9 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                         </span>
                         <span className="tricks-dom-card-footer">
                             <span>{cardLimitLabel(card, nowValue)}</span>
-                            <span className="tricks-dom-stack">{stackCount}</span>
+                            <span className={`tricks-dom-stack${stackCount >= 7 ? " has-gradient" : ""}`}>
+                                <span className="tricks-dom-stack-value">{stackCount}</span>
+                            </span>
                         </span>
                     </>
                 )}
@@ -609,41 +578,51 @@ function DomCardsLayer({
                 pointerEvents: "none",
             }}
         >
-            {orderedField.map((card, index) => {
-                const base = fieldLayout(index, fieldScrollY, size.width)
-                const visible = base.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
-                    && base.y <= fieldViewportBottom(size.height) + 48
-                if (!visible) return null
+            <div
+                className="tricks-field-viewport"
+                style={{
+                    position: "absolute",
+                    inset: 0,
+                    clipPath: `inset(${HEADER_HEIGHT}px 0 ${Math.max(0, size.height - fieldViewportBottom(size.height))}px 0)`,
+                    pointerEvents: "none",
+                }}
+            >
+                {orderedField.map((card, index) => {
+                    const base = fieldLayout(index, fieldScrollY, size.width)
+                    const visible = base.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
+                        && base.y <= fieldViewportBottom(size.height) + 48
+                    if (!visible) return null
 
-                return (
-                    <TricksDomCard
-                        key={card.id}
-                        card={card}
-                        type="field"
-                        layout={{
-                            ...base,
-                            zIndex: selectedFieldId === card.id ? 330 : 20 + index,
-                        }}
-                        usersById={usersById}
-                        selected={selectedFieldId === card.id}
-                        disabled={isTricksCardLimitExpired(card, nowValue) || !card.limit_at}
-                        nowValue={nowValue}
-                        onClick={() => {
-                            const side = base.x + FIELD_CARD_WIDTH / 2 > size.width / 2 ? "left" : "right"
-                            onSelectField?.({
-                                card,
-                                anchor: {
-                                    x: base.x,
-                                    y: base.y,
-                                    width: FIELD_CARD_WIDTH,
-                                    height: FIELD_CARD_HEIGHT,
-                                },
-                                side,
-                            })
-                        }}
-                    />
-                )
-            })}
+                    return (
+                        <TricksDomCard
+                            key={card.id}
+                            card={card}
+                            type="field"
+                            layout={{
+                                ...base,
+                                zIndex: selectedFieldId === card.id ? 330 : 20 + index,
+                            }}
+                            usersById={usersById}
+                            selected={selectedFieldId === card.id}
+                            disabled={!card.limit_at}
+                            nowValue={nowValue}
+                            onClick={() => {
+                                const side = base.x + FIELD_CARD_WIDTH / 2 > size.width / 2 ? "left" : "right"
+                                onSelectField?.({
+                                    card,
+                                    anchor: {
+                                        x: base.x,
+                                        y: base.y,
+                                        width: FIELD_CARD_WIDTH,
+                                        height: FIELD_CARD_HEIGHT,
+                                    },
+                                    side,
+                                })
+                            }}
+                        />
+                    )
+                })}
+            </div>
             {view.tournament?.state !== "ended" && (
                 <TricksDeck
                     layout={baseDeckLayout}
@@ -891,15 +870,17 @@ export default function TricksLayeredGame({
                 angle: 0,
             },
         })
-        setFxBurst({
+        const rarity = Number(card?.rarity || 1)
+        setFxBurst(rarity >= 3 ? {
             id,
             x: target.x + FIELD_CARD_WIDTH / 2,
             y: target.y + FIELD_CARD_HEIGHT / 2,
-            color: rarityColors[Number(card?.rarity || 1)] || "#ffd447",
+            color: rarityColors[rarity] || "#ffd447",
             count: Math.min(30, 14 + stackCount * 2),
-        })
+        } : null)
         scheduleMotionEnd(() => {
             setTakingMotion((current) => (current?.id === id ? null : current))
+            setFxBurst((current) => (current?.id === id ? null : current))
             setSelectedHand(null)
         })
     }, [fieldScrollY, interactionBusy, onTake, operation.canTake, scheduleMotionEnd, size.height, size.width, view.field.length, view.hand.length])
@@ -907,39 +888,6 @@ export default function TricksLayeredGame({
     useEffect(() => {
         onFieldSortingChange?.(false)
     }, [onFieldSortingChange])
-
-    const stackFlames = useMemo(() => {
-        const fieldById = new Map((view.field || []).map((card) => [card.id, card]))
-        const fieldFlames = fieldOrder
-            .map((id, index) => {
-                const card = fieldById.get(id)
-                const stackCount = Number(card?.stack_count || 1)
-                if (!card || stackCount < 6 || isTricksCardLimitExpired(card, nowValue)) return null
-                const layout = fieldLayout(index, fieldScrollY, size.width)
-                const visible = layout.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
-                    && layout.y <= fieldViewportBottom(size.height) + 48
-                if (!visible) return null
-
-                return {
-                    id: card.id,
-                    x: layout.x + FIELD_CARD_WIDTH - 34,
-                    y: layout.y + FIELD_CARD_HEIGHT - 38,
-                    stackCount,
-                }
-            })
-            .filter(Boolean)
-        const takingStackCount = Number(takingMotion?.card?.stack_count || view.hand.length || 1)
-        if (takingMotion && takingStackCount >= 6) {
-            fieldFlames.push({
-                id: `taking-${takingMotion.card.id}`,
-                x: takingMotion.to.x + FIELD_CARD_WIDTH - 34,
-                y: takingMotion.to.y + FIELD_CARD_HEIGHT - 38,
-                stackCount: takingStackCount,
-            })
-        }
-
-        return fieldFlames
-    }, [fieldOrder, fieldScrollY, nowValue, size.height, size.width, takingMotion, view.field, view.hand.length])
 
     return (
         <div
@@ -953,6 +901,7 @@ export default function TricksLayeredGame({
             }}
         >
             <PhaserBaseLayer state={state} size={size} />
+            <FxLayer burst={fxBurst} />
             <DomCardsLayer
                 view={view}
                 size={size}
@@ -972,7 +921,6 @@ export default function TricksLayeredGame({
                 busy={interactionBusy}
                 nowValue={nowValue}
             />
-            <FxLayer burst={fxBurst} stackFlames={stackFlames} />
             <style jsx global>{`
                 .tricks-dom-card {
                     border: 0;
@@ -1089,6 +1037,13 @@ export default function TricksLayeredGame({
                     border: 2px solid #6b7280;
                     font-size: 17px;
                 }
+                .tricks-dom-stack.has-gradient .tricks-dom-stack-value {
+                    color: transparent;
+                    background-image: linear-gradient(90deg, #ffffff 0%, #ffb347 50%, #ffffff 100%);
+                    background-clip: text;
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                }
                 .tricks-dom-card-expired {
                     position: absolute;
                     inset: 8px;
@@ -1101,10 +1056,10 @@ export default function TricksLayeredGame({
                     font-weight: 800;
                 }
                 .tricks-dom-deck {
-                    display: grid;
-                    grid-template-rows: 1fr auto auto auto auto 1fr;
+                    display: flex;
+                    flex-direction: column;
                     align-items: center;
-                    justify-items: center;
+                    padding: 16px 12px 0;
                     border-radius: 10px;
                     background: #263247;
                     border: 10px solid #101620;
@@ -1136,8 +1091,6 @@ export default function TricksLayeredGame({
                     background: linear-gradient(135deg, rgba(141, 180, 255, 0.18), rgba(255, 255, 255, 0.04));
                 }
                 .tricks-dom-deck-title {
-                    grid-row: 1;
-                    align-self: end;
                     font-size: 24px;
                     font-weight: 800;
                 }
@@ -1154,11 +1107,14 @@ export default function TricksLayeredGame({
                     font-weight: 800;
                     cursor: pointer;
                 }
+                .tricks-dom-deck button {
+                    margin-top: 4px;
+                }
                 .tricks-dom-deck-count {
                     color: #c7d2e6;
                     font-size: 15px;
                     font-weight: 800;
-                    margin-top: 12px;
+                    margin-top: 6px;
                 }
                 .tricks-dom-deck-trash {
                     color: #9aa8bd;
@@ -1167,6 +1123,7 @@ export default function TricksLayeredGame({
                 }
                 .tricks-dom-deck-reason {
                     max-width: 210px;
+                    margin-top: 2px;
                     color: #ffcf6e;
                     font-size: 11px;
                     line-height: 1.3;
