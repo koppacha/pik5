@@ -132,6 +132,9 @@ class TrickCollectionService
                 ->where('stack_parent_id', $card->id)->where('state', '_stack')
                 ->lockForUpdate()->update(['state' => '_trash']);
             $card->fill(['state' => '_collected', 'collected_at' => $now])->save();
+            $topRanking = collect($rankings)->where('rank', 1)
+                ->sortBy(fn (array $row) => sprintf('%s:%020d', $row['created_at'] ?? '', $row['post_id'] ?? 0))
+                ->first();
             LimitLog::query()->create([
                 'event' => 'collect',
                 'event_id' => $event->event_id,
@@ -142,6 +145,8 @@ class TrickCollectionService
                 'from_state' => '_field',
                 'to_state' => '_collected',
                 'records_count' => count($rankings),
+                'top_user_id' => $topRanking['user_id'] ?? null,
+                'top_score' => isset($topRanking['score']) ? (int) $topRanking['score'] : null,
                 'route' => $request?->path(),
                 'ip' => $request?->ip(),
                 'user_agent' => $request?->userAgent(),

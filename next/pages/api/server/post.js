@@ -8,6 +8,10 @@ import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import prisma from "../../../lib/prisma";
+import {tricksIdentityHeaders} from "../../../lib/tricks/proxyAuth";
+
+const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 export const config = {
     api: {
@@ -21,7 +25,19 @@ function getFieldValue(value) {
 }
 
 async function parseForm(req) {
-    const form = formidable({})
+    const form = formidable({
+        maxFields: 32,
+        maxFieldsSize: 64 * 1024,
+        maxFiles: 1,
+        maxFileSize: MAX_UPLOAD_BYTES,
+        maxTotalFileSize: MAX_UPLOAD_BYTES,
+        filter: ({mimetype}) => !mimetype || [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+        ].includes(mimetype),
+    })
     return new Promise((resolve, reject) => {
         form.parse(req, (error, fields, files) => {
             if (error) {
@@ -111,7 +127,7 @@ export default async function handler(req, res){
         }
 
         if (isEdit) {
-            const currentRecordRes = await fetch(`http://laravel:8000/api/record/id/${editUniqueId}`)
+            const currentRecordRes = await fetch(`${LARAVEL_API_BASE}/record/id/${encodeURIComponent(editUniqueId)}`)
             if (!currentRecordRes.ok) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
@@ -165,9 +181,10 @@ export default async function handler(req, res){
             'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
             'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
             'x-forwarded-host': String(req.headers.host || ''),
+            ...tricksIdentityHeaders(currentUserId, editorRole),
         }
 
-        const response = await fetch("http://laravel:8000/api/record", {
+        const response = await fetch(`${LARAVEL_API_BASE}/record`, {
             method: "POST",
             headers: proxyHeaders,
             body: formData,
@@ -183,6 +200,10 @@ export default async function handler(req, res){
         res.status(response.status).json(data)
         return
     } catch (error) {
+        if (Number(error?.httpCode) === 413 || Number(error?.code) === 1009) {
+            res.status(413).json({error: true, message: "upload too large"})
+            return
+        }
         await prismaLogging(session.user.userId, "postProxyError", String(error))
         res.status(502).json({error: true, message: "proxy error"})
         return

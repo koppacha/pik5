@@ -138,12 +138,45 @@ class TrickStateService
 
     public function logs(TrickEvent $event): array
     {
-        return LimitLog::query()->where('event_id', $event->event_id)
+        $logs = LimitLog::query()->where('event_id', $event->event_id)
             ->whereIn('event', [
                 'join', 'join_existing', 'take', 'record_posted', 'record_updated', 'record_deleted',
                 'limit_extended', 'collect', 'subsidy_paid', 'event_ended',
             ])
-            ->latest()->limit(100)->get()->reverse()->values()->all();
+            ->latest()->limit(100)->get()->reverse()->values();
+        $cards = TrickEventCard::query()->with('deck')
+            ->where('event_id', $event->event_id)
+            ->whereIn('id', $logs->pluck('event_card_id')->filter())
+            ->get()->keyBy('id');
+        $rankingsByCard = $this->records->rankingsByCards($cards);
+
+        return $logs->map(function (LimitLog $log) use ($cards, $rankingsByCard): array {
+            $payload = collect($log->toArray())->only([
+                'id', 'event', 'event_id', 'event_card_id', 'actor_name', 'card_id', 'stage_id',
+                'from_state', 'to_state', 'points_delta', 'rank_points_delta', 'draw_points_delta',
+                'remaining_draw_points', 'remaining_deck_count', 'hand_count', 'rewards', 'records_count',
+                'top_user_id', 'top_score', 'previous_limit', 'new_limit', 'created_at',
+            ])->all();
+            $card = $cards->get($log->event_card_id);
+            $context = is_array($log->context) ? $log->context : [];
+            $ranking = null;
+            if (in_array($log->event, ['record_posted', 'record_updated'], true) && $card !== null) {
+                $ranking = collect($rankingsByCard[$card->id] ?? [])->firstWhere('user_id', $log->actor_name);
+            }
+            if ($log->event === 'collect') {
+                $topRanking = collect($context['final_rankings'] ?? [])->where('rank', 1)
+                    ->sortBy(fn (array $row) => sprintf('%s:%020d', $row['created_at'] ?? '', $row['post_id'] ?? 0))
+                    ->first();
+                $payload['top_user_id'] = $topRanking['user_id'] ?? $log->top_user_id;
+            }
+            $payload['card_title'] = $card?->deck?->title;
+            $payload['rarity'] = $card?->rarity !== null ? (int) $card->rarity : null;
+            $payload['score'] = isset($context['score']) ? (int) $context['score'] : ($ranking['score'] ?? null);
+            $payload['rank'] = isset($context['rank']) ? (int) $context['rank'] : ($ranking['rank'] ?? null);
+            $payload['subsidy_slot'] = $log->event === 'subsidy_paid' ? ($context['slot'] ?? null) : null;
+
+            return $payload;
+        })->all();
     }
 
     private function normalizeCards(Collection $cards): array
@@ -201,12 +234,17 @@ class TrickStateService
         $nextTakeAt = $player->last_take_at?->copy()->addMinutes(90);
 
         return [
-            ...$player->toArray(),
+            'name' => $player->name,
+            'draw_points' => $player->draw_points,
+            'rank_points' => $player->rank_points,
+            'card_count' => $player->card_count,
+            'last_take_at' => $player->last_take_at?->toIso8601String(),
             'points' => $player->draw_points,
             'confirmed_rank_points' => $player->rank_points,
             'provisional_rank_points' => $provisionalRankPoints,
             'total_rank_points' => $player->rank_points + $provisionalRankPoints,
             'next_take_at' => $nextTakeAt?->toIso8601String(),
+            'subsidy_flag' => (bool) $player->subsidy_flag,
         ];
     }
 

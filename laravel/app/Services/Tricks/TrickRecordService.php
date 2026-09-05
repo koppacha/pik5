@@ -22,6 +22,7 @@ class TrickRecordService
         private readonly TrickClock $clock,
         private readonly TrickRuleCalculator $rules,
         private readonly TrickRankCalculator $ranks,
+        private readonly TrickRequestIdentity $identity,
     ) {
     }
 
@@ -32,6 +33,7 @@ class TrickRecordService
             return;
         }
         [$event, $card] = $context;
+        $this->authorizeSavedRecord($event, $record, $replacedRecord, $request);
         $deck = $card->relationLoaded('deck') ? $card->deck : $card->deck()->first();
         if ($deck === null || (int) $record->stage_id !== (int) $deck->stage_id) {
             abort(response()->json(['message' => '投稿ステージと大会カードが一致しません'], 422));
@@ -42,6 +44,9 @@ class TrickRecordService
         }
         if ($card->state !== '_field') {
             abort(response()->json(['message' => '回収済みまたは場札でないカードへは投稿できません'], 409));
+        }
+        if ((int) $record->rule !== 1 || (int) $record->score < 1 || (int) $record->score > 99999) {
+            abort(response()->json(['message' => '大会記録のルールまたはスコアが不正です'], 422));
         }
 
         $player = Player::query()->where('event_id', $event->event_id)
@@ -104,11 +109,21 @@ class TrickRecordService
         $this->log($event, $card, $record, $participantOrder, $pointsPaid, $extension, $rankings, $request);
     }
 
-    public function deleted(Record $record): void
+    public function deleted(Record $record, Request $request = null): void
     {
         $link = TrickEventRecord::query()->where('record_id', $record->post_id)->first();
         if ($link === null) {
             return;
+        }
+        if ($request !== null) {
+            $event = TrickEvent::query()->where('event_id', $link->event_id)->firstOrFail();
+            $userId = $this->identity->resolveForEvent($request, $event);
+            if ($userId === null) {
+                abort(response()->json(['message' => '認証が必要です'], 401));
+            }
+            if ($userId !== (string) $record->user_id && $this->identity->role($request) <= 0) {
+                abort(response()->json(['message' => '他ユーザーの記録は削除できません'], 403));
+            }
         }
         $card = TrickEventCard::query()->whereKey($link->event_card_id)->lockForUpdate()->first();
         if ($card === null) {
@@ -206,8 +221,10 @@ class TrickRecordService
         );
 
         return collect($best)->map(function ($row, $userId) use ($rankData, $paidPlayers) {
-            $data = $row->toArray();
-            unset($data['trick_event_card_id']);
+            $data = collect($row->toArray())->only([
+                'post_id', 'unique_id', 'user_id', 'user_name', 'score', 'stage_id', 'rule', 'console',
+                'difficulty', 'region', 'post_comment', 'img_url', 'video_url', 'flg', 'team', 'created_at',
+            ])->all();
             $data['user_id'] = $userId;
             $data['user_name'] = $data['user_name'] ?: $userId;
             $data['score'] = (int) $data['score'];
@@ -218,6 +235,29 @@ class TrickRecordService
 
             return $data;
         })->sortBy('rank')->values()->all();
+    }
+
+    private function authorizeSavedRecord(
+        TrickEvent $event,
+        Record $record,
+        ?Record $replacedRecord,
+        ?Request $request,
+    ): void {
+        if ($request === null) {
+            return;
+        }
+        $userId = $this->identity->resolveForEvent($request, $event);
+        if ($userId === null) {
+            abort(response()->json(['message' => '認証が必要です'], 401));
+        }
+        if ($userId !== (string) $record->user_id) {
+            abort(response()->json(['message' => '投稿者と認証ユーザーが一致しません'], 403));
+        }
+        if ($replacedRecord !== null
+            && $userId !== (string) $replacedRecord->user_id
+            && $this->identity->role($request) <= 0) {
+            abort(response()->json(['message' => '他ユーザーの記録は編集できません'], 403));
+        }
     }
 
     /** @return array{0: TrickEvent, 1: TrickEventCard}|null */
@@ -274,6 +314,7 @@ class TrickRecordService
         array $rankings,
         ?Request $request,
     ): void {
+        $actorRanking = collect($rankings)->firstWhere('user_id', $record->user_id);
         LimitLog::query()->create([
             'event' => $participantOrder === null ? 'record_updated' : 'record_posted',
             'event_id' => $event->event_id,
@@ -295,6 +336,8 @@ class TrickRecordService
                 'record_id' => $record->post_id,
                 'participant_order' => $participantOrder,
                 'extension_minutes' => $extension,
+                'score' => (int) $record->score,
+                'rank' => isset($actorRanking['rank']) ? (int) $actorRanking['rank'] : null,
             ],
         ]);
     }

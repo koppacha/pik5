@@ -46,8 +46,12 @@ test.describe("limited tricks phase 6", () => {
             }
             await Promise.all(pages.map((page) => page.goto("/limited/tricks")))
             await Promise.all(pages.map((page) => expect(page.locator("canvas")).toBeVisible()))
-            await expect(pages[0].getByText("P 20 / 手札 3 / 捨て札 0", {exact: true})).toBeVisible()
-            await expect(pages[1].getByText("P 20 / 手札 0 / 捨て札 0", {exact: true})).toBeVisible()
+            await expect(pages[0].getByText("P 20 / 手札 3", {exact: true})).toBeVisible()
+            await expect(pages[1].getByText("P 20 / 手札 0", {exact: true})).toBeVisible()
+            await expect(pages[0].getByText("P 20 / 手札 3 / 捨て札 0", {exact: true})).toHaveCount(0)
+            await expect(pages[0].locator("[data-tricks-tournament-info]")).toBeVisible()
+            await expect(pages[0].locator("[data-tricks-header-scroll] > div:last-child > *").first())
+                .toHaveAttribute("data-tricks-tournament-info", "true")
             expect(await pages[0].locator("canvas").count()).toBe(1)
             expect(await pages[1].locator("canvas").count()).toBe(1)
         } finally {
@@ -72,6 +76,33 @@ test.describe("limited tricks phase 6", () => {
             expect(advanced.collected).toBeGreaterThanOrEqual(1)
             const after = await fixture.get(fixture.players[0], "/api/server/tricks/state")
             expect(after.field).toHaveLength(0)
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("field cards stay clipped below the header in a compact viewport", async ({page, request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        await page.setViewportSize({width: 800, height: 720})
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            const state = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            await fixture.post(fixture.players[0], `/api/server/tricks/cards/${state.hand[0].id}/take`)
+            await page.goto("/limited/tricks")
+
+            const card = page.locator(".tricks-dom-card-field")
+            await expect(card).toBeVisible()
+            await page.mouse.move(300, 300)
+            await page.mouse.wheel(0, 1000)
+            await expect(page.getByRole("link", {name: "ホームに戻る"})).toBeVisible()
+            const fieldCardInHeader = await page.evaluate(() => {
+                return Boolean(document.elementFromPoint(30, 110)?.closest(".tricks-dom-card-field"))
+            })
+            expect(fieldCardInHeader).toBe(false)
         } finally {
             await fixture.cleanup()
         }

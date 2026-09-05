@@ -231,14 +231,31 @@ export const authOptions = {
                 }
             }
 
-            // useSession().update() などで session 更新が走った場合に token も追随させる
-            if(trigger === 'update' && session){
-                // update() の payload 形状が揺れるので両対応
-                const s = session.user ?? session
-
-                if(typeof s.name === 'string') token.name = s.name
-                if(typeof s.role === 'string') token.role = s.role
-                if(typeof s.userId === 'string') token.userId = s.userId
+            // update() の payload はクライアント制御のため、認可属性には使わない
+            if(trigger === 'update'){
+                try {
+                    let dbUser = null
+                    if(token.id && token.id !== token.userId){
+                        dbUser = await prisma.user.findUnique({
+                            where: {id: token.id},
+                            select: {id: true, userId: true, name: true, role: true},
+                        })
+                    }
+                    if(!dbUser && token.userId){
+                        dbUser = await prisma.user.findFirst({
+                            where: {userId: token.userId},
+                            select: {id: true, userId: true, name: true, role: true},
+                        })
+                    }
+                    if(dbUser){
+                        token.id = dbUser.id
+                        token.userId = dbUser.userId
+                        token.name = dbUser.name
+                        token.role = dbUser.role
+                    }
+                } catch (e) {
+                    // DB再取得失敗時も、攻撃者が渡した update payload は採用しない
+                }
             }
 
             return token

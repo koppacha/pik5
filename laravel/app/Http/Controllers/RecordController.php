@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class RecordController extends Controller
 {
@@ -29,7 +30,7 @@ class RecordController extends Controller
      */
     public function index(): JsonResponse
     {
-        $data = Record::all();
+        $data = Record::select(config('const.selected'))->get();
 
         return response()->json(
             $data
@@ -209,6 +210,15 @@ class RecordController extends Controller
      */
     public function create(Request $request, TrickRecordService $trickRecords): JsonResponse
     {
+        $request->validate([
+            'score' => ['required', 'integer', 'min:1', 'max:99999'],
+            'rule' => ['required', 'integer', 'min:1'],
+            'console' => ['required', 'integer', 'min:1'],
+            'post_comment' => ['nullable', 'string', 'max:128'],
+            'video_url' => ['nullable', 'string', 'max:128'],
+            'user_agent' => ['nullable', 'string', 'max:512'],
+            'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+        ]);
         $isEdit = ($request['mode'] === 'edit') && ! empty($request['edit_unique_id']);
         $editUniqueId = (int) ($request['edit_unique_id'] ?: 0);
         $score = (int) ($request['score'] ?: 0);
@@ -221,6 +231,7 @@ class RecordController extends Controller
 
         // 受信した画像の処理
         $fileName = '';
+        $uploadedFileName = '';
         $img = $request->file('file');
         if ($img) {
             try {
@@ -231,8 +242,11 @@ class RecordController extends Controller
                 if (! $path) {
                     return response()->json('画像の保存に失敗しました。');
                 }
+                $uploadedFileName = $fileName;
             } catch (Exception $e) {
-                return response()->json('error:'.$e);
+                Log::warning('RecordController.image.failed', ['exception' => $e::class]);
+
+                return response()->json(['message' => '画像の保存に失敗しました'], 422);
             }
         }
 
@@ -362,8 +376,14 @@ class RecordController extends Controller
                 $trickRecords->saved($posts, $current, $request);
             });
         } catch (HttpResponseException $e) {
+            if ($uploadedFileName !== '') {
+                Storage::disk('public')->delete('img/'.$uploadedFileName);
+            }
             throw $e;
         } catch (\Throwable $e) {
+            if ($uploadedFileName !== '') {
+                Storage::disk('public')->delete('img/'.$uploadedFileName);
+            }
             Log::error('RecordController.create.failed', ['error' => $e->getMessage()]);
 
             return response()->json(['message' => '記録の保存に失敗しました'], 500);
@@ -557,7 +577,7 @@ class RecordController extends Controller
         $unique_id = $request['id'];
         $editorRole = (int) ($request['editor_role'] ?: 0);
 
-        $result = DB::transaction(function () use ($unique_id, $editorRole, $trickRecords) {
+        $result = DB::transaction(function () use ($request, $unique_id, $editorRole, $trickRecords) {
             $target = Record::where('unique_id', $unique_id)
                 ->where('flg', '<', 2)
                 ->orderBy('post_id', 'DESC')
@@ -573,7 +593,7 @@ class RecordController extends Controller
 
             $target->flg = 2;
             $target->save();
-            $trickRecords->deleted($target);
+            $trickRecords->deleted($target, $request);
 
             return 'deleted';
         });

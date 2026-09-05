@@ -6,6 +6,7 @@ export const tricksApi = {
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
     scores: (deckId) => `/api/server/tricks/cards/${deckId}/scores`,
     debugCollect: (deckId) => `/api/server/tricks/cards/${deckId}/debug-collect`,
+    collectExpired: "/api/server/tricks/maintenance/collect-expired",
     debugTimeFreeze: "/api/server/tricks/debug/time/freeze",
     debugTimeSet: "/api/server/tricks/debug/time/set",
     debugTimeAdvance: "/api/server/tricks/debug/time/advance",
@@ -56,6 +57,35 @@ export const formatRemaining = (endAt, nowValue = Date.now()) => {
     return [hours, minutes, seconds]
         .map((v) => String(v).padStart(2, "0"))
         .join(":")
+}
+// 大会終了までの残り時間を、1時間を境に時分または分秒で返す。
+export const formatTournamentRemaining = (endAt, nowValue = Date.now()) => {
+    if (!endAt) return "--時間--分"
+    const diff = Math.max(0, new Date(endAt).getTime() - nowValue)
+
+    if (diff >= 60 * 60 * 1000) {
+        const totalMinutes = Math.floor(diff / 60000)
+        const hours = Math.floor(totalMinutes / 60)
+        const minutes = totalMinutes % 60
+
+        return `${String(hours).padStart(2, "0")}時間${String(minutes).padStart(2, "0")}分`
+    }
+
+    const totalSeconds = Math.floor(diff / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${String(minutes).padStart(2, "0")}分${String(seconds).padStart(2, "0")}秒`
+}
+// JSTの毎時00分・30分に訪れる次回ポイント給付までをmm:ssで返す。
+export const formatNextSubsidyRemaining = (nowValue = Date.now()) => {
+    const slotMs = 30 * 60 * 1000
+    const nextSlot = Math.floor(nowValue / slotMs) * slotMs + slotMs
+    const totalSeconds = Math.max(0, Math.floor((nextSlot - nowValue) / 1000))
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
 // 場札のリミット時刻が現在時刻を過ぎているかを判定する。
 export const isTricksCardLimitExpired = (card, nowValue = Date.now()) => {
@@ -190,11 +220,12 @@ export const orderTricksField = (field = [], nowValue = Date.now()) => {
 export const normalizeTricksState = (state, options = {}) => {
     const nowValue = options.nowValue || Date.now()
     const orderedHand = orderTricksHand(state?.hand || [], options.handOrder || [])
+    const activeField = (state?.field || []).filter((card) => !isTricksCardLimitExpired(card, nowValue))
 
     return {
         tournament: state?.tournament || {},
         players: state?.players || [],
-        field: orderTricksField(state?.field || [], nowValue),
+        field: orderTricksField(activeField, nowValue),
         hand: orderedHand.hand,
         handOrder: orderedHand.order,
         deckCount: state?.deck_count ?? 0,
@@ -209,7 +240,7 @@ export const tricksOperationState = (state, options = {}) => {
     const nowValue = Number(options.nowValue || Date.now())
     const tournament = state?.tournament || {}
     const me = state?.me
-    const fieldCount = state?.field?.length || 0
+    const fieldCount = (state?.field || []).filter((card) => !isTricksCardLimitExpired(card, nowValue)).length
     const handCount = state?.hand?.length || 0
     const playerCount = state?.players?.length || 0
     const requiredHand = 3 + fieldCount

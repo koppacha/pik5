@@ -15,11 +15,7 @@ class TrickDummyDeckSeeder extends Seeder
         $now = Carbon::now()->toDateTimeString();
 
         $query = DB::table('decks');
-        if (Schema::hasColumn('decks', 'event_id')) {
-            $query->where('event_id', $eventId);
-        } else {
-            $query->where('eventId', $eventId);
-        }
+        $query->where('eventId', $eventId);
         $query->where('creator', 'codex_dummy')->delete();
 
         $rows = [];

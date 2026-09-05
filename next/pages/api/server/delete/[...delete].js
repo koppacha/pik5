@@ -4,6 +4,9 @@ import {authOptions} from "../../auth/[...nextauth]"
 import {prismaLogging} from "../[...query]"
 import {ensureServerApiAccess} from "../../../../lib/serverApiAccess"
 import prisma from "../../../../lib/prisma"
+import {tricksIdentityHeaders} from "../../../../lib/tricks/proxyAuth"
+
+const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
 
 function canDeleteRecord(sessionUserId, role, createdAt, ownerUserId) {
     if (Number(role) === 10) return true
@@ -41,7 +44,7 @@ export default async function handler(req, res){
             })
             role = Number(user?.role || 0)
         }
-        const recordRes = await fetch(`http://laravel:8000/api/record/id/${encodeURIComponent(uniqueId)}`)
+        const recordRes = await fetch(`${LARAVEL_API_BASE}/record/id/${encodeURIComponent(uniqueId)}`)
         const record = await recordRes.json().catch(() => ({}))
         if (!recordRes.ok || !record?.unique_id || Number(record.flg) > 1) {
             res.status(404).json({error: true, message: "record not found"})
@@ -54,8 +57,10 @@ export default async function handler(req, res){
         await prismaLogging(currentUserId, "delete", uniqueId)
 
         const params = new URLSearchParams({user_id: currentUserId, editor_role: String(role)})
-        const del = await fetch(`http://laravel:8000/api/record/${encodeURIComponent(uniqueId)}?${params}`,
-            {method: "DELETE"})
+        const del = await fetch(`${LARAVEL_API_BASE}/record/${encodeURIComponent(uniqueId)}?${params}`, {
+            method: "DELETE",
+            headers: tricksIdentityHeaders(currentUserId, role),
+        })
 
         const data = await del.json()
         res.status(del.status).json({data})

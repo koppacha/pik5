@@ -3,6 +3,7 @@
 namespace Tests\Feature\Tricks;
 
 use App\Models\Deck;
+use App\Models\LimitLog;
 use App\Models\Player;
 use App\Models\Record;
 use App\Models\TrickCardPayment;
@@ -18,6 +19,23 @@ use Tests\TestCase;
 class TrickPhaseThreeTest extends TestCase
 {
     use DatabaseTransactions;
+
+    private string $testSecret;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->testSecret = bin2hex(random_bytes(32));
+        putenv('TRICKS_EVENT_ID=990101');
+        putenv('TRICKS_INTERNAL_SECRET='.$this->testSecret);
+    }
+
+    protected function tearDown(): void
+    {
+        putenv('TRICKS_EVENT_ID');
+        putenv('TRICKS_INTERNAL_SECRET');
+        parent::tearDown();
+    }
 
     public function test_initial_posts_charge_extend_rank_and_update_provisional_points(): void
     {
@@ -99,11 +117,15 @@ class TrickPhaseThreeTest extends TestCase
     {
         [$event, $card] = $this->fixture();
         $payload = $this->recordPayload($card, 'mallory', 101);
-        $this->postJson('/api/record', $payload)->assertStatus(403);
+        $this->postJson('/api/record', $payload)->assertStatus(401);
         self::assertFalse(Record::query()->where('user_id', 'mallory')
             ->where('stage_id', $card->deck->stage_id)->exists());
 
-        $this->postJson('/api/record', $this->recordPayload($card, 'alice', 102))
+        $this->withHeaders($this->signedHeaders('alice'))
+            ->postJson('/api/record', $this->recordPayload($card, 'bob', 102))
+            ->assertStatus(403);
+        $this->withHeaders($this->signedHeaders('alice'))
+            ->postJson('/api/record', $this->recordPayload($card, 'alice', 102))
             ->assertOk()->assertExactJson(['OK', 200]);
         $saved = Record::query()->where('user_id', 'alice')
             ->where('stage_id', $card->deck->stage_id)->firstOrFail();
@@ -115,14 +137,16 @@ class TrickPhaseThreeTest extends TestCase
         $invalidEdit['mode'] = 'edit';
         $invalidEdit['edit_unique_id'] = $saved->unique_id;
         $invalidEdit['stage_id'] = $card->deck->stage_id + 1;
-        $this->postJson('/api/record', $invalidEdit)->assertStatus(422);
+        $this->withHeaders($this->signedHeaders('alice'))
+            ->postJson('/api/record', $invalidEdit)->assertStatus(422);
         self::assertSame('0', (string) $saved->fresh()->flg);
         self::assertSame(1, Record::query()->where('user_id', 'alice')->where('flg', '<', 2)->count());
 
         $saved->forceFill(['created_at' => now()->subHours(25)])->save();
         $this->deleteJson('/api/record/'.$saved->unique_id, ['editor_role' => 0])->assertStatus(500);
         self::assertSame('0', (string) $saved->fresh()->flg);
-        $this->deleteJson('/api/record/'.$saved->unique_id, ['editor_role' => 10])
+        $this->withHeaders($this->signedHeaders('admin', 10))
+            ->deleteJson('/api/record/'.$saved->unique_id, ['editor_role' => 10])
             ->assertOk()->assertExactJson(['deleted']);
         self::assertSame('2', (string) $saved->fresh()->flg);
         self::assertSame(0, $card->fresh()->post_count);
@@ -154,6 +178,54 @@ class TrickPhaseThreeTest extends TestCase
         self::assertTrue(Record::query()->where('user_id', 'outsider')->where('stage_id', 7199)->exists());
         self::assertSame(0, TrickEventRecord::query()->whereHas('record', fn ($query) => $query
             ->where('user_id', 'outsider'))->count());
+    }
+
+    public function test_public_payloads_exclude_private_and_audit_fields(): void
+    {
+        [$event, $card] = $this->fixture();
+        app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
+        $log = LimitLog::query()->create([
+            'event' => 'take',
+            'event_id' => $event->event_id,
+            'event_card_id' => $card->id,
+            'actor_name' => 'alice',
+            'card_id' => $card->deck_id,
+            'stacked_card_ids' => [111, 222],
+            'card_snapshot' => ['hidden' => true],
+            'player_snapshot' => ['hidden' => true],
+            'context' => ['hidden' => true],
+            'ip' => '192.0.2.1',
+            'user_agent' => 'private-agent',
+            'route' => 'private-route',
+            'request_id' => 'private-request',
+        ]);
+
+        $publicLog = collect(app(TrickStateService::class)->logs($event))
+            ->firstWhere('id', $log->id);
+        self::assertNotNull($publicLog);
+        foreach (['stacked_card_ids', 'card_snapshot', 'player_snapshot', 'context', 'ip', 'user_agent', 'route', 'request_id'] as $key) {
+            self::assertArrayNotHasKey($key, $publicLog);
+        }
+        self::assertSame('Phase 3 card', $publicLog['card_title']);
+
+        $recordLog = collect(app(TrickStateService::class)->logs($event))->firstWhere('event', 'record_posted');
+        self::assertNotNull($recordLog);
+        self::assertSame('Phase 3 card', $recordLog['card_title']);
+        self::assertSame(100, $recordLog['score']);
+        self::assertSame(1, $recordLog['rank']);
+
+        $ranking = app(TrickRecordService::class)->rankings($card)[0];
+        foreach (['user_ip', 'user_host', 'user_agent', 'post_memo'] as $key) {
+            self::assertArrayNotHasKey($key, $ranking);
+        }
+
+        $snapshot = app(TrickStateService::class)->snapshot($event, null);
+        self::assertSame([], $snapshot['hand']);
+        self::assertArrayHasKey('subsidy_flag', $snapshot['players'][0]);
+        self::assertIsBool($snapshot['players'][0]['subsidy_flag']);
+        foreach (['subsidy_flag_slot_at', 'last_subsidy_paid_slot_at', 'created_at', 'updated_at'] as $key) {
+            self::assertArrayNotHasKey($key, $snapshot['players'][0]);
+        }
     }
 
     /** @return array{0: TrickEvent, 1: TrickEventCard} */
@@ -253,6 +325,25 @@ class TrickPhaseThreeTest extends TestCase
             'user_agent' => 'phpunit',
             'video_url' => '',
             'mode' => 'create',
+        ];
+    }
+
+    private function signedHeaders(string $userId, int $role = 0): array
+    {
+        $timestamp = (string) time();
+        $roleValue = (string) $role;
+
+        return [
+            'x-tricks-user' => $userId,
+            'x-tricks-role' => $roleValue,
+            'x-tricks-identity-kind' => 'session',
+            'x-tricks-test-event' => '',
+            'x-tricks-timestamp' => $timestamp,
+            'x-tricks-signature' => hash_hmac(
+                'sha256',
+                $timestamp."\n".$userId."\n".$roleValue."\nsession\n",
+                $this->testSecret,
+            ),
         ];
     }
 }

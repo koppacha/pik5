@@ -1,19 +1,57 @@
 import {useEffect, useMemo, useRef, useState} from "react"
 import {
     buildTricksShakerSortSteps,
+    formatNextSubsidyRemaining,
+    formatTournamentRemaining,
     shortenTricksText,
     syncTricksOrder,
     targetTricksPlayerOrder,
+    tricksOperationState,
 } from "../../lib/tricks"
 
-function logText(log) {
-    if (typeof log === "string") return log
-    return log?.message || log?.text || log?.event || JSON.stringify(log)
+const visibleLogEvents = new Set(["join", "take", "record_posted", "record_updated", "subsidy_paid", "collect"])
+
+function displayName(usersById, userId, fallback = "-") {
+    if (!userId) return fallback
+    return usersById[userId]?.name || userId
 }
 
-export default function TricksHud({state, dimmed = false, currentUserId = "", nowValue = Date.now()}) {
+function logTimestamp(value) {
+    const date = new Date(value)
+    if (!Number.isFinite(date.getTime())) return "--:--:--"
+
+    return new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23",
+    }).format(date)
+}
+
+function logText(log, usersById) {
+    if (typeof log === "string") return `--:--:-- - ${log}`
+    const user = displayName(usersById, log?.actor_name)
+    const topUser = displayName(usersById, log?.top_user_id, "ホルダーなし")
+    const cardTitle = log?.card_title || `カード#${log?.card_id || "-"}`
+    const rarity = Math.max(1, Number(log?.rarity || 1))
+    let text = log?.message || log?.text || log?.event || "イベントが発生しました。"
+
+    if (log?.event === "join") text = `${user}さんが参加しました。`
+    if (log?.event === "take") text = `${user}さんが★${rarity} ${cardTitle}をテイクしました。`
+    if (log?.event === "record_posted" || log?.event === "record_updated") {
+        text = `${user}さんが${cardTitle}に投稿しました。（${log?.score ?? "-"}点 / ${log?.rank ?? "-"}位）`
+    }
+    if (log?.event === "subsidy_paid") text = "ポイントが給付されました。"
+    if (log?.event === "collect") text = `${cardTitle}が${topUser}に回収され、ポイントが還元されました。`
+
+    return `${logTimestamp(log?.created_at)} - ${text}`
+}
+
+export default function TricksHud({state, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now()}) {
     const players = useMemo(() => state?.players || [], [state?.players])
-    const logs = state?.logs || []
+    const logs = useMemo(() => state?.logs || [], [state?.logs])
+    const [clockReady, setClockReady] = useState(false)
     const [playerOrder, setPlayerOrder] = useState([])
     const sortTimerRef = useRef(null)
     const playersByName = useMemo(() => {
@@ -25,6 +63,55 @@ export default function TricksHud({state, dimmed = false, currentUserId = "", no
     const orderedPlayers = playerOrder
         .map((name) => playersByName[name])
         .filter(Boolean)
+    const operation = useMemo(() => tricksOperationState(state, {nowValue}), [nowValue, state])
+    const remaining = formatTournamentRemaining(state?.tournament?.end_at, nowValue)
+    const nextSubsidyRemaining = clockReady ? formatNextSubsidyRemaining(nowValue) : "--:--"
+    const visibleLogs = useMemo(() => {
+        const subsidySlots = new Set()
+
+        return logs.filter((log) => {
+            if (typeof log !== "string" && !visibleLogEvents.has(log?.event)) return false
+            if (log?.event !== "subsidy_paid") return true
+            const slot = String(log?.subsidy_slot || log?.created_at || "").slice(0, 19)
+            if (subsidySlots.has(slot)) return false
+            subsidySlots.add(slot)
+            return true
+        })
+    }, [logs])
+    const infoCard = (
+        <div
+            data-tricks-tournament-info
+            style={{
+                minWidth: 156,
+                padding: "7px 10px",
+                borderRadius: 10,
+                border: "1px solid rgba(148, 163, 184, 0.25)",
+                background: "rgba(148, 163, 184, 0.09)",
+                color: "#9aa8bd",
+            }}
+        >
+            <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
+                <span>大会情報</span>
+                {(state?.tournament?.debug || state?.tournament?.test_mode) && <span style={{color: "#88f0b0"}}>DEBUG</span>}
+            </div>
+            <div style={{fontSize: 13, fontWeight: 500, marginTop: 3}}>
+                場札上限 {operation.fieldCap}枚
+            </div>
+            <div style={{fontSize: 11, marginTop: 2, opacity: 0.78}}>
+                テイク必要 {operation.requiredHand}枚
+            </div>
+            <div data-tricks-tournament-remaining style={{fontSize: 11, marginTop: 2, color: "#ffcf6e"}}>
+                残り {remaining}
+            </div>
+            <div data-tricks-subsidy-remaining style={{fontSize: 11, marginTop: 2, color: "#e6edf8"}}>
+                次回給付 {nextSubsidyRemaining}
+            </div>
+        </div>
+    )
+
+    useEffect(() => {
+        setClockReady(true)
+    }, [])
 
     useEffect(() => {
         setPlayerOrder((currentOrder) => {
@@ -98,18 +185,20 @@ export default function TricksHud({state, dimmed = false, currentUserId = "", no
                         lineHeight: 1.45,
                     }}
                 >
-                    {logs.length === 0 && (
+                    {visibleLogs.length === 0 && (
                         <div style={{color: "#718096"}}>ログはまだありません</div>
                     )}
-                    {logs.slice(0, 100).map((log, index) => (
+                    {visibleLogs.slice(0, 100).map((log, index) => (
                         <div
-                            key={log?.id || `${index}-${logText(log)}`}
+                            key={log?.id || `${index}-${logText(log, usersById)}`}
                             style={{
                                 padding: "3px 0",
-                                borderBottom: index < logs.length - 1 ? "1px solid rgba(154, 168, 189, 0.12)" : "none",
+                                borderBottom: index < visibleLogs.length - 1 ? "1px solid rgba(154, 168, 189, 0.12)" : "none",
+                                whiteSpace: "normal",
+                                overflowWrap: "anywhere",
                             }}
                         >
-                            {shortenTricksText(logText(log), 72)}
+                            {logText(log, usersById)}
                         </div>
                     ))}
                 </div>
@@ -124,12 +213,19 @@ export default function TricksHud({state, dimmed = false, currentUserId = "", no
                     color: "#e6edf8",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
+                    overflow: "hidden",
                 }}
             >
                 <div
+                    data-tricks-header-scroll
                     style={{
+                        width: "100%",
+                        maxWidth: "100%",
+                        boxSizing: "border-box",
                         overflowX: "auto",
                         overflowY: "hidden",
+                        overscrollBehaviorX: "contain",
+                        WebkitOverflowScrolling: "touch",
                         padding: "8px 0 0",
                         whiteSpace: "nowrap",
                     }}
@@ -138,12 +234,15 @@ export default function TricksHud({state, dimmed = false, currentUserId = "", no
                         <div style={{padding: "6px 0", color: "#718096", fontSize: 12}}>参加者はまだいません</div>
                     )}
                     <div style={{display: "flex", gap: 8, minWidth: "max-content"}}>
+                        {infoCard}
                         {orderedPlayers.map((player, index) => {
                             const isMe = currentUserId && player.name === currentUserId
+                            const screenName = usersById[player.name]?.name || player.name
 
                             return (
                                 <div
                                     key={player.name || index}
+                                    data-tricks-player={player.name}
                                     style={{
                                         minWidth: 132,
                                         padding: "7px 10px",
@@ -155,26 +254,32 @@ export default function TricksHud({state, dimmed = false, currentUserId = "", no
                                         transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
                                     }}
                                 >
-                                    <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
-                                        <span>#{index + 1}</span>
-                                        <span>R {player.total_rank_points ?? player.rank_points ?? 0}</span>
-                                    </div>
-                                    <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
-                                        {shortenTricksText(player.name, 14)}
-                                    </div>
-                                    <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                        確定 {player.confirmed_rank_points ?? player.rank_points ?? 0}
-                                        {" / "}
-                                        暫定 {player.provisional_rank_points ?? 0}
-                                    </div>
-                                    <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                        P {player.draw_points} / 手札 {player.card_count}
-                                    </div>
-                                    {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
-                                        <div style={{fontSize: 10, marginTop: 2, color: "#ffcf6e"}}>
-                                            次回テイク {new Date(player.next_take_at).toLocaleTimeString("ja-JP")}
+                                        <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
+                                            <span>#{index + 1}</span>
+                                            <span>R {player.total_rank_points ?? player.rank_points ?? 0}</span>
                                         </div>
-                                    )}
+                                        <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
+                                            {shortenTricksText(screenName, 14)}
+                                        </div>
+                                        <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
+                                            確定 {player.confirmed_rank_points ?? player.rank_points ?? 0}
+                                            {" / "}
+                                            暫定 {player.provisional_rank_points ?? 0}
+                                        </div>
+                                        <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
+                                            <span
+                                                data-tricks-subsidy-flag={player.subsidy_flag ? "active" : "inactive"}
+                                                style={{color: player.subsidy_flag ? "#d84b8c" : "inherit"}}
+                                            >
+                                                P{player.subsidy_flag ? "'" : ""} {player.draw_points}
+                                            </span>
+                                            <span> / 手札 {player.card_count}</span>
+                                        </div>
+                                        {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
+                                            <div style={{fontSize: 10, marginTop: 2, color: "#ffcf6e"}}>
+                                                次回テイク {new Date(player.next_take_at).toLocaleTimeString("ja-JP")}
+                                            </div>
+                                        )}
                                 </div>
                             )
                         })}
