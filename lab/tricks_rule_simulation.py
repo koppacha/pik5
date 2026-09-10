@@ -15,7 +15,9 @@ import argparse
 import heapq
 import json
 import math
+import os
 import random
+import statistics
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -31,11 +33,21 @@ FIELD_LIMIT = 16
 TAKE_CLOSE_BEFORE_END = timedelta(hours=1)
 INITIAL_LIMIT = timedelta(minutes=90)
 TAKE_COOLDOWN = timedelta(minutes=90)
+ALL_FIELD_FIRST_POLICIES = {"all_field_first", "all_field_first_endgame_free"}
+ENDGAME_FREE_POLICIES = {"endgame_free", "all_field_first_endgame_free"}
+POST_CREDIT_POLICIES = {"post_credit"}
+TAKE_COOLDOWN_POLICIES = {
+    "baseline",
+    *ALL_FIELD_FIRST_POLICIES,
+    *ENDGAME_FREE_POLICIES,
+    *POST_CREDIT_POLICIES,
+}
+ENDGAME_FREE_BEFORE_END = timedelta(minutes=150)
+POST_COOLDOWN_CREDIT_MINUTES = 15
 EXTENSION_START_MINUTES = 60
 EXTENSION_STEP_MINUTES = 5
 EXTENSION_FLOOR_MINUTES = 5
 SUBSIDY_INTERVAL = timedelta(minutes=30)
-SUBSIDY_THRESHOLD = 5
 RARITY_BOOST_PEAK_HOUR = 46
 RARITY_INITIAL_RATE = 10.0
 RARITY_PEAK_RATE = 100.0
@@ -55,6 +67,8 @@ MAX_ZERO_TIME_ACTIONS = 512
 PRACTICE_DIMINISHING_SCALE = 60.0
 UPDATE_ATTEMPT_INCREMENT = 5
 UPDATE_GAP_MULTIPLIER = 0.35
+RETURN_TO_DECK_COST = 1
+RETURN_SUBSIDY_FLAG_THRESHOLD = 4
 FORECAST_POST_PARTICIPATION = {
     "正統派": 0.68,
     "投稿優先派": 0.92,
@@ -97,6 +111,7 @@ class Card:
     taker: str | None = None
     stack_count: int = 0
     stack_ids: list[int] = field(default_factory=list)
+    late_first_extension: bool = False
     paid_points_total: int = 0
     taken_at: datetime | None = None
     drawn_at: datetime | None = None
@@ -111,6 +126,10 @@ class Card:
     posted_players: set[str] = field(default_factory=set)
     paid_players: set[str] = field(default_factory=set)
     reward_log: list[dict[str, Any]] = field(default_factory=list)
+    draw_history: list[str] = field(default_factory=list)
+    return_history: list[str] = field(default_factory=list)
+    practiced_before_return: bool = False
+    pending_returned_by: str | None = None
 
 
 @dataclass
@@ -136,6 +155,11 @@ class Player:
     busy_until: datetime | None = None
     last_take_at: datetime | None = None
     take_times: list[datetime] = field(default_factory=list)
+    cooldown_credit_minutes: int = 0
+    cooldown_released_take_at: datetime | None = None
+    relaxed_take_times: list[datetime] = field(default_factory=list)
+    take_stack_counts: list[int] = field(default_factory=list)
+    take_costs: list[int] = field(default_factory=list)
 
     def is_active(self, at: datetime) -> bool:
         if not self.joined:
@@ -183,10 +207,32 @@ class EventQueue:
 
 
 class Simulation:
-    def __init__(self, seed: int, output_dir: Path) -> None:
+    def __init__(
+        self,
+        seed: int,
+        output_dir: Path,
+        return_to_deck_enabled: bool = True,
+        write_outputs: bool = True,
+        return_subsidy_enabled: bool = True,
+        take_cooldown_policy: str = "all_field_first_endgame_free",
+        take_cost_mode: str = "field",
+        take_level_up_every: int = 2,
+    ) -> None:
+        if take_cooldown_policy not in TAKE_COOLDOWN_POLICIES:
+            raise ValueError(f"unknown take cooldown policy: {take_cooldown_policy}")
+        if take_cost_mode not in {"field", "level_linear"}:
+            raise ValueError(f"unknown take cost mode: {take_cost_mode}")
+        if take_level_up_every < 1:
+            raise ValueError("take level-up interval must be at least 1")
         self.rng = random.Random(seed)
         self.skill_rng = random.Random(seed ^ 0x5A17)
         self.seed = seed
+        self.return_to_deck_enabled = return_to_deck_enabled
+        self.write_outputs = write_outputs
+        self.return_subsidy_enabled = return_subsidy_enabled
+        self.take_cooldown_policy = take_cooldown_policy
+        self.take_cost_mode = take_cost_mode
+        self.take_level_up_every = take_level_up_every
         self.start_at = datetime(2026, 1, 1, 0, 0, tzinfo=JST)
         self.end_at = self.start_at + timedelta(hours=EVENT_HOURS)
         self.now = self.start_at
@@ -209,11 +255,31 @@ class Simulation:
         self.collections = 0
         self.subsidy_payments = 0
         self.rarity_draw_counts = {rarity: 0 for rarity in range(1, 6)}
+        self.return_to_deck_count = 0
+        self.returned_card_redraw_count = 0
+        self.returned_card_other_player_redraw_count = 0
+        self.practiced_return_count = 0
+        self.return_subsidy_flag_count = 0
+        self.cooldown_release_count = 0
+        self.cooldown_post_credit_events = 0
+        self.cooldown_post_credit_minutes = 0
+        self.endgame_free_take_count = 0
+        self.endgame_cooldown_blocked_players: set[str] = set()
+        self.endgame_cooldown_blocked_cycles: set[tuple[str, str]] = set()
+        self.cooldown_stall_snapshot_count = 0
+        self.all_field_posted_cooldown_waits = 0
         self.invariant_errors: list[str] = []
         self.half_hour_snapshots: list[dict[str, Any]] = []
         self.pending_initial_posts: dict[int, set[str]] = {}
         self._setup_players()
         self._setup_events()
+        preference_rng = random.Random(seed ^ 0xA991)
+        self.card_appeal = {cid: preference_rng.random() for cid in self.cards}
+        self.player_tastes = {p.name: {cid: preference_rng.random() for cid in self.cards} for p in self.players.values()}
+        self.contrarians = {p.name for p in self.players.values() if p.personality == "ネガティブ派" and preference_rng.random() < 0.5}
+        self.trap_targets = {}
+        self.trap_returns = set()
+
 
     def _setup_players(self) -> None:
         early_offsets = sorted(self.rng.uniform(0, 60) for _ in range(8))
@@ -373,7 +439,8 @@ class Simulation:
         self.queue.push(self.end_at, "final")
 
     def run(self) -> dict[str, Any]:
-        with self.jsonl_path.open("w", encoding="utf-8") as fh:
+        log_path = self.jsonl_path if self.write_outputs else Path(os.devnull)
+        with log_path.open("w", encoding="utf-8") as fh:
             self.out = fh
             while self.queue:
                 at, kind, data = self.queue.pop()
@@ -410,7 +477,8 @@ class Simulation:
                     break
             summary = self._summary()
             self.out.write(json.dumps({"type": "summary", "summary": summary}, ensure_ascii=False) + "\n")
-        self.summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        if self.write_outputs:
+            self.summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
         return summary
 
     def _handle_join(self, player_name: str) -> None:
@@ -427,12 +495,13 @@ class Simulation:
     def _handle_subsidy(self) -> None:
         paid: list[str] = []
         field_empty = len(self.field) == 0
+        participant_count = self.participant_count()
         for player in self.players.values():
             if not player.joined:
                 continue
             flag_due = player.subsidy_flag_slot_at is not None and player.subsidy_flag_slot_at <= self.now
-            eligible = field_empty or flag_due
-            if not eligible or player.points > SUBSIDY_THRESHOLD:
+            empty_field_due = empty_field_subsidy_eligible(player.points, len(player.hand), field_empty)
+            if not empty_field_due and not flag_due:
                 continue
             if player.last_subsidy_paid_slot_at == self.now:
                 continue
@@ -443,9 +512,15 @@ class Simulation:
             if flag_due:
                 player.subsidy_flag_slot_at = None
         if paid:
-            self._record("subsidy", None, {"paid": paid, "field_empty": field_empty})
+            self._record("subsidy", None, {
+                "paid": paid,
+                "field_empty": field_empty,
+                "participant_count": participant_count,
+            })
 
     def _handle_half_hour_snapshot(self) -> None:
+        if self._cooldown_stall_now():
+            self.cooldown_stall_snapshot_count += 1
         self.half_hour_snapshots.append(self._half_hour_summary_snapshot())
 
     def _handle_take_close_attempts(self) -> None:
@@ -453,7 +528,7 @@ class Simulation:
         self.rng.shuffle(players)
         for player in players:
             player.actions["take_close_attempt"] = player.actions.get("take_close_attempt", 0) + 1
-            if len(player.hand) < self._required_take_hand():
+            if len(player.hand) < self._required_take_hand(player):
                 self._record("take_close_attempt", player.name, {
                     "result": "insufficient_hand",
                     "hand_count": len(player.hand),
@@ -462,12 +537,14 @@ class Simulation:
             card_id = self._select_take_card(player)
             if card_id is None or not self._can_take(player):
                 reason = self._take_block_reason(player)
+                if reason == "take_cooldown" and player.points > 0:
+                    self.endgame_cooldown_blocked_players.add(player.name)
                 self._record("take_close_attempt", player.name, {
                     "result": "take_not_allowed",
                     "reason": reason,
                     "hand_count": len(player.hand),
                     "field_count": len(self.field),
-                    "next_take_at": self._iso(take_cooldown_until(player.last_take_at)),
+                    "next_take_at": self._iso(self._cooldown_until(player)),
                 })
                 continue
             card = self.cards[card_id]
@@ -502,12 +579,22 @@ class Simulation:
                     "card_id": action.get("card_id"),
                 })
             if action["type"] == "wait":
+                if self._waiting_only_for_cooldown(player):
+                    self.all_field_posted_cooldown_waits += 1
+                    if self.now >= self.end_at - ENDGAME_FREE_BEFORE_END and player.points > 0:
+                        self.endgame_cooldown_blocked_cycles.add((
+                            player.name,
+                            self._iso(player.last_take_at) or "first_take",
+                        ))
                 player.actions["wait"] = player.actions.get("wait", 0) + 1
                 self._record("wait", player.name, {"reason": action.get("reason", "no_action")})
                 self._schedule_next_decision(player, WAIT_RECHECK_MINUTES)
                 return
             if action["type"] == "draw":
                 self._draw(player)
+                continue
+            if action["type"] == "return_to_deck":
+                self._return_to_deck(player, action["card_id"])
                 continue
             if action["type"] == "take":
                 self._take(player, action["card_id"], trigger=action.get("consensus", "decision"))
@@ -548,12 +635,24 @@ class Simulation:
         self._schedule_next_decision(player, WAIT_RECHECK_MINUTES)
 
     def _choose_action(self, player: Player) -> dict[str, Any]:
+        trap = self._contrarian_action(player)
+        if trap is not None:
+            return trap
         options = self._legal_actions(player)
+        target = self.trap_targets.get(player.name)
+        if player.name in self.trap_returns and target in self.field and self.cards[target].taker != player.name:
+            traps = [a for a in options if a.get("card_id") == target and a["type"] in {"initial_post", "update"}]
+            if traps:
+                player.actions["trap_attempt"] = player.actions.get("trap_attempt", 0) + 1
+                return min(traps, key=lambda a: a["duration"])
         if not options:
             return {"type": "wait", "reason": "no_legal_action"}
         consensus_action = self._consensus_stall_action(player, options)
         if consensus_action is not None:
             return consensus_action
+        return_action = self._return_to_reduce_stack(player, options)
+        if return_action is not None:
+            return return_action
         hand_pressure_take = self._take_to_avoid_large_hand(player, options)
         if hand_pressure_take is not None:
             return hand_pressure_take
@@ -600,6 +699,7 @@ class Simulation:
 
     def _legal_actions(self, player: Player) -> list[dict[str, Any]]:
         actions: list[dict[str, Any]] = []
+        selected_take_card_id: int | None = None
         can_still_take = self.now < self.end_at - TAKE_CLOSE_BEFORE_END
         future_take_count = self._forecast_take_opportunities(player)
         # テイク締切後は、新たに引いたカードや手札練習の成果を場に出せない。
@@ -609,6 +709,7 @@ class Simulation:
         if self._can_take(player):
             card_id = self._select_take_card(player)
             if card_id and self._feasible_new_field_posters(self.cards[card_id]) > 0:
+                selected_take_card_id = card_id
                 actions.append({"type": "take", "card_id": card_id})
         for card_id in self.field:
             card = self.cards[card_id]
@@ -641,7 +742,45 @@ class Simulation:
                     "card_id": practice_card_id,
                     "duration": duration,
                 })
+        if (
+            self.return_to_deck_enabled
+            and player.points >= RETURN_TO_DECK_COST
+            and len(player.hand) > self._required_take_hand(player)
+            and self._can_take(player)
+        ):
+            return_candidates = [
+                card_id for card_id in player.hand
+                if card_id != selected_take_card_id
+            ]
+            if return_candidates:
+                actions.append({
+                    "type": "return_to_deck",
+                    "card_id": min(
+                        return_candidates,
+                        key=lambda card_id: (
+                            card_id in player.favorite_card_ids,
+                            player.private_practice.get(card_id, 0),
+                            self.cards[card_id].difficulty or 1,
+                        ),
+                    ),
+                })
         return actions
+
+    def _return_to_reduce_stack(
+        self,
+        player: Player,
+        options: list[dict[str, Any]],
+    ) -> dict[str, Any] | None:
+        """非スタック派がテイク可能な余剰手札を最小枚数まで戻す積極利用シナリオ。"""
+        if player.personality == "スタック派":
+            return None
+        returns = [action for action in options if action["type"] == "return_to_deck"]
+        takes = [action for action in options if action["type"] == "take"]
+        if returns and takes:
+            cid = returns[0]["card_id"]
+            if self.player_tastes[player.name][cid] < 0.25 and player.points >= 3:
+                return returns[0]
+        return None
 
     def _can_finish_timed_action(
         self,
@@ -680,7 +819,7 @@ class Simulation:
         ]
         updates = [a for a in options if a["type"] == "update"]
         take_opportunities = self._forecast_take_opportunities(player)
-        required_hand = self._required_take_hand()
+        required_hand = self._required_take_hand(player)
         reachable_target = min(
             max(STACK_TARGET_HAND, required_hand),
             len(player.hand) + max(0, player.points),
@@ -716,14 +855,14 @@ class Simulation:
         if takes and len(player.hand) >= 5:
             return max(takes, key=lambda a: self._take_value(player, a["card_id"]))
         draws = [a for a in options if a["type"] == "draw"]
-        if draws and len(player.hand) < max(6, self._required_take_hand()):
+        if draws and len(player.hand) < max(6, self._required_take_hand(player)):
             return draws[0]
         return {"type": "wait", "reason": "orthodox_no_rank_point_gain"}
 
     def _choose_negative_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
         # ネガティブ派：練習成果を締切前に場へ出せる見込みがある場合に練習を優先する。
         draws = [a for a in options if a["type"] == "draw"]
-        if draws and len(player.hand) < self._required_take_hand():
+        if draws and len(player.hand) < self._required_take_hand(player):
             return draws[0]
         practices = [a for a in options if a["type"] == "practice"]
         if practices and self._forecast_take_opportunities(player) >= 1:
@@ -758,7 +897,7 @@ class Simulation:
         return max(favorite_actions, key=holder_value)
 
     def _take_to_avoid_large_hand(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any] | None:
-        pressure_threshold = max(8, self._required_take_hand())
+        pressure_threshold = max(8, self._required_take_hand(player))
         if player.personality == "スタック派" or len(player.hand) < pressure_threshold:
             return None
         takes = [a for a in options if a["type"] == "take"]
@@ -781,7 +920,7 @@ class Simulation:
             cost = self._initial_post_cost(card)
             coverage_value = 0.6 + card.stack_count / 12.0
             expected_utility = self._post_expected_utility(player, card, action["duration"])
-            return expected_utility + coverage_value + cost * point_shadow
+            return expected_utility + coverage_value + cost * point_shadow + self._sharing_appeal(player, card.id) * 0.5
         if action["type"] == "update":
             card = self.cards[action["card_id"]]
             current_rank = self._current_rank(player, card)
@@ -806,8 +945,11 @@ class Simulation:
             future_rank_points = self._rank_points_for(expected_rank, expected_participants, projected_stack)
             remaining_draws = max(1, projected_stack - len(player.hand))
             pipeline_value = future_rank_points / remaining_draws
-            completion_bonus = 1.0 if len(player.hand) < self._required_take_hand() else 0.35
+            completion_bonus = 1.0 if len(player.hand) < self._required_take_hand(player) else 0.35
             return pipeline_value + completion_bonus + point_shadow
+        if action["type"] == "return_to_deck":
+            # 直後のテイクで余剰1枚をスタックから救う価値。料金1Pを差し引く。
+            return 0.35 + point_shadow - RETURN_TO_DECK_COST
         if action["type"] == "practice":
             card = self.cards[action["card_id"]]
             stack_count = max(3, self._forecast_orthodox_stack_target(player))
@@ -844,24 +986,34 @@ class Simulation:
         close_at = self.end_at - TAKE_CLOSE_BEFORE_END
         if self.now >= close_at:
             return 0
-        next_ready = max(self.now, take_cooldown_until(player.last_take_at) or self.now)
+        next_ready = max(self.now, self._cooldown_until(player) or self.now)
         hypothetical_last = player.last_take_at
         opportunities = 0
         for session_start, session_end in player.active_sessions:
             window_start = max(self.now, session_start)
             window_end = min(close_at, session_end)
             candidate = max(window_start, next_ready)
-            while candidate < window_end:
+            while candidate < window_end and opportunities < FIELD_LIMIT:
                 opportunities += 1
                 hypothetical_last = candidate
-                candidate += TAKE_COOLDOWN
+                if self.take_cooldown_policy in ENDGAME_FREE_POLICIES and candidate >= self.end_at - ENDGAME_FREE_BEFORE_END:
+                    candidate += timedelta(microseconds=1)
+                else:
+                    candidate += TAKE_COOLDOWN
                 next_ready = candidate
 
         # 締切直前試行だけは活動セッション外でも全員が1回試みる。
         take_close_attempt_at = close_at - timedelta(microseconds=1)
         if (
             take_close_attempt_at >= self.now
-            and take_cooldown_ready(hypothetical_last, take_close_attempt_at)
+            and (
+                hypothetical_last is None
+                or take_close_attempt_at >= hypothetical_last + TAKE_COOLDOWN
+                or (
+                    self.take_cooldown_policy in ENDGAME_FREE_POLICIES
+                    and take_close_attempt_at >= self.end_at - ENDGAME_FREE_BEFORE_END
+                )
+            )
         ):
             opportunities += 1
         return opportunities
@@ -882,7 +1034,7 @@ class Simulation:
     def _forecast_orthodox_stack_target(self, player: Player) -> int:
         affordable = len(player.hand) + max(0, player.points)
         surplus_target = 3 + min(7, max(0, player.points - 5) // 8)
-        return max(3, min(affordable, max(self._required_take_hand(), surplus_target)))
+        return max(3, min(affordable, max(self._required_take_hand(player), surplus_target)))
 
     def _forecast_field_participants(self, card: Card, actor_name: str) -> int:
         deadline = min(card.limit_at or (self.now + INITIAL_LIMIT), self.end_at)
@@ -1177,20 +1329,61 @@ class Simulation:
         card_id = self.rng.choice(candidates)
         self.deck.remove(card_id)
         card = self.cards[card_id]
+        if card.pending_returned_by is not None:
+            self.returned_card_redraw_count += 1
+            if card.pending_returned_by != player.name:
+                self.returned_card_other_player_redraw_count += 1
+            card.pending_returned_by = None
         card.state = player.name
         card.drawn_at = self.now
         rarity_distribution = rarity_distribution_at(self.elapsed_minutes())
-        card.rarity = self._weighted_choice(rarity_distribution)
+        rarity_assigned_now = card.rarity is None
+        if rarity_assigned_now:
+            card.rarity = self._weighted_choice(rarity_distribution)
         player.points -= 1
         self.rarity_draw_counts[card.rarity] += 1
         player.hand.append(card_id)
+        card.draw_history.append(player.name)
         player.actions["draw"] = player.actions.get("draw", 0) + 1
         self._record("draw", player.name, {
             "card_id": card_id,
             "rarity": card.rarity,
             "difficulty": card.difficulty,
             "cost": 1,
+            "rarity_assigned_now": rarity_assigned_now,
             "rare_probability": round(sum(weight for rarity, weight in rarity_distribution if rarity >= 2), 6),
+        })
+
+    def _return_to_deck(self, player: Player, card_id: int) -> None:
+        if not can_return_to_deck(self.return_to_deck_enabled, player.points, card_id in player.hand):
+            self._record("wait", player.name, {"reason": "return_to_deck_not_allowed"})
+            return
+        player.hand.remove(card_id)
+        player.points -= RETURN_TO_DECK_COST
+        card = self.cards[card_id]
+        practiced = player.private_practice.get(card_id, 0) > 0
+        card.practiced_before_return = card.practiced_before_return or practiced
+        card.return_history.append(player.name)
+        card.pending_returned_by = player.name
+        card.state = "_deck"
+        self.deck.append(card_id)
+        self.rng.shuffle(self.deck)
+        self.return_to_deck_count += 1
+        self.practiced_return_count += int(practiced)
+        subsidy_flagged = (
+            self.return_subsidy_enabled
+            and should_flag_return_subsidy(player.points)
+        )
+        if subsidy_flagged:
+            self._set_subsidy_flag(player)
+            self.return_subsidy_flag_count += 1
+        player.actions["return_to_deck"] = player.actions.get("return_to_deck", 0) + 1
+        self._record("return_to_deck", player.name, {
+            "card_id": card_id,
+            "cost": RETURN_TO_DECK_COST,
+            "practiced_before_return": practiced,
+            "subsidy_flagged": subsidy_flagged,
+            "public": False,
         })
 
     def _draw_available_difficulty(self) -> int:
@@ -1202,21 +1395,106 @@ class Simulation:
         weights[lowest] += missing_weight
         return self._weighted_choice(list(weights.items()))
 
+    def _cooldown_until(self, player: Player) -> datetime | None:
+        if player.last_take_at is None:
+            return None
+        if (
+            self.take_cooldown_policy in ALL_FIELD_FIRST_POLICIES
+            and player.cooldown_released_take_at == player.last_take_at
+        ):
+            return player.last_take_at
+        credit = player.cooldown_credit_minutes if self.take_cooldown_policy in POST_CREDIT_POLICIES else 0
+        ready_at = player.last_take_at + TAKE_COOLDOWN - timedelta(minutes=min(90, credit))
+        if self.take_cooldown_policy in ENDGAME_FREE_POLICIES:
+            ready_at = min(ready_at, self.end_at - ENDGAME_FREE_BEFORE_END)
+        return ready_at
+
+    def _all_field_first_condition(self, player: Player) -> bool:
+        if len(self.field) < 2:
+            return False
+        if not any(self.cards[card_id].taker != player.name for card_id in self.field):
+            return False
+        for card_id in self.field:
+            card = self.cards[card_id]
+            player_score = card.scores.get(player.name)
+            if player_score is None or player_score < max(card.scores.values(), default=float("inf")):
+                return False
+        return True
+
+    def _cooldown_ready(self, player: Player, at: datetime, mutate_release: bool = True) -> bool:
+        ready_at = self._cooldown_until(player)
+        if ready_at is None or at >= ready_at:
+            return True
+        if self.take_cooldown_policy not in ALL_FIELD_FIRST_POLICIES or not self._all_field_first_condition(player):
+            return False
+        if mutate_release and player.cooldown_released_take_at != player.last_take_at:
+            player.cooldown_released_take_at = player.last_take_at
+            self.cooldown_release_count += 1
+        return True
+
+    def _take_non_cooldown_conditions(self, player: Player) -> bool:
+        return (
+            len(player.hand) >= self._required_take_hand(player)
+            and self.now < self.end_at - TAKE_CLOSE_BEFORE_END
+            and len(self.field) < self._field_cap()
+        )
+
+    def _waiting_only_for_cooldown(self, player: Player) -> bool:
+        return (
+            bool(self.field)
+            and all(player.name in self.cards[card_id].posted_players for card_id in self.field)
+            and self._take_non_cooldown_conditions(player)
+            and not self._cooldown_ready(player, self.now, mutate_release=False)
+        )
+
+    def _cooldown_stall_now(self) -> bool:
+        if not self.field:
+            return False
+        candidates = [
+            player
+            for player in self.players.values()
+            if player.is_active(self.now)
+            and (player.busy_until is None or player.busy_until <= self.now)
+            and self._take_non_cooldown_conditions(player)
+        ]
+        return bool(candidates) and all(
+            not self._cooldown_ready(player, self.now, mutate_release=False)
+            for player in candidates
+        )
+
+    def _apply_post_cooldown_credit(self, player: Player) -> int:
+        if self.take_cooldown_policy not in POST_CREDIT_POLICIES or player.last_take_at is None:
+            return 0
+        if self._cooldown_ready(player, self.now, mutate_release=False):
+            return 0
+        before = player.cooldown_credit_minutes
+        player.cooldown_credit_minutes = min(90, before + POST_COOLDOWN_CREDIT_MINUTES)
+        applied = player.cooldown_credit_minutes - before
+        if applied > 0:
+            self.cooldown_post_credit_events += 1
+            self.cooldown_post_credit_minutes += applied
+        return applied
+
     def _can_take(self, player: Player) -> bool:
         return self._take_block_reason(player) is None
 
     def _take_block_reason(self, player: Player) -> str | None:
-        if len(player.hand) < self._required_take_hand():
+        if len(player.hand) < self._required_take_hand(player):
             return "insufficient_hand"
         if self.now >= self.end_at - TAKE_CLOSE_BEFORE_END:
             return "take_closed"
         if len(self.field) >= self._field_cap():
             return "field_cap"
-        if not take_cooldown_ready(player.last_take_at, self.now):
+        if not self._cooldown_ready(player, self.now):
             return "take_cooldown"
         return None
 
-    def _required_take_hand(self) -> int:
+    def _take_level(self, player: Player) -> int:
+        return take_level_for_count(len(player.take_times), self.take_level_up_every)
+
+    def _required_take_hand(self, player: Player) -> int:
+        if self.take_cost_mode == "level_linear":
+            return level_take_requirement(self._take_level(player))
         return required_take_hand(len(self.field))
 
     def _field_cap(self) -> int:
@@ -1229,16 +1507,44 @@ class Simulation:
         selection_pool = preferred_hand or player.hand
         max_practice = max(player.private_practice.get(cid, 0) for cid in selection_pool)
         candidates = [cid for cid in selection_pool if player.private_practice.get(cid, 0) == max_practice]
-        return self.rng.choice(candidates)
+        return max(candidates, key=lambda cid: self._sharing_appeal(player, cid))
+
+    def _sharing_appeal(self, player: Player, cid: int) -> float:
+        # Stable, private preferences; no privileged access to other players' hands.
+        return self.player_tastes[player.name][cid] + self.card_appeal[cid] * 0.6
+
+    def _contrarian_action(self, player: Player) -> dict[str, Any] | None:
+        if player.name not in self.contrarians or player.name in self.trap_returns:
+            return None
+        if not self.field or self.now >= self.end_at - timedelta(hours=3):
+            return None
+        cid = self.trap_targets.get(player.name)
+        if cid is None and player.hand and player.points >= 2:
+            cid = max(player.hand, key=lambda c: self.player_tastes[player.name][c])
+            self.trap_targets[player.name] = cid
+        if cid not in player.hand:
+            return None
+        practiced = player.private_practice.get(cid, 0)
+        if practiced >= 30 and player.points >= 1 and self.return_to_deck_enabled:
+            self.trap_returns.add(player.name)
+            player.actions["trap_return"] = player.actions.get("trap_return", 0) + 1
+            return {"type": "return_to_deck", "card_id": cid}
+        duration = max(difficulty_minimum_minutes(self.cards[cid].difficulty), 30 - practiced)
+        if practiced < 30 and self._can_finish_timed_action(player, duration, self.end_at - TAKE_CLOSE_BEFORE_END):
+            return {"type": "practice", "card_id": cid, "duration": duration}
+        return None
 
     def _take(self, player: Player, card_id: int, trigger: str = "decision") -> None:
+        take_level = self._take_level(player)
+        required_hand = self._required_take_hand(player)
         if not self._can_take(player) or card_id not in player.hand:
             reason = "card_not_in_hand" if card_id not in player.hand else self._take_block_reason(player)
             self._record("wait", player.name, {
                 "reason": reason or "take_not_allowed",
-                "next_take_at": self._iso(take_cooldown_until(player.last_take_at)),
+                "next_take_at": self._iso(self._cooldown_until(player)),
             })
             return
+        previous_take_at = player.last_take_at
         stack_cards = player.hand[:]
         player.hand = []
         card = self.cards[card_id]
@@ -1247,25 +1553,41 @@ class Simulation:
         card.stack_count = len(stack_cards)
         player.max_stack_count = max(player.max_stack_count, card.stack_count)
         card.stack_ids = [cid for cid in stack_cards if cid != card_id]
+        card.late_first_extension = False
         card.paid_points_total = 0
         card.taken_at = self.now
+        if previous_take_at is not None and self.now - previous_take_at < TAKE_COOLDOWN:
+            player.relaxed_take_times.append(self.now)
         player.last_take_at = self.now
         player.take_times.append(self.now)
+        player.take_stack_counts.append(card.stack_count)
+        player.take_costs.append(required_hand)
+        player.cooldown_credit_minutes = 0
+        player.cooldown_released_take_at = None
+        if (
+            self.take_cooldown_policy in ENDGAME_FREE_POLICIES
+            and previous_take_at is not None
+            and self.now >= self.end_at - ENDGAME_FREE_BEFORE_END
+            and self.now - previous_take_at < TAKE_COOLDOWN
+        ):
+            self.endgame_free_take_count += 1
         card.limit_at = self.now + INITIAL_LIMIT
         card.holder_names = []
         self.queue.push(card.limit_at, "collect", {"card_id": card.id, "limit_at": card.limit_at.isoformat()})
         for stack_id in card.stack_ids:
             self.cards[stack_id].state = "_stack"
         self.field.append(card_id)
-        self._set_subsidy_flag(player)
+        if player.points < self.participant_count():
+            self._set_subsidy_flag(player)
         player.actions["take"] = player.actions.get("take", 0) + 1
         self._record("take", player.name, {
             "card_id": card_id,
             "stack_count": card.stack_count,
-            "required_hand": 3 + max(0, len(self.field) - 1),
+            "required_hand": required_hand,
+            "take_level": take_level,
             "trigger": trigger,
             "stack_ids": card.stack_ids,
-            "cooldown_until": self._iso(take_cooldown_until(player.last_take_at)),
+            "cooldown_until": self._iso(self._cooldown_until(player)),
         })
 
     def _complete_initial_post(self, player_name: str, card_id: int, duration: int) -> None:
@@ -1288,16 +1610,20 @@ class Simulation:
             card.paid_players.add(player.name)
             card.paid_points_total += cost
         self._apply_score(player, card, duration, is_update=False)
+        cooldown_credit = self._apply_post_cooldown_credit(player) if paid_now else 0
         extension_minutes = 0
         if card.limit_at is None:
             card.limit_at = (card.taken_at or self.now) + INITIAL_LIMIT
             self.queue.push(card.limit_at, "collect", {"card_id": card.id, "limit_at": card.limit_at.isoformat()})
-        elif paid_now and existing_participants >= 1 and self.now < self.end_at - TAKE_CLOSE_BEFORE_END:
+        elif paid_now and self.now < self.end_at - TAKE_CLOSE_BEFORE_END:
             participant_order = existing_participants + 1
-            extension_minutes = initial_post_extension_minutes(participant_order)
+            if participant_order == 1 and (card.limit_at - self.now).total_seconds() < 45 * 60:
+                card.late_first_extension = True
+                extension_minutes = 45
+            elif participant_order >= 2:
+                extension_minutes = initial_post_extension_minutes(participant_order, card.late_first_extension)
             card.limit_at += timedelta(minutes=extension_minutes)
             self.queue.push(card.limit_at, "collect", {"card_id": card.id, "limit_at": card.limit_at.isoformat()})
-        self._set_subsidy_flag(player)
         player.actions["initial_post"] = player.actions.get("initial_post", 0) + 1
         self._record("initial_post", player.name, {
             "card_id": card_id,
@@ -1312,6 +1638,7 @@ class Simulation:
                 self._effective_practice_minutes(player.private_practice.get(card.id, 0)),
                 3,
             ),
+            "cooldown_credit_minutes": cooldown_credit,
             "limit_at": self._iso(card.limit_at),
         })
         self._schedule_next_decision(player, 0)
@@ -1334,7 +1661,6 @@ class Simulation:
         card = self.cards[card_id]
         previous_update_duration = card.last_update_duration.get(player.name, 0)
         self._apply_score(player, card, duration, is_update=True)
-        self._set_subsidy_flag(player)
         player.actions["update"] = player.actions.get("update", 0) + 1
         self._record("update", player.name, {
             "card_id": card_id,
@@ -1410,6 +1736,13 @@ class Simulation:
         rank_points = self._apply_rank_points(card, ranking)
         rewards = self._apply_collection_rewards(card, ranking)
         card.holder_names = holder_names_from_ranking(ranking)
+        subsidy_flagged_holders: list[str] = []
+        if self.now < self.end_at:
+            for player_name in card.holder_names:
+                player = self.players[player_name]
+                if player.points < self.participant_count():
+                    self._set_subsidy_flag(player)
+                    subsidy_flagged_holders.append(player_name)
         card.state = "_collected"
         card.collected_at = self.now
         if card_id in self.field:
@@ -1425,6 +1758,7 @@ class Simulation:
             "rank_points": rank_points,
             "rewards": rewards,
             "holders": card.holder_names,
+            "subsidy_flagged_holders": subsidy_flagged_holders,
         })
 
     def _ranking_groups(self, card: Card) -> list[dict[str, Any]]:
@@ -1531,16 +1865,17 @@ class Simulation:
         return distribution[-1][0]
 
     def _record(self, event_type: str, actor: str | None, details: dict[str, Any]) -> None:
-        entry = {
-            "timestamp": self._iso(self.now),
-            "minute": int((self.now - self.start_at).total_seconds() // 60),
-            "type": "event",
-            "event": event_type,
-            "actor": actor,
-            "details": details,
-            "state": self._snapshot(),
-        }
-        self.out.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        if self.write_outputs:
+            entry = {
+                "timestamp": self._iso(self.now),
+                "minute": int((self.now - self.start_at).total_seconds() // 60),
+                "type": "event",
+                "event": event_type,
+                "actor": actor,
+                "details": details,
+                "state": self._snapshot(),
+            }
+            self.out.write(json.dumps(entry, ensure_ascii=False) + "\n")
         self.events_written += 1
         self._check_invariants(event_type)
 
@@ -1588,9 +1923,13 @@ class Simulation:
             "live_rank_points": (live_rank_points or {}).get(player.name, 0),
             "hand_count": len(player.hand),
             "hand": player.hand[:],
+            "history_icon_cards": [
+                card_id for card_id in player.hand
+                if self.cards[card_id].return_history
+            ],
             "subsidy_flag_slot_at": self._iso(player.subsidy_flag_slot_at),
             "last_take_at": self._iso(player.last_take_at),
-            "next_take_at": self._iso(take_cooldown_until(player.last_take_at)),
+            "next_take_at": self._iso(self._cooldown_until(player)),
         }
 
     def _check_invariants(self, context: str) -> None:
@@ -1607,9 +1946,9 @@ class Simulation:
             # ドロー可能性自体は行動選択の問題なのでここでは検査しない。
         for player in self.players.values():
             for previous, current in zip(player.take_times, player.take_times[1:]):
-                if current - previous < TAKE_COOLDOWN:
+                if current - previous < TAKE_COOLDOWN and current not in player.relaxed_take_times:
                     self.invariant_errors.append(
-                        f"{context}: {player.name} take cooldown violated "
+                        f"{context}: {player.name} unapproved take cooldown violation "
                         f"{self._iso(previous)} -> {self._iso(current)}"
                     )
         for card_id in self.field:
@@ -1651,6 +1990,12 @@ class Simulation:
                     "total_active_minutes": p.total_active_minutes(),
                     "total_active_hours": round(p.total_active_minutes() / 60, 2),
                     "max_stack_count": p.max_stack_count,
+                    "take_count": len(p.take_times),
+                    "draw_count": p.actions.get("draw", 0),
+                    "mean_take_stack": round(statistics.mean(p.take_stack_counts), 3) if p.take_stack_counts else None,
+                    "take_stack_counts": p.take_stack_counts,
+                    "take_costs": p.take_costs,
+                    "take_levels": [take_level_for_count(index, self.take_level_up_every) for index in range(len(p.take_times))],
                     "last_take_at": self._iso(p.last_take_at),
                     "minimum_take_gap_minutes": min(
                         (
@@ -1667,6 +2012,15 @@ class Simulation:
             key=lambda item: (item["rank_points"], item["points"]),
             reverse=True,
         )
+        take_counts = [len(player.take_times) for player in self.players.values()]
+        total_takes = sum(take_counts)
+        max_player_takes = max(take_counts, default=0)
+        collection_rewards = sum(
+            entry["points"]
+            for card in self.cards.values()
+            for entry in card.reward_log
+        )
+        post_fees = sum(card.paid_points_total for card in self.cards.values())
         summary = {
             "seed": self.seed,
             "jsonl_path": str(self.jsonl_path),
@@ -1695,6 +2049,7 @@ class Simulation:
                 "holder_priority_favorite_card_count": FAVORITE_CARD_COUNT,
                 "take_audience_horizon_minutes": int(INITIAL_LIMIT.total_seconds() // 60),
                 "take_cooldown_minutes": int(TAKE_COOLDOWN.total_seconds() // 60),
+                "take_cooldown_policy": self.take_cooldown_policy,
                 "take_cooldown_basis": "successful_take_at",
                 "take_cooldown_ignores_field_lifecycle": True,
                 "take_close_requires_feasible_poster": True,
@@ -1709,14 +2064,31 @@ class Simulation:
                 "initial_limit_minutes": 90,
                 "initial_post_extension": "60 minutes, minus 5 per participant, floor 5",
                 "stack_time_bonus": False,
-                "take_hand_requirement": "3 + current_field_count",
+                "take_cost_mode": self.take_cost_mode,
+                "take_level_up_every": self.take_level_up_every if self.take_cost_mode == "level_linear" else None,
+                "take_hand_requirement": (
+                    "3 + floor(current_field_count / 2)"
+                    if self.take_cost_mode == "field"
+                    else "level L = 1 + floor(successful_takes / k); required stack = L + 2"
+                ),
                 "field_cap": "min(max(1, cumulative_participants - 1), 16)",
                 "entry_cost": "rarity for 1st and 4th+, free for 2nd and 3rd",
                 "rank_point_first_bonus": 1,
                 "rank_point_basis": "participant_count",
                 "rank_point_display": "confirmed + live field provisional",
+                "subsidy_threshold": "empty: points + hand < 8; take/winner: points < cumulative participants",
+                "subsidy_action_flags": "take and natural-collection winner; one slot; no payout-time recheck",
+                "subsidy_empty_field": "recurs while field is empty and points + hand < 8",
                 "difficulty_assignment": "intrinsic_card_value",
                 "missing_difficulty_weight": "lowest_available_difficulty",
+                "return_to_deck_enabled": self.return_to_deck_enabled,
+                "return_to_deck_cost": RETURN_TO_DECK_COST,
+                "return_subsidy_flag_threshold_after_payment": RETURN_SUBSIDY_FLAG_THRESHOLD,
+                "return_subsidy_enabled": self.return_subsidy_enabled,
+                "returned_card_rarity": "preserve first draw rarity",
+                "return_event_visibility": "private",
+                "return_history_icon": "visible in hand after redraw",
+                "return_to_deck_policy": "disliked surplus returns; bounded contrarian practice-return ambush",
             },
             "rarity_draw_counts": self.rarity_draw_counts,
             "players": players,
@@ -1724,6 +2096,45 @@ class Simulation:
             "trash_count": len(self.trash),
             "field_count": len(self.field),
             "collected_count": len(self.collected),
+            "return_to_deck": {
+                "count": self.return_to_deck_count,
+                "points_spent": self.return_to_deck_count * RETURN_TO_DECK_COST,
+                "redraw_count": self.returned_card_redraw_count,
+                "other_player_redraw_count": self.returned_card_other_player_redraw_count,
+                "practiced_before_return_count": self.practiced_return_count,
+                "subsidy_flag_count": self.return_subsidy_flag_count,
+            },
+            "cooldown": {
+                "policy": self.take_cooldown_policy,
+                "release_count": self.cooldown_release_count,
+                "post_credit_events": self.cooldown_post_credit_events,
+                "post_credit_minutes": self.cooldown_post_credit_minutes,
+                "endgame_free_takes": self.endgame_free_take_count,
+                "endgame_cooldown_blocked_players": len(self.endgame_cooldown_blocked_players),
+                "endgame_cooldown_blocked_cycles": len(self.endgame_cooldown_blocked_cycles),
+                "rapid_take_count": sum(len(player.relaxed_take_times) for player in self.players.values()),
+                "max_zero_time_burst": max(
+                    (max_take_burst(player.take_times, timedelta(0)) for player in self.players.values()),
+                    default=0,
+                ),
+                "max_sub90_burst": max(
+                    (max_take_burst(player.take_times, TAKE_COOLDOWN) for player in self.players.values()),
+                    default=0,
+                ),
+                "max_takes_by_player": max_player_takes,
+                "max_take_share": round(max_player_takes / total_takes, 4) if total_takes else 0.0,
+                "cooldown_stall_snapshots": self.cooldown_stall_snapshot_count,
+                "all_field_posted_cooldown_waits": self.all_field_posted_cooldown_waits,
+            },
+            "economy": {
+                "ending_points": sum(player.points for player in self.players.values()),
+                "draw_costs": sum(player.actions.get("draw", 0) for player in self.players.values()),
+                "post_fees": post_fees,
+                "return_costs": self.return_to_deck_count * RETURN_TO_DECK_COST,
+                "collection_rewards": collection_rewards,
+                "subsidy_payments": self.subsidy_payments,
+                "confirmed_rank_points": sum(player.rank_points for player in self.players.values()),
+            },
             "collection_participant_counts": {
                 str(count): sum(
                     1
@@ -1748,6 +2159,9 @@ class Simulation:
             summary["fixed_countdown_tests"] = fixed_countdown_tests()
             summary["fixed_holder_tests"] = fixed_holder_tests()
             summary["fixed_take_cooldown_tests"] = fixed_take_cooldown_tests()
+            summary["fixed_relaxed_take_tests"] = fixed_relaxed_take_tests()
+            summary["fixed_return_to_deck_tests"] = fixed_return_to_deck_tests()
+            summary["fixed_subsidy_tests"] = fixed_subsidy_tests()
         return summary
 
     def _half_hour_summary_snapshot(self) -> dict[str, Any]:
@@ -1803,6 +2217,31 @@ def take_cooldown_until(last_take_at: datetime | None) -> datetime | None:
 def take_cooldown_ready(last_take_at: datetime | None, at: datetime) -> bool:
     ready_at = take_cooldown_until(last_take_at)
     return ready_at is None or at >= ready_at
+
+
+def max_take_burst(take_times: list[datetime], threshold: timedelta) -> int:
+    if not take_times:
+        return 0
+    longest = 1
+    current = 1
+    for previous, taken_at in zip(take_times, take_times[1:]):
+        gap = taken_at - previous
+        within = gap == timedelta(0) if threshold == timedelta(0) else gap < threshold
+        current = current + 1 if within else 1
+        longest = max(longest, current)
+    return longest
+
+
+def can_return_to_deck(enabled: bool, points: int, card_in_hand: bool) -> bool:
+    return enabled and points >= RETURN_TO_DECK_COST and card_in_hand
+
+
+def should_flag_return_subsidy(points_after_payment: int) -> bool:
+    return points_after_payment <= RETURN_SUBSIDY_FLAG_THRESHOLD
+
+
+def empty_field_subsidy_eligible(points: int, hand_count: int, field_empty: bool) -> bool:
+    return field_empty and points + hand_count < 8
 
 
 def play_time_cost(duration: int) -> float:
@@ -1933,11 +2372,11 @@ def calculate_initial_post_cost(rarity: int, existing_participants: int) -> int:
     return 0 if 1 <= existing_participants < 3 else rarity
 
 
-def initial_post_extension_minutes(participant_order: int) -> int:
+def initial_post_extension_minutes(participant_order: int, late_first_extension: bool = False) -> int:
     if participant_order <= 1:
         return 0
     reduction = (participant_order - 2) * EXTENSION_STEP_MINUTES
-    return max(EXTENSION_FLOOR_MINUTES, EXTENSION_START_MINUTES - reduction)
+    return max(EXTENSION_FLOOR_MINUTES, (40 if late_first_extension else EXTENSION_START_MINUTES) - reduction)
 
 
 def holder_names_from_ranking(ranking: list[dict[str, Any]]) -> list[str]:
@@ -1946,8 +2385,16 @@ def holder_names_from_ranking(ranking: list[dict[str, Any]]) -> list[str]:
     return list(ranking[0].get("players", []))
 
 
+def take_level_for_count(successful_takes: int, level_up_every: int) -> int:
+    return 1 + max(0, successful_takes) // max(1, level_up_every)
+
+
+def level_take_requirement(level: int) -> int:
+    return 2 + max(1, level)
+
+
 def required_take_hand(field_count: int) -> int:
-    return 3 + max(0, field_count)
+    return 3 + max(0, field_count) // 2
 
 
 def field_cap(participant_count: int) -> int:
@@ -2177,9 +2624,14 @@ def fixed_entry_rule_tests() -> list[dict[str, Any]]:
         },
         {
             "name": "take_hand_requirement_grows_with_fields",
-            "ok": required_take_hand(0) == 3 and required_take_hand(7) == 10,
+            "ok": required_take_hand(0) == 3 and required_take_hand(7) == 6,
             "at_zero_fields": required_take_hand(0),
             "at_seven_fields": required_take_hand(7),
+        },
+        {
+            "name": "level_take_requirement_linear",
+            "ok": [take_level_for_count(takes, 2) for takes in range(5)] == [1, 1, 2, 2, 3]
+            and [level_take_requirement(level) for level in range(1, 4)] == [3, 4, 5],
         },
         {
             "name": "field_cap_uses_participants_minus_one",
@@ -2244,7 +2696,7 @@ def fixed_countdown_tests() -> list[dict[str, Any]]:
             "initial_minutes": int(INITIAL_LIMIT.total_seconds() // 60),
         },
         {
-            "name": "first_post_does_not_extend",
+            "name": "normal_first_post_does_not_extend",
             "ok": initial_post_extension_minutes(1) == 0,
             "extension": initial_post_extension_minutes(1),
         },
@@ -2305,6 +2757,329 @@ def fixed_take_cooldown_tests() -> list[dict[str, Any]]:
     ]
 
 
+def fixed_relaxed_take_tests() -> list[dict[str, Any]]:
+    output_dir = Path(".")
+
+    proposal_a = Simulation(1, output_dir, write_outputs=False, take_cooldown_policy="all_field_first")
+    a_player = proposal_a.players["player_01"]
+    a_player.last_take_at = proposal_a.start_at
+    proposal_a.now = proposal_a.start_at + timedelta(minutes=30)
+    proposal_a.field = [1]
+    proposal_a.cards[1].taker = "player_02"
+    proposal_a.cards[1].scores = {a_player.name: 100}
+    a_rejects_single_card = not proposal_a._cooldown_ready(a_player, proposal_a.now, mutate_release=False)
+    proposal_a.field = [1, 2]
+    proposal_a.cards[2].taker = a_player.name
+    proposal_a.cards[2].scores = {a_player.name: 100, "player_03": 100}
+    a_accepts_tied_first_with_other_take = proposal_a._cooldown_ready(
+        a_player,
+        proposal_a.now,
+        mutate_release=False,
+    )
+    proposal_a.cards[1].taker = a_player.name
+    a_rejects_own_cards_only = not proposal_a._cooldown_ready(a_player, proposal_a.now, mutate_release=False)
+
+    proposal_b = Simulation(2, output_dir, write_outputs=False, take_cooldown_policy="endgame_free")
+    b_player = proposal_b.players["player_01"]
+    b_threshold = proposal_b.end_at - ENDGAME_FREE_BEFORE_END
+    b_player.last_take_at = b_threshold - timedelta(minutes=10)
+    b_before_threshold = not proposal_b._cooldown_ready(
+        b_player,
+        b_threshold - timedelta(microseconds=1),
+        mutate_release=False,
+    )
+    b_at_threshold = proposal_b._cooldown_ready(b_player, b_threshold, mutate_release=False)
+
+    proposal_c = Simulation(3, output_dir, write_outputs=False, take_cooldown_policy="post_credit")
+    c_player = proposal_c.players["player_01"]
+    c_player.last_take_at = proposal_c.start_at
+    proposal_c.now = proposal_c.start_at + timedelta(minutes=1)
+    c_credits = [proposal_c._apply_post_cooldown_credit(c_player) for _ in range(7)]
+
+    combined = Simulation(
+        4,
+        output_dir,
+        write_outputs=False,
+        take_cooldown_policy="all_field_first_endgame_free",
+    )
+    combined_player = combined.players["player_01"]
+    combined_player.last_take_at = combined.start_at
+    combined.now = combined.start_at + timedelta(minutes=30)
+    combined.field = [1, 2]
+    combined.cards[1].taker = "player_02"
+    combined.cards[2].taker = combined_player.name
+    combined.cards[1].scores = {combined_player.name: 100}
+    combined.cards[2].scores = {combined_player.name: 100}
+    combined_accepts_a = combined._cooldown_ready(combined_player, combined.now, mutate_release=False)
+    combined.field = []
+    combined_threshold = combined.end_at - ENDGAME_FREE_BEFORE_END
+    combined_player.last_take_at = combined_threshold - timedelta(minutes=10)
+    combined_accepts_b = combined._cooldown_ready(
+        combined_player,
+        combined_threshold,
+        mutate_release=False,
+    )
+
+    return [
+        {
+            "name": "proposal_a_requires_at_least_two_field_cards",
+            "ok": a_rejects_single_card,
+        },
+        {
+            "name": "proposal_a_accepts_tied_first_when_another_player_took_a_card",
+            "ok": a_accepts_tied_first_with_other_take,
+        },
+        {
+            "name": "proposal_a_rejects_field_made_only_from_own_takes",
+            "ok": a_rejects_own_cards_only,
+        },
+        {
+            "name": "proposal_b_starts_exactly_two_and_a_half_hours_before_end",
+            "ok": b_before_threshold and b_at_threshold,
+        },
+        {
+            "name": "proposal_c_grants_fifteen_minutes_per_card_and_caps_at_ninety",
+            "ok": c_credits == [15, 15, 15, 15, 15, 15, 0]
+            and c_player.cooldown_credit_minutes == 90,
+            "credits": c_credits,
+        },
+        {
+            "name": "combined_policy_accepts_both_a_and_b_release_paths",
+            "ok": combined_accepts_a and combined_accepts_b,
+        },
+    ]
+
+
+def fixed_return_to_deck_tests() -> list[dict[str, Any]]:
+    return [
+        {
+            "name": "return_cost_is_one_point",
+            "ok": RETURN_TO_DECK_COST == 1,
+            "cost": RETURN_TO_DECK_COST,
+        },
+        {
+            "name": "return_is_allowed_with_one_point",
+            "ok": can_return_to_deck(True, 1, True),
+        },
+        {
+            "name": "return_is_blocked_at_zero_points",
+            "ok": not can_return_to_deck(True, 0, True),
+        },
+        {
+            "name": "return_is_blocked_for_non_hand_card",
+            "ok": not can_return_to_deck(True, 10, False),
+        },
+        {
+            "name": "return_is_blocked_when_rule_disabled",
+            "ok": not can_return_to_deck(False, 10, True),
+        },
+        {
+            "name": "return_subsidy_flag_is_set_at_four_points",
+            "ok": should_flag_return_subsidy(4),
+        },
+        {
+            "name": "return_subsidy_flag_is_not_set_at_five_points",
+            "ok": not should_flag_return_subsidy(5),
+        },
+    ]
+
+
+def fixed_subsidy_tests() -> list[dict[str, Any]]:
+    return [
+        {
+            "name": "empty_field_uses_combined_resources_below_eight",
+            "ok": empty_field_subsidy_eligible(4, 3, True),
+        },
+        {
+            "name": "combined_resources_equal_eight_is_not_eligible",
+            "ok": not empty_field_subsidy_eligible(5, 3, True),
+        },
+        {
+            "name": "nonempty_field_does_not_create_recurring_subsidy",
+            "ok": not empty_field_subsidy_eligible(-1, 5, False),
+        },
+        {
+            "name": "return_threshold_is_independent_at_four_points",
+            "ok": should_flag_return_subsidy(4) and not should_flag_return_subsidy(5),
+        },
+    ]
+
+
+def comparison_metrics(summary: dict[str, Any]) -> dict[str, float | int]:
+    players = summary["players"]
+    return_stats = summary["return_to_deck"]
+    cooldown = summary["cooldown"]
+    economy = summary["economy"]
+    return {
+        "collections": summary["collections"],
+        "subsidy_payments": summary["subsidy_payments"],
+        "end_points": sum(player["points"] for player in players),
+        "zero_point_players": sum(player["points"] <= 0 for player in players),
+        "draws": sum(player["actions"].get("draw", 0) for player in players),
+        "takes": sum(player["actions"].get("take", 0) for player in players),
+        "rank_points": sum(player["rank_points"] for player in players),
+        "max_player_rank_points": max((player["rank_points"] for player in players), default=0),
+        "mean_max_stack": statistics.mean(player["max_stack_count"] for player in players),
+        "collection_rewards": economy["collection_rewards"],
+        "post_fees": economy["post_fees"],
+        "max_takes_by_player": cooldown["max_takes_by_player"],
+        "max_take_share": cooldown["max_take_share"],
+        "rapid_takes": cooldown["rapid_take_count"],
+        "max_zero_time_burst": cooldown["max_zero_time_burst"],
+        "max_sub90_burst": cooldown["max_sub90_burst"],
+        "cooldown_stall_snapshots": cooldown["cooldown_stall_snapshots"],
+        "all_field_posted_cooldown_waits": cooldown["all_field_posted_cooldown_waits"],
+        "cooldown_releases": cooldown["release_count"],
+        "post_credit_events": cooldown["post_credit_events"],
+        "endgame_free_takes": cooldown["endgame_free_takes"],
+        "endgame_cooldown_blocked_players": cooldown["endgame_cooldown_blocked_players"],
+        "endgame_cooldown_blocked_cycles": cooldown["endgame_cooldown_blocked_cycles"],
+        "returns": return_stats["count"],
+        "return_redraws": return_stats["redraw_count"],
+        "other_player_redraws": return_stats["other_player_redraw_count"],
+        "practiced_returns": return_stats["practiced_before_return_count"],
+        "return_subsidy_flags": return_stats["subsidy_flag_count"],
+        "invariant_errors": len(summary["invariant_errors"]),
+    }
+
+
+def compare_return_rule(start_seed: int, runs: int, output_dir: Path) -> dict[str, Any]:
+    scenarios: list[dict[str, dict[str, float | int]]] = []
+    for seed in range(start_seed, start_seed + runs):
+        baseline = Simulation(seed, output_dir, False, False).run()
+        without_subsidy = Simulation(seed, output_dir, True, False, False).run()
+        with_subsidy = Simulation(seed, output_dir, True, False, True).run()
+        scenarios.append({
+            "baseline": comparison_metrics(baseline),
+            "return_without_subsidy": comparison_metrics(without_subsidy),
+            "return_with_subsidy": comparison_metrics(with_subsidy),
+        })
+
+    report: dict[str, Any] = {
+        "runs": runs,
+        "start_seed": start_seed,
+        "scenario": "non-stack players actively return every surplus card before taking",
+        "baseline_mean": {},
+        "return_without_subsidy_mean": {},
+        "return_with_subsidy_mean": {},
+        "subsidy_effect_mean_delta": {},
+        "return_rule_effect_mean_delta": {},
+    }
+    for key in scenarios[0]["baseline"]:
+        baseline_values = [float(row["baseline"][key]) for row in scenarios]
+        without_values = [float(row["return_without_subsidy"][key]) for row in scenarios]
+        with_values = [float(row["return_with_subsidy"][key]) for row in scenarios]
+        baseline_mean = statistics.mean(baseline_values)
+        without_mean = statistics.mean(without_values)
+        with_mean = statistics.mean(with_values)
+        report["baseline_mean"][key] = round(baseline_mean, 3)
+        report["return_without_subsidy_mean"][key] = round(without_mean, 3)
+        report["return_with_subsidy_mean"][key] = round(with_mean, 3)
+        report["subsidy_effect_mean_delta"][key] = round(with_mean - without_mean, 3)
+        report["return_rule_effect_mean_delta"][key] = round(with_mean - baseline_mean, 3)
+    report["baseline_runs_with_zero_point_player"] = sum(
+        row["baseline"]["zero_point_players"] > 0 for row in scenarios
+    )
+    report["return_without_subsidy_runs_with_zero_point_player"] = sum(
+        row["return_without_subsidy"]["zero_point_players"] > 0 for row in scenarios
+    )
+    report["return_with_subsidy_runs_with_zero_point_player"] = sum(
+        row["return_with_subsidy"]["zero_point_players"] > 0 for row in scenarios
+    )
+    return report
+
+
+def percentile(values: list[float], ratio: float) -> float:
+    ordered = sorted(values)
+    if not ordered:
+        return 0.0
+    index = min(len(ordered) - 1, max(0, math.ceil(len(ordered) * ratio) - 1))
+    return ordered[index]
+
+
+def compare_cooldown_rules(start_seed: int, runs: int, output_dir: Path) -> dict[str, Any]:
+    policies = {
+        "baseline": "現行90分",
+        "all_field_first": "案A・全場札1位で解除",
+        "endgame_free": "案B・終了2時間半前から免除",
+        "all_field_first_endgame_free": "案A+B・条件解除と終盤免除",
+        "post_credit": "案C・初投稿ごとに15分免除",
+    }
+    scenarios: dict[str, list[dict[str, float | int]]] = {policy: [] for policy in policies}
+    for seed in range(start_seed, start_seed + runs):
+        for policy in policies:
+            summary = Simulation(
+                seed,
+                output_dir,
+                return_to_deck_enabled=True,
+                write_outputs=False,
+                return_subsidy_enabled=True,
+                take_cooldown_policy=policy,
+            ).run()
+            scenarios[policy].append(comparison_metrics(summary))
+
+    report: dict[str, Any] = {
+        "runs": runs,
+        "start_seed": start_seed,
+        "policies": policies,
+        "assumptions": {
+            "return_to_deck_enabled": True,
+            "return_subsidy_enabled": True,
+            "other_take_conditions_unchanged": True,
+            "ui_action_minutes": 0,
+            "take_hand_requirement": "3 + current field count",
+            "field_cap": "min(max(1, participants - 1), 16)",
+        },
+        "statistics": {},
+        "mean_delta_from_baseline": {},
+        "mean_percent_from_baseline": {},
+        "risk_runs": {},
+    }
+    metric_names = list(scenarios["baseline"][0])
+    baseline_means = {
+        metric: statistics.mean(float(row[metric]) for row in scenarios["baseline"])
+        for metric in metric_names
+    }
+    for policy, rows in scenarios.items():
+        report["statistics"][policy] = {}
+        report["mean_delta_from_baseline"][policy] = {}
+        report["mean_percent_from_baseline"][policy] = {}
+        for metric in metric_names:
+            values = [float(row[metric]) for row in rows]
+            mean_value = statistics.mean(values)
+            baseline_mean = baseline_means[metric]
+            report["statistics"][policy][metric] = {
+                "mean": round(mean_value, 3),
+                "median": round(statistics.median(values), 3),
+                "p95": round(percentile(values, 0.95), 3),
+                "max": round(max(values), 3),
+            }
+            report["mean_delta_from_baseline"][policy][metric] = round(mean_value - baseline_mean, 3)
+            report["mean_percent_from_baseline"][policy][metric] = (
+                round((mean_value / baseline_mean - 1.0) * 100.0, 2) if baseline_mean else None
+            )
+        report["risk_runs"][policy] = {
+            "with_rapid_take": sum(row["rapid_takes"] > 0 for row in rows),
+            "with_zero_time_multi_take": sum(row["max_zero_time_burst"] > 1 for row in rows),
+            "with_single_player_majority": sum(row["max_take_share"] > 0.5 for row in rows),
+            "with_cooldown_stall_snapshot": sum(row["cooldown_stall_snapshots"] > 0 for row in rows),
+            "with_all_field_posted_cooldown_wait": sum(
+                row["all_field_posted_cooldown_waits"] > 0 for row in rows
+            ),
+            "with_endgame_cooldown_blocked_cycle": sum(
+                row["endgame_cooldown_blocked_cycles"] > 0 for row in rows
+            ),
+            "with_invariant_error": sum(row["invariant_errors"] > 0 for row in rows),
+        }
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    stamp = datetime.now(JST).strftime("%Y%m%d_%H%M%S")
+    report_path = output_dir / f"tricks_cooldown_comparison_{stamp}.json"
+    report["report_path"] = str(report_path)
+    report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    return report
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="トリックテイキング制ルール検証シミュレーション")
     parser.add_argument("--seed", type=int, default=260704, help="乱数シード")
@@ -2314,12 +3089,84 @@ def parse_args() -> argparse.Namespace:
         default=Path(__file__).resolve().parent / "outputs",
         help="出力ディレクトリ",
     )
+    parser.add_argument(
+        "--return-to-deck",
+        action="store_true",
+        default=True,
+        help="1Pで手札を山札へ戻す追加ルールを有効にする",
+    )
+    parser.add_argument(
+        "--summary-only",
+        action="store_true",
+        help="イベントログと要約ファイルを書き出さない（複数シード比較向け）",
+    )
+    parser.add_argument(
+        "--no-return-subsidy",
+        action="store_true",
+        help="返却後4P以下でも給付金フラグを立てない比較条件",
+    )
+    parser.add_argument(
+        "--compare-runs",
+        type=int,
+        default=0,
+        metavar="N",
+        help="連続するNシードで追加ルール無効・有効を比較する",
+    )
+    parser.add_argument(
+        "--cooldown-policy",
+        choices=sorted(TAKE_COOLDOWN_POLICIES),
+        default="all_field_first_endgame_free",
+        help="テイクのクールダウンルールを選択する",
+    )
+    parser.add_argument(
+        "--take-cost-mode",
+        choices=["field", "level_linear"],
+        default="field",
+        help="テイク必要スタックを場札数式または公開レベル式で算出する",
+    )
+    parser.add_argument(
+        "--take-level-up-every",
+        type=int,
+        default=2,
+        metavar="K",
+        help="level_linear時、成功テイクK回ごとにレベルを1上げる",
+    )
+    parser.add_argument(
+        "--compare-cooldown-runs",
+        type=int,
+        default=0,
+        metavar="N",
+        help="連続するNシードで現行ルールと案A・B・Cを比較する",
+    )
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    sim = Simulation(seed=args.seed, output_dir=args.output_dir)
+    if args.compare_cooldown_runs > 0:
+        print(json.dumps(
+            compare_cooldown_rules(args.seed, args.compare_cooldown_runs, args.output_dir),
+            ensure_ascii=False,
+            indent=2,
+        ))
+        return
+    if args.compare_runs > 0:
+        print(json.dumps(
+            compare_return_rule(args.seed, args.compare_runs, args.output_dir),
+            ensure_ascii=False,
+            indent=2,
+        ))
+        return
+    sim = Simulation(
+        seed=args.seed,
+        output_dir=args.output_dir,
+        return_to_deck_enabled=args.return_to_deck,
+        write_outputs=not args.summary_only,
+        return_subsidy_enabled=not args.no_return_subsidy,
+        take_cooldown_policy=args.cooldown_policy,
+        take_cost_mode=args.take_cost_mode,
+        take_level_up_every=args.take_level_up_every,
+    )
     summary = sim.run()
     print(json.dumps({
         "jsonl_path": summary["jsonl_path"],
@@ -2337,7 +3184,13 @@ def main() -> None:
         "fixed_countdown_tests": summary["fixed_countdown_tests"],
         "fixed_holder_tests": summary["fixed_holder_tests"],
         "fixed_take_cooldown_tests": summary["fixed_take_cooldown_tests"],
+        "fixed_relaxed_take_tests": summary["fixed_relaxed_take_tests"],
+        "fixed_return_to_deck_tests": summary["fixed_return_to_deck_tests"],
+        "fixed_subsidy_tests": summary["fixed_subsidy_tests"],
         "rarity_draw_counts": summary["rarity_draw_counts"],
+        "return_to_deck": summary["return_to_deck"],
+        "cooldown": summary["cooldown"],
+        "economy": summary["economy"],
     }, ensure_ascii=False, indent=2))
 
 

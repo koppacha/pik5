@@ -18,6 +18,7 @@ class Player extends Model
         'subsidy_flag_slot_at' => 'datetime',
         'last_subsidy_paid_slot_at' => 'datetime',
         'last_take_at' => 'datetime',
+        'take_cooldown_released_for' => 'datetime',
     ];
 
     public function event(): BelongsTo

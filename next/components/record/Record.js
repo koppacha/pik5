@@ -118,6 +118,9 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                              data?.post_rank === 3 ? "rank3" :
                              data?.post_rank <  11 ? "rank4" :
                              data?.post_rank <  21 ? "rank11": "rank21"
+    const rankPointLabel = swapScoreRpsLabel && data?.provisional_reward_points !== undefined
+        ? `${data?.rps ?? "?"}r/${data.provisional_reward_points ?? "?"}p`
+        : `${data?.rps ?? "?"} ${history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}`
 
     // 順位セル用のカラー生成関数
     const rankCellColor = (rank) => {
@@ -138,7 +141,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {(!mini || showMiniRps) && <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}]</RankPointType>}
+                        {(!mini || showMiniRps) && <RankPointType className="rank-point-type">[{rankPointLabel}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>

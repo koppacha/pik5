@@ -42,8 +42,12 @@ function logText(log, usersById) {
     if (log?.event === "record_posted" || log?.event === "record_updated") {
         text = `${user}さんが${cardTitle}に投稿しました。（${log?.score ?? "-"}点 / ${log?.rank ?? "-"}位）`
     }
-    if (log?.event === "subsidy_paid") text = "ポイントが給付されました。"
-    if (log?.event === "collect") text = `${cardTitle}が${topUser}に回収され、ポイントが還元されました。`
+    if (log?.event === "subsidy_paid") text = `${Number(log?.subsidy_recipient_count || 1)}人にポイントが給付されました。`
+    if (log?.event === "collect") {
+        text = Number(log?.records_count || 0) === 0
+            ? `${cardTitle}がトラッシュされました`
+            : `${cardTitle}が${topUser}に回収され、ポイントが還元されました。`
+    }
 
     return `${logTimestamp(log?.created_at)} - ${text}`
 }
@@ -52,6 +56,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
     const players = useMemo(() => state?.players || [], [state?.players])
     const logs = useMemo(() => state?.logs || [], [state?.logs])
     const [clockReady, setClockReady] = useState(false)
+    const [logOpen, setLogOpen] = useState(true)
     const [playerOrder, setPlayerOrder] = useState([])
     const sortTimerRef = useRef(null)
     const playersByName = useMemo(() => {
@@ -67,16 +72,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
     const remaining = formatTournamentRemaining(state?.tournament?.end_at, nowValue)
     const nextSubsidyRemaining = clockReady ? formatNextSubsidyRemaining(nowValue) : "--:--"
     const visibleLogs = useMemo(() => {
-        const subsidySlots = new Set()
-
-        return logs.filter((log) => {
-            if (typeof log !== "string" && !visibleLogEvents.has(log?.event)) return false
-            if (log?.event !== "subsidy_paid") return true
-            const slot = String(log?.subsidy_slot || log?.created_at || "").slice(0, 19)
-            if (subsidySlots.has(slot)) return false
-            subsidySlots.add(slot)
-            return true
-        })
+        return logs.filter((log) => typeof log === "string" || visibleLogEvents.has(log?.event))
     }, [logs])
     const infoCard = (
         <div
@@ -159,24 +155,55 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
     return (
         <>
             <div
+                data-tricks-log-wrapper
+                data-log-open={logOpen ? "true" : "false"}
                 style={{
-                    position: "absolute",
+                    position: "fixed",
                     right: 24,
-                    bottom: 24,
-                    width: 284,
-                    maxHeight: 210,
-                    zIndex: 2,
+                    bottom: 235,
+                    width: 444,
+                    height: 178,
+                    display: "flex",
+                    alignItems: "stretch",
+                    zIndex: 20,
                     color: "#e6edf8",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
+                    transform: logOpen ? "translateX(0)" : "translateX(400px)",
+                    transition: "transform 240ms ease, opacity 160ms ease",
                 }}
             >
-                <div style={{fontSize: 13, color: "#9aa8bd", marginBottom: 6}}>
-                    ログ
-                </div>
-                <div
+                <button
+                    type="button"
+                    data-tricks-log-toggle
+                    aria-expanded={logOpen}
+                    aria-controls="tricks-log-region"
+                    onClick={() => setLogOpen((open) => !open)}
                     style={{
-                        maxHeight: 178,
+                        width: 44,
+                        flex: "0 0 44px",
+                        border: "1px solid rgba(154, 168, 189, 0.45)",
+                        borderRight: 0,
+                        borderRadius: "8px 0 0 8px",
+                        background: "rgba(21, 29, 43, 0.96)",
+                        color: "#c7d2e6",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        letterSpacing: "0.16em",
+                        writingMode: "vertical-rl",
+                        cursor: "pointer",
+                    }}
+                >
+                    ログ
+                </button>
+                <div
+                    id="tricks-log-region"
+                    data-tricks-log-region
+                    aria-hidden={!logOpen}
+                    style={{
+                        width: 400,
+                        height: 178,
+                        boxSizing: "border-box",
                         overflowY: "auto",
                         border: "1px solid rgba(154, 168, 189, 0.35)",
                         background: "rgba(13, 18, 28, 0.82)",
@@ -191,6 +218,8 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                     {visibleLogs.slice(0, 100).map((log, index) => (
                         <div
                             key={log?.id || `${index}-${logText(log, usersById)}`}
+                            data-tricks-log-entry={log?.id || index}
+                            data-tricks-log-event={log?.event || "text"}
                             style={{
                                 padding: "3px 0",
                                 borderBottom: index < visibleLogs.length - 1 ? "1px solid rgba(154, 168, 189, 0.12)" : "none",
@@ -271,7 +300,13 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                                 data-tricks-subsidy-flag={player.subsidy_flag ? "active" : "inactive"}
                                                 style={{color: player.subsidy_flag ? "#d84b8c" : "inherit"}}
                                             >
-                                                P{player.subsidy_flag ? "'" : ""} {player.draw_points}
+                                                <span
+                                                    data-tricks-points-label
+                                                    style={{textDecoration: player.subsidy_flag ? "underline" : "none"}}
+                                                >
+                                                    P
+                                                </span>
+                                                {" "}{player.draw_points}
                                             </span>
                                             <span> / 手札 {player.card_count}</span>
                                         </div>

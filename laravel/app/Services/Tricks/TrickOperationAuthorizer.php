@@ -2,6 +2,7 @@
 
 namespace App\Services\Tricks;
 
+use App\Models\Player;
 use App\Models\TrickEvent;
 use Illuminate\Http\Request;
 
@@ -32,6 +33,19 @@ class TrickOperationAuthorizer
         }
 
         return $this->assertAdmin($request);
+    }
+
+    public function assertParticipantForEvent(TrickEvent $event, Request $request): string
+    {
+        $userId = $this->identity->resolveForEvent($request, $event);
+        if ($userId === null) {
+            abort(response()->json(['message' => '認証が必要です'], 401));
+        }
+        if (! Player::query()->where('event_id', $event->event_id)->where('name', $userId)->exists()) {
+            abort(response()->json(['message' => '大会へ参加してください'], 403));
+        }
+
+        return $userId;
     }
 
     public function assertFixture(Request $request, int $eventId): string

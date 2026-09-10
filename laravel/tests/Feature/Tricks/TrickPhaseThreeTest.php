@@ -10,6 +10,8 @@ use App\Models\TrickCardPayment;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
 use App\Models\TrickEventRecord;
+use App\Services\Tricks\TrickCollectionService;
+use App\Services\Tricks\TrickGameService;
 use App\Services\Tricks\TrickRecordService;
 use App\Services\Tricks\TrickStateService;
 use Carbon\CarbonImmutable;
@@ -37,6 +39,57 @@ class TrickPhaseThreeTest extends TestCase
         parent::tearDown();
     }
 
+    public function test_late_first_extension_and_posting_badges_survive_delete_and_repost(): void
+    {
+        [$event, $card] = $this->fixture();
+        $card->update(['limit_at' => $event->debug_now->addMinutes(44)]);
+        $records = app(TrickRecordService::class);
+        $first = $this->record($card, 'alice', 100);
+        $records->saved($first);
+        self::assertTrue($card->fresh()->late_first_extension);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(89)));
+        $state = app(TrickStateService::class);
+        self::assertTrue($state->snapshot($event, 'alice')['field'][0]['my_has_record']);
+        self::assertFalse($state->snapshot($event, 'bob')['field'][0]['my_has_record']);
+        self::assertSame(0, $state->snapshot($event, 'bob')['field'][0]['my_initial_post_cost']);
+        self::assertFalse($state->snapshot($event, null)['field'][0]['my_can_post']);
+        $records->saved($this->record($card, 'bob', 90));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(129)));
+        $records->saved($this->record($card, 'carol', 80));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(164)));
+        self::assertSame(3, $state->snapshot($event, 'dave')['field'][0]['my_initial_post_cost']);
+        $first->update(['flg' => 2]);
+        $records->deleted($first->fresh());
+        self::assertFalse($state->snapshot($event, 'alice')['field'][0]['my_has_record']);
+        self::assertSame(0, $state->snapshot($event, 'alice')['field'][0]['my_initial_post_cost']);
+        $records->saved($this->record($card, 'alice', 110));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(164)));
+        self::assertTrue($card->fresh()->late_first_extension);
+    }
+
+    public function test_first_post_at_exactly_45_minutes_or_in_last_hour_does_not_extend(): void
+    {
+        [$event, $card] = $this->fixture();
+        $card->update(['limit_at' => $event->debug_now->addMinutes(45)]);
+        app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
+        self::assertFalse($card->fresh()->late_first_extension);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(45)));
+        $event->update(['debug_now' => $event->end_at->subHour()]);
+        $card->update(['limit_at' => $event->debug_now->addMinutes(20)]);
+        app(TrickRecordService::class)->saved($this->record($card, 'bob', 90));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(20)));
+    }
+
+    public function test_late_first_post_in_final_hour_never_extends(): void
+    {
+        [$event, $card] = $this->fixture();
+        $event->update(['debug_now' => $event->end_at->subHour()]);
+        $card->update(['limit_at' => $event->debug_now->addMinutes(20)]);
+        app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
+        self::assertFalse($card->fresh()->late_first_extension);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(20)));
+    }
+
     public function test_initial_posts_charge_extend_rank_and_update_provisional_points(): void
     {
         [$event, $card] = $this->fixture();
@@ -58,6 +111,7 @@ class TrickPhaseThreeTest extends TestCase
         $rankings = $records->rankings($card);
         self::assertSame([1, 1, 3, 4], collect($rankings)->pluck('rank')->all());
         self::assertSame([5, 5, 2, 1], collect($rankings)->pluck('rps')->all());
+        self::assertSame([5, 5, 1, 0], collect($rankings)->pluck('provisional_reward_points')->all());
         self::assertNotContains(false, collect($rankings)->pluck('initial_payment_recorded')->all(), true);
 
         Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['rank_points' => 2]);
@@ -97,6 +151,96 @@ class TrickPhaseThreeTest extends TestCase
         $records->saved($repost);
         self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
         self::assertSame($limit, $card->fresh()->limit_at->toDateTimeString());
+    }
+
+    public function test_all_field_first_releases_current_take_cooldown_and_next_take_resets_it(): void
+    {
+        [$event, $firstCard] = $this->fixture();
+        $now = CarbonImmutable::instance($event->debug_now);
+        $secondDeck = Deck::query()->create([
+            'eventId' => $event->event_id,
+            'event_id' => $event->event_id,
+            'stageId' => 399,
+            'stage_id' => 7102,
+            'origin_stage_id' => 399,
+            'card_id' => 920102,
+            'title' => 'Phase 3 second card',
+            'ruleName' => 'Rule',
+            'rule_name' => 'Rule',
+            'state' => '_in_event',
+            'text' => 'Test rule',
+            'difficulty' => 2,
+            'rarity' => 3,
+            'rewards' => 0,
+        ]);
+        $secondCard = TrickEventCard::query()->create([
+            'event_id' => $event->event_id,
+            'deck_id' => $secondDeck->id,
+            'state' => '_field',
+            'difficulty' => 2,
+            'rarity' => 3,
+            'stack_count' => 3,
+            'taker' => 'alice',
+            'taken_at' => $now,
+            'limit_at' => $now->addMinutes(90),
+        ])->load('deck');
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update([
+            'last_take_at' => $now,
+        ]);
+
+        $records = app(TrickRecordService::class);
+        foreach ([$firstCard, $secondCard] as $card) {
+            $records->saved($this->record($card, 'bob', 100));
+            $records->saved($this->record($card, 'alice', 100));
+        }
+
+        $alice = Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->firstOrFail();
+        self::assertTrue($alice->take_cooldown_released_for->equalTo($alice->last_take_at));
+        self::assertNull(app(TrickStateService::class)->snapshot($event, 'alice')['me']['next_take_at']);
+
+        foreach (range(1, 5) as $index) {
+            $deck = Deck::query()->create([
+                'eventId' => $event->event_id,
+                'event_id' => $event->event_id,
+                'stageId' => 399,
+                'stage_id' => 7200 + $index,
+                'origin_stage_id' => 399,
+                'card_id' => 920200 + $index,
+                'title' => 'Cooldown hand '.$index,
+                'ruleName' => 'Rule',
+                'rule_name' => 'Rule',
+                'state' => '_in_event',
+                'text' => 'Test rule',
+                'difficulty' => 1,
+                'rarity' => 1,
+                'rewards' => 0,
+            ]);
+            TrickEventCard::query()->create([
+                'event_id' => $event->event_id,
+                'deck_id' => $deck->id,
+                'state' => 'alice',
+                'difficulty' => 1,
+                'rarity' => 1,
+                'drawn_order' => $index,
+            ]);
+        }
+
+        $selected = TrickEventCard::query()->where('event_id', $event->event_id)
+            ->where('state', 'alice')->orderBy('drawn_order')->firstOrFail();
+        $take = app(TrickGameService::class)->take($event, 'alice', $selected->deck_id);
+
+        self::assertSame('_field', $take['card']['state']);
+        self::assertNull(Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->value('take_cooldown_released_for'));
+        self::assertSame($now->addMinutes(90)->toIso8601String(), $take['player']['next_take_at']);
+
+        app(TrickCollectionService::class)->collect($event, $selected->deck_id, true);
+        $aliceAfterCollection = Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->firstOrFail();
+        self::assertTrue(
+            $aliceAfterCollection->take_cooldown_released_for->equalTo($aliceAfterCollection->last_take_at),
+        );
+        self::assertNull(app(TrickStateService::class)->snapshot($event, 'alice')['me']['next_take_at']);
     }
 
     public function test_event_record_link_prevents_historical_stage_records_from_mixing(): void

@@ -3,19 +3,63 @@
 namespace Tests\Feature\Tricks;
 
 use App\Models\Deck;
+use App\Models\LimitLog;
 use App\Models\Player;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
 use App\Services\Tricks\TrickGameService;
+use App\Services\Tricks\TrickStageAllocator;
 use App\Services\Tricks\TrickStateService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class TrickPhaseTwoTest extends TestCase
 {
     use DatabaseTransactions;
+
+    public function test_stage_allocator_uses_smallest_unused_id_between_1001_and_1999(): void
+    {
+        $now = CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Tokyo');
+        $event = TrickEvent::query()->create([
+            'event_id' => 990005,
+            'title' => 'Stage allocation test',
+            'start_at' => $now->subHour(),
+            'end_at' => $now->addHour(),
+            'state' => 'active',
+            'debug' => true,
+            'test_mode' => true,
+            'debug_now' => $now,
+            'initialized_at' => $now->subHour(),
+        ]);
+        $usedStageIds = DB::table('stages')->whereBetween('stage_id', [1001, 1999])->pluck('stage_id')
+            ->merge(Deck::query()->whereBetween('stage_id', [1001, 1999])->pluck('stage_id'))
+            ->map(fn ($stageId) => (int) $stageId)->flip();
+        $expectedStageId = collect(range(1001, 1999))->first(fn (int $stageId) => ! $usedStageIds->has($stageId));
+        self::assertNotNull($expectedStageId);
+        $deck = Deck::query()->create([
+            'eventId' => $event->event_id,
+            'event_id' => $event->event_id,
+            'stageId' => 399,
+            'stage_id' => null,
+            'origin_stage_id' => 399,
+            'card_id' => 990005,
+            'title' => 'Allocated card',
+            'ruleName' => 'Rule',
+            'rule_name' => 'Rule',
+            'state' => '_in_event',
+            'text' => 'Test rule',
+            'difficulty' => 1,
+            'rarity' => 1,
+            'rewards' => 0,
+        ]);
+
+        self::assertSame($expectedStageId, app(TrickStageAllocator::class)->ensure($event, $deck));
+        self::assertSame($expectedStageId, (int) $deck->fresh()->stage_id);
+        self::assertTrue(DB::table('stages')->where('stage_id', $expectedStageId)->exists());
+    }
 
     public function test_join_draw_take_and_read_only_snapshot_use_event_models(): void
     {
@@ -161,6 +205,16 @@ class TrickPhaseTwoTest extends TestCase
             $payload = $exception->getResponse()->getData(true);
             self::assertSame($now->addMinutes(90)->toIso8601String(), $payload['next_take_at']);
         }
+
+        $endgameThreshold = CarbonImmutable::instance($event->end_at)->subMinutes(150);
+        $event->update(['debug_now' => $endgameThreshold]);
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update([
+            'last_take_at' => $endgameThreshold->subMinutes(10),
+            'take_cooldown_released_for' => null,
+        ]);
+        $endgameTake = $game->take($event->fresh(), 'alice', $newHand->first()->deck_id);
+        self::assertSame('_field', $endgameTake['card']['state']);
+        self::assertNull($endgameTake['player']['next_take_at']);
     }
 
     public function test_join_api_ignores_body_identity_and_accepts_signed_identity(): void
@@ -198,6 +252,102 @@ class TrickPhaseTwoTest extends TestCase
         } finally {
             putenv('TRICKS_EVENT_ID');
             putenv('TRICKS_INTERNAL_SECRET');
+        }
+    }
+
+    public function test_return_to_deck_costs_one_point_preserves_rarity_and_sets_history(): void
+    {
+        $now = CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Tokyo');
+        $event = TrickEvent::query()->create([
+            'event_id' => 990004,
+            'title' => 'Phase 2 return',
+            'start_at' => $now->subHour(),
+            'end_at' => $now->addHours(47),
+            'state' => 'active',
+            'debug' => true,
+            'test_mode' => true,
+            'debug_now' => $now,
+            'initialized_at' => $now->subHour(),
+            'random_seed' => 1234,
+        ]);
+        $deck = Deck::query()->create([
+            'eventId' => $event->event_id,
+            'event_id' => $event->event_id,
+            'stageId' => 399,
+            'stage_id' => 6401,
+            'origin_stage_id' => 399,
+            'card_id' => 914001,
+            'title' => 'Returned card',
+            'ruleName' => 'Rule',
+            'rule_name' => 'Rule',
+            'state' => '_in_event',
+            'text' => 'Test rule',
+            'difficulty' => 1,
+            'rarity' => 1,
+            'rewards' => 0,
+        ]);
+        $card = TrickEventCard::query()->create([
+            'event_id' => $event->event_id,
+            'deck_id' => $deck->id,
+            'state' => 'alice',
+            'difficulty' => 1,
+            'rarity' => 5,
+            'drawn_order' => 1,
+        ]);
+        Player::query()->create([
+            'event_id' => $event->event_id,
+            'name' => 'alice',
+            'draw_points' => 5,
+            'rank_points' => 0,
+            'card_count' => 1,
+            'created_at' => $now->subHour(),
+            'updated_at' => $now->subHour(),
+        ]);
+
+        $game = app(TrickGameService::class);
+        $returned = $game->returnToDeck($event, 'alice', $deck->id);
+        self::assertSame(4, $returned['player']['points']);
+        self::assertSame([], $returned['hand']);
+        self::assertSame('_deck', $card->fresh()->state);
+        self::assertSame(1, $card->fresh()->returned_count);
+        self::assertSame(5, $card->fresh()->rarity);
+        self::assertTrue((bool) Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->value('subsidy_flag'));
+        self::assertTrue($returned['player']['subsidy_flag']);
+        self::assertTrue(app(TrickStateService::class)->snapshot($event, 'alice')['me']['subsidy_flag']);
+        self::assertNotContains('return_to_deck', collect(app(TrickStateService::class)->logs($event))->pluck('event')->all());
+        self::assertSame(1, LimitLog::query()->where('event_id', $event->event_id)
+            ->where('event', 'return_to_deck')->count());
+
+        foreach (['bob', 'carol', 'dave', 'erin'] as $name) {
+            Player::query()->create([
+                'event_id' => $event->event_id,
+                'name' => $name,
+                'draw_points' => 5,
+                'rank_points' => 0,
+                'card_count' => 0,
+                'created_at' => $now->subHour(),
+                'updated_at' => $now->subHour(),
+            ]);
+        }
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update([
+            'draw_points' => 5,
+            'subsidy_flag' => false,
+            'subsidy_flag_slot_at' => null,
+        ]);
+        $drawn = $game->draw($event, 'alice');
+        self::assertSame(5, $drawn['card']['rarity']);
+        self::assertTrue($drawn['card']['was_returned']);
+        self::assertSame(4, $drawn['player']['points']);
+        self::assertTrue($drawn['player']['subsidy_flag']);
+        self::assertTrue(app(TrickStateService::class)->snapshot($event, 'alice')['me']['subsidy_flag']);
+
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['draw_points' => 0]);
+        try {
+            $game->returnToDeck($event, 'alice', $deck->id);
+            self::fail('0P return must fail');
+        } catch (HttpResponseException $exception) {
+            self::assertSame(422, $exception->getResponse()->getStatusCode());
         }
     }
 }

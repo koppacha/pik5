@@ -16,6 +16,8 @@ class TrickEventCard extends Model
         'stack_count' => 'integer',
         'post_count' => 'integer',
         'paid_points_total' => 'integer',
+        'returned_count' => 'integer',
+        'late_first_extension' => 'boolean',
         'limit_at' => 'datetime',
         'taken_at' => 'datetime',
         'collected_at' => 'datetime',

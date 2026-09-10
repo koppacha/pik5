@@ -108,8 +108,6 @@ export default async function handle(req, res){
   const identityHeaders = path.startsWith('tricks/')
     ? Object.keys(testIdentityHeaders).length > 0
       ? testIdentityHeaders
-      : path === 'tricks/maintenance/collect-expired'
-        ? tricksIdentityHeaders('system', 10)
       : tricksIdentityHeaders(session?.user?.userId || session?.user?.id, session?.user?.role)
     : {}
   try {

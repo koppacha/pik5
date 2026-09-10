@@ -40,9 +40,9 @@ class TrickController extends Controller
 
     private const POLL_LIMIT = 100;
 
-    private const STAGE_ID_START = 1313;
+    private const STAGE_ID_START = 1001;
 
-    private const STAGE_ID_END = 9999;
+    private const STAGE_ID_END = 1999;
 
     private array $deckColumns = [];
 
@@ -149,6 +149,14 @@ class TrickController extends Controller
         return response()->json($game->take($event, $userId, $deckId, $request));
     }
 
+    public function returnToDeck(Request $request, int $deckId, TrickEventResolver $events, TrickGameService $game): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($game->returnToDeck($event, $userId, $deckId, $request));
+    }
+
     public function scores(Request $request, int $deckId, TrickEventResolver $events, TrickRequestIdentity $identity, TrickRecordService $records): JsonResponse
     {
         $event = $events->forRequest($request, $identity);
@@ -191,7 +199,7 @@ class TrickController extends Controller
         TrickCollectionService $collections,
     ): JsonResponse {
         $event = $events->forRequest($request, app(TrickRequestIdentity::class));
-        $actor = $authorization->assertAdminForEvent($event, $request);
+        $actor = $authorization->assertParticipantForEvent($event, $request);
 
         return response()->json($collections->collectExpired($event, $actor, $request));
     }
@@ -203,7 +211,7 @@ class TrickController extends Controller
         TrickSubsidyService $subsidies,
     ): JsonResponse {
         $event = $events->forRequest($request, app(TrickRequestIdentity::class));
-        $actor = $authorization->assertAdminForEvent($event, $request);
+        $actor = $authorization->assertParticipantForEvent($event, $request);
 
         return response()->json($subsidies->processCurrent($event, $actor, $request));
     }

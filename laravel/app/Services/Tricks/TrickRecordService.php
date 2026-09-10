@@ -22,7 +22,9 @@ class TrickRecordService
         private readonly TrickClock $clock,
         private readonly TrickRuleCalculator $rules,
         private readonly TrickRankCalculator $ranks,
+        private readonly TrickRewardDistributor $rewards,
         private readonly TrickRequestIdentity $identity,
+        private readonly TrickTakeCooldownService $cooldowns,
     ) {
     }
 
@@ -91,22 +93,26 @@ class TrickRecordService
                 $card->increment('paid_points_total', $pointsPaid);
             }
 
-            if ($participantOrder >= 2 && $card->limit_at !== null
+            if ($card->limit_at !== null
                 && $now->lessThan(CarbonImmutable::instance($event->end_at)->subHour())) {
-                $extension = $this->rules->extensionMinutes($participantOrder);
-                $card->limit_at = CarbonImmutable::instance($card->limit_at)->addMinutes($extension);
+                $limit = CarbonImmutable::instance($card->limit_at);
+                if ($participantOrder === 1 && $limit->greaterThan($now) && $limit->lessThan($now->addMinutes(45))) {
+                    $extension = 45;
+                    $card->late_first_extension = true;
+                } elseif ($participantOrder >= 2) {
+                    $extension = $this->rules->extensionMinutes($participantOrder, (bool) $card->late_first_extension);
+                }
+                $card->limit_at = $limit->addMinutes($extension);
                 $card->save();
             }
         }
 
-        $player->subsidy_flag = true;
-        $player->subsidy_flag_slot_at = $this->nextSubsidySlot($this->clock->now($event));
-        $player->save();
         $rankings = $this->rankings($card);
         $card->post_count = count($rankings);
         $card->top_player = $rankings[0]['user_id'] ?? null;
         $card->save();
         $this->log($event, $card, $record, $participantOrder, $pointsPaid, $extension, $rankings, $request);
+        $this->releaseEligibleTakeCooldowns($event, $now);
     }
 
     public function deleted(Record $record, Request $request = null): void
@@ -115,8 +121,8 @@ class TrickRecordService
         if ($link === null) {
             return;
         }
+        $event = TrickEvent::query()->where('event_id', $link->event_id)->lockForUpdate()->firstOrFail();
         if ($request !== null) {
-            $event = TrickEvent::query()->where('event_id', $link->event_id)->firstOrFail();
             $userId = $this->identity->resolveForEvent($request, $event);
             if ($userId === null) {
                 abort(response()->json(['message' => '認証が必要です'], 401));
@@ -151,11 +157,53 @@ class TrickRecordService
                 'collection_result_frozen' => $card->state === '_collected',
             ],
         ]);
+        $this->releaseEligibleTakeCooldowns($event, $this->clock->now($event));
+    }
+
+    /** @return array<int, string> */
+    public function releaseEligibleTakeCooldowns(TrickEvent $event, CarbonImmutable $now): array
+    {
+        $field = TrickEventCard::query()->where('event_id', $event->event_id)
+            ->where('state', '_field')->get();
+        if ($field->count() < 2) {
+            return [];
+        }
+
+        $firstPlayersByCard = collect($this->rankingsByCards($field))->map(
+            fn (array $rankings) => collect($rankings)->where('rank', 1)->pluck('user_id')->values(),
+        );
+        $players = Player::query()->where('event_id', $event->event_id)
+            ->whereNotNull('last_take_at')->lockForUpdate()->get();
+        $released = [];
+        foreach ($players as $player) {
+            if ($this->cooldowns->nextTakeAt($event, $player, $now) === null) {
+                continue;
+            }
+            if (! $field->contains(fn (TrickEventCard $card) => $card->taker !== null
+                && (string) $card->taker !== $player->name)) {
+                continue;
+            }
+            $isFirstOnEveryCard = $field->every(
+                fn (TrickEventCard $card) => $firstPlayersByCard->get($card->id, collect())->contains($player->name),
+            );
+            if (! $isFirstOnEveryCard) {
+                continue;
+            }
+
+            $player->take_cooldown_released_for = $player->last_take_at;
+            $player->save();
+            $released[] = $player->name;
+        }
+
+        return $released;
     }
 
     public function rankings(TrickEventCard $card): array
     {
-        return $this->rankingsByCards(collect([$card]))[$card->id] ?? [];
+        $card = $card->fresh() ?? $card;
+        $rankings = $this->rankingsByCards(collect([$card]))[$card->id] ?? [];
+
+        return $this->withProvisionalRewards($card, $rankings);
     }
 
     /** @return array<string, int> */
@@ -235,6 +283,42 @@ class TrickRecordService
 
             return $data;
         })->sortBy('rank')->values()->all();
+    }
+
+    private function withProvisionalRewards(TrickEventCard $card, array $rankings): array
+    {
+        if ($rankings === []) {
+            return [];
+        }
+        if (count($rankings) === 1) {
+            $rankings[0]['provisional_reward_points'] = max(
+                0,
+                (int) $card->stack_count + (int) $card->paid_points_total,
+            );
+
+            return $rankings;
+        }
+
+        $rankGroups = collect($rankings)->groupBy('rank')->values()
+            ->map(fn ($group) => $group->pluck('user_id')->values()->all())->all();
+        $result = $this->rewards->distribute(
+            $this->rules->totalReward(
+                (int) $card->stack_count,
+                (int) $card->paid_points_total,
+                (int) $card->difficulty,
+            ),
+            $rankGroups,
+        );
+
+        return collect($rankings)->map(function (array $ranking) use ($card, $result): array {
+            $points = (int) ($result['distribution'][$ranking['user_id']] ?? 0);
+            if ($ranking['user_id'] === $card->taker) {
+                $points += (int) $result['taker_remainder'];
+            }
+            $ranking['provisional_reward_points'] = $points;
+
+            return $ranking;
+        })->all();
     }
 
     private function authorizeSavedRecord(

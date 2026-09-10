@@ -4,9 +4,11 @@ export const tricksApi = {
     join: "/api/server/tricks/join",
     draw: "/api/server/tricks/draw",
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
+    returnToDeck: (deckId) => `/api/server/tricks/cards/${deckId}/return-to-deck`,
     scores: (deckId) => `/api/server/tricks/cards/${deckId}/scores`,
     debugCollect: (deckId) => `/api/server/tricks/cards/${deckId}/debug-collect`,
     collectExpired: "/api/server/tricks/maintenance/collect-expired",
+    subsidy: "/api/server/tricks/maintenance/subsidy",
     debugTimeFreeze: "/api/server/tricks/debug/time/freeze",
     debugTimeSet: "/api/server/tricks/debug/time/set",
     debugTimeAdvance: "/api/server/tricks/debug/time/advance",
@@ -16,6 +18,7 @@ export const tricksApi = {
 export const tricksActions = {
     draw: "draw",
     take: "take",
+    returnToDeck: "returnToDeck",
     selectField: "selectField",
     cancel: "cancel",
 }
@@ -243,7 +246,7 @@ export const tricksOperationState = (state, options = {}) => {
     const fieldCount = (state?.field || []).filter((card) => !isTricksCardLimitExpired(card, nowValue)).length
     const handCount = state?.hand?.length || 0
     const playerCount = state?.players?.length || 0
-    const requiredHand = 3 + fieldCount
+    const requiredHand = 3 + Math.floor(fieldCount / 2)
     const fieldCap = Math.min(Math.max(1, playerCount - 1), 16)
     const endAt = tournament.end_at ? new Date(tournament.end_at).getTime() : 0
     const nextTakeAt = me?.next_take_at ? new Date(me.next_take_at).getTime() : 0
@@ -263,12 +266,19 @@ export const tricksOperationState = (state, options = {}) => {
     else if (fieldCount >= fieldCap) takeReason = `場札上限 ${fieldCap}枚に達しています`
     else if (handCount < requiredHand) takeReason = `手札が${requiredHand}枚必要です（現在${handCount}枚）`
 
+    let returnReason = ""
+    if (!me) returnReason = "大会へ参加してください"
+    else if (!available) returnReason = "大会開催時間外です"
+    else if (Number(me.draw_points) <= 0) returnReason = "ポイントが0P以下です"
+
     return {
         available,
         canDraw: drawReason === "",
         drawReason,
         canTake: takeReason === "",
         takeReason,
+        canReturnToDeck: returnReason === "",
+        returnReason,
         requiredHand,
         fieldCap,
         fieldCount,

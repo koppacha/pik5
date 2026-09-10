@@ -1,0 +1,947 @@
+{
+  "runs": 100,
+  "start_seed": 260704,
+  "policies": {
+    "baseline": "現行90分",
+    "all_field_first": "案A・全場札1位で解除",
+    "endgame_free": "案B・終了2時間半前から免除",
+    "post_credit": "案C・初投稿ごとに15分免除"
+  },
+  "assumptions": {
+    "return_to_deck_enabled": true,
+    "return_subsidy_enabled": true,
+    "other_take_conditions_unchanged": true,
+    "ui_action_minutes": 0,
+    "take_hand_requirement": "3 + current field count",
+    "field_cap": "min(max(1, participants - 1), 16)"
+  },
+  "statistics": {
+    "baseline": {
+      "collections": {
+        "mean": 40.95,
+        "median": 41.0,
+        "p95": 48.0,
+        "max": 54.0
+      },
+      "subsidy_payments": {
+        "mean": 95.88,
+        "median": 95.5,
+        "p95": 135.0,
+        "max": 149.0
+      },
+      "end_points": {
+        "mean": 264.18,
+        "median": 260.5,
+        "p95": 315.0,
+        "max": 350.0
+      },
+      "zero_point_players": {
+        "mean": 0.25,
+        "median": 0.0,
+        "p95": 1.0,
+        "max": 4.0
+      },
+      "draws": {
+        "mean": 344.86,
+        "median": 342.0,
+        "p95": 412.0,
+        "max": 456.0
+      },
+      "takes": {
+        "mean": 40.95,
+        "median": 41.0,
+        "p95": 48.0,
+        "max": 54.0
+      },
+      "rank_points": {
+        "mean": 643.91,
+        "median": 637.5,
+        "p95": 793.0,
+        "max": 842.0
+      },
+      "max_player_rank_points": {
+        "mean": 108.88,
+        "median": 104.0,
+        "p95": 157.0,
+        "max": 175.0
+      },
+      "mean_max_stack": {
+        "mean": 7.201,
+        "median": 7.281,
+        "p95": 8.375,
+        "max": 9.688
+      },
+      "collection_rewards": {
+        "mean": 481.35,
+        "median": 476.0,
+        "p95": 590.0,
+        "max": 646.0
+      },
+      "post_fees": {
+        "mean": 147.18,
+        "median": 145.0,
+        "p95": 184.0,
+        "max": 204.0
+      },
+      "max_takes_by_player": {
+        "mean": 10.11,
+        "median": 10.0,
+        "p95": 15.0,
+        "max": 16.0
+      },
+      "max_take_share": {
+        "mean": 0.246,
+        "median": 0.244,
+        "p95": 0.351,
+        "max": 0.371
+      },
+      "rapid_takes": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "max_zero_time_burst": {
+        "mean": 1.0,
+        "median": 1.0,
+        "p95": 1.0,
+        "max": 1.0
+      },
+      "max_sub90_burst": {
+        "mean": 1.0,
+        "median": 1.0,
+        "p95": 1.0,
+        "max": 1.0
+      },
+      "cooldown_stall_snapshots": {
+        "mean": 4.81,
+        "median": 4.0,
+        "p95": 10.0,
+        "max": 17.0
+      },
+      "all_field_posted_cooldown_waits": {
+        "mean": 12.49,
+        "median": 12.0,
+        "p95": 23.0,
+        "max": 30.0
+      },
+      "cooldown_releases": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "post_credit_events": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "endgame_free_takes": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "returns": {
+        "mean": 21.01,
+        "median": 21.0,
+        "p95": 33.0,
+        "max": 57.0
+      },
+      "return_redraws": {
+        "mean": 19.11,
+        "median": 18.5,
+        "p95": 31.0,
+        "max": 55.0
+      },
+      "other_player_redraws": {
+        "mean": 13.87,
+        "median": 13.5,
+        "p95": 24.0,
+        "max": 30.0
+      },
+      "practiced_returns": {
+        "mean": 0.07,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 2.0
+      },
+      "return_subsidy_flags": {
+        "mean": 5.96,
+        "median": 5.5,
+        "p95": 12.0,
+        "max": 17.0
+      },
+      "invariant_errors": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      }
+    },
+    "all_field_first": {
+      "collections": {
+        "mean": 42.65,
+        "median": 42.0,
+        "p95": 50.0,
+        "max": 56.0
+      },
+      "subsidy_payments": {
+        "mean": 94.53,
+        "median": 91.5,
+        "p95": 131.0,
+        "max": 154.0
+      },
+      "end_points": {
+        "mean": 270.07,
+        "median": 275.0,
+        "p95": 308.0,
+        "max": 356.0
+      },
+      "zero_point_players": {
+        "mean": 0.19,
+        "median": 0.0,
+        "p95": 1.0,
+        "max": 1.0
+      },
+      "draws": {
+        "mean": 356.64,
+        "median": 353.5,
+        "p95": 427.0,
+        "max": 464.0
+      },
+      "takes": {
+        "mean": 42.65,
+        "median": 42.0,
+        "p95": 50.0,
+        "max": 56.0
+      },
+      "rank_points": {
+        "mean": 653.15,
+        "median": 642.5,
+        "p95": 806.0,
+        "max": 867.0
+      },
+      "max_player_rank_points": {
+        "mean": 111.33,
+        "median": 104.5,
+        "p95": 158.0,
+        "max": 180.0
+      },
+      "mean_max_stack": {
+        "mean": 7.231,
+        "median": 7.312,
+        "p95": 8.188,
+        "max": 8.875
+      },
+      "collection_rewards": {
+        "mean": 504.15,
+        "median": 500.0,
+        "p95": 595.0,
+        "max": 644.0
+      },
+      "post_fees": {
+        "mean": 151.72,
+        "median": 151.0,
+        "p95": 186.0,
+        "max": 205.0
+      },
+      "max_takes_by_player": {
+        "mean": 11.13,
+        "median": 11.0,
+        "p95": 18.0,
+        "max": 19.0
+      },
+      "max_take_share": {
+        "mean": 0.259,
+        "median": 0.253,
+        "p95": 0.367,
+        "max": 0.442
+      },
+      "rapid_takes": {
+        "mean": 3.48,
+        "median": 3.0,
+        "p95": 8.0,
+        "max": 11.0
+      },
+      "max_zero_time_burst": {
+        "mean": 1.0,
+        "median": 1.0,
+        "p95": 1.0,
+        "max": 1.0
+      },
+      "max_sub90_burst": {
+        "mean": 2.64,
+        "median": 2.0,
+        "p95": 4.0,
+        "max": 7.0
+      },
+      "cooldown_stall_snapshots": {
+        "mean": 4.34,
+        "median": 4.0,
+        "p95": 10.0,
+        "max": 17.0
+      },
+      "all_field_posted_cooldown_waits": {
+        "mean": 9.07,
+        "median": 8.0,
+        "p95": 18.0,
+        "max": 23.0
+      },
+      "cooldown_releases": {
+        "mean": 3.58,
+        "median": 3.0,
+        "p95": 8.0,
+        "max": 12.0
+      },
+      "post_credit_events": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "endgame_free_takes": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "returns": {
+        "mean": 20.25,
+        "median": 19.5,
+        "p95": 34.0,
+        "max": 57.0
+      },
+      "return_redraws": {
+        "mean": 18.35,
+        "median": 18.0,
+        "p95": 32.0,
+        "max": 43.0
+      },
+      "other_player_redraws": {
+        "mean": 13.4,
+        "median": 13.0,
+        "p95": 22.0,
+        "max": 36.0
+      },
+      "practiced_returns": {
+        "mean": 0.04,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 2.0
+      },
+      "return_subsidy_flags": {
+        "mean": 6.0,
+        "median": 6.0,
+        "p95": 12.0,
+        "max": 17.0
+      },
+      "invariant_errors": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      }
+    },
+    "endgame_free": {
+      "collections": {
+        "mean": 41.63,
+        "median": 41.0,
+        "p95": 48.0,
+        "max": 55.0
+      },
+      "subsidy_payments": {
+        "mean": 96.46,
+        "median": 96.0,
+        "p95": 135.0,
+        "max": 149.0
+      },
+      "end_points": {
+        "mean": 258.39,
+        "median": 255.0,
+        "p95": 305.0,
+        "max": 348.0
+      },
+      "zero_point_players": {
+        "mean": 0.18,
+        "median": 0.0,
+        "p95": 1.0,
+        "max": 2.0
+      },
+      "draws": {
+        "mean": 357.14,
+        "median": 354.0,
+        "p95": 429.0,
+        "max": 499.0
+      },
+      "takes": {
+        "mean": 41.63,
+        "median": 41.0,
+        "p95": 48.0,
+        "max": 55.0
+      },
+      "rank_points": {
+        "mean": 641.02,
+        "median": 633.5,
+        "p95": 795.0,
+        "max": 835.0
+      },
+      "max_player_rank_points": {
+        "mean": 108.9,
+        "median": 103.5,
+        "p95": 159.0,
+        "max": 177.0
+      },
+      "mean_max_stack": {
+        "mean": 7.191,
+        "median": 7.156,
+        "p95": 8.438,
+        "max": 9.5
+      },
+      "collection_rewards": {
+        "mean": 486.85,
+        "median": 478.5,
+        "p95": 590.0,
+        "max": 664.0
+      },
+      "post_fees": {
+        "mean": 146.98,
+        "median": 145.0,
+        "p95": 183.0,
+        "max": 203.0
+      },
+      "max_takes_by_player": {
+        "mean": 10.59,
+        "median": 10.0,
+        "p95": 16.0,
+        "max": 19.0
+      },
+      "max_take_share": {
+        "mean": 0.253,
+        "median": 0.25,
+        "p95": 0.364,
+        "max": 0.432
+      },
+      "rapid_takes": {
+        "mean": 1.34,
+        "median": 1.0,
+        "p95": 4.0,
+        "max": 6.0
+      },
+      "max_zero_time_burst": {
+        "mean": 1.42,
+        "median": 1.0,
+        "p95": 3.0,
+        "max": 3.0
+      },
+      "max_sub90_burst": {
+        "mean": 2.15,
+        "median": 2.0,
+        "p95": 4.0,
+        "max": 5.0
+      },
+      "cooldown_stall_snapshots": {
+        "mean": 4.71,
+        "median": 4.0,
+        "p95": 10.0,
+        "max": 17.0
+      },
+      "all_field_posted_cooldown_waits": {
+        "mean": 12.15,
+        "median": 12.0,
+        "p95": 22.0,
+        "max": 30.0
+      },
+      "cooldown_releases": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "post_credit_events": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "endgame_free_takes": {
+        "mean": 3.71,
+        "median": 4.0,
+        "p95": 6.0,
+        "max": 7.0
+      },
+      "returns": {
+        "mean": 20.8,
+        "median": 20.5,
+        "p95": 32.0,
+        "max": 50.0
+      },
+      "return_redraws": {
+        "mean": 19.36,
+        "median": 19.0,
+        "p95": 31.0,
+        "max": 40.0
+      },
+      "other_player_redraws": {
+        "mean": 14.16,
+        "median": 13.5,
+        "p95": 24.0,
+        "max": 30.0
+      },
+      "practiced_returns": {
+        "mean": 0.07,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 2.0
+      },
+      "return_subsidy_flags": {
+        "mean": 5.72,
+        "median": 5.0,
+        "p95": 12.0,
+        "max": 17.0
+      },
+      "invariant_errors": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      }
+    },
+    "post_credit": {
+      "collections": {
+        "mean": 42.18,
+        "median": 42.0,
+        "p95": 50.0,
+        "max": 52.0
+      },
+      "subsidy_payments": {
+        "mean": 92.63,
+        "median": 92.0,
+        "p95": 126.0,
+        "max": 146.0
+      },
+      "end_points": {
+        "mean": 267.01,
+        "median": 263.5,
+        "p95": 317.0,
+        "max": 349.0
+      },
+      "zero_point_players": {
+        "mean": 0.23,
+        "median": 0.0,
+        "p95": 1.0,
+        "max": 3.0
+      },
+      "draws": {
+        "mean": 348.51,
+        "median": 342.5,
+        "p95": 424.0,
+        "max": 443.0
+      },
+      "takes": {
+        "mean": 42.18,
+        "median": 42.0,
+        "p95": 50.0,
+        "max": 52.0
+      },
+      "rank_points": {
+        "mean": 660.66,
+        "median": 652.5,
+        "p95": 814.0,
+        "max": 862.0
+      },
+      "max_player_rank_points": {
+        "mean": 110.98,
+        "median": 106.5,
+        "p95": 150.0,
+        "max": 171.0
+      },
+      "mean_max_stack": {
+        "mean": 7.253,
+        "median": 7.156,
+        "p95": 8.562,
+        "max": 9.625
+      },
+      "collection_rewards": {
+        "mean": 496.47,
+        "median": 495.0,
+        "p95": 595.0,
+        "max": 644.0
+      },
+      "post_fees": {
+        "mean": 152.72,
+        "median": 151.5,
+        "p95": 194.0,
+        "max": 212.0
+      },
+      "max_takes_by_player": {
+        "mean": 10.79,
+        "median": 11.0,
+        "p95": 16.0,
+        "max": 17.0
+      },
+      "max_take_share": {
+        "mean": 0.255,
+        "median": 0.25,
+        "p95": 0.351,
+        "max": 0.447
+      },
+      "rapid_takes": {
+        "mean": 6.51,
+        "median": 6.0,
+        "p95": 11.0,
+        "max": 13.0
+      },
+      "max_zero_time_burst": {
+        "mean": 1.0,
+        "median": 1.0,
+        "p95": 1.0,
+        "max": 1.0
+      },
+      "max_sub90_burst": {
+        "mean": 2.83,
+        "median": 2.0,
+        "p95": 6.0,
+        "max": 9.0
+      },
+      "cooldown_stall_snapshots": {
+        "mean": 4.38,
+        "median": 4.0,
+        "p95": 10.0,
+        "max": 19.0
+      },
+      "all_field_posted_cooldown_waits": {
+        "mean": 10.01,
+        "median": 10.0,
+        "p95": 19.0,
+        "max": 25.0
+      },
+      "cooldown_releases": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "post_credit_events": {
+        "mean": 46.09,
+        "median": 46.0,
+        "p95": 57.0,
+        "max": 63.0
+      },
+      "endgame_free_takes": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      },
+      "returns": {
+        "mean": 20.86,
+        "median": 20.5,
+        "p95": 33.0,
+        "max": 39.0
+      },
+      "return_redraws": {
+        "mean": 19.08,
+        "median": 18.5,
+        "p95": 30.0,
+        "max": 37.0
+      },
+      "other_player_redraws": {
+        "mean": 14.39,
+        "median": 14.0,
+        "p95": 23.0,
+        "max": 31.0
+      },
+      "practiced_returns": {
+        "mean": 0.06,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 2.0
+      },
+      "return_subsidy_flags": {
+        "mean": 6.72,
+        "median": 6.0,
+        "p95": 13.0,
+        "max": 16.0
+      },
+      "invariant_errors": {
+        "mean": 0.0,
+        "median": 0.0,
+        "p95": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "mean_delta_from_baseline": {
+    "baseline": {
+      "collections": 0.0,
+      "subsidy_payments": 0.0,
+      "end_points": 0.0,
+      "zero_point_players": 0.0,
+      "draws": 0.0,
+      "takes": 0.0,
+      "rank_points": 0.0,
+      "max_player_rank_points": 0.0,
+      "mean_max_stack": 0.0,
+      "collection_rewards": 0.0,
+      "post_fees": 0.0,
+      "max_takes_by_player": 0.0,
+      "max_take_share": 0.0,
+      "rapid_takes": 0.0,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 0.0,
+      "cooldown_stall_snapshots": 0.0,
+      "all_field_posted_cooldown_waits": 0.0,
+      "cooldown_releases": 0.0,
+      "post_credit_events": 0.0,
+      "endgame_free_takes": 0.0,
+      "returns": 0.0,
+      "return_redraws": 0.0,
+      "other_player_redraws": 0.0,
+      "practiced_returns": 0.0,
+      "return_subsidy_flags": 0.0,
+      "invariant_errors": 0.0
+    },
+    "all_field_first": {
+      "collections": 1.7,
+      "subsidy_payments": -1.35,
+      "end_points": 5.89,
+      "zero_point_players": -0.06,
+      "draws": 11.78,
+      "takes": 1.7,
+      "rank_points": 9.24,
+      "max_player_rank_points": 2.45,
+      "mean_max_stack": 0.03,
+      "collection_rewards": 22.8,
+      "post_fees": 4.54,
+      "max_takes_by_player": 1.02,
+      "max_take_share": 0.013,
+      "rapid_takes": 3.48,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 1.64,
+      "cooldown_stall_snapshots": -0.47,
+      "all_field_posted_cooldown_waits": -3.42,
+      "cooldown_releases": 3.58,
+      "post_credit_events": 0.0,
+      "endgame_free_takes": 0.0,
+      "returns": -0.76,
+      "return_redraws": -0.76,
+      "other_player_redraws": -0.47,
+      "practiced_returns": -0.03,
+      "return_subsidy_flags": 0.04,
+      "invariant_errors": 0.0
+    },
+    "endgame_free": {
+      "collections": 0.68,
+      "subsidy_payments": 0.58,
+      "end_points": -5.79,
+      "zero_point_players": -0.07,
+      "draws": 12.28,
+      "takes": 0.68,
+      "rank_points": -2.89,
+      "max_player_rank_points": 0.02,
+      "mean_max_stack": -0.01,
+      "collection_rewards": 5.5,
+      "post_fees": -0.2,
+      "max_takes_by_player": 0.48,
+      "max_take_share": 0.007,
+      "rapid_takes": 1.34,
+      "max_zero_time_burst": 0.42,
+      "max_sub90_burst": 1.15,
+      "cooldown_stall_snapshots": -0.1,
+      "all_field_posted_cooldown_waits": -0.34,
+      "cooldown_releases": 0.0,
+      "post_credit_events": 0.0,
+      "endgame_free_takes": 3.71,
+      "returns": -0.21,
+      "return_redraws": 0.25,
+      "other_player_redraws": 0.29,
+      "practiced_returns": 0.0,
+      "return_subsidy_flags": -0.24,
+      "invariant_errors": 0.0
+    },
+    "post_credit": {
+      "collections": 1.23,
+      "subsidy_payments": -3.25,
+      "end_points": 2.83,
+      "zero_point_players": -0.02,
+      "draws": 3.65,
+      "takes": 1.23,
+      "rank_points": 16.75,
+      "max_player_rank_points": 2.1,
+      "mean_max_stack": 0.052,
+      "collection_rewards": 15.12,
+      "post_fees": 5.54,
+      "max_takes_by_player": 0.68,
+      "max_take_share": 0.009,
+      "rapid_takes": 6.51,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 1.83,
+      "cooldown_stall_snapshots": -0.43,
+      "all_field_posted_cooldown_waits": -2.48,
+      "cooldown_releases": 0.0,
+      "post_credit_events": 46.09,
+      "endgame_free_takes": 0.0,
+      "returns": -0.15,
+      "return_redraws": -0.03,
+      "other_player_redraws": 0.52,
+      "practiced_returns": -0.01,
+      "return_subsidy_flags": 0.76,
+      "invariant_errors": 0.0
+    }
+  },
+  "mean_percent_from_baseline": {
+    "baseline": {
+      "collections": 0.0,
+      "subsidy_payments": 0.0,
+      "end_points": 0.0,
+      "zero_point_players": 0.0,
+      "draws": 0.0,
+      "takes": 0.0,
+      "rank_points": 0.0,
+      "max_player_rank_points": 0.0,
+      "mean_max_stack": 0.0,
+      "collection_rewards": 0.0,
+      "post_fees": 0.0,
+      "max_takes_by_player": 0.0,
+      "max_take_share": 0.0,
+      "rapid_takes": null,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 0.0,
+      "cooldown_stall_snapshots": 0.0,
+      "all_field_posted_cooldown_waits": 0.0,
+      "cooldown_releases": null,
+      "post_credit_events": null,
+      "endgame_free_takes": null,
+      "returns": 0.0,
+      "return_redraws": 0.0,
+      "other_player_redraws": 0.0,
+      "practiced_returns": 0.0,
+      "return_subsidy_flags": 0.0,
+      "invariant_errors": null
+    },
+    "all_field_first": {
+      "collections": 4.15,
+      "subsidy_payments": -1.41,
+      "end_points": 2.23,
+      "zero_point_players": -24.0,
+      "draws": 3.42,
+      "takes": 4.15,
+      "rank_points": 1.43,
+      "max_player_rank_points": 2.25,
+      "mean_max_stack": 0.42,
+      "collection_rewards": 4.74,
+      "post_fees": 3.08,
+      "max_takes_by_player": 10.09,
+      "max_take_share": 5.25,
+      "rapid_takes": null,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 164.0,
+      "cooldown_stall_snapshots": -9.77,
+      "all_field_posted_cooldown_waits": -27.38,
+      "cooldown_releases": null,
+      "post_credit_events": null,
+      "endgame_free_takes": null,
+      "returns": -3.62,
+      "return_redraws": -3.98,
+      "other_player_redraws": -3.39,
+      "practiced_returns": -42.86,
+      "return_subsidy_flags": 0.67,
+      "invariant_errors": null
+    },
+    "endgame_free": {
+      "collections": 1.66,
+      "subsidy_payments": 0.6,
+      "end_points": -2.19,
+      "zero_point_players": -28.0,
+      "draws": 3.56,
+      "takes": 1.66,
+      "rank_points": -0.45,
+      "max_player_rank_points": 0.02,
+      "mean_max_stack": -0.14,
+      "collection_rewards": 1.14,
+      "post_fees": -0.14,
+      "max_takes_by_player": 4.75,
+      "max_take_share": 2.81,
+      "rapid_takes": null,
+      "max_zero_time_burst": 42.0,
+      "max_sub90_burst": 115.0,
+      "cooldown_stall_snapshots": -2.08,
+      "all_field_posted_cooldown_waits": -2.72,
+      "cooldown_releases": null,
+      "post_credit_events": null,
+      "endgame_free_takes": null,
+      "returns": -1.0,
+      "return_redraws": 1.31,
+      "other_player_redraws": 2.09,
+      "practiced_returns": 0.0,
+      "return_subsidy_flags": -4.03,
+      "invariant_errors": null
+    },
+    "post_credit": {
+      "collections": 3.0,
+      "subsidy_payments": -3.39,
+      "end_points": 1.07,
+      "zero_point_players": -8.0,
+      "draws": 1.06,
+      "takes": 3.0,
+      "rank_points": 2.6,
+      "max_player_rank_points": 1.93,
+      "mean_max_stack": 0.72,
+      "collection_rewards": 3.14,
+      "post_fees": 3.76,
+      "max_takes_by_player": 6.73,
+      "max_take_share": 3.45,
+      "rapid_takes": null,
+      "max_zero_time_burst": 0.0,
+      "max_sub90_burst": 183.0,
+      "cooldown_stall_snapshots": -8.94,
+      "all_field_posted_cooldown_waits": -19.86,
+      "cooldown_releases": null,
+      "post_credit_events": null,
+      "endgame_free_takes": null,
+      "returns": -0.71,
+      "return_redraws": -0.16,
+      "other_player_redraws": 3.75,
+      "practiced_returns": -14.29,
+      "return_subsidy_flags": 12.75,
+      "invariant_errors": null
+    }
+  },
+  "risk_runs": {
+    "baseline": {
+      "with_rapid_take": 0,
+      "with_zero_time_multi_take": 0,
+      "with_single_player_majority": 0,
+      "with_cooldown_stall_snapshot": 99,
+      "with_all_field_posted_cooldown_wait": 99,
+      "with_invariant_error": 0
+    },
+    "all_field_first": {
+      "with_rapid_take": 94,
+      "with_zero_time_multi_take": 0,
+      "with_single_player_majority": 0,
+      "with_cooldown_stall_snapshot": 94,
+      "with_all_field_posted_cooldown_wait": 98,
+      "with_invariant_error": 0
+    },
+    "endgame_free": {
+      "with_rapid_take": 66,
+      "with_zero_time_multi_take": 31,
+      "with_single_player_majority": 0,
+      "with_cooldown_stall_snapshot": 98,
+      "with_all_field_posted_cooldown_wait": 99,
+      "with_invariant_error": 0
+    },
+    "post_credit": {
+      "with_rapid_take": 100,
+      "with_zero_time_multi_take": 0,
+      "with_single_player_majority": 0,
+      "with_cooldown_stall_snapshot": 96,
+      "with_all_field_posted_cooldown_wait": 99,
+      "with_invariant_error": 0
+    }
+  },
+  "report_path": "/Users/main/IdeaProjects/pik5/lab/outputs/tricks_cooldown_comparison_20260907_123801.json"
+}

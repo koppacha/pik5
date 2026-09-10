@@ -57,6 +57,7 @@ export default function TricksPage() {
     const clockInitializedRef = useRef(false)
     const debugMetricsRef = useRef({stateFetchCount: 0, stateChangeCount: 0})
     const collectingExpiredRef = useRef(false)
+    const processedSubsidySlotRef = useRef(null)
     const stateKey = tricksApi.state
     const selectedCard = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
@@ -134,10 +135,14 @@ export default function TricksPage() {
         setBusy(true)
         setMessage("")
         try {
-            await action()
+            const result = await action()
+            if (options.beforeMutate) {
+                options.beforeMutate(result)
+                await new Promise((resolve) => window.requestAnimationFrame(resolve))
+            }
             await mutate()
             if (options.collected) await mutateCollected()
-            return true
+            return result ?? true
         } catch (e) {
             setMessage(e.message || "操作に失敗しました")
             return false
@@ -147,7 +152,21 @@ export default function TricksPage() {
     }, [mutate, mutateCollected, showLoginRequired, userId])
 
     const join = () => runAction(() => postTricks(tricksApi.join))
-    const draw = useCallback(() => runAction(() => postTricks(tricksApi.draw)), [runAction])
+    const draw = useCallback((beforeMutate) => runAction(
+        () => postTricks(tricksApi.draw),
+        {beforeMutate}
+    ), [runAction])
+    const returnToDeck = useCallback((card, beforeMutate) => {
+        if (!card?.id) return false
+        if (!window.confirm(`「${card.title || "このカード"}」を1P消費して山札に戻しますか？`)) {
+            return false
+        }
+
+        return runAction(
+            () => postTricks(tricksApi.returnToDeck(card.id)),
+            {beforeMutate}
+        )
+    }, [runAction])
     const take = useCallback((card) => {
         if (!card?.id) return
         if (!window.confirm(`「${card.title || "このカード"}」を場に出します。手札${operation.handCount}枚を使用しますか？`)) {
@@ -175,6 +194,7 @@ export default function TricksPage() {
             .map((card) => card.id)
             .join(",")
     }, [nowValue, state?.field])
+    const subsidySlotKey = Math.floor(nowValue / (30 * 60 * 1000))
     const handlePosted = async () => {
         setPostOpen(false)
         setPostingCard(null)
@@ -215,7 +235,7 @@ export default function TricksPage() {
     }, [nowValue, selectedCard, state?.field])
 
     useEffect(() => {
-        if (!expiredFieldKey || collectingExpiredRef.current) return undefined
+        if (!me || !expiredFieldKey || collectingExpiredRef.current) return undefined
         let cancelled = false
         collectingExpiredRef.current = true
         postTricks(tricksApi.collectExpired)
@@ -232,7 +252,27 @@ export default function TricksPage() {
         return () => {
             cancelled = true
         }
-    }, [expiredFieldKey, mutate])
+    }, [expiredFieldKey, me, mutate])
+
+    useEffect(() => {
+        if (!me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey) return undefined
+        let cancelled = false
+        processedSubsidySlotRef.current = subsidySlotKey
+        postTricks(tricksApi.subsidy)
+            .then(async () => {
+                if (!cancelled) await mutate()
+            })
+            .catch((subsidyError) => {
+                if (!cancelled) {
+                    processedSubsidySlotRef.current = null
+                    setMessage(subsidyError.message || "ポイント給付の確認に失敗しました")
+                }
+            })
+
+        return () => {
+            cancelled = true
+        }
+    }, [me, mutate, operation.available, subsidySlotKey])
 
     useEffect(() => {
         const serverNow = state?.server_now || state?.tournament?.server_now
@@ -311,6 +351,7 @@ export default function TricksPage() {
                     usersById={usersById}
                     onDraw={draw}
                     onTake={take}
+                    onReturnToDeck={returnToDeck}
                     onSelectField={setSelectedField}
                     onFieldSortingChange={setFieldSorting}
                     operation={operation}

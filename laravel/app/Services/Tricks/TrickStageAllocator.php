@@ -8,9 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class TrickStageAllocator
 {
-    private const START_ID = 1313;
+    private const START_ID = 1001;
 
-    private const END_ID = 9999;
+    private const END_ID = 1999;
 
     public function ensure(TrickEvent $event, Deck $deck): int
     {
