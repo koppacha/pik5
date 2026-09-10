@@ -93,7 +93,7 @@ class TotalController extends Controller
         if ((int) $request === 260704) {
             return DB::table('stages')
                 ->where('parent', 260704)
-                ->where('stage_id', '>=', 1313)
+                ->whereBetween('stage_id', [1001, 1999])
                 ->orderBy('stage_id')
                 ->pluck('stage_id')
                 ->map(static fn ($stageId) => (int) $stageId)

@@ -13,8 +13,10 @@ use Illuminate\Support\Str;
 
 class TrickSubsidyService
 {
-    public function __construct(private readonly TrickClock $clock)
-    {
+    public function __construct(
+        private readonly TrickClock $clock,
+        private readonly TrickRuleCalculator $rules,
+    ) {
     }
 
     public function processCurrent(TrickEvent $event, string $actor = null, Request $request = null): array
@@ -43,6 +45,7 @@ class TrickSubsidyService
             $fieldIsEmpty = ! TrickEventCard::query()->where('event_id', $event->event_id)
                 ->where('state', '_field')->lockForUpdate()->exists();
             $players = Player::query()->where('event_id', $event->event_id)->lockForUpdate()->get();
+            $participantCount = $players->count();
             $processed = 0;
             $paid = 0;
             foreach ($players as $player) {
@@ -55,29 +58,35 @@ class TrickSubsidyService
                 }
                 $actionDue = $player->subsidy_flag && $player->subsidy_flag_slot_at !== null
                     && CarbonImmutable::instance($player->subsidy_flag_slot_at)->lessThanOrEqualTo($slot);
-                if (! $fieldIsEmpty && ! $actionDue) {
+                $emptyFieldDue = $fieldIsEmpty
+                    && $this->rules->emptyFieldSubsidyEligible($player->draw_points, $player->card_count);
+                if (! $emptyFieldDue && ! $actionDue) {
                     continue;
                 }
 
                 $processed++;
-                if ($player->draw_points <= 5) {
-                    $player->increment('draw_points');
-                    $paid++;
-                    LimitLog::query()->create([
-                        'event' => 'subsidy_paid',
-                        'event_id' => $event->event_id,
-                        'actor_name' => $actor,
-                        'affected_player_name' => $player->name,
-                        'points_delta' => 1,
-                        'remaining_draw_points' => $player->draw_points,
-                        'route' => $request?->path(),
-                        'ip' => $request?->ip(),
-                        'user_agent' => $request?->userAgent(),
-                        'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
-                        'context' => ['slot' => $slot->toIso8601String(), 'field_empty' => $fieldIsEmpty],
-                    ]);
-                }
+                $player->increment('draw_points');
+                $paid++;
+                LimitLog::query()->create([
+                    'event' => 'subsidy_paid',
+                    'event_id' => $event->event_id,
+                    'actor_name' => $actor,
+                    'affected_player_name' => $player->name,
+                    'points_delta' => 1,
+                    'remaining_draw_points' => $player->draw_points,
+                    'route' => $request?->path(),
+                    'ip' => $request?->ip(),
+                    'user_agent' => $request?->userAgent(),
+                    'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
+                    'context' => [
+                        'slot' => $slot->toIso8601String(),
+                        'field_empty' => $fieldIsEmpty,
+                        'participant_count' => $participantCount,
+                        'reason' => $actionDue ? 'action_flag' : 'empty_field',
+                    ],
+                ]);
                 $player->last_subsidy_paid_slot_at = $slot;
+                // Only action entitlements are persisted. Empty-field eligibility is live.
                 if ($actionDue) {
                     $player->subsidy_flag = false;
                     $player->subsidy_flag_slot_at = null;

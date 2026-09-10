@@ -9,6 +9,7 @@ use App\Models\TrickCardHolder;
 use App\Models\TrickCollectionReward;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -56,6 +57,7 @@ class TrickCollectionService
             $distribution = [];
             $takerRemainder = 0;
             $holders = [];
+            $subsidyFlaggedHolders = [];
 
             if ($rankings !== []) {
                 foreach ($rankings as $ranking) {
@@ -128,10 +130,30 @@ class TrickCollectionService
                 Deck::query()->whereKey($card->deck_id)->update(['state' => '_held']);
             }
 
+            $naturallyExpired = ! $force
+                && $card->limit_at !== null
+                && $now->greaterThanOrEqualTo(CarbonImmutable::instance($card->limit_at))
+                && $now->lessThan($event->end_at);
+            if ($naturallyExpired && $holders !== []) {
+                $participantCount = Player::query()->where('event_id', $event->event_id)->count();
+                foreach ($holders as $holderName) {
+                    $holder = $players->get($holderName)?->fresh();
+                    if ($holder === null
+                        || ! $this->rules->subsidyEligible($holder->draw_points, $participantCount)) {
+                        continue;
+                    }
+                    $holder->subsidy_flag = true;
+                    $holder->subsidy_flag_slot_at = $this->nextSubsidySlot($now);
+                    $holder->save();
+                    $subsidyFlaggedHolders[] = $holderName;
+                }
+            }
+
             TrickEventCard::query()->where('event_id', $event->event_id)
                 ->where('stack_parent_id', $card->id)->where('state', '_stack')
                 ->lockForUpdate()->update(['state' => '_trash']);
             $card->fill(['state' => '_collected', 'collected_at' => $now])->save();
+            $this->records->releaseEligibleTakeCooldowns($event, $now);
             $topRanking = collect($rankings)->where('rank', 1)
                 ->sortBy(fn (array $row) => sprintf('%s:%020d', $row['created_at'] ?? '', $row['post_id'] ?? 0))
                 ->first();
@@ -160,10 +182,11 @@ class TrickCollectionService
                     'distribution' => $distribution,
                     'taker_remainder' => $takerRemainder,
                     'holders' => $holders,
+                    'subsidy_flagged_holders' => $subsidyFlaggedHolders,
                     'final_rankings' => collect($rankings)->map(fn ($ranking) => collect($ranking)->only([
                         'post_id', 'unique_id', 'user_id', 'user_name', 'score', 'rule', 'console', 'difficulty',
                         'region', 'post_comment', 'img_url', 'video_url', 'created_at', 'rank', 'post_rank', 'rps',
-                        'initial_payment_recorded',
+                        'provisional_reward_points', 'initial_payment_recorded',
                     ])->all())->all(),
                 ],
             ]);
@@ -202,5 +225,12 @@ class TrickCollectionService
             'rewards' => TrickCollectionReward::query()->where('event_card_id', $card->id)->get()->all(),
             'holders' => TrickCardHolder::query()->where('event_card_id', $card->id)->pluck('player_name')->all(),
         ];
+    }
+
+    private function nextSubsidySlot(CarbonImmutable $now): CarbonImmutable
+    {
+        $base = $now->setSecond(0)->setMicrosecond(0);
+
+        return $now->minute < 30 ? $base->setMinute(30) : $base->setMinute(0)->addHour();
     }
 }

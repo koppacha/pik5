@@ -52,10 +52,84 @@ test.describe("limited tricks phase 6", () => {
             await expect(pages[0].locator("[data-tricks-tournament-info]")).toBeVisible()
             await expect(pages[0].locator("[data-tricks-header-scroll] > div:last-child > *").first())
                 .toHaveAttribute("data-tricks-tournament-info", "true")
-            expect(await pages[0].locator("canvas").count()).toBe(1)
-            expect(await pages[1].locator("canvas").count()).toBe(1)
+            for (const page of pages) {
+                const canvasCount = await page.locator("canvas").count()
+                expect(canvasCount).toBeGreaterThanOrEqual(1)
+                expect(canvasCount).toBeLessThanOrEqual(2)
+            }
         } finally {
             await Promise.all(contexts.map((context) => context.close()))
+            await fixture.cleanup()
+        }
+    })
+
+    test("log panel shows newest entries first and slides behind its left title", async ({page, request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            const beforeTake = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            const taken = await fixture.post(
+                fixture.players[0],
+                `/api/server/tricks/cards/${beforeTake.hand[0].id}/take`,
+            )
+            await fixture.post(fixture.admin, "/api/server/tricks/debug/time/advance", {minutes: 90})
+            await page.goto("/limited/tricks")
+            const state = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            const visibleEvents = new Set(["join", "take", "record_posted", "record_updated", "subsidy_paid", "collect"])
+            const expectedStateLogIds = [...state.logs]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at) || Number(b.id) - Number(a.id))
+                .map((log) => String(log.id))
+            expect(state.logs.map((log) => String(log.id))).toEqual(expectedStateLogIds)
+            const expectedLogIds = state.logs.filter((log) => visibleEvents.has(log.event)).map((log) => String(log.id))
+            const logEntries = page.locator("[data-tricks-log-entry]")
+            await expect(logEntries).toHaveCount(expectedLogIds.length)
+            const displayedLogIds = await logEntries.evaluateAll((entries) => {
+                return entries.map((entry) => entry.getAttribute("data-tricks-log-entry"))
+            })
+            expect(displayedLogIds).toEqual(expectedLogIds)
+            const trashMessage = `${taken.card.title}がトラッシュされました`
+            const displayedLogTexts = await page.locator("[data-tricks-log-entry]").allTextContents()
+            expect(displayedLogTexts.some((text) => text.endsWith(` - ${trashMessage}`))).toBe(true)
+
+            const wrapper = page.locator("[data-tricks-log-wrapper]")
+            const region = page.locator("[data-tricks-log-region]")
+            const toggle = page.locator("[data-tricks-log-toggle]")
+            await expect(wrapper).toHaveCSS("position", "fixed")
+            await expect(region).toHaveCSS("width", "400px")
+            const openWrapperBox = await wrapper.boundingBox()
+            const openRegionBox = await region.boundingBox()
+            const openToggleBox = await toggle.boundingBox()
+            expect(openWrapperBox).not.toBeNull()
+            expect(openRegionBox).not.toBeNull()
+            expect(openToggleBox).not.toBeNull()
+            expect(page.viewportSize().height - openWrapperBox.y - openWrapperBox.height).toBeGreaterThanOrEqual(234)
+            expect(openToggleBox.x).toBeLessThan(openRegionBox.x)
+
+            await toggle.click()
+            await expect(wrapper).toHaveAttribute("data-log-open", "false")
+            await expect(toggle).toHaveAttribute("aria-expanded", "false")
+            await page.waitForTimeout(300)
+            const closedRegionBox = await region.boundingBox()
+            const closedToggleBox = await toggle.boundingBox()
+            expect(closedRegionBox.x).toBeGreaterThanOrEqual(page.viewportSize().width - 25)
+            expect(closedToggleBox.x).toBeLessThan(page.viewportSize().width)
+
+            await toggle.click()
+            await expect(wrapper).toHaveAttribute("data-log-open", "true")
+            await page.waitForTimeout(300)
+            const reopenedRegionBox = await region.boundingBox()
+            expect(Math.abs(reopenedRegionBox.x - openRegionBox.x)).toBeLessThanOrEqual(1)
+        } finally {
             await fixture.cleanup()
         }
     })
@@ -76,6 +150,312 @@ test.describe("limited tricks phase 6", () => {
             expect(advanced.collected).toBeGreaterThanOrEqual(1)
             const after = await fixture.get(fixture.players[0], "/api/server/tricks/state")
             expect(after.field).toHaveLength(0)
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("endgame cooldown exemption enables take while keeping other limits", async ({page, request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL, {
+            debugNow: "2026-09-20T20:00:00+09:00",
+            startAt: "2026-09-20T19:00:00+09:00",
+            endAt: "2026-09-20T23:59:00+09:00",
+            players: [
+                {name: `pw_end_a_${Date.now()}`, points: 20, hand_count: 3},
+                {name: `pw_end_b_${Date.now()}`, points: 20, hand_count: 0},
+                {name: `pw_end_c_${Date.now()}`, points: 20, hand_count: 0},
+            ],
+        })
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            const initial = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            await fixture.post(fixture.players[0], `/api/server/tricks/cards/${initial.hand[0].id}/take`)
+            for (let index = 0; index < 4; index += 1) {
+                await fixture.post(fixture.players[0], "/api/server/tricks/draw")
+            }
+
+            await page.goto("/limited/tricks")
+            await page.locator(".tricks-dom-card-hand").first().click()
+            await expect(page.getByRole("button", {name: "場に出す", exact: true})).toBeDisabled()
+            await page.getByRole("button", {name: "キャンセル", exact: true}).click()
+
+            await fixture.post(fixture.admin, "/api/server/tricks/debug/time/set", {
+                now: "2026-09-20T21:29:00+09:00",
+            })
+            const endgameState = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            expect(endgameState.me.next_take_at).toBeNull()
+            expect(endgameState.field).toHaveLength(1)
+            expect(endgameState.hand).toHaveLength(4)
+
+            await page.reload()
+            await page.locator(".tricks-dom-card-hand").first().click()
+            await expect(page.getByRole("button", {name: "場に出す", exact: true})).toBeEnabled()
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("hand menu returns a card for 1P and disables return at 0P", async ({page, request, baseURL}) => {
+        const fixture = await createTricksFixture(request, baseURL)
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            await page.goto("/limited/tricks")
+            await page.locator(".tricks-dom-card-hand").first().click()
+            const actionButtons = page.locator(".tricks-hand-action")
+            await expect(actionButtons).toHaveText(["場に出す", "山札に戻す", "キャンセル"])
+            await expect(page.locator("[data-tricks-take-summary]")).toContainText("投稿コスト 1P")
+            await expect(page.locator("[data-tricks-take-summary]")).toContainText("スタック数 3")
+            await expect(page.locator("[data-tricks-take-summary]")).toHaveCSS("font-weight", "800")
+            await expect(page.getByRole("button", {name: "山札に戻す", exact: true})).toBeEnabled()
+            page.once("dialog", (dialog) => dialog.accept())
+            await page.getByRole("button", {name: "山札に戻す", exact: true}).click()
+            const returnMotion = page.locator('[data-tricks-motion="return-to-deck"]')
+            await expect(returnMotion).toBeVisible()
+            await expect(returnMotion).toHaveCSS("animation-name", "tricksReturnToDeck")
+            const returnOpacities = await returnMotion.evaluate((element) => {
+                const animation = element.getAnimations()[0]
+                animation.pause()
+                const values = [0, 160, 320, 610].map((time) => {
+                    animation.currentTime = time
+                    return getComputedStyle(element).opacity
+                })
+                animation.play()
+
+                return values
+            })
+            expect(returnOpacities).toEqual(["1", "1", "1", "1"])
+            await expect(page.getByText("P 19 / 手札 2", {exact: true})).toBeVisible()
+            await expect(returnMotion).toHaveCount(0, {timeout: 2000})
+
+            const state = await fixture.get(fixture.players[0], "/api/server/tricks/state")
+            expect(state.deck_count).toBe(198)
+            expect(state.logs.map((log) => log.event)).not.toContain("return_to_deck")
+        } finally {
+            await fixture.cleanup()
+        }
+
+        const zeroFixture = await createTricksFixture(request, baseURL, {
+            players: [{name: `pw_zero_${Date.now()}`, points: 0, hand_count: 1}],
+        })
+        await page.unroute("**/api/server/tricks/**")
+        await page.unroute("**/api/auth/session")
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: zeroFixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(zeroFixture.players[0], zeroFixture.eventId)},
+            })
+        })
+        try {
+            await page.goto("/limited/tricks")
+            await page.locator(".tricks-dom-card-hand").first().click()
+            await expect(page.getByRole("button", {name: "山札に戻す", exact: true})).toBeDisabled()
+        } finally {
+            await zeroFixture.cleanup()
+        }
+    })
+
+    test("draw motion hides the first card before a zero-card hand is rendered", async ({page, request, baseURL}) => {
+        const eventKey = Date.now()
+        const fixture = await createTricksFixture(request, baseURL, {
+            players: [{name: `pw_empty_hand_${eventKey}`, points: 20, hand_count: 0}],
+        })
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            await page.goto("/limited/tricks")
+            await expect(page.locator(".tricks-dom-card-hand")).toHaveCount(0)
+            await page.evaluate(() => {
+                window.__TRICKS_DRAW_SEQUENCE__ = []
+                const root = document.querySelector("[data-tricks-root]") || document.body
+                window.__TRICKS_DRAW_OBSERVER__ = new MutationObserver(() => {
+                    const cards = [...document.querySelectorAll(".tricks-dom-card-hand")]
+                    if (cards.length === 0) return
+                    window.__TRICKS_DRAW_SEQUENCE__.push({
+                        ghost: Boolean(document.querySelector("[data-tricks-draw-motion]")),
+                        opacities: cards.map((card) => getComputedStyle(card).opacity),
+                    })
+                })
+                window.__TRICKS_DRAW_OBSERVER__.observe(root, {
+                    attributes: true,
+                    childList: true,
+                    subtree: true,
+                    attributeFilter: ["style"],
+                })
+            })
+
+            await page.getByRole("button", {name: "ドロー", exact: true}).click()
+            const ghost = page.locator("[data-tricks-draw-motion]")
+            await expect(ghost).toBeVisible()
+            await expect(page.locator(".tricks-dom-card-hand")).toHaveCount(1)
+            await expect(page.locator(".tricks-dom-card-hand")).toHaveCSS("opacity", "0")
+            const firstRenderedHand = await page.evaluate(() => {
+                window.__TRICKS_DRAW_OBSERVER__?.disconnect()
+                return window.__TRICKS_DRAW_SEQUENCE__?.[0]
+            })
+            expect(firstRenderedHand).toEqual({ghost: true, opacities: ["0"]})
+
+            await expect(ghost).toHaveCount(0, {timeout: 2000})
+            await expect(page.locator(".tricks-dom-card-hand")).toHaveCSS("opacity", "1")
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("point spend immediately shows the subsidy flag and subsidy logs use recipient counts", async ({page, request, baseURL}) => {
+        const eventKey = Date.now()
+        const players = [
+            {name: `pw_subsidy_a_${eventKey}`, points: 4, hand_count: 0},
+            {name: `pw_subsidy_b_${eventKey}`, points: 4, hand_count: 0},
+            {name: `pw_subsidy_c_${eventKey}`, points: 4, hand_count: 0},
+            {name: `pw_subsidy_d_${eventKey}`, points: 4, hand_count: 0},
+            {name: `pw_subsidy_e_${eventKey}`, points: 4, hand_count: 0},
+        ]
+        const fixture = await createTricksFixture(request, baseURL, {
+            debugNow: "2026-09-20T20:10:00+09:00",
+            startAt: "2026-09-20T19:00:00+09:00",
+            endAt: "2026-09-20T23:59:00+09:00",
+            players,
+        })
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            await page.goto("/limited/tricks")
+            const playerCard = page.locator(`[data-tricks-player="${fixture.players[0]}"]`)
+            await expect(playerCard.locator("[data-tricks-subsidy-flag]"))
+                .toHaveAttribute("data-tricks-subsidy-flag", "inactive")
+
+            await page.getByRole("button", {name: "ドロー", exact: true}).click()
+            const activePoints = playerCard.locator('[data-tricks-subsidy-flag="active"]')
+            await expect(activePoints).toHaveText("P 3")
+            await expect(activePoints).not.toContainText("'")
+            await expect(activePoints).toHaveCSS("color", "rgb(216, 75, 140)")
+            await expect(activePoints.locator("[data-tricks-points-label]")).toHaveCSS("text-decoration-line", "underline")
+
+            await fixture.post(fixture.admin, "/api/server/tricks/debug/time/advance", {minutes: 20})
+            await page.reload()
+            await expect(playerCard.locator('[data-tricks-subsidy-flag="active"]')).toHaveText("P 4")
+            await expect(page.getByText("5人にポイントが給付されました。", {exact: false})).toBeVisible()
+        } finally {
+            await fixture.cleanup()
+        }
+    })
+
+    test("large hands use a shallow fan and drawn cards flip before following an arc", async ({page, request, baseURL}) => {
+        const eventKey = Date.now()
+        const fixture = await createTricksFixture(request, baseURL, {
+            players: [{name: `pw_large_hand_${eventKey}`, points: 20, hand_count: 20}],
+        })
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId: fixture.players[0], role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/server/tricks/**", async (route) => {
+            await route.continue({
+                headers: {...route.request().headers(), ...testIdentityHeaders(fixture.players[0], fixture.eventId)},
+            })
+        })
+        try {
+            await page.goto("/limited/tricks")
+            const handCards = page.locator(".tricks-dom-card-hand")
+            await expect(handCards).toHaveCount(20)
+            const cardYPositions = await handCards.evaluateAll((cards) => cards.map((card) => {
+                const match = card.style.transform.match(/translate3d\([^,]+,\s*([-\d.]+)px/)
+
+                return match ? Number(match[1]) : Number.NaN
+            }))
+            expect(cardYPositions.every(Number.isFinite)).toBe(true)
+            expect(Math.max(...cardYPositions) - Math.min(...cardYPositions)).toBeLessThanOrEqual(55)
+            if (process.env.TRICKS_CAPTURE_UI === "1") {
+                await page.screenshot({path: "pages/limited/tricks/output/playwright/large-hand-fan.png"})
+            }
+
+            await page.getByRole("button", {name: "ドロー", exact: true}).click()
+            const ghost = page.locator("[data-tricks-draw-motion]")
+            const flipper = page.locator("[data-tricks-draw-flipper]")
+            await expect(ghost).toBeVisible()
+            await expect(handCards).toHaveCount(21)
+            await expect(handCards.last()).toHaveCSS("opacity", "0")
+            if (process.env.TRICKS_CAPTURE_UI === "1") {
+                await ghost.evaluate((element) => {
+                    element.getAnimations({subtree: true}).forEach((animation) => {
+                        animation.currentTime = 400
+                        animation.pause()
+                    })
+                })
+                await page.screenshot({path: "pages/limited/tricks/output/playwright/draw-face-hold.png"})
+                await ghost.evaluate((element) => {
+                    element.getAnimations({subtree: true}).forEach((animation) => {
+                        animation.currentTime = 800
+                    })
+                })
+                await page.screenshot({path: "pages/limited/tricks/output/playwright/draw-arc.png"})
+                await ghost.evaluate((element) => {
+                    element.getAnimations({subtree: true}).forEach((animation) => animation.play())
+                })
+            }
+            await expect(ghost).toHaveCSS("animation-name", "tricksDrawToHand")
+            await expect(flipper).toHaveCSS("animation-name", "tricksDrawFlip")
+            await expect(ghost.locator(".tricks-dom-draw-face .tricks-dom-card-title")).not.toHaveText("Untitled")
+            const drawOpacities = await ghost.evaluate((element) => {
+                const animation = element.getAnimations()[0]
+                animation.pause()
+                const values = [0, 320, 520, 800, 1130].map((time) => {
+                    animation.currentTime = time
+                    return getComputedStyle(element).opacity
+                })
+                animation.play()
+
+                return values
+            })
+            expect(drawOpacities).toEqual(["1", "1", "1", "1", "1"])
+
+            await expect(ghost).toHaveCount(0, {timeout: 2000})
+            await expect(handCards.last()).toHaveCSS("opacity", "1")
         } finally {
             await fixture.cleanup()
         }

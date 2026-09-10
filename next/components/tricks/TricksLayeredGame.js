@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
-import {faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
+import {faCheck, faClockRotateLeft, faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {
     cardLimitLabel,
@@ -28,6 +28,9 @@ const FIELD_MAX_STACK_BACKS = 5
 const FIELD_STACK_OFFSET = 5
 const FX_DURATION_MS = 520
 const CARD_MOTION_MS = 620
+const DRAW_FLIP_MS = 320
+const DRAW_REVEAL_HOLD_MS = 200
+const DRAW_MOTION_MS = DRAW_FLIP_MS + DRAW_REVEAL_HOLD_MS + CARD_MOTION_MS
 
 const rarityLabels = {
     1: "C1",
@@ -54,8 +57,12 @@ function handLayout(width, height, count, index) {
         ? 0
         : Math.min(HAND_CARD_WIDTH * 0.62, visibleWidth / Math.max(count - 1, 1))
     const offset = index - (count - 1) / 2
-    const angle = Math.max(-18, Math.min(18, offset * 4.5))
-    const arc = Math.abs(offset) * 12
+    const edgeOffset = Math.max((count - 1) / 2, 1)
+    const normalizedOffset = Math.abs(offset) / edgeOffset
+    const maxAngle = Math.min(12, Math.max(0, count - 1) * 3)
+    const maxArcDrop = Math.min(54, Math.max(0, count - 1) * 6)
+    const angle = Math.sign(offset) * maxAngle * normalizedOffset
+    const arc = maxArcDrop * (normalizedOffset ** 1.65)
 
     return {
         x: centerX + offset * spacing,
@@ -421,7 +428,7 @@ function FxLayer({burst}) {
 }
 
 // DOMカード1枚を表示する。
-function TricksDomCard({card, type, layout, usersById, selected, disabled, hidden, motionStyle, nowValue, onClick}) {
+function TricksDomCard({card, type, layout, usersById, selected, disabled, hidden, motionStyle, motionType, nowValue, onClick}) {
     const rarity = Number(card?.rarity || 1)
     const isField = type === "field"
     const stackCount = Math.max(Number(card?.stack_count || 1), 1)
@@ -440,6 +447,7 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                 event.stopPropagation()
                 if (!disabled) onClick?.()
             }}
+            data-tricks-motion={motionType}
             className={`tricks-dom-card tricks-dom-card-${type} rarity-${rarity}${selected ? " is-selected" : ""}${expired ? " is-expired" : ""}`}
             style={{
                 position: "absolute",
@@ -479,7 +487,10 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                             <span><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
                         </span>
                         <span className="tricks-dom-card-footer">
-                            <span>{cardLimitLabel(card, nowValue)}</span>
+                            <span>{cardLimitLabel(card, nowValue)}{!expired && card.my_can_post && card.my_initial_post_cost === 0 && (
+                                <span data-tricks-free style={{marginLeft: 6, color: "#237a39", fontWeight: 700}}>無料！</span>
+                            )}</span>
+                            {card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
                             <span className={`tricks-dom-stack${stackCount >= 7 ? " has-gradient" : ""}`}>
                                 <span className="tricks-dom-stack-value">{stackCount}</span>
                             </span>
@@ -489,6 +500,15 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                 {!isField && (
                     <span className="tricks-dom-card-footer">
                         <span>手札</span>
+                        {card.was_returned && (
+                            <span
+                                className="tricks-return-history-icon"
+                                title="このカードは以前誰かの手札から山札へ戻されています"
+                                aria-label="返却履歴あり"
+                            >
+                                <FontAwesomeIcon icon={faClockRotateLeft} />
+                            </span>
+                        )}
                         <span>{rarityLabels[rarity] || `R${rarity}`}</span>
                     </span>
                 )}
@@ -523,13 +543,16 @@ function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, on
     )
 }
 
-// 山札から手札へ移動する裏面ゴーストカードを表示する。
+// 山札上で表返り、静止後に手札へ移動するゴーストカードを表示する。
 function DrawGhost({motion}) {
     if (!motion) return null
+    const card = motion.card || {}
+    const rarity = Number(card.rarity || 1)
 
     return (
         <div
             className="tricks-dom-draw-ghost"
+            data-tricks-draw-motion
             style={{
                 "--from-x": `${motion.from.x}px`,
                 "--from-y": `${motion.from.y}px`,
@@ -539,9 +562,27 @@ function DrawGhost({motion}) {
                 "--to-x": `${motion.to.x}px`,
                 "--to-y": `${motion.to.y}px`,
                 "--to-angle": `${motion.to.angle || 0}deg`,
+                "--card-border": rarityColors[rarity] || rarityColors[1],
                 zIndex: 360,
             }}
-        />
+        >
+            <span className="tricks-dom-draw-flipper" data-tricks-draw-flipper>
+                <span className="tricks-dom-card-back tricks-dom-draw-back" />
+                <span className="tricks-dom-card-face tricks-dom-draw-face">
+                    <span className="tricks-dom-card-meta">
+                        <span>#{card.stage_id || card.card_id || card.id || "-"}</span>
+                        <span>★{card.difficulty || 1} {rarityLabels[rarity] || `R${rarity}`}</span>
+                    </span>
+                    <span className="tricks-dom-card-title">{shortenTricksText(card.title || "Untitled", 18)}</span>
+                    <span className="tricks-dom-card-rule">{shortenTricksText(card.rule_name || "", 20)}</span>
+                    <span className="tricks-dom-card-text">{shortenTricksText(card.text || "", 74)}</span>
+                    <span className="tricks-dom-card-footer">
+                        <span>手札</span>
+                        <span>{rarityLabels[rarity] || `R${rarity}`}</span>
+                    </span>
+                </span>
+            </span>
+        </div>
     )
 }
 
@@ -558,9 +599,11 @@ function DomCardsLayer({
     onSelectHand,
     onCancelHand,
     onTake,
+    onReturnToDeck,
     onSelectField,
     drawMotion,
     takingMotion,
+    returningMotion,
     operation,
     busy,
     nowValue,
@@ -638,6 +681,8 @@ function DomCardsLayer({
                 const home = handLayout(size.width, size.height, list.length, index)
                 const isSelected = selectedHandId === card.id
                 const isTaking = takingMotion?.card?.id === card.id
+                const isDrawing = drawMotion?.card?.id === card.id
+                const isReturning = returningMotion?.card?.id === card.id
                 const layout = isSelected
                     ? selectedHandLayout(size.width, size.height)
                     : {
@@ -653,7 +698,7 @@ function DomCardsLayer({
                         layout={layout}
                         usersById={usersById}
                         selected={isSelected}
-                        hidden={isTaking}
+                        hidden={isTaking || isDrawing || isReturning}
                         disabled={busy}
                         nowValue={nowValue}
                         onClick={() => onSelectHand(card)}
@@ -686,6 +731,33 @@ function DomCardsLayer({
                     }}
                 />
             )}
+            {returningMotion && (
+                <TricksDomCard
+                    card={returningMotion.card}
+                    type="hand"
+                    layout={{
+                        x: 0,
+                        y: 0,
+                        angle: 0,
+                        zIndex: 370,
+                    }}
+                    usersById={usersById}
+                    disabled
+                    motionType="return-to-deck"
+                    nowValue={nowValue}
+                    motionStyle={{
+                        "--from-x": `${returningMotion.from.x}px`,
+                        "--from-y": `${returningMotion.from.y}px`,
+                        "--from-angle": `${returningMotion.from.angle || 0}deg`,
+                        "--arc-x": `${returningMotion.arc.x}px`,
+                        "--arc-y": `${returningMotion.arc.y}px`,
+                        "--to-x": `${returningMotion.to.x}px`,
+                        "--to-y": `${returningMotion.to.y}px`,
+                        "--to-angle": `${returningMotion.to.angle || 0}deg`,
+                        animation: `tricksReturnToDeck ${CARD_MOTION_MS}ms cubic-bezier(0.22, 0.84, 0.22, 1) forwards`,
+                    }}
+                />
+            )}
             {selectedHand && (
                 <>
                     <button
@@ -712,6 +784,21 @@ function DomCardsLayer({
                             pointerEvents: "auto",
                         }}
                     >
+                        <div
+                            data-tricks-take-summary
+                            style={{
+                                maxWidth: 220,
+                                color: "#fff",
+                                fontSize: 14,
+                                fontWeight: 800,
+                                lineHeight: 1.5,
+                                textAlign: "center",
+                                textShadow: "0 1px 4px rgba(0, 0, 0, 0.85)",
+                            }}
+                        >
+                            <div>投稿コスト {Math.max(1, Number(selectedHand.rarity || 1))}P</div>
+                            <div>スタック数 {view.hand.length}</div>
+                        </div>
                         <button
                             type="button"
                             className="tricks-hand-action tricks-hand-action-take"
@@ -724,6 +811,15 @@ function DomCardsLayer({
                         {!operation.canTake && (
                             <div style={{maxWidth: 220, color: "#ffcf6e", fontSize: 12}}>{operation.takeReason}</div>
                         )}
+                        <button
+                            type="button"
+                            className="tricks-hand-action tricks-hand-action-return"
+                            disabled={busy || !operation.canReturnToDeck}
+                            title={operation.returnReason}
+                            onClick={() => onReturnToDeck(selectedHand)}
+                        >
+                            山札に戻す
+                        </button>
                         <button type="button" className="tricks-hand-action" onClick={onCancelHand}>
                             キャンセル
                         </button>
@@ -742,6 +838,7 @@ export default function TricksLayeredGame({
     sortTick = 0,
     onDraw,
     onTake,
+    onReturnToDeck,
     onSelectField,
     onFieldSortingChange,
     operation,
@@ -757,13 +854,14 @@ export default function TricksLayeredGame({
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)
     const [takingMotion, setTakingMotion] = useState(null)
+    const [returningMotion, setReturningMotion] = useState(null)
     const motionTimersRef = useRef(new Set())
-    const interactionBusy = busy || Boolean(drawMotion) || Boolean(takingMotion)
+    const interactionBusy = busy || Boolean(drawMotion) || Boolean(takingMotion) || Boolean(returningMotion)
     const view = useMemo(() => normalizeTricksState(state || {}, {handOrder, nowValue}), [handOrder, nowValue, state])
     const handOrderKey = view.handOrder.join(",")
     const fieldIdsKey = (view.field || []).map((card) => card.id).join(",")
 
-    const scheduleMotionEnd = useCallback((callback) => {
+    const scheduleMotionEnd = useCallback((callback, duration = CARD_MOTION_MS) => {
         const timer = window.setTimeout(() => {
             motionTimersRef.current.delete(timer)
             window.__TRICKS_RENDER_METRICS__ = {
@@ -771,7 +869,7 @@ export default function TricksLayeredGame({
                 activeTimers: motionTimersRef.current.size,
             }
             callback()
-        }, CARD_MOTION_MS)
+        }, duration)
         motionTimersRef.current.add(timer)
         window.__TRICKS_RENDER_METRICS__ = {
             ...(window.__TRICKS_RENDER_METRICS__ || {}),
@@ -825,15 +923,14 @@ export default function TricksLayeredGame({
         setFieldScrollY((current) => Math.max(0, Math.min(maxScroll, current + event.deltaY)))
     }, [selectedFieldId, selectedHand, size.height, size.width, view.field])
 
-    const handleDraw = useCallback(async () => {
-        if (!operation.canDraw || interactionBusy) return
-        const succeeded = await onDraw?.()
-        if (!succeeded) return
+    const beginDrawMotion = useCallback((result) => {
+        if (!result?.card) return false
         const from = deckLayout(size.height)
         const to = handLayout(size.width, size.height, Math.max(view.hand.length + 1, 1), view.hand.length)
         const id = `draw-${Date.now()}`
         setDrawMotion({
             id,
+            card: result.card,
             from,
             mid: {
                 x: (from.x + to.x) / 2,
@@ -843,8 +940,19 @@ export default function TricksLayeredGame({
         })
         scheduleMotionEnd(() => {
             setDrawMotion((current) => (current?.id === id ? null : current))
+        }, DRAW_MOTION_MS)
+
+        return true
+    }, [scheduleMotionEnd, size.height, size.width, view.hand.length])
+
+    const handleDraw = useCallback(async () => {
+        if (!operation.canDraw || interactionBusy) return
+        let motionStarted = false
+        const result = await onDraw?.((drawResult) => {
+            motionStarted = beginDrawMotion(drawResult)
         })
-    }, [interactionBusy, onDraw, operation.canDraw, scheduleMotionEnd, size.height, size.width, view.hand.length])
+        if (!motionStarted) beginDrawMotion(result)
+    }, [beginDrawMotion, interactionBusy, onDraw, operation.canDraw])
 
     const handleTake = useCallback(async (card) => {
         if (!operation.canTake || interactionBusy) return
@@ -885,6 +993,38 @@ export default function TricksLayeredGame({
         })
     }, [fieldScrollY, interactionBusy, onTake, operation.canTake, scheduleMotionEnd, size.height, size.width, view.field.length, view.hand.length])
 
+    const beginReturnMotion = useCallback((card) => {
+        if (!card) return false
+        const from = selectedHandLayout(size.width, size.height)
+        const to = deckLayout(size.height)
+        const id = `return-${card.id}-${Date.now()}`
+        setReturningMotion({
+            id,
+            card,
+            from,
+            arc: {
+                x: (from.x + to.x) / 2,
+                y: Math.min(from.y, to.y) - 120,
+            },
+            to,
+        })
+        scheduleMotionEnd(() => {
+            setReturningMotion((current) => (current?.id === id ? null : current))
+            setSelectedHand(null)
+        })
+
+        return true
+    }, [scheduleMotionEnd, size.height, size.width])
+
+    const handleReturnToDeck = useCallback(async (card) => {
+        if (!operation.canReturnToDeck || interactionBusy) return
+        let motionStarted = false
+        const result = await onReturnToDeck?.(card, (returnResult) => {
+            motionStarted = beginReturnMotion(returnResult?.card || card)
+        })
+        if (result && !motionStarted) beginReturnMotion(result.card || card)
+    }, [beginReturnMotion, interactionBusy, onReturnToDeck, operation.canReturnToDeck])
+
     useEffect(() => {
         onFieldSortingChange?.(false)
     }, [onFieldSortingChange])
@@ -914,9 +1054,11 @@ export default function TricksLayeredGame({
                 onSelectHand={setSelectedHand}
                 onCancelHand={() => setSelectedHand(null)}
                 onTake={handleTake}
+                onReturnToDeck={handleReturnToDeck}
                 onSelectField={onSelectField}
                 drawMotion={drawMotion}
                 takingMotion={takingMotion}
+                returningMotion={returningMotion}
                 operation={operation}
                 busy={interactionBusy}
                 nowValue={nowValue}
@@ -930,7 +1072,7 @@ export default function TricksLayeredGame({
                     cursor: pointer;
                     text-align: left;
                     transform-origin: 0 0;
-                    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 160ms ease, opacity 160ms ease;
+                    transition: transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 160ms ease;
                 }
                 .tricks-dom-card:disabled {
                     cursor: default;
@@ -982,6 +1124,15 @@ export default function TricksLayeredGame({
                     color: #667085;
                     font-size: 13px;
                     font-weight: 700;
+                }
+                .tricks-return-history-icon {
+                    display: inline-grid;
+                    place-items: center;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 999px;
+                    background: #7c3aed;
+                    color: #ffffff;
                 }
                 .tricks-dom-card-title,
                 .tricks-dom-card-rule,
@@ -1073,22 +1224,39 @@ export default function TricksLayeredGame({
                     top: 0;
                     width: ${HAND_CARD_WIDTH}px;
                     height: ${HAND_CARD_HEIGHT}px;
-                    border-radius: 10px;
-                    background: #263247;
-                    border: 10px solid #101620;
-                    box-sizing: border-box;
-                    box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
                     pointer-events: none;
                     transform-origin: 0 0;
-                    animation: tricksDrawFromDeck ${CARD_MOTION_MS}ms cubic-bezier(0.22, 0.84, 0.22, 1) forwards;
+                    perspective: 900px;
+                    animation: tricksDrawToHand ${DRAW_MOTION_MS}ms linear forwards;
                 }
-                .tricks-dom-draw-ghost::after {
+                .tricks-dom-draw-flipper {
+                    content: "";
+                    position: absolute;
+                    inset: 0;
+                    transform-style: preserve-3d;
+                    animation: tricksDrawFlip ${DRAW_MOTION_MS}ms ease-in-out forwards;
+                }
+                .tricks-dom-draw-face,
+                .tricks-dom-draw-back {
+                    backface-visibility: hidden;
+                    -webkit-backface-visibility: hidden;
+                }
+                .tricks-dom-draw-back {
+                    transform: rotateY(180deg);
+                    background: #263247;
+                    border: 10px solid #101620;
+                    box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
+                }
+                .tricks-dom-draw-back::after {
                     content: "";
                     position: absolute;
                     inset: 10px;
                     border-radius: 8px;
                     border: 1px solid rgba(141, 180, 255, 0.62);
                     background: linear-gradient(135deg, rgba(141, 180, 255, 0.18), rgba(255, 255, 255, 0.04));
+                }
+                .tricks-dom-draw-face {
+                    transform: rotateY(0deg);
                 }
                 .tricks-dom-deck-title {
                     font-size: 24px;
@@ -1142,18 +1310,30 @@ export default function TricksLayeredGame({
                     background: #1f7a43;
                     border-color: #6edb9a;
                 }
-                @keyframes tricksDrawFromDeck {
+                @keyframes tricksDrawToHand {
                     0% {
-                        opacity: 0.96;
+                        opacity: 1;
                         transform: translate3d(var(--from-x), var(--from-y), 0) rotate(var(--from-angle)) scale(0.94);
                     }
-                    45% {
-                        opacity: 0.98;
-                        transform: translate3d(var(--mid-x), var(--mid-y), 0) rotate(-8deg) scale(1.06);
+                    46% {
+                        opacity: 1;
+                        transform: translate3d(var(--from-x), var(--from-y), 0) rotate(var(--from-angle)) scale(0.98);
+                    }
+                    74% {
+                        opacity: 1;
+                        transform: translate3d(var(--mid-x), var(--mid-y), 0) rotate(-7deg) scale(1.05);
                     }
                     100% {
-                        opacity: 0;
+                        opacity: 1;
                         transform: translate3d(var(--to-x), var(--to-y), 0) rotate(var(--to-angle)) scale(1);
+                    }
+                }
+                @keyframes tricksDrawFlip {
+                    0%, 2% {
+                        transform: rotateY(180deg);
+                    }
+                    28%, 100% {
+                        transform: rotateY(0deg);
                     }
                 }
                 @keyframes tricksTakePlace {
@@ -1170,6 +1350,23 @@ export default function TricksLayeredGame({
                     100% {
                         opacity: 0;
                         transform: translate3d(var(--to-x), var(--to-y), 0) rotate(var(--to-angle)) scale(1);
+                        filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.24));
+                    }
+                }
+                @keyframes tricksReturnToDeck {
+                    0% {
+                        opacity: 1;
+                        transform: translate3d(var(--from-x), var(--from-y), 0) rotate(var(--from-angle)) scale(1);
+                        filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
+                    }
+                    52% {
+                        opacity: 1;
+                        transform: translate3d(var(--arc-x), var(--arc-y), 0) rotate(8deg) scale(1.04);
+                        filter: drop-shadow(0 42px 34px rgba(0, 0, 0, 0.34));
+                    }
+                    100% {
+                        opacity: 1;
+                        transform: translate3d(var(--to-x), var(--to-y), 0) rotate(var(--to-angle)) scale(0.94);
                         filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.24));
                     }
                 }
