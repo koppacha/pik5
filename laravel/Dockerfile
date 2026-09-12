@@ -1,4 +1,4 @@
-FROM php:8.2-fpm-bullseye
+FROM php:8.2-fpm-bookworm
 SHELL ["/bin/bash", "-oeux", "pipefail", "-c"]
 
 # timezone environment
@@ -13,8 +13,8 @@ ENV TZ=UTC \
 
 COPY --from=composer:2.2 /usr/bin/composer /usr/bin/composer
 
-RUN apt-get update && \
-  apt-get -y install --no-install-recommends \
+RUN apt-get -o Acquire::Retries=5 update && \
+  apt-get -o Acquire::Retries=5 -y install --no-install-recommends \
     ca-certificates \
     curl \
     default-mysql-client \
