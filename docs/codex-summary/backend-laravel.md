@@ -31,8 +31,8 @@
 
 ## 設定/環境
 
-- `config/version.php` は `/var/www/project.json` を JSON として読み、`version` から `record_prefix` を算出する。
-- `project.json` が壊れていても落とさず安全にフォールバックする。
+- `config/version.php` は `laravel/project.json` を JSON として読み、`version` から `record_prefix` を算出する。このファイルは `laravel/` のディレクトリ mount 経由でストーストへ反映する。
+- `laravel/project.json` が欠落・不正でも PHP Warning を API 応答に混入させず、`record_prefix` は `300` へフォールバックする。
 - 設定キャッシュ利用環境では `.env` や設定ファイル変更後に `config:clear` / `config:cache` が必要。
 - PHP 8.5 などでは Laravel/vendor 由来 Deprecated が大量に出ることがある。今回変更の成否とは切り分ける。
 

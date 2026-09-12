@@ -28,6 +28,7 @@ import {toAbsoluteUrl} from "../lib/seo"
 import NextEvent from "../components/top/NextEvent"
 import PickupVideo from "../components/top/PickupVideo"
 import RecentKeywordArticle from "../components/top/RecentKeywordArticle"
+import LimitedIdeas from "../components/top/LimitedIdeas"
 import MonthlyMnp from "../components/top/MonthlyMnp"
 
 export async function getServerSideProps(context) {
@@ -37,8 +38,9 @@ export async function getServerSideProps(context) {
     const prisma = (await import("../lib/prisma")).default
 
     // 前回のトレンドをリクエスト
-    const res = await fetch(`http://laravel:8000/api/prev`)
-    const prev = (res.status < 300) ? await res.json() : null
+    const prev = await fetch(`http://laravel:8000/api/prev`)
+        .then(res => res.ok ? res.json().catch(() => null) : null)
+        .catch(() => null)
 
     // スクリーンネームをリクエスト
     const users = await getCachedUsers()
@@ -180,6 +182,7 @@ export default function Home({users, prev, disablePickupVideoAutoplay}) {
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
                           <NextEvent/>
                       </WrapTopBox>
+                      <LimitedIdeas/>
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
                           <RecentKeywordArticle users={users}/>
                       </WrapTopBox>

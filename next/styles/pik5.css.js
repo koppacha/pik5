@@ -180,8 +180,7 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
   
-  .form-helper-text,
-  .MuiFormHelperText-root {
+  .form-helper-text {
     color: ${colors.light.front};
 
     div, input, label {
@@ -461,7 +460,7 @@ export const StairIcon = styled(FontAwesomeIcon)`
   ${sp`font-size: 0.7em;`}
 `
 export const WrapTopBox = styled(Grid)`
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 `
 export const TopBox = styled(Box)`
   border-radius: 6px;
@@ -623,7 +622,7 @@ export const BattleRecordContainer = styled(RecordContainer)`
   border-left: 1px solid;
   box-shadow: 0 0 4px;
 `
-export const AuthWindow = styled(Grid)`
+export const AuthWindow = styled(Grid).attrs({className: 'form-helper-text-themed'})`
   background-color: ${colors.light.back};
   opacity: 0.85;
   color: ${colors.light.front};
@@ -744,7 +743,7 @@ export const MobileMenuBox = styled(Box)`
     background-color: ${colors.dark.back};
   }
 `
-export const StyledDialogContent = styled(DialogContent)`
+export const StyledDialogContent = styled(DialogContent).attrs({className: 'form-helper-text-themed'})`
   color: ${colors.light.front};
   background-color: ${colors.light.back};
   

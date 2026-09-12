@@ -18,6 +18,7 @@
 ## Docker
 
 - `docker compose ps` でコンテナ起動状態を確認する。
+- アプリバージョンは `laravel/project.json` で管理する。Git checkout による inode 置換で単一ファイル bind mount が切れるのを避けるため、ルートの `project.json` を個別 mount しない。
 - `next` コンテナが起動していても `yarn dev` が起動していなければ `localhost:3005` は接続拒否になる。
 - ホスト公開 `localhost:3005` とコンテナ内 `localhost:3000` を混同しない。
 - `next` サービスの `5555:5555` は通常運用では不要。Prisma Studio をホストから使う用途がなければ閉じてよい。
@@ -44,7 +45,7 @@
 - 本番で `migrate deploy` は成功しても、Next の実行プロセスが古いままだと症状が残ることがある。
 - `node_modules` の `esbuild` が別プラットフォーム向けでローカル build が失敗することがある。Next build の結果と切り分ける。
 - `next/package.json` の `prebuild` で `prisma generate` を常時実行する。`next/generated/prisma` が Git 追跡対象外でも、`yarn build` / `npm run build` 前に generated client を再生成するため。
-- dev 起動では `prebuild` が実行されないため、`next/generated/prisma` がない環境では `yarn prisma generate` を実行してから `yarn dev` を起動する必要がある。欠落時は `../generated/prisma/client` の module not found で 500 になる。
+- dev 起動では `prebuild` が実行されないため、`yarn dev` の `predev` で `prisma generate` を実行する。ブランチ切り替え後に generated client が欠落・陳腐化していても、開発サーバー起動時に再生成される。生成物の欠落時は `../generated/prisma/client` の module not found で 500 になる。
 - webpack cache の `*.pack.gz_` rename に関する ENOENT は、Prisma Client 欠落によるコンパイル失敗時にも出る二次的なキャッシュ警告であり、Prisma の module not found とは切り分ける。
 
 ## Release After Pull

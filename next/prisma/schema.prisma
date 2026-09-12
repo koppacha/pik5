@@ -103,3 +103,29 @@ model VerificationToken {
 
   @@unique([identifier, token])
 }
+
+// Each save (including soft deletion) appends a revision. Only the head has currentKey.
+model LimitedIdea {
+  ruleId             String   @db.VarChar(36)
+  revision           Int
+  currentKey         String?  @unique @db.VarChar(36)
+  creatorId          String   @db.VarChar(191)
+  creatorName        String   @db.VarChar(191)
+  editorId           String   @db.VarChar(191)
+  legacyId           String?  @db.VarChar(191)
+  title              Int
+  stageId            Int
+  ruleName           String   @db.Text
+  difficulty         Int
+  registrationMethod String   @db.VarChar(5)
+  body               String   @db.MediumText
+  hidden             Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now())
+
+  @@id([ruleId, revision])
+  @@index([creatorId, hidden, updatedAt])
+  @@index([hidden, updatedAt])
+  @@index([legacyId])
+  @@map("limitedIdeas")
+}

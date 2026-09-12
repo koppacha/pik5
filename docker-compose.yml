@@ -9,7 +9,6 @@ services:
     container_name: laravel
     volumes:
       - ./laravel:/var/www/laravel
-      - ./project.json:/var/www/project.json:ro
       - ./backups/mysql:/var/backups/mysql
     expose:
       - "8000"
@@ -83,7 +82,6 @@ services:
     tty: true
     volumes:
       - ./next:/var/www/next
-      - ./project.json:/var/www/project.json:ro
     ports:
       - "3005:3000"
     logging:

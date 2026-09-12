@@ -26,6 +26,7 @@
 - `RankingTotal` は既に `flatMap` + `while` で複数ボーダー連続表示する先例。
 - ユーザーページのパンくずは「ホーム > ユーザー別ページ」。第1階層の「ユーザー別ページ」にはリンクを付けない。
 - ユーザーページの基礎情報は、総投稿数、初投稿日、最終投稿日、キーワード編集回数、イベントスタンプ数、最終更新を表示する。
+- 比較ページ `/compare/[...compare]` は、指定されたどちらかのユーザーまたは表示名が Prisma のユーザー一覧に存在しない場合、未定義値を props に含めず404を返す。
 - サインアップ画面では表示名を「ハンドルネーム」と表記し、入力欄の注意事項を常時表示する。ユーザーIDは3文字以上、パスワードはbcryptの72バイト制限による意図しない同一照合を避けるため、半角英数記号8文字以上72文字以下をフロントと Next API の双方で検証する。
 - ページ単位でフッターを非表示にする場合は `Component.hideFooter = true` を設定し、`_app.js` から `Layout` へ渡す。サインアップ画面はフッター非表示。
 - トップページのWelcomeBlockは、ログイン状態に関係なく主要4タイトル、キーワード、Discordの6リンクに固定し、スマホ3列・PC6列で表示する。認証動線はWelcomeBlockの上に右寄せで配置し、非ログイン時はアカウント作成をシリーズ別アクセントのグラデーションで強調する。
@@ -72,3 +73,10 @@
 - Unity WebGL ビルドは、既存生成 `index.html` が相対パス前提の場合、Next ページへ直接移植せず `public` 配下の HTML を iframe で読むのが参照崩れが少ない。
 - `.data.br`、`.framework.js.br`、`.wasm.br` は通常静的配信だけでは失敗する可能性がある。
 - Next 側で Unity の `.br` ファイルに `Content-Encoding: br` と適切な `Content-Type` を設定する。
+
+## HelperTextの背景別配色
+
+- HelperTextは白背景のMUI Paper/Dialog（設定、パスワードリセット、記録投稿、期間限定フォーム）と、テーマ連動の背景（AuthWindow、StyledDialogContent、ページの絞り込み）に混在する。
+- 配色は `styles/styles.scss` に集約する。標準の `.MuiFormHelperText-root` は白背景用の濃いグレー（#555555）、エラーは濃い赤（#b3261e）。ページ全体のダークモードだけを見て明色へ変更しない。
+- テーマ連動の背景ではヘルパー自身またはフォーム親に `form-helper-text-themed` を付ける。通常色は `--color-text-base`、ダーク時のエラー色は #ff8a80。AuthWindowとStyledDialogContentは共通コンポーネントでclassを付与する。
+- 既存の `.form-helper-text` は認証フォームの入力・ラベル配色にも使われているため保持し、HelperTextの配色は新しいclassとCSS変数で分離する。

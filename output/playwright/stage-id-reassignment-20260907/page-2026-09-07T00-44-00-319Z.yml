@@ -1,0 +1,19 @@
+- generic [active] [ref=f1e1]:
+  - generic [ref=f1e3]:
+    - link "ホームに戻る" [ref=f1e4] [cursor=pointer]:
+      - /url: /
+    - generic [ref=f1e5]:
+      - generic [ref=f1e6]: ログ
+      - generic [ref=f1e7]: ログはまだありません
+    - generic [ref=f1e10]:
+      - generic [ref=f1e11]: 参加者はまだいません
+      - generic [ref=f1e13]:
+        - generic [ref=f1e14]: 大会情報
+        - generic [ref=f1e16]: 場札上限 1枚
+        - generic [ref=f1e17]: テイク必要 3枚
+        - generic [ref=f1e18]: 残り --時間--分
+        - generic [ref=f1e19]: 次回給付 15:59
+    - generic [ref=f1e20]:
+      - generic [ref=f1e21]: 参加状況を確認中
+      - generic [ref=f1e22]: 読み込み中...
+  - alert [ref=f1e23]

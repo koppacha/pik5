@@ -15,7 +15,7 @@ export default function SpeedRunConsole({stage, console:cnsl, consoles}){
     }
     return (
         <FormControl>
-            <FormHelperText className="form-helper-text">{t.speedrun.console.title}</FormHelperText>
+            <FormHelperText className="form-helper-text-themed">{t.speedrun.console.title}</FormHelperText>
             <StyledSelect
                 className="styled-select"
                 defaultValue={consoles[0]}

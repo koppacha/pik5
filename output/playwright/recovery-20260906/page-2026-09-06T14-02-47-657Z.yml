@@ -1,0 +1,25 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e6]:
+      - generic [ref=e7]: 山札
+      - button "ドロー" [disabled] [ref=e8]
+      - generic [ref=e9]: 残り 0枚
+      - generic [ref=e10]: 捨て札 0枚
+      - generic [ref=e11]: 大会へ参加してください
+    - link "ホームに戻る" [ref=e12] [cursor=pointer]:
+      - /url: /
+    - generic [ref=e13]:
+      - generic [ref=e14]: ログ
+      - generic [ref=e15]: ログはまだありません
+    - generic [ref=e18]:
+      - generic [ref=e19]: 参加者はまだいません
+      - generic [ref=e21]:
+        - generic [ref=e22]: 大会情報
+        - generic [ref=e24]: 場札上限 1枚
+        - generic [ref=e25]: テイク必要 3枚
+        - generic [ref=e26]: 残り --時間--分
+        - generic [ref=e27]: 次回給付 27:12
+    - generic [ref=e28]:
+      - generic [ref=e29]: 参加状況を確認中
+      - generic [ref=e30]: 読み込み中...
+  - alert [ref=e31]
