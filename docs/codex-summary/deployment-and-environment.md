@@ -18,6 +18,8 @@
 ## Docker
 
 - `docker compose ps` でコンテナ起動状態を確認する。
+- Laravelイメージは公式 `php:8.2-fpm-bookworm` を使用する。旧BullseyeでDebian Securityの索引と配布ファイルがずれ、`apt-get install` が404になる事象を回避するため2026-09-12に更新した。APTには `Acquire::Retries=5` を設定する。
+- ルートの `.dockerignore` で `.env`、秘密鍵、ローカルDB、バックアップ、ログ、`node_modules`、`.next`、`next/prisma/data` などをビルドコンテキストから除外する。Next Dockerfileは `next/` 全体をCOPYするため、この設定を削除しない。
 - アプリバージョンは `laravel/project.json` で管理する。Git checkout による inode 置換で単一ファイル bind mount が切れるのを避けるため、ルートの `project.json` を個別 mount しない。
 - `next` コンテナが起動していても `yarn dev` が起動していなければ `localhost:3005` は接続拒否になる。
 - ホスト公開 `localhost:3005` とコンテナ内 `localhost:3000` を混同しない。
