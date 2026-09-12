@@ -187,8 +187,7 @@ body {
 //    }
 //}
 
-.form-helper-text,
-.MuiFormHelperText-root {
+.form-helper-text {
     color: $light-front;
 
     div, input, label {
@@ -204,6 +203,26 @@ body {
 
     }
 }
+// MUI Paper/Dialog forms stay light even when the page uses the dark theme.
+// Apply this class to helpers (or their form container) on a theme-colored surface.
+.form-helper-text-themed {
+    --form-helper-text-color: var(--color-text-base);
+    --form-helper-error-color: #b3261e;
+
+    [data-theme='dark'] & {
+        --form-helper-error-color: #ff8a80;
+    }
+}
+
+.MuiFormHelperText-root {
+    // Override legacy styled-dialog descendant colors, without recoloring inputs/labels.
+    color: var(--form-helper-text-color, #555555) !important;
+}
+
+.MuiFormHelperText-root.Mui-error {
+    color: var(--form-helper-error-color, #b3261e) !important;
+}
+
 .sp-hidden {
     display: none;
 }

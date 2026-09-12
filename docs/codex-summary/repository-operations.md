@@ -7,7 +7,7 @@
 - `docker-compose.yml` は `next` / `laravel` / `mysql` / `redis` のローカルサービスを定義する。
 - `mysql/` と `redis/` はローカルデータボリューム。`log/mysql/` は DB ダンプやログ用途。
 - `wiki/`、`lab/`、`sandbox/` は実験・ドキュメント用途。関連タスクでない限り編集しない。
-- `project.json` はプロジェクトルートのバージョン情報ソース。旧 `VERSION` は廃止済みの前提で扱う。
+- `laravel/project.json` はアプリバージョン情報ソース。旧ルート `project.json` と `VERSION` は廃止済みの前提で扱う。
 
 ## 開発起動
 
@@ -16,15 +16,15 @@
 - Next は `docker compose exec next bash` 後に `yarn dev`。ホスト公開は通常 `http://localhost:3005`、コンテナ内は `http://localhost:3000`。
 - Laravel は `docker compose exec laravel bash` 後に `php artisan serve --host 0.0.0.0`。コンテナ内は `http://localhost:8000`。
 - 停止は `docker compose down`。
-- Docker の単一ファイル mount を変更した場合は、既存コンテナ再起動だけでは反映されないことがある。`project.json` mount などはコンテナ再作成で確認する。
+- Git checkout で置換されるファイルを Docker へ単一ファイル mount しない。ホスト側の inode 置換後にコンテナから参照できなくなることがある。
 
 ## バージョンと発番
 
 - 記録の `unique_id` は「バージョン由来3桁 + ランダム6桁」の9桁相当が仕様。
-- `RecordController` は `config('version.record_prefix')` を使う。`record_prefix` は `project.json` の `version` から算出される。
-- `project.json` は `laravel` / `next` 両コンテナへ `/var/www/project.json:ro` として mount される想定。
-- `project.json` が実行中コンテナに見えていない場合、`record_prefix` が `"000"` になり、`(int)` キャストの影響で6桁に見えることがある。
-- 本番や設定キャッシュ利用環境で `project.json` や `.env` を変えた後は `php artisan config:clear` または `php artisan config:cache`、必要に応じてコンテナ/Nextプロセス再起動を行う。
+- `RecordController` は `config('version.record_prefix')` を使う。`record_prefix` は `laravel/project.json` の `version` から算出される。
+- `laravel/project.json` は既存の `./laravel:/var/www/laravel` ディレクトリ mount 経由で参照し、個別 mount は追加しない。
+- `laravel/project.json` が欠落・不正な場合、`record_prefix` は `"300"` へフォールバックし、PHP Warning を API 応答に混入させない。
+- 本番や設定キャッシュ利用環境で `laravel/project.json` や `.env` を変えた後は `php artisan config:clear` または `php artisan config:cache`、必要に応じてコンテナ/Nextプロセス再起動を行う。
 
 ## Git と既存変更
 

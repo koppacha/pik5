@@ -26,7 +26,7 @@ export default function PullDownDifficulty(props){
 
     return (
         <FormControl>
-            <FormHelperText className="form-helper-text">{t.g.difficulty}</FormHelperText>
+            <FormHelperText className="form-helper-text-themed">{t.g.difficulty}</FormHelperText>
             <Select
                 className="styled-select"
                 defaultValue={0}

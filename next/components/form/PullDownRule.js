@@ -19,7 +19,7 @@ export default function PullDownRule(props){
 
     return (
         <FormControl>
-            <FormHelperText className="form-helper-text">{t.g.category}</FormHelperText>
+            <FormHelperText className="form-helper-text-themed">{t.g.category}</FormHelperText>
             <StyledSelect
                 className="styled-select"
                 defaultValue={rule}

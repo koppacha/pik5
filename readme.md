@@ -104,7 +104,7 @@ $ docker compose logs --tail=100 laravel
 
 - `next` コンテナは `docker-compose.yml` 上では常駐のみ行う構成です。ビルド後は本番運用中の起動方法に合わせて、`next` コンテナ内で `yarn start`（または既存のプロセス管理手順）を起動・再起動してください。
 - `laravel` コンテナは `php artisan serve --host 0.0.0.0` を起動する構成です。`docker compose up -d` 後に API 応答とログを確認してください。
-- `.env`、`project.json`、`docker-compose.yml`、`Dockerfile`、nginx 設定に変更があった場合は、コンテナ再作成やプロセス再起動だけでなく、設定が実行中コンテナへ反映されているか確認してください。
+- `.env`、`laravel/project.json`、`docker-compose.yml`、`Dockerfile`、nginx 設定に変更があった場合は、コンテナ再作成やプロセス再起動だけでなく、設定が実行中コンテナへ反映されているか確認してください。
 - 反映後はトップページ、ログイン、投稿、主要ランキングなど、ユーザー影響の大きい画面を最低限スモークチェックしてください。
 
 ### 場合によって必要

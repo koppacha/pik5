@@ -104,7 +104,7 @@ export default function ModalCompare({open, handleClose, param}) {
                                     getOptionKey={(option) => option.userId}
                                     renderInput={(params) =>
                                         <>
-                                            <FormHelperText className="form-helper-text">{t.g.userName}</FormHelperText>
+                                            <FormHelperText className="form-helper-text-themed">{t.g.userName}</FormHelperText>
                                             <StyledTextField {...params}/>
                                         </>}
                                     onChange={(event, value) => {
@@ -166,7 +166,7 @@ export default function ModalCompare({open, handleClose, param}) {
                                     defaultValue={param.users.find(e => e.userId === param.user2) ?? null}
                                     renderInput={(params) =>
                                         <>
-                                            <FormHelperText className="form-helper-text">{t.g.userName}</FormHelperText>
+                                            <FormHelperText className="form-helper-text-themed">{t.g.userName}</FormHelperText>
                                             <StyledTextField {...params}/>
                                         </>}
                                     onChange={(event, value) => {
