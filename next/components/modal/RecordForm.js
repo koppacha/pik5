@@ -5,10 +5,9 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import DialogContent from "@mui/material/DialogContent";
 import {useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
-import * as yup from "yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {convertToSeconds, currentYear, rule2consoles, useLocale} from "../../lib/pik5";
+import {convertToSeconds, currentYear, fetcher, rule2consoles, useLocale} from "../../lib/pik5";
 import {Backdrop, Box, CircularProgress, MenuItem, ToggleButton, Typography} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -17,6 +16,8 @@ import {timeStageList} from "../../lib/const";
 import Compressor from "compressorjs";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheck} from "@fortawesome/free-solid-svg-icons";
+import useSWR from "swr";
+import {createRecordValidationSchema} from "../../lib/recordValidation";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose, initialData = null, onSuccess = null, onPosted = null}) {
 
@@ -48,41 +49,18 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [caveTime, setCaveTime] = useState("")
     const [timeValue, setTimeValue] = useState("00:00:00")
 
-    const videoRegex = videoUrl ?
-        // 証拠動画URLが入力された場合の正規表現
-        /^https?:\/\/(www\.)?(nicovideo\.jp|youtube\.com|youtu\.be|twitch\.tv|twitter\.com)\/[\w\-\/?=]*$/
-        :
-        // 空欄の場合はスルー
-        ""
+    const {data: countData} = useSWR(session?.user?.userId ? `/api/server/count/${session.user.userId}` : null, fetcher)
+    const {data: rankData} = useSWR(info?.stage_id && rule && score ? `/api/server/record/rank/${info.stage_id}/${rule}/${score}` : null, fetcher)
 
     // バリデーションルール
-    const schema = yup.object({
-        score: yup
-            .number()
-            .min(1, '０点以下は登録できません。')
-            .max(99999, 'スコアの最大値は99,999です'),
-        videoUrl: yup
-            .string()
-            .matches(videoRegex,
-                {message: '有効なURLではありません。有効な動画サイトは「YouTube」「ニコニコ動画」「Twitch」「Twitter」です。'})
-            .max(128, 'URLの最大文字数は128文字です。'),
-        comment: yup
-            .string()
-            .max(128, 'コメントの最大文字数は128文字です。'),
-        rule: yup
-            .number()
-            .min(1, 'ルールの選択は必須です。'),
-        console: yup
-            .number()
-            .min(1, '操作方法の選択は必須です。'),
-        time: yup
-            .string()
-            .matches(/^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, '正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。')
-            .test('isTimeValid', '1以下のスコアは登録できません。', function (value) {
-                if(!isTime()) return true
-                const calculatedScore = time2score(value);
-                return calculatedScore > 1;
-            }),
+    const schema = createRecordValidationSchema({
+        isTime: isTime(),
+        time2score,
+        rule,
+        stageId: info?.stage_id,
+        rank: rankData?.data,
+        countInfo: countData?.data,
+        image: img || initialData?.img_url,
     })
 
     const {
@@ -96,6 +74,10 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         mode: 'onChange',
         resolver: yupResolver(schema)
     })
+
+    useEffect(() => {
+        void trigger(["videoUrl", "img"])
+    }, [countData?.data, img, rankData?.data, trigger, videoUrl])
 
     // フォームデータの初期化
     useEffect(() => {
@@ -116,6 +98,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             videoUrl: defaultVideoUrl,
             comment: defaultComment,
             "region-score": defaultScore,
+            pikmin: 0,
+            treasure: 0,
+            caveTime: "00:00:00",
         })
         setUserAgent(window.navigator.userAgent)
         setConsole(defaultConsole)
@@ -263,14 +248,14 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             success(result) {
                 setImg(result)
             },
-            error(err) {
-                console.log(err.message)
+            error() {
+                setImg(null)
             }
         })
     }
 
     // タイム表示判定（RecordController.phpと共通）
-    const isTime = () => {
+    function isTime() {
         return [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
     }
 
@@ -420,7 +405,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         value={difficulty || ""}
                         margin="normal"
-                        className={isPik4() || "hidden"}
+                        className={isPik4() ? "" : "hidden"}
                     >
                         {
                             [1, 2, 3].map((key) =>
@@ -432,7 +417,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         value="check"
                         selected={regionSelected}
                         color="success"
-                        className={[203, 213, 228].includes(info?.stage_id) || "hidden"}
+                        className={[203, 213, 228].includes(info?.stage_id) ? "" : "hidden"}
                         onChange={() => {
                             const nextSelected = !regionSelected
                             setRegionSelected(nextSelected)
@@ -457,9 +442,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'region-score' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={isRegion() || "hidden"}
+                        className={isRegion() ? "" : "hidden"}
                     />
                     <TextField
                         {...register('pikmin')}
@@ -477,9 +461,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'pikmin' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('treasure')}
@@ -497,9 +480,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'treasure' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="0"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('caveTime')}
@@ -517,9 +499,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'caveTime' in errors}
                         helperText={errors.time?.message}
-                        defaultValue="00:00:00"
                         margin="normal"
-                        className={[25].includes(rule) || "hidden"}
+                        className={[25].includes(rule) ? "" : "hidden"}
                     />
                     <TextField
                         {...register('time')}
@@ -539,7 +520,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         helperText={errors.time?.message}
                         value={timeValue}
                         margin="normal"
-                        className={isTime() || "hidden"}
+                        className={isTime() ? "" : "hidden"}
                     />
                     <TextField
                         {...register('score')}
@@ -552,7 +533,6 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         variant="standard"
                         error={'score' in errors}
                         helperText={errors.score?.message}
-                        defaultValue={0}
                         value={score}
                         margin="normal"
                         disabled={(isTime() || [25].includes(rule) || isRegion()) && true}

@@ -15,7 +15,7 @@ export default function PullDownKeywordCategory({category}){
 
     return (
         <FormControl>
-            <FormHelperText className="form-helper-text">{t.keyword.g.category}</FormHelperText>
+            <FormHelperText className="form-helper-text-themed">{t.keyword.g.category}</FormHelperText>
             <StyledSelect
                 defaultValue={category || "all"}
                 id="select-category"

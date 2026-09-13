@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Library\Func;
 use App\Models\Record;
+use App\Models\Stage;
 use App\Models\Total;
 use DateTime;
 use Illuminate\Http\JsonResponse;
@@ -102,6 +103,32 @@ class TotalController extends Controller
 
         return [];
     }
+
+    public function stages(Request $request, string $series): JsonResponse
+    {
+        $stages = self::stage_list($series);
+
+        if (!$request->boolean('include_special')) {
+            return response()->json($stages);
+        }
+
+        $seriesId = (int)$request->query('series', 0);
+        $specialStages = [];
+
+        if ($seriesId >= 1 && $seriesId <= 4) {
+            $specialStages = Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'series')
+                ->where('series', $seriesId)
+                ->whereBetween('stage_id', [900, 1000])
+                ->where('stage_id', '!=', 903)
+                ->orderBy('stage_id')
+                ->get();
+        }
+
+        return response()->json([
+            'stages' => $stages,
+            'specialStages' => $specialStages,
+        ]);
+    }
     /**
      * Display a listing of the resource.
      *
@@ -157,7 +184,8 @@ class TotalController extends Controller
         $req = [
             "console" => (int)$request['console'] ?: 0,
             "rule" => (int)$request['rule'] ?: $seriesId,
-            "year" => (int)$request['year'] ?: date("Y")
+            "year" => (int)$request['year'] ?: date("Y"),
+            "snapshot_at" => $request['snapshot_at'] ?? null,
         ];
 
         // ルールの強制置換
@@ -192,11 +220,13 @@ class TotalController extends Controller
         $ranking = [];
 
         // オプション引数を加工する
-        $year = $req["year"] + 1;
         $console_operation = $req["console"] ? "=" : ">";
 
         // 対象年からフィルターする年月日を算出
-        $datetime = new DateTime("{$year}-01-01 00:00:00");
+        $year = $req["year"] + 1;
+        $datetime = $req["snapshot_at"]
+            ? new DateTime($req["snapshot_at"])
+            : new DateTime("{$year}-01-01 00:00:00");
         $date = $datetime->format("Y-m-d H:i:s");
         // 共通処理ここまで
 
@@ -248,9 +278,7 @@ class TotalController extends Controller
                     $user_id = $record['user_id'];
 
                     // スコア計算（ルールIDがSpeedrun系の場合の特別処理を含む）
-                    $score = $rule_id === 29 || $rule_id === 35 || $rule_id === 47
-                        ? max(0, 600 - $record['score'])
-                        : $record['score'];
+                    $score = self::scoreForTotal((int)$rule_id, (int)$record['score']);
 
                     // 初期化
                     if (!isset($users[$user_id])) {
@@ -311,6 +339,13 @@ class TotalController extends Controller
 
         // 結果を出力
         return Func::rank_calc("total", $users, [$req["console"], $rules, $date]);
+    }
+
+    public static function scoreForTotal(int $rule, int $score): int
+    {
+        return in_array($rule, [29, 35, 47], true)
+            ? max(0, 600 - $score)
+            : $score;
     }
 
     /**

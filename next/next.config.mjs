@@ -43,6 +43,9 @@ const nextConfig = {
         port: '8000',
       }
     ]
+  },
+  compiler: {
+    styledComponents: true
   }
 }
 

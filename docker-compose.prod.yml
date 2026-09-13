@@ -1,6 +1,20 @@
 services:
+  laravel:
+    environment:
+      - DB_PROTECT_DESTRUCTIVE_COMMANDS=true
+      - DB_BACKUP_ENABLED=true
+
+  scheduler:
+    container_name: laravel-scheduler
+    command: php artisan schedule:work
+    expose: []
+    environment:
+      - DB_PROTECT_DESTRUCTIVE_COMMANDS=true
+      - DB_BACKUP_ENABLED=true
+    restart: unless-stopped
+
   next:
-    command: sh -c "yarn build && yarn start"
+    command: sh -c "yarn build && exec yarn start"
     stdin_open: false
     tty: false
     restart: unless-stopped

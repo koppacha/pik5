@@ -4,8 +4,10 @@ use App\Http\Controllers\ArenaController;
 use App\Http\Controllers\BattleController;
 use App\Http\Controllers\CardController;
 use App\Http\Controllers\DiscordEventController;
+use App\Http\Controllers\EventResultController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\NewArenaController;
 use App\Http\Controllers\NewRecordController;
 use App\Http\Controllers\PlayerController;
 use App\Http\Controllers\PostCountController;
@@ -71,7 +73,9 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 // 通常総合ランキング取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'total/{id}/{console?}/{rule?}/{year?}' , [ TotalController::class, 'show' ]);
-    Route::get ( 'stages/{series}' , [ TotalController::class, 'stage_list' ]);
+    Route::get ( 'stages/{series}' , [ TotalController::class, 'stages' ]);
+    Route::get ( 'event-total/{category?}' , [ EventResultController::class, 'show' ]);
+    Route::get ( 'event-category/{event}' , [ EventResultController::class, 'category' ]);
 });
 // ステージ情報取得API
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
@@ -88,6 +92,9 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get('user/total/{id}', [UserTotalController::class, 'show'])->name('user.total');
     Route::get('user/rank/{id}', [UserTotalController::class, 'getTotalsTables']);
+    Route::get('user/rps-history/{id}/{rule?}', [UserTotalController::class, 'getRpsHistory']);
+    Route::get('user/monthly-mnp', [UserTotalController::class, 'getMonthlyMnp']);
+    Route::get('user/dashboard-summary/{id}', [UserTotalController::class, 'getDashboardSummary']);
 });
 // キーワード関連API
 Route::group ([ 'middleware' => [ 'api', 'cors']], static function () {
@@ -123,6 +130,14 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route:: post('battle', [BattleController::class, 'create']);
     Route:: get('battle/rate', [BattleController::class, 'getRate']);
     Route:: get('battle/score', [BattleController::class, 'getScore']);
+});
+// ピクチャレアリーナ対戦API
+Route::group ([ 'middleware' => [ 'api' ]], static function () {
+    Route::get('new-arena/state', [NewArenaController::class, 'state']);
+    Route::post('new-arena/player/add', [NewArenaController::class, 'addPlayer']);
+    Route::post('new-arena/player/remove', [NewArenaController::class, 'removePlayer']);
+    Route::post('new-arena/shuffle', [NewArenaController::class, 'shufflePlayers']);
+    Route::post('new-arena/result', [NewArenaController::class, 'submitResult']);
 });
 // テスト用
 Route::group ([ 'middleware' => [ 'api' ]], static function () {

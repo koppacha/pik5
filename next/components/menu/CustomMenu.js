@@ -11,18 +11,35 @@ import MenuOt from "./MenuOt";
 import {useLocale} from "../../lib/pik5";
 import {CustomMenuButton} from "../../styles/pik5.css";
 import MenuSpeedrun from "./MenuSpeedrun";
+import {useRouter} from "next/router";
 
 export default function CustomMenu(props){
 
     const {t} = useLocale()
+    const router = useRouter()
 
     // プルダウンメニュー駆動周り
     const anchorEl = useRef(null)
     const [open, setOpen] = useState(false)
 
-    const handleClick = (event) => {
-        setOpen(!open);
-    };
+    const handleClick = () => {
+        if(!open){
+            setOpen(true)
+            return
+        }
+
+        if(!props.destination?.href){
+            setOpen(false)
+            return
+        }
+
+        setOpen(false)
+        if(props.destination.external){
+            window.open(props.destination.href, "_blank", "noopener,noreferrer")
+            return
+        }
+        router.push(props.destination.href)
+    }
     const handleClose = (e) => {
         if(
             anchorEl.current &&

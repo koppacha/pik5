@@ -1,63 +1,75 @@
 import Link from "next/link";
-import {Box, Grid, List, ListItem, Typography} from "@mui/material";
+import {Box, Grid, Typography} from "@mui/material";
 import React, {useState} from "react";
 import {
     AuthButton,
-    CellBox,
-    EventContainer, EventContent, EventDate,
-    InfoBox, SeriesTheme,
+    InfoBox,
     TopBox,
     TopBoxContent,
-    TopBoxContentList,
     TopBoxHeader,
     WrapTopBox
 } from "../styles/pik5.css";
-import {id2name, useLocale} from "../lib/pik5";
+import {useLocale} from "../lib/pik5";
 import {
     faArrowTrendUp, faBullhorn,
-    faCalendarDays,
     faCertificate,
-    faCircleInfo, faFaceSmileBeam,
     faFlag, faRankingStar
 } from "@fortawesome/free-solid-svg-icons";
+import {faDiscord} from "@fortawesome/free-brands-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import NewRecords from "../components/top/NewRecords";
 import PostCountRanking from "../components/top/PostCountRanking";
 import TrendRanking from "../components/top/TrendRanking";
-import { useSession, signIn, signOut } from "next-auth/react"
-import ModalKeywordEdit from "../components/modal/ModalKeywordEdit";
-import {mutate} from "swr";
+import {useSession, signOut} from "next-auth/react"
 import ModalIdeaPost from "../components/modal/ModalIdeaPost";
-import PostButton from "../components/PostButton";
 import DashBoard from "../components/top/DashBoard";
 import SeoHead from "../components/SeoHead"
 import {toAbsoluteUrl} from "../lib/seo"
 import NextEvent from "../components/top/NextEvent"
 import PickupVideo from "../components/top/PickupVideo"
 import RecentKeywordArticle from "../components/top/RecentKeywordArticle"
+import LimitedIdeas from "../components/top/LimitedIdeas"
+import MonthlyMnp from "../components/top/MonthlyMnp"
 
 export async function getServerSideProps(context) {
     const { getCachedUsers } = await import("../lib/usersCache")
+    const {getServerSession} = await import("next-auth/next")
+    const {authOptions} = await import("./api/auth/[...nextauth]")
+    const prisma = (await import("../lib/prisma")).default
 
     // 前回のトレンドをリクエスト
-    const res = await fetch(`http://laravel:8000/api/prev`)
-    const prev = (res.status < 300) ? await res.json() : null
+    const prev = await fetch(`http://laravel:8000/api/prev`)
+        .then(res => res.ok ? res.json().catch(() => null) : null)
+        .catch(() => null)
 
     // スクリーンネームをリクエスト
     const users = await getCachedUsers()
+    const session = await getServerSession(context.req, context.res, authOptions)
+    const userSettings = session?.user?.dbId
+        ? await prisma.user.findUnique({
+            where: {id: session.user.dbId},
+            select: {disablePickupVideoAutoplay: true},
+        })
+        : session?.user?.userId
+            ? await prisma.user.findFirst({
+                where: {userId: session.user.userId},
+                select: {disablePickupVideoAutoplay: true},
+            })
+            : null
 
     return {
         props: {
-            users, prev
+            users,
+            prev,
+            disablePickupVideoAutoplay: userSettings?.disablePickupVideoAutoplay ?? false,
         }
     }
 }
 
-export default function Home({users, prev}) {
+export default function Home({users, prev, disablePickupVideoAutoplay}) {
 
     const {t,r} = useLocale()
-    const {data: session } = useSession()
-    const isAdmin = Number(session?.user?.role) === 10
+    const {data: session, status: sessionStatus} = useSession()
 
     // 期間限定ルール投稿モーダル制御関連
     const [editOpen, setEditOpen] = useState(false)
@@ -65,52 +77,44 @@ export default function Home({users, prev}) {
     const handleEditOpen = () => setEditOpen(true)
     const handleEditClose = () => setEditOpen(false)
 
-    const handleNotifyLatestRecord = () => {
-        if (typeof window === "undefined") return
-        window.dispatchEvent(new window.CustomEvent("pik5:notify-latest-record"))
-    }
-
-    // ログイン判定によって表示を変更
-    const loginName = () => {
-        if(!session){
-            return {
-                name: t.g.login,
-                url: "/auth/login",
-            }
-        } else {
-            return {
-                name: session.user.name,
-                url: "/user/"+session.user.userId
-            }
-        }
-    }
     // ウェルカムメッセージ直下のリンク
     const WelcomeBlock =
-        <>
-            <hr style={{margin: "1em", borderWidth: "1px 0 0 0"}}/>
-            <Grid container className="welcome-block" columns={{xs: 3.3, sm: 6, md: 7.6, lg: 8}}>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/total/10">{t.title[1]}</Grid>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/total/20">{t.title[2]}</Grid>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/total/30">{t.title[3]}</Grid>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/total/40">{t.title[4]}</Grid>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/keyword">{t.g.key}</Grid>
-                <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="https://discord.gg/rQEBJQa">Discord</Grid>
-                {isAdmin &&
-                    <Grid item xs={1} className="top-series-mini-box" onClick={handleNotifyLatestRecord} style={{cursor: "pointer"}}>
-                        最新記録を通知
+            <Grid
+                container
+                spacing={1}
+                className="welcome-block"
+                columns={{xs: 3, sm: 6}}
+                style={{margin: 0, width: "100%"}}
+            >
+                {[1, 2, 3, 4].map(series => (
+                    <Grid item xs={1} key={series}>
+                        <Link
+                            className="top-series-mini-box"
+                            href={`/total/${series}0`}
+                        >
+                            {t.title[series]}
+                        </Link>
                     </Grid>
-                }
-                {(!session)
-                    ?
-                    <>
-                        <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/auth/register">{t.g.register}</Grid>
-                        <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="/auth/login">{t.g.login}</Grid>
-                    </>
-                    :
-                    <Grid item xs={1} underline="none" className="top-series-mini-box" component={Link} href="#" onClick={() => signOut()}>{t.g.logout}</Grid>
-                }
+                ))}
+                <Grid item xs={1}>
+                    <Link
+                        className="top-series-mini-box"
+                        href="/keyword"
+                    >
+                        {t.g.key}
+                    </Link>
+                </Grid>
+                <Grid item xs={1}>
+                    <Link
+                        className="top-series-mini-box"
+                        href="https://discord.gg/rQEBJQa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <FontAwesomeIcon icon={faDiscord} bounce className="welcome-discord-icon"/>Discord
+                    </Link>
+                </Grid>
             </Grid>
-        </>
     // 年初来の最多投稿ステージ
     const PrevTrend = (prev?.stage?.cnt)
         ? <>{t.g.trendYear}: {t.stage[prev.stage["stage_id"]]} ({prev.stage["cnt"]} {t.g.countTail}）</>
@@ -137,14 +141,29 @@ export default function Home({users, prev}) {
           <Typography variant="" className="title">{t.title[0]}</Typography><br/>
           <Typography variant="" className="subtitle">{r.title[0]}</Typography><br/>
           <InfoBox className="info-box">
-              {t.t.welcome}
+              <Box className="welcome-intro-row">
+                  <Box>{t.t.welcome}</Box>
+                  {sessionStatus !== "loading" && <Box className="welcome-auth-actions">
+                      {!session ? (
+                          <>
+                              <AuthButton className="welcome-signup-button" component={Link} href="/auth/register">{t.g.register}</AuthButton>
+                              <AuthButton component={Link} href="/auth/login">{t.g.login}</AuthButton>
+                          </>
+                      ) : (
+                          <>
+                              <AuthButton component={Link} href="/auth/config">{t.g.userConfig}</AuthButton>
+                              <AuthButton onClick={() => signOut()}>{t.g.logout}</AuthButton>
+                          </>
+                      )}
+                  </Box>}
+              </Box>
               {WelcomeBlock}
           </InfoBox>
           <Grid container spacing={1}>
               {(session) &&
                   <WrapTopBox item xs={12} className="wrap-top-box">
                       <TopBox className="top-box">
-                          <DashBoard user={session.user} users={users} />
+                          <DashBoard user={session.user} users={users} simple />
                           <Box style={{
                               borderTop: "1px solid #777",
                               fontSize: "0.8em",
@@ -163,13 +182,14 @@ export default function Home({users, prev}) {
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
                           <NextEvent/>
                       </WrapTopBox>
+                      <LimitedIdeas/>
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
-                          <RecentKeywordArticle/>
+                          <RecentKeywordArticle users={users}/>
                       </WrapTopBox>
                   </Grid>
               </WrapTopBox>
               <WrapTopBox item xs={12} sm={6} className="wrap-top-box">
-                  <PickupVideo users={users}/>
+                  <PickupVideo users={users} disableInitialAutoplay={disablePickupVideoAutoplay}/>
               </WrapTopBox>
               <WrapTopBox item xs={12} className="wrap-top-box">
                   <TopBox className="top-box">
@@ -179,6 +199,16 @@ export default function Home({users, prev}) {
                       </TopBoxHeader>
                       <TopBoxContent className="top-box-content">
                           <TrendRanking/>
+                      </TopBoxContent>
+                  </TopBox>
+              </WrapTopBox>
+              <WrapTopBox item xs={12} className="wrap-top-box">
+                  <TopBox className="top-box">
+                      <TopBoxHeader className="top-box-header">
+                          <span><FontAwesomeIcon icon={faRankingStar}/> 月間MVP</span>
+                      </TopBoxHeader>
+                      <TopBoxContent className="top-box-content">
+                          <MonthlyMnp users={users}/>
                       </TopBoxContent>
                   </TopBox>
               </WrapTopBox>

@@ -111,7 +111,7 @@ export const GlobalStyle = createGlobalStyle`
   body {
     color: ${colors.light.front};
     background-color: ${colors.light.back};
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`font-size: 0.8em`}
     [data-theme='dark'] & {
@@ -122,7 +122,7 @@ export const GlobalStyle = createGlobalStyle`
 
   .title {
     font-size: 3.5em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`font-size: 2em`}
   }
@@ -188,10 +188,10 @@ export const GlobalStyle = createGlobalStyle`
     }
 
     [data-theme='dark'] & {
-      color: ${colors.dark.front};
+      color: ${colors.dark.front} !important;
 
       div, input, label {
-        color: ${colors.dark.front};
+        color: ${colors.dark.front} !important;
       }
 
     }
@@ -218,7 +218,7 @@ export const GlobalStyle = createGlobalStyle`
     
     /* Markdownをオーバライドするスタイル */
     code {
-      font-family: "M PLUS 1 CODE", sans-serif;
+      font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     }
 
     h2, h3, h4, h5, h6 {
@@ -263,7 +263,7 @@ export const OffsetContainer = styled(Container)`
   ${pc`margin-top: 80px;`}
 `
 export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.series}))`
-  font-family: "M PLUS 1 CODE", sans-serif;
+  font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
   color: ${uiColors.navText};
   background-color: transparent;
   font-size: 0.9em;
@@ -282,7 +282,7 @@ export const CustomMenuButton = styled(Button).attrs(props => ({$series: props.s
   }
 `
 export const AuthButton = styled(Button)`
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     background-color: ${uiColors.buttonAltBg};
     color: ${uiColors.buttonAltText};
     font-weight: bold;
@@ -294,7 +294,7 @@ export const AuthButton = styled(Button)`
     }
 `
 export const CustomButton = styled(Button)`
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     color: ${colors.light.back};
     background-color: ${colors.light.front};
     font-size: 0.9em;
@@ -381,7 +381,7 @@ export const HeaderPopMenu = styled(Paper)`
   background-color: transparent;
 `
 export const StyledMenuItem = styled(MenuItem)`
-  font-family: "M PLUS 1 CODE", sans-serif;
+  font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
   border-left: 10px solid ${uiColors.menuItemBorder};
   background-color: ${uiColors.menuItemBg};
   color: ${uiColors.menuItemBorder};
@@ -408,14 +408,13 @@ export const InfoBox = styled(Box)`
 export const RuleWrapper = styled(Grid)`
   margin-bottom: 8px;
   min-width: 1200px;
-  overflow: scroll;
-  white-space: nowrap;
   
   ${sp`margin-bottom: 15px;`}
 `
 
 export const RuleBox = styled(Grid)`
   border-radius: 4px;
+  line-height: 1.5;
   padding: 12px 6px;
   margin-right: 6px;
   cursor: pointer;
@@ -426,6 +425,7 @@ export const RuleBox = styled(Grid)`
   }
 `
 export const CellBox = styled(Box)`
+  font-size: 0.9em;
   margin :4px;
   padding :4px;
   background-color: ${colors.light.subBack};
@@ -435,6 +435,24 @@ export const CellBox = styled(Box)`
     background-color: ${colors.dark.subBack};
   }
 `
+export const TrendCellBox = styled(CellBox)`
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.35;
+  overflow: hidden;
+
+  .cell-box-caption {
+    min-height: 1.35em;
+  }
+
+  .trend-fire-row {
+    display: block;
+    min-height: 1.35em;
+    white-space: nowrap;
+  }
+`
 export const StairIcon = styled(FontAwesomeIcon)`
   font-size :0.8em;
   margin :0 0.5em;
@@ -442,22 +460,17 @@ export const StairIcon = styled(FontAwesomeIcon)`
   ${sp`font-size: 0.7em;`}
 `
 export const WrapTopBox = styled(Grid)`
-  margin-bottom: 10px;
+  margin-bottom: 4px;
 `
 export const TopBox = styled(Box)`
-  border: 1px solid ${colors.light.border};
   border-radius: 6px;
   height: 100%;
-
-  [data-theme='dark'] & {
-    border: 1px solid ${colors.dark.border};
-  }
 `
 export const TopBoxHeader = styled(Box)`
   background-color: var(--color-block-header-bg);
   color: var(--color-block-header-text);
   padding :4px;
-  border-radius: 4px;
+  border-radius: 4px 4px 0 0;
   display: flex;
   justify-content: space-between;
   
@@ -471,7 +484,12 @@ export const TopBoxHeader = styled(Box)`
   }
 `
 export const TopBoxContent = styled(Box)`
-  padding :8px;
+    border: 1px solid ${colors.light.border};
+    border-radius: 0 0 4px 4px;
+    padding :8px;
+    [data-theme='dark'] & {
+        border: 1px solid ${colors.dark.border};
+    }
 `
 export const TopBoxContentList = styled(Box)`
   font-size: 0.9em;
@@ -502,7 +520,7 @@ export const TeamScoreType = styled(Typography)`
   font-size: 800%;
   letter-spacing: 10px;
   line-height: 85%;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   
   ${sp`
     font-size: 500%;
@@ -510,7 +528,7 @@ export const TeamScoreType = styled(Typography)`
 `
 export const TeamRpsType = styled(Typography)`
   font-size: 333%;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   color: ${colors.light.subTitle};
 
   ${sp`
@@ -522,37 +540,37 @@ export const TeamRpsType = styled(Typography)`
 `
 export const ScoreType = styled(Typography)`
   font-size: 1.3em;
-  font-family:"Quicksand","Proza Libre","cursive";
+  font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
   
   ${sp`
     font-size: 0.9em;
   `}
   [data-theme='dark'] & {
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
   }
 `
 export const ScoreTail = styled(Typography)`
   color: ${colors.light.subTitle};
-  font-family:"Quicksand","Proza Libre","cursive";
+  font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
 
   [data-theme='dark'] & {
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     color: ${colors.dark.subTitle};
   }
 `
 export const CompareType = styled(Typography)`
   color: ${colors.light.compare};
   font-size :0.8em;
-  font-family:"Quicksand","cursive";
+  font-family: var(--font-quicksand), "Quicksand", "cursive";
   
   [data-theme='dark'] & {
-      font-family:"Proza Libre","cursive";
+      font-family: var(--font-proza-libre), "Proza Libre", "cursive";
       color: ${colors.dark.compare};
   }
 `
 export const UserType = styled(Typography).attrs(props => ({$length: props.length}))`
     font-size :1.25em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     ${sp`
         font-size: 0.9em;
@@ -567,11 +585,12 @@ export const UserType = styled(Typography).attrs(props => ({$length: props.lengt
 export const RankType = styled(Typography)`
     font-size: 2em;
     line-height :2em;
-    font-weight: 200;
-    font-family: "Krub","cursive";
+    font-weight: 300;
+    font-family: var(--font-krub), "Krub", "cursive";
 
     [data-theme='dark'] & {
-        font-family:"Kulim Park","cursive";
+        font-family: var(--font-kulim-park), "Kulim Park", "cursive";
+        font-weight: 200;
     }
 
     ${sp`font-size: 1.2em;`}
@@ -603,7 +622,7 @@ export const BattleRecordContainer = styled(RecordContainer)`
   border-left: 1px solid;
   box-shadow: 0 0 4px;
 `
-export const AuthWindow = styled(Grid)`
+export const AuthWindow = styled(Grid).attrs({className: 'form-helper-text-themed'})`
   background-color: ${colors.light.back};
   opacity: 0.85;
   color: ${colors.light.front};
@@ -724,7 +743,7 @@ export const MobileMenuBox = styled(Box)`
     background-color: ${colors.dark.back};
   }
 `
-export const StyledDialogContent = styled(DialogContent)`
+export const StyledDialogContent = styled(DialogContent).attrs({className: 'form-helper-text-themed'})`
   color: ${colors.light.front};
   background-color: ${colors.light.back};
   
