@@ -116,6 +116,22 @@ return [
 
     'migrations' => 'migrations',
 
+    'protect_destructive_commands' => env('DB_PROTECT_DESTRUCTIVE_COMMANDS', false),
+
+    'destructive_commands' => [
+        'db:wipe',
+        'migrate:fresh',
+        'migrate:refresh',
+        'migrate:reset',
+    ],
+
+    'backup' => [
+        'enabled' => env('DB_BACKUP_ENABLED', false),
+        'path' => env('DB_BACKUP_PATH', '/var/backups/mysql'),
+        'keep_days' => env('DB_BACKUP_KEEP_DAYS', 14),
+        'time' => env('DB_BACKUP_TIME', '03:20'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Redis Databases

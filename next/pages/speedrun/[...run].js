@@ -1,18 +1,20 @@
-import Record from "../../components/record/Record";
 import useSWR from "swr";
-import NowLoading from "../../components/NowLoading";
 import {fetcher, useLocale} from "../../lib/pik5";
-import BreadCrumb from "../../components/BreadCrumb";
 import * as React from "react";
-import {FormControl, FormHelperText, Grid, MenuItem, Typography} from "@mui/material";
-import {RuleBox, StairIcon, StyledSelect} from "../../styles/pik5.css";
+import {Typography, Box} from "@mui/material";
+import {StairIcon} from "../../styles/pik5.css";
 import Link from "next/link";
 import SpeedRunWrapper from "../../components/record/SpeedRunWrapper";
-import SpeedRunRules from "../../components/form/SpeedRunRules";
 import SpeedRunConsole from "../../components/form/SpeedRunConsole";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faHouseChimney, faStairs} from "@fortawesome/free-solid-svg-icons";
 import Head from "next/head";
+import {buildSpeedrunLeaderboardPath, getSpeedrunConsoleIds, speedrunStageSeries} from "../../lib/const";
+import RuleList from "../../components/record/RuleList";
+import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
+import StageList from "../../components/record/StageList";
+import {useState} from "react";
+import {currentYear} from "../../lib/pik5";
 
 export async function getStaticPaths(){
     return {
@@ -27,162 +29,14 @@ export async function getStaticProps({params}){
     const stage = query[0]
     const console = query[1] || 0
 
-    let q = ""
-    const consoles = []
+    const q = buildSpeedrunLeaderboardPath(stage, console)
+    const consoles = getSpeedrunConsoleIds(stage)
+    const series = speedrunStageSeries(stage)
 
-    switch(Number(stage)){
-        // パーツ全回収
-        case 101:
-            q += "m1zyjx60/category/9kv9y02g"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-onv29rml=klr0dpjl"
-                    break
-                case 2:
-                    q += "?var-onv29rml=21dynz41"
-                    break
-                case 4:
-                    q += "?var-onv29rml=q8kkmnkq"
-                    break
-            }
-            break
-        // ピクミン最小限パーツ全回収
-        case 102:
-            q += "m1zyjx60/category/zd3g682n"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-jlz6mx82=9qj74p3q"
-                    break
-                case 2:
-                    q += "?var-jlz6mx82=jq65x8jl"
-                    break
-                case 4:
-                    q += "?var-jlz6mx82=qoxj872q"
-                    break
-            }
-            break
-        // 借金返済
-        case 201:
-            q += "pdv9zv1w/category/zd3x7ndn"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-yn23w3jl=qyz7vv41"
-                    break
-                case 2:
-                    q += "?var-yn23w3jl=ln8e440l"
-                    break
-                case 4:
-                    q += "?var-yn23w3jl=10v6oowl"
-                    break
-                default:
-                    q += "?var-yn23w3jl=qyz7vv41"
-                    break
-            }
-            break
-        // お宝全回収
-        case 202:
-            q += "pdv9zv1w/category/wdmggxdq"
-            consoles.push(1, 2, 4)
-            switch (Number(console)){
-                case 1:
-                    q += "?var-6njy5y5n=qj7266eq"
-                    break
-                case 2:
-                    q += "?var-6njy5y5n=lmo2rrj1"
-                    break
-                case 4:
-                    q += "?var-6njy5y5n=1w47vvoq"
-                    break
-                default:
-                    q += "?var-6njy5y5n=qj7266eq"
-                    break
-            }
-            break
-        case 203:
-            consoles.push(1)
-            q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=9qj3noel"
-            break
-        case 204:
-            consoles.push(1)
-            q += "pdv9zv1w/category/jdrw35xk?var-ylqomdm8=jq6drw31"
-            break
-        case 301:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/rklrvwkn"
-                    break
-                case 4:
-                    q += "76rxq246/category/jdzw1xgd"
-                    break
-                default:
-                    q += "nd27e310/category/rklrvwkn"
-                    break
-            }
-            break
-        case 302:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/9d8gjv7k"
-                    break
-                case 4:
-                    q += "76rxq246/category/02qvy6yd"
-                    break
-                default:
-                    q += "nd27e310/category/9d8gjv7k"
-                    break
-            }
-            break
-        case 303:
-            consoles.push(3, 4)
-            switch (Number(console)){
-                case 3:
-                    q += "nd27e310/category/ndx47j2q"
-                    break
-                case 4:
-                    q += "76rxq246/category/82405zwd"
-                    break
-                default:
-                    q += "nd27e310/category/ndx47j2q"
-                    break
-            }
-            break
-        case 311:
-            consoles.push(7)
-            q += "268e3x56/category/z276730d"
-            break
-        case 312:
-            consoles.push(7)
-            q += "268e3x56/category/5dw845nd"
-            break
-        case 313:
-            consoles.push(7)
-            q += "268e3x56/category/ndx9rovd"
-            break
-        case 401:
-            consoles.push(4)
-            q += "m1zk9901/category/rkl8xe62"
-            break
-        case 402:
-            consoles.push(4)
-            q += "m1zk9901/category/wk6gn0od"
-            break
-        case 403:
-            consoles.push(4)
-            q += "m1zk9901/category/zd3mxpv2"
-            break
-        case 404:
-            consoles.push(4)
-            q += "m1zk9901/category/n2y6oe7d"
-            break
-        case 405:
-            consoles.push(4)
-            q += "m1zk9901/category/n2y69pmd"
-            break
+    if (!q) {
+        return {
+            notFound: true,
+        }
     }
     // ステージ情報をリクエスト
     const res = await fetch(`https://www.speedrun.com/api/v1/leaderboards/${q}`)
@@ -196,18 +50,46 @@ export async function getStaticProps({params}){
 
     // スクリーンネームをリクエスト（検索用）
     const users = await getCachedUsers()
+    let specialStages = []
+    const stagesRes = await fetch(`http://laravel:8000/api/stages/91?include_special=1&series=${series}`)
+    if(stagesRes.ok){
+        const stagesPayload = await stagesRes.json()
+        specialStages = stagesPayload.specialStages ?? []
+    }
 
     return {
         props: {
-            users, data, stage, console, consoles
+            users, data, stage, console, consoles, series, specialStages
         },
         revalidate: 600,
     }
 }
 
-export default function Run({data, stage, console, consoles}){
+export default function Run({data, stage, console, consoles, series, specialStages}){
 
     const {t, r} = useLocale()
+    const [displayedRule, setDisplayedRule] = useState(SPECIAL_STAGES_RULE)
+    const stageListKey = displayedRule !== SPECIAL_STAGES_RULE
+        ? `/api/server/stages/${displayedRule}`
+        : null
+    const {data: stageListRes} = useSWR(stageListKey, fetcher)
+    const displayedStages = stageListRes?.data ?? []
+    const year = currentYear()
+    const handleConventionalRuleClick = (event, rule) => {
+        event.preventDefault()
+        setDisplayedRule(rule)
+    }
+    const navigationParam = {
+        rule: 91,
+        consoles: console,
+        year,
+        info: {
+            series,
+            parent: 91,
+            stage_id: Number(stage),
+            type: "speedrun",
+        },
+    }
 
     const dates = data.data?.runs
     const displayRuns = (dates || []).reduce((acc, post) => {
@@ -236,12 +118,30 @@ export default function Run({data, stage, console, consoles}){
             #S{stage}<br/>
             <Typography variant="" className="title">{ t.speedrun[stage] }</Typography><br/>
             <Typography variant="" className="subtitle">{r.speedrun[stage]}</Typography><br/>
-            <SpeedRunConsole stage={stage} console={console} consoles={consoles}/>
-            <Grid item style={{
-                marginTop:"20px",marginBottom:"20px"
-            }}>
-                <SpeedRunRules stage={stage} console={console}/>
-            </Grid>
+            <RuleList
+                param={navigationParam}
+                displayedRule={displayedRule}
+                onConventionalRuleClick={handleConventionalRuleClick}
+                onAdditionalRuleClick={setDisplayedRule}
+            />
+            {
+                displayedRule === SPECIAL_STAGES_RULE
+                    ? <SpecialStages
+                        series={series}
+                        stages={specialStages}
+                        consoles={console}
+                        year={year}
+                    />
+                    : <StageList
+                        stages={displayedStages}
+                        consoles={console}
+                        rule={displayedRule}
+                        year={year}
+                    />
+            }
+            <Box sx={{paddingTop: '1em', paddingBottom: '8px'}}>
+                <SpeedRunConsole stage={stage} console={console} consoles={consoles}/>
+            </Box>
             {displayRuns.map(({post, rank}) => (
                 <SpeedRunWrapper
                     key={post?.run?.id || `${post?.run?.submitted || "run"}-${rank}`}

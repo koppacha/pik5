@@ -21,6 +21,7 @@ import {faRotate} from "@fortawesome/free-solid-svg-icons";
 import {useState} from "react";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import DashBoard from "../../components/top/DashBoard";
+import BreadCrumb from "../../components/BreadCrumb";
 
 export async function getStaticPaths(){
     return {
@@ -30,6 +31,7 @@ export async function getStaticPaths(){
 }
 export async function getStaticProps({params}){
     const { getCachedUsers } = await import("../../lib/usersCache")
+    const prisma = (await import("../../lib/prisma")).default
 
     const query = params.name
     const user = query[0]
@@ -51,7 +53,14 @@ export async function getStaticProps({params}){
     const marker = await mark_res.json()
 
     const consoles = query[1] || 0
-    const rule     = query[2] || 0
+    const userSettings = await prisma.user.findFirst({
+        where: {userId: user},
+        select: {srcUserId: true, userCatSelect: true},
+    })
+    const requestedRule = query[2]
+    const rule = (!requestedRule || Number(requestedRule) === 0)
+        ? (userSettings?.userCatSelect ?? 0)
+        : requestedRule
     const year     = query[3] || currentYear()
 
     // 記録を取得
@@ -72,7 +81,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            users, user, userName, consoles, rule, year, info, marker, posts, fDate
+            users, user, userName, consoles, rule, year, info, marker, posts, fDate, userSettings: userSettings ?? null
         },
         revalidate: 604800,
     }
@@ -81,7 +90,8 @@ export async function getStaticProps({params}){
 export default function Stage(param){
 
     const {t} = useLocale()
-    const firstPostDate = new Date(param.info[0].oldest_created_at)
+    const firstPostDate = param.info.first_posted_at ? new Date(param.info.first_posted_at) : null
+    const lastPostDate = param.info.last_posted_at ? new Date(param.info.last_posted_at) : null
 
     const [isProcessing, setIsProcessing] = useState(false)
 
@@ -110,7 +120,7 @@ export default function Stage(param){
             <RenderStagesWrapper>
                 <Grid container wrap="nowrap" columns={{xs: 19}}>
                     {ruleList.map(rule => param.marker.scores[rule] &&
-                        <UserInfoTotalBox style={{whiteSpace: 'nowrap'}} item key={rule} xs={1} series={Number(String(rule).slice(0, 1))}>
+                        <UserInfoTotalBox style={{whiteSpace: 'nowrap'}} key={rule} series={Number(String(rule).slice(0, 1))}>
                             {t.ru[rule]}<br/>
                             <Score score={param.marker.scores[rule]}/><br/>
                             {param.marker.marks[rule]}/{rule2array(rule).length}
@@ -173,14 +183,17 @@ export default function Stage(param){
                 <title>{param.userName+" - "+t.title[0]}</title>
             </Head>
             <Box className="page-header">
-                {t.stage.user}<br/>
+                <BreadCrumb userMode={true}/>
                 <Typography variant="" className="title">{ param.userName }</Typography><br/>
                 <Typography variant="" className="subtitle">@{param.user}</Typography>
                 <Grid container>
-                    <UserInfoBox item className="user-info-box"><span>総投稿数：</span>{param.info[0].cnt}</UserInfoBox>
-                    <UserInfoBox item className="user-info-box"><span>初投稿日：</span>{dateFormat(firstPostDate)}</UserInfoBox>
-                    <UserInfoBox item className="user-info-box">
-                        <span>最終更新：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
+                    <UserInfoBox className="user-info-box"><span>{t.g.totalPosts}：</span>{param.info.post_count}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.firstPostDate}：</span>{firstPostDate ? dateFormat(firstPostDate) : "-"}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.lastPostDate}：</span>{lastPostDate ? dateFormat(lastPostDate) : "-"}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.keywordEditCount}：</span>{param.info.keyword_edit_count}</UserInfoBox>
+                    <UserInfoBox className="user-info-box"><span>{t.g.eventStampCount}：</span>{param.info.event_stamp_count}</UserInfoBox>
+                    <UserInfoBox className="user-info-box">
+                        <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                     </UserInfoBox>
                 </Grid>
             </Box>

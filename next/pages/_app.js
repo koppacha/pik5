@@ -20,6 +20,7 @@ import {ComponentPreviews, useInitial} from "../dev";
 import SeoHead from "../components/SeoHead"
 import {Backdrop, Box, CircularProgress, Typography} from "@mui/material"
 import RecordNotificationCenter from "../components/notifications/RecordNotificationCenter"
+import {googleFontVariables} from "../lib/googleFonts"
 
 const clientSideEmotionCache = createEmotionCache()
 const analyticsEnabled = process.env.NODE_ENV === "production" && Boolean(ga)
@@ -144,7 +145,7 @@ export default function App(props) {
     )
 
     return (
-        <>
+        <div className={googleFontVariables} style={{fontFamily: "var(--font-m-plus-1-code), sans-serif"}}>
             <SeoHead />
             {analyticsEnabled && (
                 <>
@@ -167,14 +168,14 @@ export default function App(props) {
                 <SessionProvider session={session}>
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
                         {Component.disableLayout ? pageContent : (
-                            <Layout>
+                            <Layout hideFooter={Component.hideFooter}>
                                 {pageContent}
                             </Layout>
                         )}
                     </ThemeProvider>
                 </SessionProvider>
             </CacheProvider>
-        </>
+        </div>
     );
 }
 App.propTypes = {

@@ -2,7 +2,7 @@ import {ClickAwayListener, Grid, MenuItem, MenuList, Paper} from "@mui/material"
 import * as React from "react";
 import {HeaderPopMenu, SeriesTheme, StyledMenuItem} from "../../styles/pik5.css";
 import Link from "next/link";
-import {lm, mx} from "../../lib/const";
+import {lm, mx, ev} from "../../lib/const";
 import {useLocale} from "../../lib/pik5";
 
 export default function MenuLm(props){
@@ -22,11 +22,15 @@ export default function MenuLm(props){
                 >
                     <Grid container onClick={props.handleClose}>
                         <Grid item xs={3} style={{position:"relative",left:"600px"}}>
+                            <StyledMenuItem key={0} style={{
+                                borderLeft:"solid 10px "+SeriesTheme(5),
+                            }} component={Link} href={"/total/4/"} onClick={props.handleClose}>イベント全総合</StyledMenuItem>
+
                             {
-                                lm.map(n=>
+                                ev.map(n=>
                                     <StyledMenuItem key={n} style={{
                                         borderLeft:"solid 10px "+SeriesTheme(5),
-                                    }} component={Link} href={"/limited/"+n} onClick={props.handleClose}>20{String(n).slice(0, 2)+"/"+String(n).slice(2, 4)+"/"+String(n).slice(4, 6)} {t.limited[n]}</StyledMenuItem>
+                                    }} component={Link} href={"/total/4/"+n} onClick={props.handleClose}>#{n} {t.limited.category[n]}</StyledMenuItem>
                                 )
                             }
                         </Grid>

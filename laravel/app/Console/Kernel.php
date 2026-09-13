@@ -16,6 +16,20 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('tricks:maintenance')->everyMinute()->withoutOverlapping();
         $schedule->command('telescope:prune --hours=8')->hourly()->withoutOverlapping();
+
+        $schedule->command('user:fetch-totals')
+            ->monthlyOn(1, '00:10')
+            ->withoutOverlapping();
+
+        $schedule->command('user:fetch-totals --latest')
+            ->dailyAt('00:30')
+            ->withoutOverlapping();
+
+        if (config('database.backup.enabled')) {
+            $schedule->command('db:backup')
+                ->dailyAt(config('database.backup.time'))
+                ->withoutOverlapping();
+        }
     }
 
     /**

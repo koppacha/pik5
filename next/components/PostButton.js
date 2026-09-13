@@ -26,9 +26,6 @@ export default function PostButton({voteId}){
                     'created_at': now,
                 })
             })
-            if (res.status < 300) {
-                console.log(res)
-            }
         }
     }
     if(!session){

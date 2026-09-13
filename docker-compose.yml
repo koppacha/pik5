@@ -8,7 +8,7 @@ services:
     container_name: laravel
     volumes:
       - ./laravel:/var/www/laravel
-      - ./project.json:/var/www/project.json:ro
+      - ./backups/mysql:/var/backups/mysql
     expose:
       - "8000"
     restart:
@@ -29,6 +29,10 @@ services:
       - MAIL_HOST=${MAIL_HOST}
       - MAIL_PORT=${MAIL_PORT}
       - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
+      - DB_PROTECT_DESTRUCTIVE_COMMANDS=${DB_PROTECT_DESTRUCTIVE_COMMANDS:-false}
+      - DB_BACKUP_ENABLED=${DB_BACKUP_ENABLED:-false}
+      - DB_BACKUP_KEEP_DAYS=${DB_BACKUP_KEEP_DAYS:-14}
+      - DB_BACKUP_TIME=${DB_BACKUP_TIME:-03:20}
 
   scheduler:
     build:
@@ -41,7 +45,7 @@ services:
     command: php artisan schedule:work
     volumes:
       - ./laravel:/var/www/laravel
-      - ./project.json:/var/www/project.json:ro
+      - ./backups/mysql:/var/backups/mysql
     depends_on:
       - laravel
     restart: always
@@ -59,10 +63,15 @@ services:
       - DB_PASSWORD=${DB_PASS}
       - TZ=${TZ}
       - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
+      - DB_PROTECT_DESTRUCTIVE_COMMANDS=${DB_PROTECT_DESTRUCTIVE_COMMANDS:-false}
+      - DB_BACKUP_ENABLED=${DB_BACKUP_ENABLED:-false}
+      - DB_BACKUP_KEEP_DAYS=${DB_BACKUP_KEEP_DAYS:-14}
+      - DB_BACKUP_TIME=${DB_BACKUP_TIME:-03:20}
 
   mysql:
     container_name: mysql
     image: mysql:8.0
+    init: true
     platform: ${PLATFORM}
     environment:
       - MYSQL_DATABASE=${DB_NAME}
@@ -70,12 +79,15 @@ services:
       - MYSQL_PASSWORD=${DB_PASS}
       - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASS}
       - TZ=${TZ}
+      - LANG=C.UTF-8
+      - LC_ALL=C.UTF-8
     user: root:root
     ports:
       - ${DB_PORT}:3306
     volumes:
       - ./mysql:/var/lib/mysql
       - ./log/mysql:/var/log
+      - ./docker/mysql/conf.d/pik5.cnf:/etc/mysql/conf.d/pik5.cnf:ro
     restart:
       always
     logging:
@@ -87,6 +99,7 @@ services:
   redis:
     container_name: redis
     image: redis:latest
+    init: true
     volumes:
       - ./redis:/data
 
@@ -103,7 +116,6 @@ services:
     tty: true
     volumes:
       - ./next:/var/www/next
-      - ./project.json:/var/www/project.json:ro
     ports:
       - "3005:3000"
       - "5555:5555"

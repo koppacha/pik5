@@ -26,7 +26,7 @@ export default function PullDownConsole(props){
 
     return (
         <FormControl>
-            <FormHelperText className="form-helper-text">{t.g.console}</FormHelperText>
+            <FormHelperText className="form-helper-text-themed">{t.g.console}</FormHelperText>
             <Select
                 className="styled-select"
                 defaultValue={consoles}

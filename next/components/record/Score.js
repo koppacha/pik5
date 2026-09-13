@@ -2,9 +2,9 @@ import {ScoreTail, ScoreType} from "../../styles/pik5.css";
 import {range, sec2time} from "../../lib/pik5";
 import {timeStageList} from "../../lib/const";
 
-export default function Score({rule, score, stage, category, unit = "pts"}){
+export default function Score({rule, score, stage, category, unit = "pts", showZero = false}){
 
-    if(!score){
+    if(!score && !showZero){
         return (
             <></>
         )

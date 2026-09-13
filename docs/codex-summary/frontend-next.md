@@ -1,0 +1,82 @@
+# Frontend Next
+
+## コーディング規約
+
+- JavaScript の文末セミコロンは付けない。
+- React コンポーネントは PascalCase、変数は camelCase。
+- CSS-in-JS を基本にする。
+- MUI の `sx` は Grid の `xs` と混同しやすいため、インライン調整では `style` prop 優先。
+- 片方の分岐が使われない三項演算子は避け、`&&`、`||`、`??` を使う。
+- MUI Grid は既存コードで小数 `xs={1.5}` を使っている。スマホ比率調整では `columns={{xs: ..., md: ...}}` と組み合わせる。
+
+## ページ/コンポーネント方針
+
+- `next/pages/total/[...series].js` は通常総合とイベント総合 `/total/4` の分岐点。`series === "4"` の場合は通常総合処理に流さず、イベント総合 API/UI へ分岐する。
+- PC向けグローバルメニューは `HeaderMenu` から `CustomMenu` へ再押下時の遷移先を渡す。ポップアップ表示中に同じシリーズボタンを押すと各シリーズ総合へ、イベントは `/total/4` へ、本編RTAはSpeedrun.comへ別窓遷移する。URL未設定のトップ・その他は従来どおり閉じる。
+- イベント全総合のカテゴリボックスはロケールに定義された全カテゴリを表示する。`eventCategoriesWithStageList` に定義した `[151, 161, 191, 211]` のカテゴリページでは、各イベントへの `EventList` を表示する。
+- 期間限定ランキングのパンくずは「ホーム > イベント全総合 > イベントカテゴリ」、期間限定チャレンジはさらに親の期間限定ランキングまで表示する。イベントIDからカテゴリIDへの解決には `/api/event-category/{eventId}` を使う。
+- 本番公開対象外の最新期間限定イベントなど、`event_results` にカテゴリ解決用データがないイベントは `/api/event-category/{eventId}` が404を返し、パンくず経由でも公開導線を作らない。
+- `Totals` は総合カテゴリ切替。イベント総合を追加する場合、既存の `1,2,3` に `4` を加える。
+- `CategoryList` は総合カテゴリ/イベントカテゴリの横スクロールリスト用途。イベントカテゴリでは `locale.limited.category` を表示名に使う。
+- `EventList` はイベント別ブロック。リンクは仕様上 `/limited/{eventId}` だが、期間限定以外のイベントでリンク先が存在するかに注意する。
+- イベント総合ページの最終更新ブロックは、イベント総合 API の `last_updated_at` が示す最終イベント開催日を、他の総合ランキングと同じ位置に表示する。
+- イベントランキングのサブタイトルは表示言語と反対の言語にする。イベントカテゴリ総合では `useLocale()` の `r`、期間限定個別では API の `name` / `eng` を表示言語に応じて使い分ける。
+- `Record` はランキング行の共通表示。イベント総合用には `scoreUnit`、`rankPointUnit`、`hideRankProgress`、`stampItems` のような props で最小拡張する。
+- `RankingStandard` は参考スコアを記録前に挿入する。複数参考スコアが連続する場合は `while` でまとめて挿入する。
+- `RankingTotal` は既に `flatMap` + `while` で複数ボーダー連続表示する先例。
+- ユーザーページのパンくずは「ホーム > ユーザー別ページ」。第1階層の「ユーザー別ページ」にはリンクを付けない。
+- ユーザーページの基礎情報は、総投稿数、初投稿日、最終投稿日、キーワード編集回数、イベントスタンプ数、最終更新を表示する。
+- 比較ページ `/compare/[...compare]` は、指定されたどちらかのユーザーまたは表示名が Prisma のユーザー一覧に存在しない場合、未定義値を props に含めず404を返す。
+- サインアップ画面では表示名を「ハンドルネーム」と表記し、入力欄の注意事項を常時表示する。ユーザーIDは3文字以上、パスワードはbcryptの72バイト制限による意図しない同一照合を避けるため、半角英数記号8文字以上72文字以下をフロントと Next API の双方で検証する。
+- ページ単位でフッターを非表示にする場合は `Component.hideFooter = true` を設定し、`_app.js` から `Layout` へ渡す。サインアップ画面はフッター非表示。
+- トップページのWelcomeBlockは、ログイン状態に関係なく主要4タイトル、キーワード、Discordの6リンクに固定し、スマホ3列・PC6列で表示する。認証動線はWelcomeBlockの上に右寄せで配置し、非ログイン時はアカウント作成をシリーズ別アクセントのグラデーションで強調する。
+
+## その他・RTA 導線
+
+- `/total/10`、`/total/20`、`/total/30`、`/total/40` のシリーズトップだけ、通常の `StageList` 直下に RTA、その他の順で混在表示する `SpecialStages` を追加する。1行8件で折り返し、スマホ幅では8件分の幅を横スクロールする。
+- `SpecialStages` 自身が8列の CSS Grid を持ち、総合、900番台ステージ、Speedrunページのいずれでも親コンポーネントに依存せず1行8件で表示する。ラベルに全角括弧 `（` がある場合はその直前で改行する。
+- その他ステージは DB の `stages.series` が対象シリーズに一致し、`stage_id` が 900 以上 1000 以下の行を基本条件とする。ただし廃止済みの `903` は表示対象から除外する。
+- RTA は `speedrunStageConfigs` のキー先頭2桁がシリーズトップIDに一致するものを使い、31X は除外する。
+- その他ステージ取得は既存の `/api/stages/{series}` を流用する。通常の数値配列レスポンスは後方互換のため維持し、`include_special=1&series={seriesId}` 指定時だけ `stages` と `specialStages` を含むレスポンスを返す。
+- ステージ別ページでは、現在のページルール、表示中ステージリストのルール、ステージリスト切替モードを別状態として扱う。切替モード中に従来ルールを押すと遷移せず該当リストへ切替えてモードを解除し、次の従来ルール押下は遷移する。追加ルール押下は常に該当リストへ切替えてモードを維持する。
+- 追加ルールはシリーズ配下のナビゲーション対象ルール集合から、そのステージの親ルールと直接派生ルールで構成される従来ルール群を除外して算出する。`stage=216` の従来ルール群は `[22,26,27,28]`、追加ルールは `[21,24,25,29]` と「その他・RTA」になる。
+- 追加ルールで切り替えた通常ステージリストのリンクは、現在ページの操作方法と集計年を継承する。`SpecialStages` 内のRTAリンクも現在の操作方法を継承する。
+- 900以上1000以下のその他ステージページとSpeedrunページはrule 91のナビゲーションとして扱い、`RuleList` と `SpecialStages` を初期表示する。Speedrunページの旧 `SpeedRunRules` は使わない。これらのページでは「その他・RTA」をパーティション左側のアクティブな既存ルールとして扱い、シリーズ配下の通常ルールだけを追加ルールとして右側に表示する。
+- ステージページのルールリストは、ステージ切替モード外でアクティブな既存ルールを再押下した場合と、ステージ切替モード中にアクティブな追加ルールを再押下した場合、そのルールの `/total/{ruleId}` へ遷移する。「その他・RTA」は rule 91 として扱う。
+
+## ピックアップ動画
+
+- ユーザー設定 `disablePickupVideoAutoplay` が有効な場合、トップページで最初に抽選されたピックアップ動画だけ自動再生しない。手動再生後または次の動画へ移動した後は自動再生する。
+- 自動再生阻止設定は動画描画後の取得では間に合わないため、トップページの `getServerSideProps` でログインユーザーの設定を取得して `PickupVideo` へ渡す。
+
+## テーマと初期描画
+
+- `next-themes` 任せだけだとライト/ダークの初期描画ズレが起きることがある。
+- `_document.js` に初期テーマ反映用インラインスクリプトを置き、描画前に `localStorage.getItem('theme')` から `document.documentElement.dataset.theme` を設定する。
+- 保存値が無い場合の既定テーマは `dark`。
+- `localStorage` を初回レンダリングで直接参照すると SSR と CSR で Hydration mismatch が起きる。マウント後に読む。
+- styled-components は `_document.js` で `ServerStyleSheet` によるSSR収集を行う。直アクセス/リロード時に `data-styled` style タグがHTMLへ出ない場合、styled-components のスタイルが一時的または継続的に未適用になる。
+- `next.config.mjs` は `compiler.styledComponents=true` を有効化している。
+- `.rank-type` はライトテーマで `font-weight: 300`、ダークテーマで `font-weight: 200` が仕様。ライトの `Krub` は `300`、ダークの `Kulim Park` は `200` ウェイトを `next/lib/googleFonts.js` で読み込む。
+- MUI のヘルパーテキストを含むフォーム注意書きは、ダークテーマで本文テキスト色を使う。
+- `.rule-box` は全角記号による行ボックスの高さ変動を避けるため、明示的な行高を設定する。
+
+## Speedrun 表示
+
+- `SpeedRunWrapper` の speedrun ユーザー名解決は、ユーザーID単位の SWR key を使う。
+- ユーザー名は頻繁に変わらないため、90日 TTL の `localStorage` 永続キャッシュを使う方針。
+- `localStorage` キャッシュは初回レンダリングで直接評価せず、マウント後に読み込む。
+- SWR は不要な再検証を抑制する設定に寄せる。
+
+## WebGL / Unity
+
+- Unity WebGL ビルドは、既存生成 `index.html` が相対パス前提の場合、Next ページへ直接移植せず `public` 配下の HTML を iframe で読むのが参照崩れが少ない。
+- `.data.br`、`.framework.js.br`、`.wasm.br` は通常静的配信だけでは失敗する可能性がある。
+- Next 側で Unity の `.br` ファイルに `Content-Encoding: br` と適切な `Content-Type` を設定する。
+
+## HelperTextの背景別配色
+
+- HelperTextは白背景のMUI Paper/Dialog（設定、パスワードリセット、記録投稿、期間限定フォーム）と、テーマ連動の背景（AuthWindow、StyledDialogContent、ページの絞り込み）に混在する。
+- 配色は `styles/styles.scss` に集約する。標準の `.MuiFormHelperText-root` は白背景用の濃いグレー（#555555）、エラーは濃い赤（#b3261e）。ページ全体のダークモードだけを見て明色へ変更しない。
+- テーマ連動の背景ではヘルパー自身またはフォーム親に `form-helper-text-themed` を付ける。通常色は `--color-text-base`、ダーク時のエラー色は #ff8a80。AuthWindowとStyledDialogContentは共通コンポーネントでclassを付与する。
+- 既存の `.form-helper-text` は認証フォームの入力・ラベル配色にも使われているため保持し、HelperTextの配色は新しいclassとCSS変数で分離する。

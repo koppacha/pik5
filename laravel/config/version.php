@@ -1,11 +1,12 @@
 <?php
 
-$projectFile = dirname(__DIR__, 2).'/project.json';
+$projectFile = dirname(__DIR__).'/project.json';
 $project = [];
+$projectJson = @file_get_contents($projectFile);
 
-if (is_readable($projectFile)) {
+if ($projectJson !== false) {
     try {
-        $decoded = json_decode((string) file_get_contents($projectFile), true, 512, JSON_THROW_ON_ERROR);
+        $decoded = json_decode($projectJson, true, 512, JSON_THROW_ON_ERROR);
         if (is_array($decoded)) {
             $project = $decoded;
         }
@@ -18,9 +19,11 @@ $version = isset($project['version']) ? trim((string) $project['version']) : '';
 
 // 例: 3.13 -> 313
 $digits = preg_replace('/\D+/', '', $version);
-$recordPrefix = substr(str_pad($digits, 3, '0', STR_PAD_RIGHT), 0, 3);
+$recordPrefix = $digits !== ''
+    ? substr(str_pad($digits, 3, '0', STR_PAD_RIGHT), 0, 3)
+    : '300';
 
 return [
     'app' => $version,
-    'record_prefix' => $recordPrefix ?: '300',
+    'record_prefix' => $recordPrefix,
 ];

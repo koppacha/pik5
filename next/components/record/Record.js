@@ -31,7 +31,23 @@ import {useRouter} from "next/router";
 import {Swiper} from "./Swiper";
 import {stageUrlOutput} from "../../lib/factory";
 
-export default function Record({mini, parent, data, stages, series, consoles, year, prevUser, history, swapScoreRpsLabel = false, showMiniRps = false}) {
+export default function Record({
+    mini,
+    parent,
+    data,
+    stages,
+    series,
+    consoles,
+    year,
+    prevUser,
+    history,
+    swapScoreRpsLabel = false,
+    showMiniRps = false,
+    scoreUnit = null,
+    rankPointUnit = null,
+    hideRankProgress = false,
+    stampItems = null
+}) {
 
     const router = useRouter()
     const {t} = useLocale()
@@ -120,7 +136,7 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                              data?.post_rank <  21 ? "rank11": "rank21"
     const rankPointLabel = swapScoreRpsLabel && data?.provisional_reward_points !== undefined
         ? `${data?.rps ?? "?"}r/${data.provisional_reward_points ?? "?"}p`
-        : `${data?.rps ?? "?"} ${history ? "players" : (swapScoreRpsLabel ? "pts" : "rps")}`
+        : `${data?.rps ?? "?"} ${rankPointUnit ?? (history ? "players" : (swapScoreRpsLabel ? "pts" : "rps"))}`
 
     // 順位セル用のカラー生成関数
     const rankCellColor = (rank) => {
@@ -149,11 +165,11 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={swapScoreRpsLabel ? "rps" : "pts"} /><br className="pc-hidden"/>
+                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
-                        (data?.ranks) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stageCount}</ScoreType></>
+                        (data?.ranks && !hideRankProgress) && <><br/><ScoreType className="score-type" style={{fontSize:"0.9em"}} as="span">{data.ranks.length} / {stageCount}</ScoreType></>
                     }
                     </div>
                 </RecordGridWrapper>
@@ -248,6 +264,46 @@ export default function Record({mini, parent, data, stages, series, consoles, ye
                                 :
                                 <>
                                     {data.post_comment}
+                                </>}
+                            {stampItems &&
+                                <>
+                                    <Grid container>
+                                        {
+                                            stampItems.map(function(item, i){
+                                                const isInstant = item.category === "インスタント研究会"
+                                                const resultText = isInstant
+                                                    ? ({
+                                                        w: "達成",
+                                                        p: "未達成",
+                                                        e: "参加",
+                                                        m: "MVP"
+                                                    }[item.result] ?? item.result)
+                                                    : ({
+                                                        w: "優勝",
+                                                        p: "参加",
+                                                        e: "参加",
+                                                        m: "MVP"
+                                                    }[item.result] ?? item.result)
+                                                const rank =
+                                                    item.result === "m" ? 1 :
+                                                        item.result === "w" && !isInstant && Number(item.team) === 0 ? 2 :
+                                                            item.result === "w" ? 3 : 10
+                                                const title =
+                                                    <>
+                                                        <div style={{fontWeight:'bold'}}>
+                                                            {item.event_title ?? item.event_id}
+                                                        </div>
+                                                        {item.sub_title && <div style={{fontWeight:'bold'}}>
+                                                            {item.sub_title}
+                                                        </div>}
+                                                        <div>
+                                                            {resultText} ({item.stamp})
+                                                        </div>
+                                                    </>
+                                                return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item style={{backgroundColor:rankCellColor(rank)}} className="rank-cell mini-cell"/></Tooltip>
+                                            })
+                                        }
+                                    </Grid>
                                 </>}
                             {data?.ranks &&
                                 <>

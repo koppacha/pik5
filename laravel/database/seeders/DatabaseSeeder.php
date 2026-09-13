@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             UserCsvSeeder::class,
             KeywordSeeder::class,
             EventCsvSeeder::class,
+            EventResultCsvSeeder::class,
             ArenaCsvSeeder::class
         ]);
     }

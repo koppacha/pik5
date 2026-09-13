@@ -69,12 +69,21 @@ export async function getServerSideProps(ctx){
     const users = await getCachedUsers()
 
     // 表示中のユーザー名を取り出す
-    const userName = users.find(function(e){
+    const userData1 = users.find(function(e){
         return e.userId === user1
-    })?.name
-    const userName2= users.find(function(e){
+    })
+    const userData2 = users.find(function(e){
         return e.userId === user2
-    })?.name
+    })
+
+    if (!userData1?.name || !userData2?.name) {
+        return {
+            notFound: true,
+        }
+    }
+
+    const userName = userData1.name
+    const userName2 = userData2.name
 
     // 全総合(= "1")の扱いに応じて各サイドを取得（posts3/posts4 は常に定義）
     let posts1 = {}, posts2 = {}, posts3 = {}, posts4 = {}

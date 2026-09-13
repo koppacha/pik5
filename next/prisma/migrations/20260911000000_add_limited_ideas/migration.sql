@@ -1,0 +1,21 @@
+CREATE TABLE `limitedIdeas` (
+    `ruleId` VARCHAR(36) NOT NULL,
+    `revision` INTEGER NOT NULL,
+    `currentKey` VARCHAR(36) NULL,
+    `creatorId` VARCHAR(191) NOT NULL,
+    `creatorName` VARCHAR(191) NOT NULL,
+    `editorId` VARCHAR(191) NOT NULL,
+    `title` INTEGER NOT NULL,
+    `stageId` INTEGER NOT NULL,
+    `ruleName` VARCHAR(10) NOT NULL,
+    `difficulty` INTEGER NOT NULL,
+    `registrationMethod` VARCHAR(5) NOT NULL,
+    `body` VARCHAR(256) NOT NULL,
+    `hidden` BOOLEAN NOT NULL DEFAULT false,
+    `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updatedAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    UNIQUE INDEX `limitedIdeas_currentKey_key` (`currentKey`),
+    INDEX `limitedIdeas_creatorId_hidden_updatedAt_idx` (`creatorId`, `hidden`, `updatedAt`),
+    INDEX `limitedIdeas_hidden_updatedAt_idx` (`hidden`, `updatedAt`),
+    PRIMARY KEY (`ruleId`, `revision`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;

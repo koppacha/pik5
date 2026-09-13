@@ -2,11 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Record;
-use App\Models\User;
+use App\Services\TotalSnapshotService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 
 class FetchUserTotals extends Command
 {
@@ -15,14 +13,18 @@ class FetchUserTotals extends Command
      *
      * @var string
      */
-    protected $signature = 'user:fetch-totals';
+    protected $signature = 'user:fetch-totals
+        {--year= : 対象年}
+        {--month= : 対象月}
+        {--months=1 : 指定月から過去何ヶ月分を作成するか}
+        {--latest : 月次履歴ではなく最新のtotalsを更新する}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Fetch totals for all users and update the database.';
+    protected $description = 'Fetch totals for all users and update totals or monthly snapshots.';
 
     /**
      * Execute the console command.
@@ -31,21 +33,37 @@ class FetchUserTotals extends Command
      */
     public function handle(): int
     {
-        // 全ユーザーを取得
-        $users = Record::distinct()->pluck('user_id'); // ユーザー一覧
+        $service = new TotalSnapshotService();
 
-        foreach ($users as $user) {
-            // APIを実行
-            $response = Http::get(route('user.total', ['id' => $user]));
+        if ($this->option('latest')) {
+            $result = $service->updateLatestTotals();
+            $this->info("Updated latest totals. rows: {$result['rows']}");
+            return 0;
+        }
 
-            if ($response->ok()) {
-                $response->json();
-                $this->info("Updated totals for user: $user");
-            } else {
-                $this->error("Failed to fetch totals for user: $user");
+        $months = max(1, (int)$this->option('months'));
+        $year = $this->option('year');
+        $month = $this->option('month');
+        if (!$year && (int)$month > 12) {
+            $months = (int)$month;
+            $month = null;
+        }
+        $target = ($year && $month)
+            ? Carbon::create((int)$year, (int)$month, 1)
+            : Carbon::now()->subMonthNoOverflow()->startOfMonth();
+
+        for ($i = 0; $i < $months; $i++) {
+            $current = (clone $target)->subMonthsNoOverflow($i);
+            try {
+                $result = $service->storeMonth((int)$current->format('Y'), (int)$current->format('n'));
+                $this->info("Created {$result['year']}/{$result['month']} snapshot. rows: {$result['rows']}");
+            } catch (\InvalidArgumentException $e) {
+                $this->error($e->getMessage());
+                return 1;
             }
         }
-        $this->info('All users processed successfully.');
+
+        $this->info('All snapshots processed successfully.');
         return 0;
     }
 }

@@ -117,7 +117,7 @@ $light-shadow:
 body {
     color: $light-front;
     background-color: $light-back;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
 
     //${sp`font-size: 0.8em`}
 
@@ -129,7 +129,7 @@ body {
 
 .title {
     font-size: 3.5em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     line-height: 1em;
 
     //${sp`font-size: 2em`}
@@ -195,14 +195,34 @@ body {
     }
 
     [data-theme='dark'] & {
-        color: $dark-front;
+        color: $dark-front !important;
 
         div, input, label {
-            color: $dark-front;
+            color: $dark-front !important;
         }
 
     }
 }
+// MUI Paper/Dialog forms stay light even when the page uses the dark theme.
+// Apply this class to helpers (or their form container) on a theme-colored surface.
+.form-helper-text-themed {
+    --form-helper-text-color: var(--color-text-base);
+    --form-helper-error-color: #b3261e;
+
+    [data-theme='dark'] & {
+        --form-helper-error-color: #ff8a80;
+    }
+}
+
+.MuiFormHelperText-root {
+    // Override legacy styled-dialog descendant colors, without recoloring inputs/labels.
+    color: var(--form-helper-text-color, #555555) !important;
+}
+
+.MuiFormHelperText-root.Mui-error {
+    color: var(--form-helper-error-color, #b3261e) !important;
+}
+
 .sp-hidden {
     display: none;
 }
@@ -211,7 +231,7 @@ body {
 .markdown-content {
 
     code {
-        font-family: "M PLUS 1 CODE", sans-serif;
+        font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     }
 
     h2, h3, h4, h5, h6 {
@@ -277,6 +297,63 @@ body {
 }
 .welcome-block {
     text-align: center;
+    margin-top: 1em !important;
+}
+.welcome-intro-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+.welcome-auth-actions {
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 0.5em;
+
+    a {
+        text-decoration: none !important;
+    }
+}
+.welcome-signup-button {
+    background-image: linear-gradient(
+        90deg,
+        var(--page-theme-series-2-main) 0,
+        var(--page-theme-series-4-main) 15%,
+        var(--page-theme-series-3-main) 40%,
+        var(--page-theme-series-1-main) 50%,
+        var(--page-theme-series-3-main) 75%,
+        var(--page-theme-series-4-main) 85%,
+        var(--page-theme-series-2-main) 100%
+    ) !important;
+    background-size: 300% 100% !important;
+    animation: welcome-signup-gradient 16s linear infinite;
+    color: var(--color-text-on-main) !important;
+}
+.welcome-signup-button:hover {
+    filter: brightness(1.1);
+}
+@keyframes welcome-signup-gradient {
+    0% {
+        background-position: 0 50%;
+    }
+    100% {
+        background-position: 150% 50%;
+    }
+}
+@media(prefers-reduced-motion: reduce) {
+    .welcome-signup-button {
+        animation: none;
+    }
+}
+.welcome-discord-icon {
+    margin-right: 0.4em;
+}
+@media(max-width: 600px) {
+    .welcome-intro-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
 }
 .record-post-button {
     border-radius: 4px;
@@ -342,7 +419,7 @@ body {
     background-color: transparent;
 }
 .styled-menu-item {
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     border-left: 10px solid $menu-item-border;
     background-color: $menu-item-bg;
     color: $menu-item-border;
@@ -377,8 +454,9 @@ body {
     white-space: nowrap;
 }
 .rule-box {
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     font-weight: normal;
+    line-height: 1.5;
     display: inline-block;
     border-radius: 4px;
     padding: 12px 6px;
@@ -399,6 +477,7 @@ body {
     }
 }
 .cell-box {
+    font-size: 0.9em;
     margin: 4px;
     padding: 4px;
     background-color: $light-sub-back;
@@ -453,19 +532,15 @@ body {
     }
 }
 .top-box {
-    border: 1px solid $light-border;
     border-radius: 6px;
+    margin-top: 1em;
     height: 100%;
-
-    [data-theme='dark'] & {
-        border: 1px solid $dark-border;
-    }
 }
 .top-box-header {
     background-color: var(--color-block-header-bg);
     color: var(--color-block-header-text);
     padding :4px;
-    border-radius: 4px;
+    border-radius: 4px 4px 0 0;
     display: flex;
     justify-content: space-between;
 
@@ -479,7 +554,13 @@ body {
     }
 }
 .top-box-content {
+    border: 1px solid $light-border;
     padding :8px;
+    border-radius: 0 0 4px 4px;
+
+    [data-theme='dark'] & {
+        border: 1px solid $dark-border;
+    }
 }
 .top-box-content-list {
     font-size: 0.9em;
@@ -518,7 +599,7 @@ body {
 .team-score-type {
     font-size: 1000%;
     letter-spacing: 10px;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -529,9 +610,9 @@ body {
 }
 .score-type {
     font-size: 1.3em;
-    font-family:"Quicksand","Proza Libre","cursive";
+    font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
     [data-theme='dark'] & {
-        font-family:"Proza Libre","cursive";
+        font-family: var(--font-proza-libre), "Proza Libre", "cursive";
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -541,10 +622,10 @@ body {
 }
 .score-tail {
     color: $light-sub-title;
-    font-family:"Quicksand","Proza Libre","cursive";
+    font-family: var(--font-quicksand), "Quicksand", var(--font-proza-libre), "Proza Libre", "cursive";
 
     [data-theme='dark'] & {
-        font-family:"Proza Libre","cursive";
+        font-family: var(--font-proza-libre), "Proza Libre", "cursive";
         color: $dark-sub-title;
         text-shadow: $dark-shadow;
     }
@@ -552,7 +633,7 @@ body {
 .compare-type {
     color: $light-compare;
     font-size :0.8em;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
 
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
@@ -561,7 +642,7 @@ body {
 }
 .user-type {
     font-size :1.25em;
-    font-family: "M PLUS 1 CODE", sans-serif;
+    font-family: var(--font-m-plus-1-code), "M PLUS 1 CODE", sans-serif;
     [data-theme='dark'] & {
         text-shadow: $dark-shadow;
     }
@@ -581,10 +662,11 @@ body {
 .rank-type {
     font-size: 2em;
     line-height :2em;
-    font-weight: 200;
-    font-family: "Krub","cursive";
+    font-weight: 300;
+    font-family: var(--font-krub), "Krub", "cursive";
     [data-theme='dark'] & {
-        font-family: "Kulim Park","cursive";
+        font-family: var(--font-kulim-park), "Kulim Park", "cursive";
+        font-weight: 200;
         text-shadow: $dark-shadow;
     }
     @media(max-width: 600px) {
@@ -890,7 +972,7 @@ body {
 }
 .team-rps-type {
     font-size: 333%;
-    font-family:"Proza Libre","cursive";
+    font-family: var(--font-proza-libre), "Proza Libre", "cursive";
     color: $light-sub-title;
 
     [data-theme='dark'] & {
@@ -992,12 +1074,12 @@ body {
     z-index: 0;
 }
 .top-series-mini-box {
+    display: block;
     border-radius: 4px;
     padding: 6px 12px;
-    margin: 3px 3px;
     cursor: pointer;
     text-decoration: none !important;
-    border: 1px solid $light-border;
+    border: 2px solid var(--welcome-accent, #{$light-border});
     color: $light-front;
 
     [data-theme='dark'] & {

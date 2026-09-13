@@ -62,7 +62,7 @@ export default function LimitedTotal({}){
                     チーム氷ピクミン
                 </div>
                 <Grid item xs={6}>
-                    <span style={{fontSize:"1000%",fontFamily:"Proza Libre",letterSpacing:"-0.1em",color:teamColor[0]}}>{teamTotalRps(21)}</span>
+                    <span style={{fontSize:"1000%",fontFamily:"var(--font-proza-libre), Proza Libre, cursive",letterSpacing:"-0.1em",color:teamColor[0]}}>{teamTotalRps(21)}</span>
                 </Grid>
                 <Grid container item xs={6} style={{paddingTop:"1em",paddingBottom:"1em",paddingRight:"1em",textAlign:"right"}}>
                     <TeamMemberPoints team={21}/>
@@ -76,7 +76,7 @@ export default function LimitedTotal({}){
                     <TeamMemberPoints team={22}/>
                 </Grid>
                 <Grid item xs={6} style={{textAlign:"right"}}>
-                    <span style={{fontSize:"1000%",fontFamily:"Proza Libre",letterSpacing:"-0.1em",color:teamColor[1]}}>{teamTotalRps(22)}</span>
+                    <span style={{fontSize:"1000%",fontFamily:"var(--font-proza-libre), Proza Libre, cursive",letterSpacing:"-0.1em",color:teamColor[1]}}>{teamTotalRps(22)}</span>
                 </Grid>
             </Grid>
         </Grid>

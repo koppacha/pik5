@@ -1,0 +1,3 @@
+ALTER TABLE `User`
+  ADD COLUMN `srcUserId` VARCHAR(191) NULL,
+  ADD COLUMN `userCatSelect` INTEGER NULL;

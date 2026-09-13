@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Record;
+use App\Models\Keyword;
+use App\Services\EventStampService;
 use DateTime;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -34,19 +36,22 @@ class PostCountController extends Controller
         );
     }
     // ユーザーごとの全期間の投稿数を集計して参加日を算出する
-    public function getUserAllPostCount(Request $request): JsonResponse
+    public function getUserAllPostCount(Request $request, EventStampService $eventStampService): JsonResponse
     {
-        $dataset = Record::select('user_id', Record::raw('MIN(created_at) as oldest_created_at'))
-            ->selectRaw('COUNT(user_id) as cnt')
+        $dataset = Record::selectRaw('COUNT(user_id) as post_count')
+            ->selectRaw('MIN(created_at) as first_posted_at')
+            ->selectRaw('MAX(created_at) as last_posted_at')
             ->where('flg','<', 2)
             ->where('user_id', $request["id"])
-            ->orderBy('cnt', "DESC")
-            ->get()
-            ->toArray();
+            ->first();
 
-        return response()->json(
-            $dataset
-        );
+        return response()->json([
+            'post_count' => (int)($dataset?->post_count ?? 0),
+            'first_posted_at' => $dataset?->first_posted_at,
+            'last_posted_at' => $dataset?->last_posted_at,
+            'keyword_edit_count' => Keyword::where('last_editor', $request['id'])->count(),
+            'event_stamp_count' => $eventStampService->totalForUser((string)$request['id']),
+        ]);
     }
     public function getTrendPostCount(): JsonResponse
     {
@@ -56,17 +61,15 @@ class PostCountController extends Controller
         // 現在の日時を取得
         $currentDate = new DateTime();
 
-        // 12ヶ月前の月初の日付を取得
-        $startDate = (clone $currentDate)->modify("-{$trendCount} months")->modify('first day of this month');
-
         // 集計データを格納する配列
         $result = [];
 
-        // 1ヶ月ずつループ
-        for ($i = 1; $i < $trendCount +1; $i++) {
+        // 投稿がある月だけを直近から12件取得する
+        for ($i = 0; count($result) < $trendCount && $i < 240; $i++) {
             // 対象月の月初と月末を計算
-            $startOfMonth = (clone $startDate)->modify("+{$i} months")->format('Y-m-01 00:00:00');
-            $endOfMonth = (clone $startDate)->modify("+{$i} months")->modify('last day of this month')->format('Y-m-d 23:59:59');
+            $targetMonth = (clone $currentDate)->modify("-{$i} months");
+            $startOfMonth = (clone $targetMonth)->format('Y-m-01 00:00:00');
+            $endOfMonth = (clone $targetMonth)->modify('last day of this month')->format('Y-m-d 23:59:59');
 
             // 月ごとの集計を取得
             $monthlyTopStage = Record::select('stage_id')
@@ -81,12 +84,11 @@ class PostCountController extends Controller
                 ->first();
 
             if ($monthlyTopStage) {
-                // 新しい方から表示するため逆順に追加する
-                array_unshift($result, [
-                    'month' => (clone $startDate)->modify("+{$i} months")->format('Y年m月'),
+                $result[] = [
+                    'month' => (clone $targetMonth)->format('Y年m月'),
                     'stage_id' => $monthlyTopStage->stage_id,
                     'cnt' => $monthlyTopStage->cnt,
-                ]);
+                ];
             }
         }
 

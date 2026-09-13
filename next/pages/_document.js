@@ -2,10 +2,11 @@ import Document, { Html, Head, Main, NextScript } from 'next/document'
 import createEmotionCache from '../lib/createEmotionCache';
 import createEmotionServer from '@emotion/server/create-instance';
 import PropTypes from "prop-types";
+import {ServerStyleSheet} from "styled-components";
 
 export default function MyDocument(props) {
 
-    const { emotionStyleTags, locale } = props
+    const { emotionStyleTags, styledComponentsStyleTags, locale } = props
 
     return (
         <Html lang={locale || "ja"}>
@@ -24,13 +25,9 @@ export default function MyDocument(props) {
                       `,
                   }}
               />
+              {styledComponentsStyleTags}
               {emotionStyleTags}
               <link rel="icon" href="/favicon.ico" />
-              <link rel="preconnect" href="https://fonts.googleapis.com"/>
-              <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin=""/>
-              <link
-                  href="https://fonts.googleapis.com/css2?family=Krub&family=Kulim+Park:wght@200;300;400;600;700&family=M+PLUS+1+Code:wght@100;200;300;400;500;600;700&family=Oldenburg&family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Proza+Libre:wght@400;500;600;700;800&family=Quicksand&display=swap"
-                  rel="stylesheet"/>
           </Head>
           <body>
             <Main />
@@ -44,28 +41,35 @@ MyDocument.getInitialProps = async (ctx) => {
     const originalRenderPage = ctx.renderPage
     const cache = createEmotionCache()
     const {extractCriticalToChunks} = createEmotionServer(cache)
+    const sheet = new ServerStyleSheet()
 
-    ctx.renderPage = () =>
-        originalRenderPage({
-            enhanceApp: (App) =>
-                function EnhanceApp(props){
-                    return <App emotionCache={cache} {...props} />
-                },
-        })
-    const initialProps = await Document.getInitialProps(ctx)
-    const emotionStyles = extractCriticalToChunks(initialProps.html)
-    const emotionStyleTags = emotionStyles.styles.map((style) => (
-        <style
-            data-emotion={`${style.key} ${style.ids.join(' ')}`}
-            key={style.key}
-            dangerouslySetInnerHTML={{ __html: style.css }} />
-    ))
-    return {
-        ...initialProps,
-        emotionStyleTags,
-        locale: ctx.locale || ctx.defaultLocale || "ja",
+    try {
+        ctx.renderPage = () =>
+            originalRenderPage({
+                enhanceApp: (App) =>
+                    function EnhanceApp(props){
+                        return sheet.collectStyles(<App emotionCache={cache} {...props} />)
+                    },
+            })
+        const initialProps = await Document.getInitialProps(ctx)
+        const emotionStyles = extractCriticalToChunks(initialProps.html)
+        const emotionStyleTags = emotionStyles.styles.map((style) => (
+            <style
+                data-emotion={`${style.key} ${style.ids.join(' ')}`}
+                key={style.key}
+                dangerouslySetInnerHTML={{ __html: style.css }} />
+        ))
+        return {
+            ...initialProps,
+            emotionStyleTags,
+            styledComponentsStyleTags: sheet.getStyleElement(),
+            locale: ctx.locale || ctx.defaultLocale || "ja",
+        }
+    } finally {
+        sheet.seal()
     }
 }
-MyDocument.prototypes = {
+MyDocument.propTypes = {
     emotionStyleTags: PropTypes.array.isRequired,
+    styledComponentsStyleTags: PropTypes.array.isRequired,
 }

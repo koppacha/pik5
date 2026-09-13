@@ -36,15 +36,40 @@ class Func extends Facade
         }
         return ['score','DESC'];
     }
+
+    public static function sortRecordsByRule(array $records, $id, $rule): array
+    {
+        $scoreDirection = self::orderByRule($id, $rule)[1] === 'ASC' ? 1 : -1;
+
+        usort($records, static function (array $a, array $b) use ($scoreDirection): int {
+            $scoreComparison = ((int)$a['score'] <=> (int)$b['score']) * $scoreDirection;
+            if ($scoreComparison !== 0) {
+                return $scoreComparison;
+            }
+
+            $createdAtComparison = strcmp((string)$a['created_at'], (string)$b['created_at']);
+            if ($createdAtComparison !== 0) {
+                return $createdAtComparison;
+            }
+
+            return (int)$a['post_id'] <=> (int)$b['post_id'];
+        });
+
+        return $records;
+    }
     // 対象ステージ群のうち最大参加者数を求める
     public static function memberCount ($total = 0, $option = [0, 0, 2025]): array
     {
         [$console, , $year] = $option;
 
         // 対象年からフィルターする年月日を算出
-        $year = (int)$year + 1;
-        $datetime = new DateTime("{$year}-01-01 00:00:00");
-        $date = $datetime->format("Y-m-d H:i:s");
+        if (is_string($year) && str_contains($year, '-')) {
+            $date = (new DateTime($year))->format("Y-m-d H:i:s");
+        } else {
+            $year = (int)$year + 1;
+            $datetime = new DateTime("{$year}-01-01 00:00:00");
+            $date = $datetime->format("Y-m-d H:i:s");
+        }
         $console_operation = $console ? "=" : ">";
 
         if(is_array($total)){
@@ -65,9 +90,9 @@ class Func extends Facade
         }
 
         try {
-            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
+            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
         } catch (JsonException) {
-            $cacheKey = 'func:memberCount:v1' . 'console=' . $console . 'year=' . $year . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
+            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
         }
         static $memo = [];
         if (isset($memo[$cacheKey])) {
