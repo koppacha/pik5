@@ -15,12 +15,12 @@ use App\Services\Tricks\TrickGameService;
 use App\Services\Tricks\TrickRecordService;
 use App\Services\Tricks\TrickStateService;
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TrickPhaseThreeTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     private string $testSecret;
 
@@ -39,55 +39,55 @@ class TrickPhaseThreeTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_late_first_extension_and_posting_badges_survive_delete_and_repost(): void
+    public function test_post_extensions_and_posting_badges_survive_delete_and_repost(): void
     {
         [$event, $card] = $this->fixture();
         $card->update(['limit_at' => $event->debug_now->addMinutes(44)]);
         $records = app(TrickRecordService::class);
         $first = $this->record($card, 'alice', 100);
         $records->saved($first);
-        self::assertTrue($card->fresh()->late_first_extension);
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(89)));
+        self::assertFalse($card->fresh()->late_first_extension);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(59)));
         $state = app(TrickStateService::class);
         self::assertTrue($state->snapshot($event, 'alice')['field'][0]['my_has_record']);
         self::assertFalse($state->snapshot($event, 'bob')['field'][0]['my_has_record']);
         self::assertSame(0, $state->snapshot($event, 'bob')['field'][0]['my_initial_post_cost']);
         self::assertFalse($state->snapshot($event, null)['field'][0]['my_can_post']);
         $records->saved($this->record($card, 'bob', 90));
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(129)));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(69)));
         $records->saved($this->record($card, 'carol', 80));
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(164)));
-        self::assertSame(3, $state->snapshot($event, 'dave')['field'][0]['my_initial_post_cost']);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(79)));
+        self::assertSame(0, $state->snapshot($event, 'dave')['field'][0]['my_initial_post_cost']);
         $first->update(['flg' => 2]);
         $records->deleted($first->fresh());
         self::assertFalse($state->snapshot($event, 'alice')['field'][0]['my_has_record']);
-        self::assertSame(0, $state->snapshot($event, 'alice')['field'][0]['my_initial_post_cost']);
+        self::assertSame(2, $state->snapshot($event, 'alice')['field'][0]['my_initial_post_cost']);
         $records->saved($this->record($card, 'alice', 110));
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(164)));
-        self::assertTrue($card->fresh()->late_first_extension);
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(79)));
+        self::assertFalse($card->fresh()->late_first_extension);
     }
 
-    public function test_first_post_at_exactly_45_minutes_or_in_last_hour_does_not_extend(): void
+    public function test_first_and_later_posts_extend_even_in_last_hour(): void
     {
         [$event, $card] = $this->fixture();
         $card->update(['limit_at' => $event->debug_now->addMinutes(45)]);
         app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
         self::assertFalse($card->fresh()->late_first_extension);
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(45)));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(60)));
         $event->update(['debug_now' => $event->end_at->subHour()]);
         $card->update(['limit_at' => $event->debug_now->addMinutes(20)]);
         app(TrickRecordService::class)->saved($this->record($card, 'bob', 90));
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(20)));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(30)));
     }
 
-    public function test_late_first_post_in_final_hour_never_extends(): void
+    public function test_first_post_in_final_hour_uses_the_normal_extension_policy(): void
     {
         [$event, $card] = $this->fixture();
         $event->update(['debug_now' => $event->end_at->subHour()]);
         $card->update(['limit_at' => $event->debug_now->addMinutes(20)]);
         app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
         self::assertFalse($card->fresh()->late_first_extension);
-        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(20)));
+        self::assertTrue($card->fresh()->limit_at->equalTo($event->debug_now->addMinutes(35)));
     }
 
     public function test_initial_posts_charge_extend_rank_and_update_provisional_points(): void
@@ -99,19 +99,19 @@ class TrickPhaseThreeTest extends TestCase
         }
 
         self::assertSame(
-            ['alice' => 3, 'bob' => 0, 'carol' => 0, 'dave' => 3],
+            ['alice' => 0, 'bob' => 0, 'carol' => 0, 'dave' => 0],
             TrickCardPayment::query()->where('event_id', $event->event_id)
                 ->orderBy('id')->pluck('points_paid', 'player_name')->all(),
         );
-        self::assertSame(-1, Player::query()->where('event_id', $event->event_id)
+        self::assertSame(2, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
-        self::assertSame(6, $card->fresh()->paid_points_total);
-        self::assertSame('2026-07-20 16:15:00', $card->fresh()->limit_at->format('Y-m-d H:i:s'));
+        self::assertSame(0, $card->fresh()->paid_points_total);
+        self::assertSame('2026-07-20 14:15:00', $card->fresh()->limit_at->format('Y-m-d H:i:s'));
 
         $rankings = $records->rankings($card);
         self::assertSame([1, 1, 3, 4], collect($rankings)->pluck('rank')->all());
         self::assertSame([5, 5, 2, 1], collect($rankings)->pluck('rps')->all());
-        self::assertSame([5, 5, 1, 0], collect($rankings)->pluck('provisional_reward_points')->all());
+        self::assertSame([1, 1, 0, 0], collect($rankings)->pluck('provisional_reward_points')->all());
         self::assertNotContains(false, collect($rankings)->pluck('initial_payment_recorded')->all(), true);
 
         Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['rank_points' => 2]);
@@ -120,12 +120,14 @@ class TrickPhaseThreeTest extends TestCase
         self::assertSame(7, $snapshot['me']['total_rank_points']);
         self::assertSame(4, $snapshot['field'][0]['participant_count']);
         self::assertTrue($snapshot['field'][0]['my_initial_payment_recorded']);
-        self::assertSame(0, $snapshot['field'][0]['my_initial_post_cost']);
+        self::assertSame(2, $snapshot['field'][0]['my_initial_post_cost']);
     }
 
-    public function test_edit_and_delete_recalculate_without_repayment_or_reextension(): void
+    public function test_edit_and_repost_charge_again_without_reextension(): void
     {
         [$event, $card] = $this->fixture();
+        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')
+            ->update(['draw_points' => 10]);
         $records = app(TrickRecordService::class);
         $original = $this->record($card, 'alice', 100);
         $records->saved($original);
@@ -135,8 +137,8 @@ class TrickPhaseThreeTest extends TestCase
         $original->update(['flg' => 2]);
         $updated = $this->record($card, 'alice', 120);
         $records->saved($updated, $original);
-        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
-        self::assertSame($points, Player::query()->where('event_id', $event->event_id)
+        self::assertSame(2, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame($points - 2, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
         self::assertSame($limit, $card->fresh()->limit_at->toDateTimeString());
         self::assertSame(120, $records->rankings($card)[0]['score']);
@@ -145,11 +147,13 @@ class TrickPhaseThreeTest extends TestCase
         $records->deleted($updated);
         self::assertSame([], $records->rankings($card));
         self::assertSame(0, $card->fresh()->post_count);
-        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame(2, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
 
         $repost = $this->record($card, 'alice', 90);
         $records->saved($repost);
-        self::assertSame(1, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame(3, TrickCardPayment::query()->where('event_id', $event->event_id)->count());
+        self::assertSame($points - 4, Player::query()->where('event_id', $event->event_id)
+            ->where('name', 'alice')->value('draw_points'));
         self::assertSame($limit, $card->fresh()->limit_at->toDateTimeString());
     }
 

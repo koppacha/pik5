@@ -5,6 +5,7 @@ export const tricksApi = {
     draw: "/api/server/tricks/draw",
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
     returnToDeck: (deckId) => `/api/server/tricks/cards/${deckId}/return-to-deck`,
+    extend: (deckId) => `/api/server/tricks/cards/${deckId}/extend`,
     scores: (deckId) => `/api/server/tricks/cards/${deckId}/scores`,
     debugCollect: (deckId) => `/api/server/tricks/cards/${deckId}/debug-collect`,
     collectExpired: "/api/server/tricks/maintenance/collect-expired",
@@ -246,38 +247,39 @@ export const tricksOperationState = (state, options = {}) => {
     const fieldCount = (state?.field || []).filter((card) => !isTricksCardLimitExpired(card, nowValue)).length
     const handCount = state?.hand?.length || 0
     const playerCount = state?.players?.length || 0
-    const requiredHand = 3 + Math.floor(fieldCount / 2)
+    const requiredHand = Number(me?.take_cost ?? 2)
     const fieldCap = Math.min(Math.max(1, playerCount - 1), 16)
     const endAt = tournament.end_at ? new Date(tournament.end_at).getTime() : 0
     const nextTakeAt = me?.next_take_at ? new Date(me.next_take_at).getTime() : 0
     const available = Boolean(tournament.available) && tournament.state !== "ended"
 
     let drawReason = ""
-    if (!me) drawReason = "大会へ参加してください"
-    else if (!available) drawReason = "大会開催時間外です"
-    else if (Number(me.draw_points) <= 0) drawReason = "ポイントが0P以下です"
-    else if (Number(state?.deck_count || 0) + Number(state?.trash_count || 0) <= 0) drawReason = "山札と捨て札が空です"
+    if (me && !available) drawReason = "大会開催時間外です"
+    else if (me && Number(me.draw_points) <= 0) drawReason = "ポイントが0P以下です"
+    else if (Number(state?.deck_count || 0) <= 0) {
+        drawReason = Number(state?.trash_count || 0) > 0
+            ? "山札を補充しています"
+            : "山札と捨て札が空です"
+    }
 
     let takeReason = ""
-    if (!me) takeReason = "大会へ参加してください"
-    else if (!available) takeReason = "大会開催時間外です"
+    if (me && !available) takeReason = "大会開催時間外です"
     else if (endAt && nowValue >= endAt - 60 * 60 * 1000) takeReason = "大会終了1時間前以降はテイクできません"
     else if (nextTakeAt && nowValue < nextTakeAt) takeReason = `次回テイク可能 ${new Date(nextTakeAt).toLocaleTimeString("ja-JP")}`
     else if (fieldCount >= fieldCap) takeReason = `場札上限 ${fieldCap}枚に達しています`
     else if (handCount < requiredHand) takeReason = `手札が${requiredHand}枚必要です（現在${handCount}枚）`
 
     let returnReason = ""
-    if (!me) returnReason = "大会へ参加してください"
-    else if (!available) returnReason = "大会開催時間外です"
-    else if (Number(me.draw_points) <= 0) returnReason = "ポイントが0P以下です"
+    if (me && !available) returnReason = "大会開催時間外です"
+    else if (me && Number(me.draw_points) <= 0) returnReason = "ポイントが0P以下です"
 
     return {
         available,
-        canDraw: drawReason === "",
+        canDraw: Boolean(me) && drawReason === "",
         drawReason,
-        canTake: takeReason === "",
+        canTake: Boolean(me) && takeReason === "",
         takeReason,
-        canReturnToDeck: returnReason === "",
+        canReturnToDeck: Boolean(me) && returnReason === "",
         returnReason,
         requiredHand,
         fieldCap,

@@ -69,6 +69,26 @@ class TrickRewardDistributor
         return ['distribution' => $distribution, 'taker_remainder' => $remaining];
     }
 
+    /** @param list<string> $lastPlayers */
+    public function lastPlaceRemainder(int $remainder, array $lastPlayers): array
+    {
+        if ($remainder <= 0 || $lastPlayers === []) {
+            return [];
+        }
+        sort($lastPlayers, SORT_STRING);
+        $share = intdiv($remainder, count($lastPlayers));
+        $extra = $remainder % count($lastPlayers);
+        $distribution = [];
+        foreach ($lastPlayers as $index => $player) {
+            $amount = $share + ($index < $extra ? 1 : 0);
+            if ($amount > 0) {
+                $distribution[$player] = $amount;
+            }
+        }
+
+        return $distribution;
+    }
+
     /** @param  list<list<string>>  $rankGroups */
     private function eligibleGroups(array $rankGroups): array
     {

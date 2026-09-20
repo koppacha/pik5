@@ -19,8 +19,8 @@ const GAME_FPS = 30
 const HAND_AREA_HEIGHT = 420
 const HAND_AREA_EXTRA_DROP = 100
 const HAND_AREA_DROP = Math.round(HAND_CARD_HEIGHT * 0.3) + HAND_AREA_EXTRA_DROP
-const FIELD_START_Y = 164
-const HEADER_HEIGHT = 128
+const FIELD_START_Y = 190
+const HEADER_HEIGHT = 174
 const FIELD_COLUMN_GAP = 25
 const FIELD_ROW_GAP = FIELD_CARD_HEIGHT + 32
 const FIELD_SIDE_MARGIN = 24
@@ -111,7 +111,7 @@ function fieldLayout(index, scrollY = 0, width = 0) {
 function deckLayout(height) {
     return {
         x: 24,
-        y: height - HAND_CARD_HEIGHT - 28 + HAND_AREA_DROP,
+        y: height - HAND_CARD_HEIGHT - 54 + HAND_AREA_DROP,
         angle: 0,
         zIndex: 130,
     }
@@ -250,31 +250,8 @@ function PhaserBaseLayer({state, size}) {
                     this.children.removeAll(true)
                     const width = this.scale.width
                     const height = this.scale.height
-                    const view = normalizeTricksState(nextState || {}, {})
-                    const tournament = view.tournament || {}
 
                     this.add.rectangle(0, 0, width, height, 0x0c1016, 1).setOrigin(0, 0)
-                    this.add.rectangle(0, 0, width, HEADER_HEIGHT, 0x141b26, 0.82).setOrigin(0, 0)
-                    this.add.rectangle(0, handAreaTop(height), width, HAND_AREA_HEIGHT, 0x121821, 0.58).setOrigin(0, 0)
-                    this.add.text(24, 38, tournament.title || "第19回期間限定ランキング", {
-                        fontFamily: "Arial",
-                        fontSize: "24px",
-                        color: "#ffffff",
-                        fontStyle: "bold",
-                    })
-                    this.add.text(24, 72, tournament.subtitle || "トリックテイキング制", {
-                        fontFamily: "Arial",
-                        fontSize: "15px",
-                        color: "#b7c1d8",
-                    })
-
-                    if (!view.field?.length) {
-                        this.add.text(24, FIELD_START_Y, "場札はまだありません", {
-                            fontFamily: "Arial",
-                            fontSize: "14px",
-                            color: "#778399",
-                        })
-                    }
                     if (typeof window !== "undefined") {
                         const current = window.__TRICKS_RENDER_METRICS__ || {}
                         window.__TRICKS_RENDER_METRICS__ = {
@@ -519,27 +496,24 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
 }
 
 // 山札DOMを表示する。
-function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, onDraw}) {
+function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, handVisible, onDraw, onToggleHand, onShowHowToPlay}) {
+    const [open, setOpen] = useState(true)
     return (
-        <div
-            className="tricks-dom-deck"
-            style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: HAND_CARD_WIDTH,
-                height: HAND_CARD_HEIGHT,
-                transform: cardTransform(layout),
-                zIndex: layout.zIndex,
-                pointerEvents: "auto",
-            }}
-        >
-            <div className="tricks-dom-deck-title">山札</div>
-            <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
-            <div className="tricks-dom-deck-count">残り {deckCount ?? 0}枚</div>
-            <div className="tricks-dom-deck-trash">捨て札 {trashCount ?? 0}枚</div>
-            {disabledReason && <div className="tricks-dom-deck-reason">{disabledReason}</div>}
-        </div>
+        <>
+            <div className="tricks-dom-deck tricks-deck-object" aria-label={`残り${deckCount ?? 0}枚`} style={{position: "absolute", left: 0, top: 0, width: HAND_CARD_WIDTH, height: HAND_CARD_HEIGHT, transform: cardTransform(layout), zIndex: layout.zIndex, pointerEvents: "none", boxShadow: "5px -5px 0 #32435e, 10px -10px 0 #182338, 15px -15px 0 #32435e"}}>
+                <div className="tricks-deck-pattern" />
+            </div>
+            <aside className="tricks-command-window" style={{position: "absolute", left: 0, bottom: HAND_CARD_HEIGHT + 54 - HAND_AREA_DROP + 24, zIndex: 140, display: "flex", pointerEvents: "auto", transform: open ? "translateX(0)" : "translateX(calc(-100% + 44px))", transition: "transform 240ms ease", maxWidth: "100vw"}}>
+                <div id="tricks-command-body" className="tricks-command-body" style={{visibility: open ? "visible" : "hidden"}}>
+                    <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
+                    <button type="button" data-tricks-hand-toggle onClick={onToggleHand}>{handVisible ? "手札非表示" : "手札を表示"}</button>
+                    <button type="button" data-tricks-how-to-play onClick={onShowHowToPlay}>遊び方</button>
+                    <div className="tricks-dom-deck-count">残り {deckCount ?? 0}枚 / 捨て札 {trashCount ?? 0}枚</div>
+                    {disabledReason && <div className="tricks-dom-deck-reason">{disabledReason}</div>}
+                </div>
+                <button className="tricks-command-toggle" type="button" aria-expanded={open} aria-controls="tricks-command-body" onClick={() => setOpen((value) => !value)}>コマンド</button>
+            </aside>
+        </>
     )
 }
 
@@ -606,11 +580,16 @@ function DomCardsLayer({
     returningMotion,
     operation,
     busy,
+    handVisible,
+    onToggleHand,
+    onShowHowToPlay,
     nowValue,
 }) {
     const fieldById = useMemo(() => new Map((view.field || []).map((card) => [card.id, card])), [view.field])
     const orderedField = fieldOrder.map((id) => fieldById.get(id)).filter(Boolean)
     const selectedHandId = selectedHand?.id
+    const selectedFieldIndex = orderedField.findIndex((card) => card.id === selectedFieldId)
+    const selectedFieldCard = selectedFieldIndex >= 0 ? orderedField[selectedFieldIndex] : null
     const baseDeckLayout = deckLayout(size.height)
 
     return (
@@ -630,6 +609,11 @@ function DomCardsLayer({
                     pointerEvents: "none",
                 }}
             >
+                {Array.from({length: Math.max(operation.fieldCap || 0, orderedField.length)}, (_, index) => {
+                    const slot = fieldLayout(index, fieldScrollY, size.width)
+                    if (slot.y + FIELD_CARD_HEIGHT < HEADER_HEIGHT || slot.y > fieldViewportBottom(size.height) + 48) return null
+                    return <div key={index} className="tricks-field-slot" style={{position: "absolute", left: slot.x, top: slot.y, width: FIELD_CARD_WIDTH, height: FIELD_CARD_HEIGHT, boxSizing: "border-box", border: "1px solid #63738b", borderRadius: 10, color: "#9aa8bd"}}><span className="tricks-field-slot-number" style={{position: "absolute", right: 10, top: 6}}>{index + 1}</span></div>
+                })}
                 {orderedField.map((card, index) => {
                     const base = fieldLayout(index, fieldScrollY, size.width)
                     const visible = base.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
@@ -646,7 +630,8 @@ function DomCardsLayer({
                                 zIndex: selectedFieldId === card.id ? 330 : 20 + index,
                             }}
                             usersById={usersById}
-                            selected={selectedFieldId === card.id}
+                            selected={false}
+                            hidden={selectedFieldId === card.id}
                             disabled={!card.limit_at}
                             nowValue={nowValue}
                             onClick={() => {
@@ -674,6 +659,9 @@ function DomCardsLayer({
                     disabled={busy || !operation.canDraw}
                     disabledReason={operation.drawReason}
                     onDraw={onDraw}
+                    handVisible={handVisible}
+                    onToggleHand={onToggleHand}
+                    onShowHowToPlay={onShowHowToPlay}
                 />
             )}
             <DrawGhost motion={drawMotion} />
@@ -687,6 +675,7 @@ function DomCardsLayer({
                     ? selectedHandLayout(size.width, size.height)
                     : {
                         ...home,
+                        y: home.y + (handVisible ? 0 : size.height),
                         zIndex: 120 + index,
                     }
 
@@ -699,7 +688,7 @@ function DomCardsLayer({
                         usersById={usersById}
                         selected={isSelected}
                         hidden={isTaking || isDrawing || isReturning}
-                        disabled={busy}
+                        disabled={busy || !handVisible}
                         nowValue={nowValue}
                         onClick={() => onSelectHand(card)}
                     />
@@ -758,10 +747,41 @@ function DomCardsLayer({
                     }}
                 />
             )}
+            {selectedFieldId && !selectedHand && (
+                <button
+                    type="button"
+                    data-tricks-card-backdrop="field"
+                    aria-label="場札詳細を閉じる"
+                    onClick={() => onSelectField?.(null)}
+                    style={{
+                        position: "absolute",
+                        inset: 0,
+                        zIndex: 280,
+                        border: 0,
+                        background: "rgba(3, 6, 12, 0.58)",
+                        pointerEvents: "auto",
+                    }}
+                />
+            )}
+            {selectedFieldCard && !selectedHand && (
+                <TricksDomCard
+                    card={selectedFieldCard}
+                    type="field"
+                    layout={{
+                        ...fieldLayout(selectedFieldIndex, fieldScrollY, size.width),
+                        zIndex: 330,
+                    }}
+                    usersById={usersById}
+                    selected
+                    disabled
+                    nowValue={nowValue}
+                />
+            )}
             {selectedHand && (
                 <>
                     <button
                         type="button"
+                        data-tricks-card-backdrop="hand"
                         aria-label="手札詳細を閉じる"
                         onClick={onCancelHand}
                         style={{
@@ -796,7 +816,7 @@ function DomCardsLayer({
                                 textShadow: "0 1px 4px rgba(0, 0, 0, 0.85)",
                             }}
                         >
-                            <div>投稿コスト {Math.max(1, Number(selectedHand.rarity || 1))}P</div>
+                            <div>投稿コスト {Math.max(1, Number(selectedHand.difficulty || 1))}P</div>
                             <div>スタック数 {view.hand.length}</div>
                         </div>
                         <button
@@ -841,6 +861,8 @@ export default function TricksLayeredGame({
     onReturnToDeck,
     onSelectField,
     onFieldSortingChange,
+    onHandSelectionChange,
+    onShowHowToPlay,
     operation,
     busy = false,
     nowValue = Date.now(),
@@ -851,6 +873,7 @@ export default function TricksLayeredGame({
     const [fieldOrder, setFieldOrder] = useState([])
     const [fieldScrollY, setFieldScrollY] = useState(0)
     const [selectedHand, setSelectedHand] = useState(null)
+    const [handVisible, setHandVisible] = useState(true)
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)
     const [takingMotion, setTakingMotion] = useState(null)
@@ -907,9 +930,9 @@ export default function TricksLayeredGame({
     useEffect(() => {
         setFieldScrollY((current) => Math.max(0, Math.min(
             current,
-            fieldMaxScroll(size.width, size.height, view.field?.length || 0)
+            fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0))
         )))
-    }, [size.height, size.width, view.field])
+    }, [size.height, size.width, view.field, operation.fieldCap])
 
     const handleWheel = useCallback((event) => {
         if (selectedHand || selectedFieldId) return
@@ -917,11 +940,18 @@ export default function TricksLayeredGame({
         if (!rect) return
         const y = event.clientY - rect.top
         if (y < HEADER_HEIGHT || y > fieldViewportBottom(size.height)) return
-        const maxScroll = fieldMaxScroll(size.width, size.height, view.field?.length || 0)
+        const maxScroll = fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0))
         if (maxScroll <= 0) return
         event.preventDefault()
         setFieldScrollY((current) => Math.max(0, Math.min(maxScroll, current + event.deltaY)))
-    }, [selectedFieldId, selectedHand, size.height, size.width, view.field])
+    }, [selectedFieldId, selectedHand, size.height, size.width, view.field, operation.fieldCap])
+
+    useEffect(() => {
+        const root = rootRef.current
+        if (!root) return undefined
+        root.addEventListener("wheel", handleWheel, {passive: false})
+        return () => root.removeEventListener("wheel", handleWheel)
+    }, [handleWheel])
 
     const beginDrawMotion = useCallback((result) => {
         if (!result?.card) return false
@@ -1029,15 +1059,26 @@ export default function TricksLayeredGame({
         onFieldSortingChange?.(false)
     }, [onFieldSortingChange])
 
+    useEffect(() => {
+        onHandSelectionChange?.(Boolean(selectedHand))
+
+        return () => onHandSelectionChange?.(false)
+    }, [onHandSelectionChange, selectedHand])
+
+    const toggleHand = useCallback(() => {
+        setSelectedHand(null)
+        setHandVisible((visible) => !visible)
+    }, [])
+
     return (
         <div
             ref={rootRef}
-            onWheel={handleWheel}
+            data-tricks-game-layer
             style={{
                 position: "absolute",
                 inset: 0,
                 overflow: "hidden",
-                zIndex: 0,
+                zIndex: selectedHand || selectedFieldId ? 30 : 0,
             }}
         >
             <PhaserBaseLayer state={state} size={size} />
@@ -1061,6 +1102,9 @@ export default function TricksLayeredGame({
                 returningMotion={returningMotion}
                 operation={operation}
                 busy={interactionBusy}
+                handVisible={handVisible}
+                onToggleHand={toggleHand}
+                onShowHowToPlay={onShowHowToPlay}
                 nowValue={nowValue}
             />
             <style jsx global>{`
@@ -1206,6 +1250,9 @@ export default function TricksLayeredGame({
                     font-size: 22px;
                     font-weight: 800;
                 }
+                .tricks-command-body { padding: 12px; background: rgba(21,29,43,.96); border: 1px solid #63738b; display: grid; gap: 4px; width: 220px; box-sizing: border-box; }
+                .tricks-command-toggle { width: 44px; border: 1px solid #63738b; border-radius: 0 8px 8px 0; background: #151d2b; color: #e6edf8; writing-mode: vertical-rl; cursor: pointer; }
+                .tricks-deck-pattern { position: absolute; inset: 10px; border: 1px solid #8db4ff; border-radius: 8px; background: repeating-linear-gradient(45deg, transparent, transparent 12px, #354968 12px, #354968 14px); }
                 .tricks-dom-deck {
                     display: flex;
                     flex-direction: column;
@@ -1262,7 +1309,7 @@ export default function TricksLayeredGame({
                     font-size: 24px;
                     font-weight: 800;
                 }
-                .tricks-dom-deck button,
+                .tricks-command-body button,
                 .tricks-hand-action {
                     border: 1px solid #8db4ff;
                     border-radius: 8px;
@@ -1275,7 +1322,7 @@ export default function TricksLayeredGame({
                     font-weight: 800;
                     cursor: pointer;
                 }
-                .tricks-dom-deck button {
+                .tricks-command-body button {
                     margin-top: 4px;
                 }
                 .tricks-dom-deck-count {
@@ -1297,7 +1344,7 @@ export default function TricksLayeredGame({
                     line-height: 1.3;
                     text-align: center;
                 }
-                .tricks-dom-deck button:disabled,
+                .tricks-command-body button:disabled,
                 .tricks-hand-action:disabled {
                     cursor: not-allowed;
                     opacity: 0.45;

@@ -8,12 +8,12 @@ use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
 use App\Services\Tricks\TrickDebugTimeService;
 use Carbon\CarbonImmutable;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TrickPhaseFiveTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     public function test_debug_advance_processes_intermediate_subsidy_expiry_and_event_end(): void
     {
@@ -22,7 +22,7 @@ class TrickPhaseFiveTest extends TestCase
 
         self::assertSame(1, $result['collected']);
         self::assertSame(1, $result['subsidy_paid']);
-        self::assertSame('_collected', $card->fresh()->state);
+        self::assertSame('_trash', $card->fresh()->state);
         self::assertSame(6, Player::query()->where('event_id', $event->event_id)->value('draw_points'));
 
         $ended = app(TrickDebugTimeService::class)->advance($event->fresh(), 4 * 3600, 'admin');

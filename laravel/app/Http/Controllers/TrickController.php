@@ -157,6 +157,23 @@ class TrickController extends Controller
         return response()->json($game->returnToDeck($event, $userId, $deckId, $request));
     }
 
+    public function extend(Request $request, int $deckId, TrickEventResolver $events, TrickGameService $game): JsonResponse
+    {
+        $validated = $request->validate([
+            'idempotency_key' => ['required', 'string', 'min:8', 'max:96'],
+        ]);
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $userId = $this->requireUserId($request, $event);
+
+        return response()->json($game->extend(
+            $event,
+            $userId,
+            $deckId,
+            $validated['idempotency_key'],
+            $request,
+        ));
+    }
+
     public function scores(Request $request, int $deckId, TrickEventResolver $events, TrickRequestIdentity $identity, TrickRecordService $records): JsonResponse
     {
         $event = $events->forRequest($request, $identity);

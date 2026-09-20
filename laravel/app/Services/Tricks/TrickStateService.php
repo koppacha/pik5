@@ -4,6 +4,7 @@ namespace App\Services\Tricks;
 
 use App\Models\LimitLog;
 use App\Models\Player;
+use App\Models\TrickCardHolder;
 use App\Models\TrickCardPayment;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
@@ -44,6 +45,7 @@ class TrickStateService
         $now = $this->clock->now($event);
         $provisional = $this->records->provisionalByEvent($event);
         $fieldIsEmpty = ! TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_field')->exists();
+        $collectedCounts = $this->collectedCountsByPlayer($event);
         $players = Player::query()
             ->where('event_id', $event->event_id)
             ->orderByDesc('rank_points')
@@ -55,6 +57,7 @@ class TrickStateService
                 $provisional[$player->name] ?? 0,
                 $now,
                 $fieldIsEmpty,
+                (int) ($collectedCounts[$player->name] ?? 0),
             ))
             ->sortByDesc('total_rank_points')
             ->values();
@@ -71,6 +74,7 @@ class TrickStateService
             'players' => $players,
             'deck_count' => $ended ? 0 : $cards->where('state', '_deck')->count(),
             'trash_count' => $ended ? 0 : $cards->where('state', '_trash')->count(),
+            'collected_count' => $cards->where('state', '_collected')->count(),
             'field' => $field,
             'hand' => ! $ended && $userId
                 ? $this->normalizeCards($cards->where('state', $userId)->sortBy('drawn_order'))
@@ -96,6 +100,7 @@ class TrickStateService
         $now = $this->clock->now($event);
         $provisional = $this->records->provisionalByEvent($event);
         $fieldIsEmpty = ! TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_field')->exists();
+        $collectedCounts = $this->collectedCountsByPlayer($event);
 
         return Player::query()->where('event_id', $event->event_id)
             ->orderByDesc('rank_points')->orderBy('name')->get()
@@ -105,6 +110,7 @@ class TrickStateService
                 $provisional[$player->name] ?? 0,
                 $now,
                 $fieldIsEmpty,
+                (int) ($collectedCounts[$player->name] ?? 0),
             ))
             ->sortByDesc('total_rank_points')->values()->all();
     }
@@ -158,7 +164,7 @@ class TrickStateService
         $logs = LimitLog::query()->where('event_id', $event->event_id)
             ->whereIn('event', [
                 'join', 'join_existing', 'take', 'record_posted', 'record_updated', 'record_deleted',
-                'limit_extended', 'collect', 'subsidy_paid', 'event_ended',
+                'limit_extended', 'player_extension', 'empty_field_floor_grant', 'collect', 'subsidy_paid', 'event_ended',
             ])
             ->latest()->orderByDesc('id')->limit(100)->get()->values();
         $cards = TrickEventCard::query()->with('deck')
@@ -200,6 +206,9 @@ class TrickStateService
             $payload['subsidy_recipient_count'] = $log->event === 'subsidy_paid'
                 ? $subsidyCountsBySlot->get((string) ($context['slot'] ?? "log:{$log->id}"), 1)
                 : null;
+            $payload['granted_points_total'] = $log->event === 'empty_field_floor_grant'
+                ? (int) ($context['total_points'] ?? 0)
+                : null;
 
             return $payload;
         })->unique(fn (array $log): string => $log['event'] === 'subsidy_paid'
@@ -220,14 +229,16 @@ class TrickStateService
         $payments = TrickCardPayment::query()->where('event_id', $event->event_id)
             ->whereIn('event_card_id', $cards->pluck('id'))->orderBy('created_at')->get()->groupBy('event_card_id');
         $extensions = ($event->debug || $event->test_mode)
-            ? LimitLog::query()->where('event_id', $event->event_id)->where('event', 'record_posted')
+            ? LimitLog::query()->where('event_id', $event->event_id)
+                ->whereIn('event', ['record_posted', 'player_extension'])
                 ->whereIn('event_card_id', $cards->pluck('id'))->orderBy('created_at')->get()->groupBy('event_card_id')
             : collect();
 
         return $cards->map(function (TrickEventCard $card) use ($event, $extensions, $payments, $userId, $rankings, $isParticipant) {
             $cardPayments = $payments->get($card->id, collect());
-            $initialParticipantCount = $cardPayments->count();
-            $paid = $userId !== null && $cardPayments->contains('player_name', $userId);
+            $initialPayments = $cardPayments->where('payment_type', 'initial_post')->values();
+            $initialParticipantCount = $initialPayments->count();
+            $paid = $userId !== null && $initialPayments->contains('player_name', $userId);
 
             $payload = [
                 ...$this->normalizeCard($card),
@@ -236,14 +247,20 @@ class TrickStateService
                 'my_has_record' => $isParticipant && collect($rankings[$card->id] ?? [])->contains('user_id', $userId),
                 'my_can_post' => $isParticipant && $this->available($event, $this->clock->now($event)),
                 'my_initial_payment_recorded' => $paid,
-                'my_initial_post_cost' => $paid ? 0 : $this->rules->initialPostCost(
-                    max(1, (int) $card->rarity),
-                    $initialParticipantCount,
+                'my_initial_post_cost' => $this->rules->initialPostCost(
+                    max(1, (int) $card->difficulty),
+                    $userId !== null && $userId === $card->taker,
+                    $paid,
                 ),
+                'my_can_extend' => $isParticipant
+                    && $this->available($event, $this->clock->now($event))
+                    && $this->clock->now($event)->lessThan($event->end_at->copy()->subHour())
+                    && $card->limit_at !== null
+                    && $this->clock->now($event)->lessThan($card->limit_at),
             ];
             if ($event->debug || $event->test_mode) {
                 $payload['debug'] = [
-                    'initial_participants' => $cardPayments->values()->map(fn (TrickCardPayment $payment, int $index) => [
+                    'initial_participants' => $initialPayments->map(fn (TrickCardPayment $payment, int $index) => [
                         'order' => $index + 1,
                         'player_name' => $payment->player_name,
                         'points_paid' => (int) $payment->points_paid,
@@ -268,6 +285,7 @@ class TrickStateService
         int $provisionalRankPoints,
         CarbonImmutable $now,
         bool $fieldIsEmpty,
+        int $collectedCardCount,
     ): array {
         $nextTakeAt = $this->cooldowns->nextTakeAt($event, $player, $now);
 
@@ -276,6 +294,10 @@ class TrickStateService
             'draw_points' => $player->draw_points,
             'rank_points' => $player->rank_points,
             'card_count' => $player->card_count,
+            'collected_card_count' => $collectedCardCount,
+            'take_count' => (int) $player->take_count,
+            'take_level' => $this->rules->takeLevel((int) $player->take_count),
+            'take_cost' => $this->rules->requiredHand((int) $player->take_count),
             'last_take_at' => $player->last_take_at?->toIso8601String(),
             'points' => $player->draw_points,
             'confirmed_rank_points' => $player->rank_points,
@@ -285,6 +307,15 @@ class TrickStateService
             'subsidy_flag' => $this->available($event, $now) && ((bool) $player->subsidy_flag
                 || ($fieldIsEmpty && $this->rules->emptyFieldSubsidyEligible($player->draw_points, $player->card_count))),
         ];
+    }
+
+    private function collectedCountsByPlayer(TrickEvent $event): Collection
+    {
+        return TrickCardHolder::query()
+            ->where('event_id', $event->event_id)
+            ->selectRaw('player_name, COUNT(*) as aggregate')
+            ->groupBy('player_name')
+            ->pluck('aggregate', 'player_name');
     }
 
     private function available(TrickEvent $event, CarbonImmutable $now): bool

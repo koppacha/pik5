@@ -11,12 +11,12 @@ use App\Services\Tricks\TrickLegacyMigrationService;
 use App\Services\Tricks\TrickTestFixtureService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\TrickDummyDeckSeeder;
-use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class TrickPhaseSixTest extends TestCase
 {
-    use DatabaseTransactions;
+    use RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -56,6 +56,8 @@ class TrickPhaseSixTest extends TestCase
             ->assertJsonPath('tournament.event_id', $eventId)
             ->assertJsonPath('me.name', 'alice')
             ->assertJsonPath('me.points', 12)
+            ->assertJsonPath('me.collected_card_count', 0)
+            ->assertJsonPath('collected_count', 0)
             ->assertJsonCount(0, 'hand')
             ->assertJsonCount(1, 'field');
         $this->withHeaders($this->testHeaders('carol', $eventId))->getJson('/api/tricks/state')

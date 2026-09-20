@@ -24,11 +24,15 @@ class TrickRewardDistributorTest extends TestCase
         self::assertSame(10, array_sum($result['distribution']) + $result['taker_remainder']);
     }
 
-    public function test_unallocatable_remainder_is_returned_to_taker(): void
+    public function test_unallocatable_remainder_is_returned_for_last_place_distribution(): void
     {
         $result = (new TrickRewardDistributor())->distribute(8, [['A', 'B', 'C']]);
 
         self::assertSame(['A' => 2, 'B' => 2, 'C' => 2], $result['distribution']);
         self::assertSame(2, $result['taker_remainder']);
+        self::assertSame(
+            ['alice' => 2, 'bob' => 2, 'carol' => 1],
+            (new TrickRewardDistributor())->lastPlaceRemainder(5, ['carol', 'alice', 'bob']),
+        );
     }
 }
