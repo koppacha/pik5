@@ -63,45 +63,74 @@ class TrickRecordService
             'deck_id' => $card->deck_id,
         ]);
 
-        $payment = TrickCardPayment::query()
+        $initialPayment = TrickCardPayment::query()
             ->where('event_id', $event->event_id)
-            ->where('deck_id', $card->deck_id)
+            ->where('event_card_id', $card->id)
             ->where('player_name', $record->user_id)
+            ->where('payment_type', 'initial_post')
             ->first();
+        $hasInitialPost = $initialPayment !== null;
         $participantOrder = null;
         $extension = 0;
-        $pointsPaid = 0;
-        if ($payment === null) {
+        if (! $hasInitialPost) {
             $existingParticipants = TrickCardPayment::query()
                 ->where('event_id', $event->event_id)
                 ->where('event_card_id', $card->id)
+                ->where('payment_type', 'initial_post')
                 ->lockForUpdate()
                 ->count();
             $participantOrder = $existingParticipants + 1;
-            $pointsPaid = $this->rules->initialPostCost(max(1, (int) $card->rarity), $existingParticipants);
+        }
+        $submissionNumber = TrickCardPayment::query()
+            ->where('event_id', $event->event_id)
+            ->where('event_card_id', $card->id)
+            ->where('player_name', $record->user_id)
+            ->whereIn('payment_type', ['initial_post', 'score_update'])
+            ->count() + 1;
+        $paymentType = $hasInitialPost ? 'score_update' : 'initial_post';
+        $idempotencyKey = implode(':', [
+            'record',
+            $record->post_id,
+            $paymentType,
+            (string) $record->score,
+            $record->updated_at?->format('YmdHisv') ?? 'new',
+        ]);
+        $existingOperation = TrickCardPayment::query()
+            ->where('event_id', $event->event_id)
+            ->where('event_card_id', $card->id)
+            ->where('idempotency_key', $idempotencyKey)
+            ->first();
+        $pointsDue = $this->rules->initialPostCost(
+            max(1, (int) $card->difficulty),
+            $record->user_id === $card->taker,
+            $hasInitialPost,
+        );
+        $pointsPaid = $existingOperation === null ? $pointsDue : 0;
+        if ($existingOperation === null) {
+            if ($pointsPaid > 0 && $player->draw_points < $pointsPaid) {
+                abort(response()->json(['message' => "投稿には{$pointsPaid}P必要です"], 422));
+            }
             TrickCardPayment::query()->create([
                 'event_id' => $event->event_id,
                 'event_card_id' => $card->id,
                 'deck_id' => $card->deck_id,
                 'stage_id' => $record->stage_id,
                 'player_name' => $record->user_id,
+                'payment_type' => $paymentType,
+                'submission_number' => $submissionNumber,
                 'points_paid' => $pointsPaid,
                 'record_id' => $record->post_id,
+                'idempotency_key' => $idempotencyKey,
             ]);
-            if ($pointsPaid !== 0) {
+            if ($pointsPaid > 0) {
                 $player->decrement('draw_points', $pointsPaid);
                 $card->increment('paid_points_total', $pointsPaid);
             }
 
-            if ($card->limit_at !== null
-                && $now->lessThan(CarbonImmutable::instance($event->end_at)->subHour())) {
+            if (! $hasInitialPost && $card->limit_at !== null) {
                 $limit = CarbonImmutable::instance($card->limit_at);
-                if ($participantOrder === 1 && $limit->greaterThan($now) && $limit->lessThan($now->addMinutes(45))) {
-                    $extension = 45;
-                    $card->late_first_extension = true;
-                } elseif ($participantOrder >= 2) {
-                    $extension = $this->rules->extensionMinutes($participantOrder, (bool) $card->late_first_extension);
-                }
+                $remainingMinutes = max(0.0, $now->diffInSeconds($limit, false) / 60);
+                $extension = $this->rules->extensionMinutes((int) $participantOrder, $remainingMinutes);
                 $card->limit_at = $limit->addMinutes($extension);
                 $card->save();
             }
@@ -238,6 +267,7 @@ class TrickRecordService
             ->get()
             ->groupBy('trick_event_card_id');
         $paidPlayers = TrickCardPayment::query()->where('event_id', $cards->first()->event_id)
+            ->where('payment_type', 'initial_post')
             ->whereIn('event_card_id', $cardIds)->get(['event_card_id', 'player_name'])
             ->groupBy('event_card_id')->map(fn (Collection $payments) => $payments->pluck('player_name')->flip());
 
@@ -291,9 +321,11 @@ class TrickRecordService
             return [];
         }
         if (count($rankings) === 1) {
-            $rankings[0]['provisional_reward_points'] = max(
-                0,
-                (int) $card->stack_count + (int) $card->paid_points_total,
+            $rankings[0]['provisional_reward_points'] = $this->rules->totalReward(
+                (int) $card->stack_count,
+                (int) $card->paid_points_total,
+                (int) $card->difficulty,
+                1,
             );
 
             return $rankings;
@@ -306,15 +338,21 @@ class TrickRecordService
                 (int) $card->stack_count,
                 (int) $card->paid_points_total,
                 (int) $card->difficulty,
+                count($rankings),
             ),
             $rankGroups,
         );
 
-        return collect($rankings)->map(function (array $ranking) use ($card, $result): array {
+        $lastRank = max(array_column($rankings, 'rank'));
+        $lastPlayers = collect($rankings)->where('rank', $lastRank)->pluck('user_id')->all();
+        $remainderDistribution = $this->rewards->lastPlaceRemainder(
+            (int) $result['taker_remainder'],
+            $lastPlayers,
+        );
+
+        return collect($rankings)->map(function (array $ranking) use ($result, $remainderDistribution): array {
             $points = (int) ($result['distribution'][$ranking['user_id']] ?? 0);
-            if ($ranking['user_id'] === $card->taker) {
-                $points += (int) $result['taker_remainder'];
-            }
+            $points += (int) ($remainderDistribution[$ranking['user_id']] ?? 0);
             $ranking['provisional_reward_points'] = $points;
 
             return $ranking;

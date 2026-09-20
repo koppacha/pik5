@@ -34,9 +34,14 @@ class TrickRuleCalculator
         ];
     }
 
-    public function requiredHand(int $fieldCount): int
+    public function takeLevel(int $takeCount): int
     {
-        return 3 + intdiv(max(0, $fieldCount), 2);
+        return (int) floor(sqrt(max(0, $takeCount)));
+    }
+
+    public function requiredHand(int $takeCount): int
+    {
+        return $this->takeLevel($takeCount) + 2;
     }
 
     public function fieldCap(int $participantCount): int
@@ -44,20 +49,44 @@ class TrickRuleCalculator
         return min(max(1, $participantCount - 1), 16);
     }
 
-    public function initialPostCost(int $rarity, int $existingParticipantCount): int
+    public function initialPostCost(int $difficulty, bool $isTaker, bool $hasInitialPost): int
     {
-        return $existingParticipantCount >= 1 && $existingParticipantCount < 3 ? 0 : $rarity;
+        return $isTaker || $hasInitialPost ? max(1, $difficulty) : 0;
     }
 
-    public function extensionMinutes(int $participantOrder, bool $lateFirstExtension = false): int
+    public function initialCountdownMinutes(int $difficulty): int
     {
-        return $participantOrder <= 1 ? 0 : max(5, ($lateFirstExtension ? 50 : 70) - 5 * $participantOrder);
+        return 60 + max(0, min(5, max(1, $difficulty)) - 2) * 20;
     }
 
-    public function totalReward(int $stackCount, int $paidPointsTotal, int $difficulty): int
+    public function extensionMinutes(int $participantOrder, float $remainingMinutes): int
     {
-        $base = intdiv($stackCount + $paidPointsTotal, 5);
+        if ($participantOrder <= 0) {
+            return 0;
+        }
+        if ($participantOrder === 1) {
+            return $remainingMinutes < 15 ? 30 : 15;
+        }
 
-        return $stackCount + $paidPointsTotal + max(1, $difficulty) * $base;
+        return 10;
+    }
+
+    public function totalReward(
+        int $stackCount,
+        int $paidPointsTotal,
+        int $difficulty,
+        int $participantCount,
+    ): int {
+        if ($participantCount <= 0) {
+            return 0;
+        }
+        $base = max(0, $stackCount + $paidPointsTotal);
+        $baseReward = intdiv(3 * $base + 4, 5);
+        if ($participantCount === 1) {
+            return $baseReward;
+        }
+        $difficultyBonus = max(1, $difficulty) * intdiv($base, 5);
+
+        return $baseReward + intdiv($difficultyBonus, 2);
     }
 }

@@ -90,7 +90,11 @@ class TrickLegacyMigrationService
                         continue;
                     }
                     $seenPlayers[] = $record->user_id;
-                    $points = $this->rules->initialPostCost((int) ($card->rarity ?: 1), $participantOrder);
+                    $points = $this->rules->initialPostCost(
+                        (int) $card->difficulty,
+                        $record->user_id === $card->taker,
+                        false,
+                    );
                     $participantOrder++;
                     if (TrickCardPayment::query()->where('event_id', $event->event_id)
                         ->where('deck_id', $deck->id)->where('player_name', $record->user_id)->exists()) {
@@ -104,6 +108,9 @@ class TrickLegacyMigrationService
                         'player_name' => $record->user_id,
                         'points_paid' => $points,
                         'record_id' => $record->post_id,
+                        'payment_type' => 'initial_post',
+                        'submission_number' => 1,
+                        'idempotency_key' => 'legacy-initial-'.$record->post_id,
                     ]);
                     $paidTotal += $points;
                     $counts['payments']++;

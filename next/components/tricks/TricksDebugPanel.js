@@ -14,8 +14,7 @@ function displayDateTime(value) {
     return new Date(value).toLocaleString("ja-JP", {hour12: false})
 }
 
-export default function TricksDebugPanel({state, busy = false, onOperation}) {
-    const [open, setOpen] = useState(false)
+export default function TricksDebugPanel({state, busy = false, onOperation, open = false, onClose}) {
     const [setValue, setSetValue] = useState(() => localDateTimeValue(state?.debug_state?.server_now))
     const debug = state?.debug_state || {}
 
@@ -26,11 +25,11 @@ export default function TricksDebugPanel({state, busy = false, onOperation}) {
     return (
         <aside
             data-testid="tricks-debug-panel"
-            style={{position: "absolute", left: 200, top: 76, zIndex: 12, width: open ? 310 : "auto"}}
+            style={{position: "fixed", left: 24, top: 180, zIndex: 50, width: open ? 310 : "auto"}}
         >
-            <button type="button" onClick={() => setOpen((value) => !value)} style={buttonStyle}>
+            {open && <button type="button" onClick={onClose} style={buttonStyle}>
                 {open ? "デバッグを閉じる" : "デバッグ"}
-            </button>
+            </button>}
             {open && (
                 <div style={{marginTop: 8, padding: 12, borderRadius: 10, background: "#0d121c", border: "1px solid #53627a"}}>
                     <div style={{fontSize: 12, color: "#a9b8ce", lineHeight: 1.5}}>

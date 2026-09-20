@@ -1,12 +1,250 @@
 const {expect, test} = require("@playwright/test")
 const {createTricksFixture, testIdentityHeaders} = require("./tricks-fixture")
 
+function uiState({me = null, players = [], subsidyFlag = false} = {}) {
+    const playerList = players.map((player) => ({...player, subsidy_flag: subsidyFlag || player.subsidy_flag}))
+
+    return {
+        tournament: {
+            event_id: 990401,
+            title: "UI確認大会",
+            start_at: "2026-09-15T10:00:00+09:00",
+            end_at: "2026-09-15T23:00:00+09:00",
+            state: "active",
+            available: true,
+            debug: false,
+            test_mode: false,
+        },
+        server_now: "2026-09-15T12:00:00+09:00",
+        me,
+        players: playerList,
+        hand: me ? [{
+            id: 201,
+            stage_id: 7201,
+            title: "手札確認カード",
+            rule_name: "テストルール",
+            text: "手札表示確認用",
+            difficulty: 1,
+            rarity: 1,
+        }] : [],
+        field: [{
+            id: 202,
+            event_card_id: 1202,
+            stage_id: 7202,
+            title: "場札確認カード",
+            rule_name: "テストルール",
+            text: "場札表示確認用",
+            difficulty: 1,
+            rarity: 1,
+            stack_count: 2,
+            limit_at: "2026-09-15T13:00:00+09:00",
+            my_can_post: Boolean(me),
+            my_can_extend: Boolean(me),
+        }],
+        deck_count: 198,
+        trash_count: 0,
+        collected_count: 3,
+        logs: [],
+    }
+}
+
 test.describe("limited tricks phase 6", () => {
-    test("unauthenticated visitors cannot join or draw", async ({page}) => {
+    test("unauthenticated visitors can only use the login link", async ({page}) => {
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {}}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/state", async (route) => route.fulfill({json: uiState()}))
         await page.goto("/limited/tricks")
-        await expect(page.getByText("ログインが必要です", {exact: true})).toBeVisible()
-        await expect(page.getByRole("button", {name: "参加", exact: true})).toHaveCount(0)
+        await expect(page.getByText("このイベントに参加するにはログインが必要です")).toBeVisible()
+        await expect(page.getByRole("link", {name: "ログイン", exact: true})).toHaveAttribute("href", "/auth/login")
+        await expect(page.locator("[data-tricks-access-backdrop]")).toBeVisible()
         await expect(page.getByRole("button", {name: "ドロー", exact: true})).toBeDisabled()
+        await expect(page.getByText("大会へ参加してください", {exact: true})).toHaveCount(0)
+
+        const fieldBox = await page.locator(".tricks-dom-card-field").boundingBox()
+        await page.mouse.click(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2)
+        await expect(page.locator(".tricks-field-detail-panel")).toHaveCount(0)
+    })
+
+    test("logged-in non-participants join from the center gate and see the guide", async ({page}) => {
+        const userId = "pw_join_ui"
+        const player = {
+            name: userId,
+            draw_points: 5,
+            rank_points: 0,
+            total_rank_points: 0,
+            card_count: 0,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 0,
+        }
+        let state = uiState()
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.endsWith("/join")) {
+                state = uiState({me: player, players: [player]})
+                return route.fulfill({json: {player}})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.getByText("第19回期間限定ランキングに参加する")).toBeVisible()
+        await expect(page.getByRole("button", {name: "参加する", exact: true})).toBeEnabled()
+        await expect(page.getByRole("button", {name: "参加", exact: true})).toHaveCount(0)
+        await page.getByRole("button", {name: "参加する", exact: true}).click()
+        await expect(page.getByRole("dialog")).toContainText("期間限定ランキングは、みんなが考えたルール")
+        await expect(page.getByRole("dialog").getByRole("button", {name: "閉じる"})).toBeVisible()
+    })
+
+    test("participant HUD, hand controls, guide, and focus layers follow the UI rules", async ({page}) => {
+        const userId = "pw_participant_ui"
+        const player = {
+            name: userId,
+            draw_points: 20,
+            rank_points: 7,
+            confirmed_rank_points: 5,
+            provisional_rank_points: 2,
+            total_rank_points: 7,
+            card_count: 1,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 2,
+            subsidy_flag: false,
+        }
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        const participantState = uiState({me: player, players: [player]})
+        participantState.tournament.debug = true
+        await page.route("**/api/server/tricks/**", async (route) => route.fulfill({json: participantState}))
+
+        await page.goto("/limited/tricks")
+        await expect(page.locator("[data-tricks-collected-count]")).toHaveText("回収カード総数 3枚")
+        await expect(page.locator("[data-tricks-player-collected-count]")).toHaveText("回収カード 2枚")
+        await expect(page.getByText(/確定 5/)).toHaveCount(0)
+        await expect(page.locator("[data-tricks-subsidy-remaining]")).toHaveCount(0)
+
+        const handCard = page.locator(".tricks-dom-card-hand")
+        await page.locator("[data-tricks-hand-toggle]").click()
+        await expect(page.locator("[data-tricks-hand-toggle]")).toHaveText("手札を表示")
+        await page.waitForTimeout(240)
+        const hiddenBox = await handCard.boundingBox()
+        expect(hiddenBox.y).toBeGreaterThanOrEqual(page.viewportSize().height)
+        await page.locator("[data-tricks-hand-toggle]").click()
+        await expect(page.locator("[data-tricks-hand-toggle]")).toHaveText("手札非表示")
+        await page.waitForTimeout(240)
+        const shownBox = await handCard.boundingBox()
+        expect(shownBox.y).toBeLessThan(page.viewportSize().height)
+
+        await page.locator("[data-tricks-how-to-play]").click()
+        await expect(page.getByRole("dialog")).toContainText("まずはドローボタンを押してカードを３枚引きましょう。")
+        await page.getByRole("dialog").getByRole("button", {name: "閉じる"}).click()
+
+        await handCard.click()
+        await expect(page.locator('[data-tricks-card-backdrop="hand"]')).toBeVisible()
+        await expect(page.locator("[data-tricks-focus-backdrop]")).toBeVisible()
+        await expect(page.locator("[data-tricks-game-layer]")).toHaveCSS("z-index", "30")
+        await expect(page.locator(".tricks-dom-card-hand.is-selected")).toHaveCSS("z-index", "310")
+        await page.getByRole("button", {name: "キャンセル", exact: true}).click()
+
+        await page.locator(".tricks-dom-card-field").click()
+        await expect(page.locator('[data-tricks-card-backdrop="field"]')).toBeVisible()
+        await expect(page.locator(".tricks-dom-card-field.is-selected")).toHaveCount(1)
+        await expect(page.locator(".tricks-field-detail-panel")).toBeVisible()
+        await page.getByRole("button", {name: "閉じる", exact: true}).click()
+
+        await page.waitForFunction(() => window.__TRICKS_DEBUG_SNAPSHOT__?.().phaserLoopSleeping === true)
+        const before = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
+        await page.waitForTimeout(3500)
+        const after = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
+        expect(after.phaserGameObjects).toBe(before.phaserGameObjects)
+        expect(after.domCards).toBe(before.domCards)
+        expect(after.activeRaf).toBe(0)
+        expect(after.activeTimers).toBe(0)
+        expect(after.phaserRenderCount).toBe(before.phaserRenderCount)
+    })
+
+    test("subsidy countdown is shown as soon as an eligible player appears", async ({page}) => {
+        const player = {
+            name: "pw_subsidy_ui",
+            draw_points: 3,
+            rank_points: 0,
+            total_rank_points: 0,
+            card_count: 1,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 0,
+            subsidy_flag: true,
+        }
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        const state = uiState({me: player, players: [player]})
+        state.me.subsidy_flag = false
+        state.players[0].subsidy_flag = false
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.endsWith("/draw")) {
+                state.me.draw_points = 2
+                state.me.subsidy_flag = true
+                state.players[0].draw_points = 2
+                state.players[0].subsidy_flag = true
+                const card = {...state.hand[0], id: 203, title: "追加ドローカード"}
+                state.hand.push(card)
+                return route.fulfill({json: {card}})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.locator("[data-tricks-subsidy-remaining]")).toHaveCount(0)
+        await page.getByRole("button", {name: "ドロー", exact: true}).click()
+        await expect(page.locator("[data-tricks-subsidy-remaining]")).toContainText("次回給付")
+    })
+
+    test("draw stays disabled while the deck is empty and re-enables after refill state arrives", async ({page}) => {
+        const player = {
+            name: "pw_deck_refill_ui",
+            draw_points: 5,
+            rank_points: 0,
+            total_rank_points: 0,
+            card_count: 1,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 0,
+            subsidy_flag: false,
+        }
+        const state = uiState({me: player, players: [player]})
+        state.deck_count = 0
+        state.trash_count = 3
+        let refillAt = null
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (refillAt === null) refillAt = Date.now() + 1200
+            if (Date.now() >= refillAt) {
+                state.deck_count = 3
+                state.trash_count = 0
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        const drawButton = page.getByRole("button", {name: "ドロー", exact: true})
+        await expect(drawButton).toBeDisabled()
+        await expect(page.getByText("山札を補充しています", {exact: true})).toBeVisible()
+        await expect(drawButton).toBeEnabled({timeout: 7000})
+        await expect(page.getByText("残り 3枚", {exact: true})).toBeVisible()
     })
 
     test("fixture API creates 200 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
@@ -486,6 +724,114 @@ test.describe("limited tricks phase 6", () => {
         } finally {
             await fixture.cleanup()
         }
+    })
+
+    test("player level is public and a field card can be extended for one point", async ({page}) => {
+        const userId = "pw_extension_user"
+        const previousLimit = new Date("2026-09-15T12:30:00+09:00").getTime()
+        let extensionPayload = null
+        const card = {
+            id: 101,
+            event_card_id: 1001,
+            stage_id: 7101,
+            card_id: 930001,
+            title: "延長確認カード",
+            rule_name: "テストルール",
+            text: "画面確認用",
+            difficulty: 2,
+            rarity: 1,
+            stack_count: 2,
+            taker: userId,
+            limit_at: new Date(previousLimit).toISOString(),
+            taken_at: "2026-09-15T11:30:00+09:00",
+            paid_points_total: 0,
+            participant_count: 0,
+            my_has_record: false,
+            my_can_post: true,
+            my_initial_payment_recorded: false,
+            my_initial_post_cost: 2,
+            my_can_extend: true,
+        }
+        const player = {
+            name: userId,
+            draw_points: 20,
+            rank_points: 0,
+            confirmed_rank_points: 0,
+            provisional_rank_points: 0,
+            total_rank_points: 0,
+            card_count: 0,
+            take_count: 1,
+            take_level: 1,
+            take_cost: 3,
+            subsidy_flag: false,
+            next_take_at: null,
+        }
+        const state = {
+            tournament: {
+                event_id: 990301,
+                title: "UI確認大会",
+                start_at: "2026-09-14T00:00:00+09:00",
+                end_at: "2026-09-16T00:00:00+09:00",
+                state: "active",
+                available: true,
+                debug: false,
+                test_mode: false,
+            },
+            server_now: "2026-09-15T12:00:00+09:00",
+            me: player,
+            players: [player],
+            hand: [],
+            field: [card],
+            logs: [],
+            deck_count: 199,
+            trash_count: 0,
+        }
+        await page.route("**/api/auth/session", async (route) => {
+            await route.fulfill({
+                contentType: "application/json",
+                body: JSON.stringify({user: {userId, role: 0}, expires: "2099-01-01T00:00:00.000Z"}),
+            })
+        })
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            const path = new URL(route.request().url()).pathname
+            if (path.endsWith("/state")) return route.fulfill({json: state})
+            if (path.endsWith("/scores")) return route.fulfill({json: []})
+            if (path.endsWith("/extend")) {
+                extensionPayload = route.request().postDataJSON()
+                player.draw_points = 19
+                card.limit_at = new Date(previousLimit + 15 * 60 * 1000).toISOString()
+                card.paid_points_total = 1
+                return route.fulfill({json: {
+                    card,
+                    player,
+                    extended: true,
+                    idempotent_replay: false,
+                }})
+            }
+
+            return route.fulfill({json: {}})
+        })
+
+        await page.goto("/limited/tricks")
+        const playerPanel = page.locator(`[data-tricks-player="${userId}"]`)
+        await expect(playerPanel.locator("[data-tricks-take-level]")).toHaveText("Lv.1 / テイクコスト 3")
+        await page.locator(".tricks-dom-card-field").click()
+        const extendButton = page.locator("[data-tricks-extend-button]")
+        await expect(extendButton).toBeEnabled()
+        page.once("dialog", async (dialog) => {
+            expect(dialog.message()).toBe("１点支払ってこのカードの期限を延長しますか？")
+            await dialog.accept()
+        })
+        await extendButton.click()
+        await expect(page.getByText("P 19 / 手札 0", {exact: true})).toBeVisible()
+        expect(extensionPayload.idempotency_key).toMatch(/^(?:[0-9a-f-]{36}|extend-)/)
+        await expect(page.getByText("支払総額 1P", {exact: false})).toBeVisible()
+
+        player.draw_points = 0
+        await page.reload()
+        await page.locator(".tricks-dom-card-field").click()
+        await expect(page.locator("[data-tricks-extend-button]")).toBeDisabled()
     })
 
     test("canvas remains idle and bounded during a 30 second observation", async ({page, request, baseURL}) => {

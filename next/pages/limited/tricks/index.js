@@ -39,6 +39,7 @@ function stateContentSignature(state) {
         hand: state.hand,
         deck_count: state.deck_count,
         trash_count: state.trash_count,
+        collected_count: state.collected_count,
         logs: state.logs,
     })
 }
@@ -51,7 +52,9 @@ export default function TricksPage() {
     const [selectedField, setSelectedField] = useState(null)
     const [postingCard, setPostingCard] = useState(null)
     const [postOpen, setPostOpen] = useState(false)
-    const [loginRequiredOpen, setLoginRequiredOpen] = useState(false)
+    const [handDetailOpen, setHandDetailOpen] = useState(false)
+    const [debugOpen, setDebugOpen] = useState(false)
+    const [howToOpen, setHowToOpen] = useState(false)
     const [fieldSorting, setFieldSorting] = useState(false)
     const [nowValue, setNowValue] = useState(Date.now())
     const clockInitializedRef = useRef(false)
@@ -121,15 +124,8 @@ export default function TricksPage() {
     const me = state?.me
     const authenticated = status === "authenticated" && Boolean(userId)
     const canJoin = authenticated && !me && state?.tournament?.available
-    const showLoginRequired = useCallback(() => {
-        setLoginRequiredOpen(true)
-    }, [])
-    const closeLoginRequired = useCallback(() => {
-        setLoginRequiredOpen(false)
-    }, [])
     const runAction = useCallback(async (action, options = {}) => {
         if (!userId) {
-            showLoginRequired()
             return false
         }
         setBusy(true)
@@ -149,9 +145,12 @@ export default function TricksPage() {
         } finally {
             setBusy(false)
         }
-    }, [mutate, mutateCollected, showLoginRequired, userId])
+    }, [mutate, mutateCollected, userId])
 
-    const join = () => runAction(() => postTricks(tricksApi.join))
+    const join = async () => {
+        const result = await runAction(() => postTricks(tricksApi.join))
+        if (result) setHowToOpen(true)
+    }
     const draw = useCallback((beforeMutate) => runAction(
         () => postTricks(tricksApi.draw),
         {beforeMutate}
@@ -175,6 +174,24 @@ export default function TricksPage() {
 
         return runAction(() => postTricks(tricksApi.take(card.id)))
     }, [operation.handCount, runAction])
+    const extendCard = useCallback(async (card) => {
+        if (!card?.id) return false
+        if (!window.confirm("１点支払ってこのカードの期限を延長しますか？")) return false
+        const idempotencyKey = window.crypto?.randomUUID
+            ? window.crypto.randomUUID()
+            : `extend-${Date.now()}-${Math.random().toString(36).slice(2)}`
+        const result = await runAction(() => postTricks(tricksApi.extend(card.id), {
+            idempotency_key: idempotencyKey,
+        }))
+        if (result?.card) {
+            setSelectedField((current) => current?.card
+                ? {...current, card: {...current.card, ...result.card}}
+                : {...card, ...result.card})
+            await mutateRankings()
+        }
+
+        return result
+    }, [mutateRankings, runAction])
     const runDebugOperation = useCallback((type, payload = {}) => {
         const urls = {
             freeze: tricksApi.debugTimeFreeze,
@@ -195,6 +212,9 @@ export default function TricksPage() {
             .join(",")
     }, [nowValue, state?.field])
     const subsidySlotKey = Math.floor(nowValue / (30 * 60 * 1000))
+    const cardDetailOpen = Boolean(selectedCard) && !postOpen
+    const focusBackdropOpen = handDetailOpen || cardDetailOpen
+    const accessGateOpen = Boolean(state) && !me && status !== "loading"
     const handlePosted = async () => {
         setPostOpen(false)
         setPostingCard(null)
@@ -337,7 +357,7 @@ export default function TricksPage() {
                     position: "relative",
                     width: "100vw",
                     height: "100vh",
-                    minHeight: 720,
+                    minHeight: 540,
                     marginLeft: "calc(50% - 50vw)",
                     marginRight: "calc(50% - 50vw)",
                     background: "#0c1016",
@@ -354,27 +374,15 @@ export default function TricksPage() {
                     onReturnToDeck={returnToDeck}
                     onSelectField={setSelectedField}
                     onFieldSortingChange={setFieldSorting}
+                    onHandSelectionChange={setHandDetailOpen}
+                    onShowHowToPlay={() => setHowToOpen(true)}
                     operation={operation}
                     busy={busy}
                     nowValue={nowValue}
                 />
-                <Link
-                    href="/"
-                    style={{
-                        position: "absolute",
-                        left: 24,
-                        top: 14,
-                        zIndex: 3,
-                        color: "#9fb6d8",
-                        fontSize: 13,
-                        textDecoration: "none",
-                    }}
-                >
-                    ホームに戻る
-                </Link>
-                <TricksHud state={state} usersById={usersById} dimmed={Boolean(selectedCard) && !postOpen} currentUserId={userId} nowValue={nowValue} />
+                <TricksHud state={state} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
                 {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} />}
-                {isDebugAdmin && <TricksDebugPanel state={state} busy={busy} onOperation={runDebugOperation} />}
+                {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy} onOperation={runDebugOperation} />}
                 <div
                     style={{
                         position: "absolute",
@@ -384,40 +392,28 @@ export default function TricksPage() {
                         alignItems: "center",
                         gap: 12,
                         zIndex: 2,
-                        opacity: selectedCard && !postOpen ? 0.35 : 1,
+                        opacity: focusBackdropOpen ? 0.35 : 1,
                     }}
                 >
-                    {authenticated && !me && (
-                        <button
-                            type="button"
-                            onClick={join}
-                            disabled={busy || !canJoin}
-                            style={{
-                                border: "1px solid #6edb9a",
-                                background: canJoin ? "#1f7a43" : "#253044",
-                                color: "#fff",
-                                padding: "10px 16px",
-                                cursor: !busy && canJoin ? "pointer" : "not-allowed",
-                            }}
-                        >
-                            参加
-                        </button>
-                    )}
-                    {!me && (
-                        <div style={{fontSize: 14, color: "#d8e0ef"}}>
-                            {status === "loading"
-                                ? "参加状況を確認中"
-                                : authenticated
-                                    ? "未参加"
-                                    : "ログインが必要です"}
-                        </div>
-                    )}
                     {(message || error || isLoading) && (
                         <div style={{fontSize: 13, color: error ? "#ff8a8a" : "#ffcf6e"}}>
                             {isLoading ? "読み込み中..." : message || error?.message}
                         </div>
                     )}
                 </div>
+                {focusBackdropOpen && (
+                    <div
+                        data-tricks-focus-backdrop
+                        aria-hidden="true"
+                        style={{
+                            position: "absolute",
+                            inset: 0,
+                            zIndex: 25,
+                            background: "rgba(3, 6, 12, 0.58)",
+                            pointerEvents: "auto",
+                        }}
+                    />
+                )}
                 {selectedCard && !postOpen && (
                     <div
                         role="presentation"
@@ -433,7 +429,7 @@ export default function TricksPage() {
                         style={{
                             position: "absolute",
                             inset: 0,
-                            zIndex: 20,
+                            zIndex: 45,
                             background: "transparent",
                             pointerEvents: "auto",
                         }}
@@ -456,7 +452,7 @@ export default function TricksPage() {
                         }}
                         style={{
                             position: "absolute",
-                            zIndex: 30,
+                            zIndex: 50,
                             width: fieldDetailModalWidth,
                             left: fieldPanelStyle.left,
                             top: fieldPanelStyle.top,
@@ -466,7 +462,7 @@ export default function TricksPage() {
                     >
                         <div style={{padding: 22, minHeight: 180, maxHeight: 390, overflowY: "auto"}}>
                             <div style={{fontSize: 12, color: "#64748b", marginBottom: 10}}>
-                                初投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
+                                現在の投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
                                 {selectedCard.my_initial_payment_recorded ? "（支払記録済み）" : ""}
                                 {" / "}参加者 {selectedCard.participant_count ?? 0}人
                                 {" / "}支払総額 {selectedCard.paid_points_total ?? 0}P
@@ -493,14 +489,23 @@ export default function TricksPage() {
                             )}
                         </div>
                         <div style={{display: "flex", justifyContent: "flex-end", gap: 8, padding: "10px 18px 16px", borderTop: "1px solid #e5e7eb"}}>
-                            <Button onClick={closeFieldDetail}>閉じる</Button>
                             <Button
+                                data-tricks-post-button
                                 variant="contained"
                                 onClick={openPostModal}
                                 disabled={busy || !selectedCard?.stage_id || !operation.available || !me}
                             >
                                 投稿
                             </Button>
+                            <Button
+                                data-tricks-extend-button
+                                variant="outlined"
+                                onClick={() => extendCard(selectedCard)}
+                                disabled={busy || !me || Number(me.draw_points) < 1 || !selectedCard.my_can_extend}
+                            >
+                                延長
+                            </Button>
+                            <Button onClick={closeFieldDetail}>閉じる</Button>
                             {isDebugAdmin && (
                                 <Button
                                     color="warning"
@@ -528,10 +533,70 @@ export default function TricksPage() {
                         onPosted={handlePosted}
                     />
                 )}
-                <Dialog open={loginRequiredOpen} onClose={closeLoginRequired}>
-                    <Box style={{width: "min(600px, 86vw)"}}>
-                        <DialogContent>
-                            <Link href="/auth/login">イベントに参加するにはログインする必要があります</Link>
+                {accessGateOpen && (
+                    <>
+                        <div
+                            data-tricks-access-backdrop
+                            aria-hidden="true"
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 100,
+                                background: "rgba(3, 6, 12, 0.62)",
+                                pointerEvents: "auto",
+                            }}
+                        />
+                        <div
+                            data-tricks-access-message
+                            style={{
+                                position: "absolute",
+                                inset: 0,
+                                zIndex: 110,
+                                display: "grid",
+                                placeItems: "center",
+                                padding: 24,
+                                pointerEvents: "none",
+                            }}
+                        >
+                            <div style={{fontSize: "clamp(18px, 2.2vw, 30px)", fontWeight: 800, textAlign: "center", textShadow: "0 2px 8px #000"}}>
+                                {authenticated ? (
+                                    <>
+                                        第19回期間限定ランキングに
+                                        <button
+                                            type="button"
+                                            onClick={join}
+                                            disabled={busy || !canJoin}
+                                            style={{...accessActionStyle, color: "#8ef0b2"}}
+                                        >
+                                            参加する
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        このイベントに参加するには
+                                        <Link href="/auth/login" style={{...accessActionStyle, color: "#8db4ff"}}>ログイン</Link>
+                                        が必要です
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </>
+                )}
+                <Dialog open={howToOpen} onClose={() => setHowToOpen(false)}>
+                    <Box style={{width: "min(720px, 90vw)"}}>
+                        <DialogContent style={{fontSize: 15, lineHeight: 1.75}}>
+                            <p>期間限定ランキングは、みんなが考えたルールをあなたが選んでみんなで遊ぶイベントです。</p>
+                            <ol style={{paddingLeft: 24}}>
+                                <li>まずはドローボタンを押してカードを３枚引きましょう。</li>
+                                <li>引いたカードから面白そうなルールを選び、場に出しましょう。</li>
+                                <li>カウントダウンが終わるまで、みんなでそのカードのルールをひたすらプレイ！（ポイントを使えば延長もできるよ）</li>
+                                <li>終了したら、ランキングの順位に応じてドローポイントやランクポイントが還元されます。１位を獲ったらそのカードはあなたのもの！</li>
+                                <li>他のみんなが出したカードも積極的にプレイしてポイントを稼ぎ、新たなカードを引いていこう！</li>
+                                <li>最終的にランクポイントがもっとも多かった人が勝利となります。</li>
+                            </ol>
+                            <div style={{display: "flex", justifyContent: "flex-end", marginTop: 18}}>
+                                <Button variant="contained" onClick={() => setHowToOpen(false)}>閉じる</Button>
+                            </div>
                         </DialogContent>
                     </Box>
                 </Dialog>
@@ -579,3 +644,15 @@ export default function TricksPage() {
 }
 
 TricksPage.disableLayout = true
+
+const accessActionStyle = {
+    appearance: "none",
+    border: 0,
+    background: "transparent",
+    padding: "0 0.22em",
+    font: "inherit",
+    fontWeight: 800,
+    textDecoration: "underline",
+    cursor: "pointer",
+    pointerEvents: "auto",
+}

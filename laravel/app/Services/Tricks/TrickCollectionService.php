@@ -18,6 +18,7 @@ class TrickCollectionService
 {
     public function __construct(
         private readonly TrickClock $clock,
+        private readonly TrickEmergencyGrantService $emergencyGrants,
         private readonly TrickRuleCalculator $rules,
         private readonly TrickRewardDistributor $rewards,
         private readonly TrickRecordService $records,
@@ -36,7 +37,7 @@ class TrickCollectionService
             $event = TrickEvent::query()->whereKey($event->id)->lockForUpdate()->firstOrFail();
             $card = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)
                 ->where('deck_id', $deckId)->lockForUpdate()->firstOrFail();
-            if ($card->state === '_collected') {
+            if ($card->state === '_collected' || ($card->state === '_trash' && $card->collected_at !== null)) {
                 return $this->payload($card, false);
             }
             if ($card->state !== '_field') {
@@ -55,7 +56,7 @@ class TrickCollectionService
             $players = Player::query()->where('event_id', $event->event_id)
                 ->whereIn('name', $playerNames)->lockForUpdate()->get()->keyBy('name');
             $distribution = [];
-            $takerRemainder = 0;
+            $remainderDistribution = [];
             $holders = [];
             $subsidyFlaggedHolders = [];
 
@@ -69,17 +70,32 @@ class TrickCollectionService
                 }
 
                 if (count($rankings) === 1) {
-                    $distribution[$rankings[0]['user_id']] = max(0, $card->stack_count + $card->paid_points_total);
+                    $distribution[$rankings[0]['user_id']] = $this->rules->totalReward(
+                        (int) $card->stack_count,
+                        (int) $card->paid_points_total,
+                        (int) $card->difficulty,
+                        1,
+                    );
                     $rewardType = 'single_fixed';
                 } else {
                     $rankGroups = collect($rankings)->groupBy('rank')->values()
                         ->map(fn ($group) => $group->pluck('user_id')->values()->all())->all();
                     $result = $this->rewards->distribute(
-                        $this->rules->totalReward($card->stack_count, $card->paid_points_total, $card->difficulty),
+                        $this->rules->totalReward(
+                            (int) $card->stack_count,
+                            (int) $card->paid_points_total,
+                            (int) $card->difficulty,
+                            count($rankings),
+                        ),
                         $rankGroups,
                     );
                     $distribution = $result['distribution'];
-                    $takerRemainder = $result['taker_remainder'];
+                    $lastRank = max(array_column($rankings, 'rank'));
+                    $lastPlayers = collect($rankings)->where('rank', $lastRank)->pluck('user_id')->all();
+                    $remainderDistribution = $this->rewards->lastPlaceRemainder(
+                        (int) $result['taker_remainder'],
+                        $lastPlayers,
+                    );
                     $rewardType = 'rank_distribution';
                 }
 
@@ -100,22 +116,22 @@ class TrickCollectionService
                         $players->get($playerName)?->increment('draw_points', $points);
                     }
                 }
-                if ($takerRemainder > 0) {
-                    $taker = $card->taker ? $players->get($card->taker) : null;
-                    if ($taker === null) {
-                        abort(response()->json(['message' => '端数還元先のテイカーが存在しません'], 409));
+                foreach ($remainderDistribution as $playerName => $points) {
+                    $player = $players->get($playerName);
+                    if ($player === null) {
+                        abort(response()->json(['message' => '余剰還元先の最下位投稿者が存在しません'], 409));
                     }
                     $reward = TrickCollectionReward::query()->firstOrCreate([
                         'event_id' => $event->event_id,
                         'deck_id' => $card->deck_id,
-                        'player_name' => $taker->name,
-                        'reward_type' => 'taker_remainder',
+                        'player_name' => $playerName,
+                        'reward_type' => 'last_place_remainder',
                     ], [
                         'event_card_id' => $card->id,
-                        'points_delta' => $takerRemainder,
+                        'points_delta' => $points,
                     ]);
                     if ($reward->wasRecentlyCreated) {
-                        $taker->increment('draw_points', $takerRemainder);
+                        $player->increment('draw_points', $points);
                     }
                 }
 
@@ -152,7 +168,9 @@ class TrickCollectionService
             TrickEventCard::query()->where('event_id', $event->event_id)
                 ->where('stack_parent_id', $card->id)->where('state', '_stack')
                 ->lockForUpdate()->update(['state' => '_trash']);
-            $card->fill(['state' => '_collected', 'collected_at' => $now])->save();
+            $toState = $rankings === [] ? '_trash' : '_collected';
+            $card->fill(['state' => $toState, 'collected_at' => $now])->save();
+            $emergencyGrant = $this->emergencyGrants->apply($event, $now, $actor, $request);
             $this->records->releaseEligibleTakeCooldowns($event, $now);
             $topRanking = collect($rankings)->where('rank', 1)
                 ->sortBy(fn (array $row) => sprintf('%s:%020d', $row['created_at'] ?? '', $row['post_id'] ?? 0))
@@ -165,7 +183,7 @@ class TrickCollectionService
                 'card_id' => $card->deck_id,
                 'stage_id' => $card->deck?->stage_id,
                 'from_state' => '_field',
-                'to_state' => '_collected',
+                'to_state' => $toState,
                 'records_count' => count($rankings),
                 'top_user_id' => $topRanking['user_id'] ?? null,
                 'top_score' => isset($topRanking['score']) ? (int) $topRanking['score'] : null,
@@ -180,7 +198,9 @@ class TrickCollectionService
                         'rps' => $ranking['rps'],
                     ])->all(),
                     'distribution' => $distribution,
-                    'taker_remainder' => $takerRemainder,
+                    'last_place_remainder' => $remainderDistribution,
+                    'recycled_unposted' => $rankings === [],
+                    'emergency_grant_points' => $emergencyGrant['points'],
                     'holders' => $holders,
                     'subsidy_flagged_holders' => $subsidyFlaggedHolders,
                     'final_rankings' => collect($rankings)->map(fn ($ranking) => collect($ranking)->only([
@@ -215,7 +235,7 @@ class TrickCollectionService
     private function payload(TrickEventCard $card, bool $collectedNow): array
     {
         $collectionLog = LimitLog::query()->where('event_id', $card->event_id)
-            ->where('event_card_id', $card->id)->where('event', 'collect')->first();
+            ->where('event_card_id', $card->id)->where('event', 'collect')->latest('id')->first();
         $finalRankings = $collectionLog?->context['final_rankings'] ?? null;
 
         return [

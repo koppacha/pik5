@@ -1,3 +1,8 @@
+import {useTheme} from "next-themes"
+import Link from "next/link"
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
+import {faHome, faCloudSun, faCloudMoon, faBookBookmark} from "@fortawesome/free-solid-svg-icons"
+import {faDiscord} from "@fortawesome/free-brands-svg-icons"
 import {useEffect, useMemo, useRef, useState} from "react"
 import {
     buildTricksShakerSortSteps,
@@ -9,7 +14,7 @@ import {
     tricksOperationState,
 } from "../../lib/tricks"
 
-const visibleLogEvents = new Set(["join", "take", "record_posted", "record_updated", "subsidy_paid", "collect"])
+const visibleLogEvents = new Set(["join", "take", "record_posted", "record_updated", "player_extension", "empty_field_floor_grant", "subsidy_paid", "collect"])
 
 function displayName(usersById, userId, fallback = "-") {
     if (!userId) return fallback
@@ -43,6 +48,8 @@ function logText(log, usersById) {
         text = `${user}さんが${cardTitle}に投稿しました。（${log?.score ?? "-"}点 / ${log?.rank ?? "-"}位）`
     }
     if (log?.event === "subsidy_paid") text = `${Number(log?.subsidy_recipient_count || 1)}人にポイントが給付されました。`
+    if (log?.event === "player_extension") text = `${user}さんが${cardTitle}を15分延長しました。`
+    if (log?.event === "empty_field_floor_grant") text = `循環再開のため合計${Number(log?.granted_points_total || 0)}Pが配布されました。`
     if (log?.event === "collect") {
         text = Number(log?.records_count || 0) === 0
             ? `${cardTitle}がトラッシュされました`
@@ -52,11 +59,27 @@ function logText(log, usersById) {
     return `${logTimestamp(log?.created_at)} - ${text}`
 }
 
-export default function TricksHud({state, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now()}) {
+function LiveClock() {
+    const [time, setTime] = useState("")
+    useEffect(() => {
+        const update = () => setTime(new Intl.DateTimeFormat("ja-JP", {
+            year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23", timeZone: "Asia/Tokyo",
+        }).format(new Date()))
+        update()
+        const timer = setInterval(update, 1000)
+        return () => clearInterval(timer)
+    }, [])
+    return <time className="tricks-live-clock" style={{fontVariantNumeric: "tabular-nums"}}>{time || "----/--/-- --:--:--"}</time>
+}
+
+export default function TricksHud({state, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false}) {
     const players = useMemo(() => state?.players || [], [state?.players])
     const logs = useMemo(() => state?.logs || [], [state?.logs])
     const [clockReady, setClockReady] = useState(false)
-    const [logOpen, setLogOpen] = useState(true)
+    const [logOpen, setLogOpen] = useState(false)
+    const {resolvedTheme, setTheme} = useTheme()
+    const panelBackground = "color-mix(in srgb, var(--color-bg-base) 90%, transparent)"
+    const panelColor = "var(--color-text-base)"
     const [playerOrder, setPlayerOrder] = useState([])
     const sortTimerRef = useRef(null)
     const playersByName = useMemo(() => {
@@ -71,37 +94,41 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
     const operation = useMemo(() => tricksOperationState(state, {nowValue}), [nowValue, state])
     const remaining = formatTournamentRemaining(state?.tournament?.end_at, nowValue)
     const nextSubsidyRemaining = clockReady ? formatNextSubsidyRemaining(nowValue) : "--:--"
+    const hasSubsidyRecipient = players.some((player) => player?.subsidy_flag)
     const visibleLogs = useMemo(() => {
         return logs.filter((log) => typeof log === "string" || visibleLogEvents.has(log?.event))
     }, [logs])
     const infoCard = (
         <div
+            className="tricks-tournament-info"
             data-tricks-tournament-info
             style={{
                 minWidth: 156,
                 padding: "7px 10px",
                 borderRadius: 10,
                 border: "1px solid rgba(148, 163, 184, 0.25)",
-                background: "rgba(148, 163, 184, 0.09)",
-                color: "#9aa8bd",
+                background: panelBackground,
+                color: panelColor,
             }}
         >
             <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
                 <span>大会情報</span>
-                {(state?.tournament?.debug || state?.tournament?.test_mode) && <span style={{color: "#88f0b0"}}>DEBUG</span>}
+                {(state?.tournament?.debug || state?.tournament?.test_mode) && <button type="button" onClick={onToggleDebug} disabled={!onToggleDebug} aria-expanded={debugOpen} style={{color: "#279c59", background: "transparent", border: 0, cursor: onToggleDebug ? "pointer" : "default"}}>DEBUG</button>}
             </div>
             <div style={{fontSize: 13, fontWeight: 500, marginTop: 3}}>
                 場札上限 {operation.fieldCap}枚
             </div>
-            <div style={{fontSize: 11, marginTop: 2, opacity: 0.78}}>
-                テイク必要 {operation.requiredHand}枚
+            <div data-tricks-collected-count style={{fontSize: 11, marginTop: 2, opacity: 0.78}}>
+                回収カード総数 {state?.collected_count ?? 0}枚
             </div>
-            <div data-tricks-tournament-remaining style={{fontSize: 11, marginTop: 2, color: "#ffcf6e"}}>
+            <div data-tricks-tournament-remaining style={{fontSize: 11, marginTop: 2, color: "var(--color-text-base)"}}>
                 残り {remaining}
             </div>
-            <div data-tricks-subsidy-remaining style={{fontSize: 11, marginTop: 2, color: "#e6edf8"}}>
-                次回給付 {nextSubsidyRemaining}
-            </div>
+            {hasSubsidyRecipient && (
+                <div data-tricks-subsidy-remaining style={{fontSize: 11, marginTop: 2, color: panelColor}}>
+                    次回給付 {nextSubsidyRemaining}
+                </div>
+            )}
         </div>
     )
 
@@ -154,22 +181,34 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
 
     return (
         <>
+            <nav className="tricks-top-bar" aria-label="イベントナビゲーション" style={{
+                position: "fixed", top: 0, left: '40px', zIndex: 40, display: "flex", alignItems: "center", gap: 12, width: "max-content", maxWidth: "100vw", boxSizing: "border-box", overflowX: "auto", whiteSpace: "nowrap", padding: "3px 18px", borderRadius: "0 0 18px 18px", background: "#3c3c3c", color: "#fff", fontSize: 13, lineHeight: "22px"
+            }}>
+                <span style={{fontWeight:'bold'}}>第19回期間限定ランキング</span>
+                <span style={{fontSize:'0.85em'}}>トリックテイキング制×スタンダード</span>
+                <LiveClock />
+                <Link href="/" aria-label="ホーム" style={{color: "inherit"}}><FontAwesomeIcon icon={faHome} /></Link>
+                <a href="https://discord.gg/rQEBJQa" aria-label="Discord" style={{color: "inherit"}}><FontAwesomeIcon icon={faDiscord} /></a>
+                <button type="button" aria-label="テーマ変更" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} style={{border: 0, background: "transparent", color: "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={clockReady && resolvedTheme === "dark" ? faCloudSun : faCloudMoon} /></button>
+                <a href="#knowledge" aria-label="ナレッジ" style={{color: "inherit"}}><FontAwesomeIcon icon={faBookBookmark} /></a>
+            </nav>
             <div
+                className="tricks-log-window"
                 data-tricks-log-wrapper
                 data-log-open={logOpen ? "true" : "false"}
                 style={{
                     position: "fixed",
-                    right: 24,
-                    bottom: 235,
-                    width: 444,
+                    right: 0,
+                    top: 180,
+                    width: "min(444px, 100vw)",
                     height: 178,
                     display: "flex",
                     alignItems: "stretch",
-                    zIndex: 20,
+                    zIndex: 40,
                     color: "#e6edf8",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
-                    transform: logOpen ? "translateX(0)" : "translateX(400px)",
+                    transform: logOpen ? "translateX(0)" : "translateX(calc(100% - 44px))",
                     transition: "transform 240ms ease, opacity 160ms ease",
                 }}
             >
@@ -197,11 +236,14 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                     ログ
                 </button>
                 <div
+                    className="tricks-log-body"
                     id="tricks-log-region"
                     data-tricks-log-region
                     aria-hidden={!logOpen}
                     style={{
                         width: 400,
+                        minWidth: 0,
+                        visibility: logOpen ? "visible" : "hidden",
                         height: 178,
                         boxSizing: "border-box",
                         overflowY: "auto",
@@ -233,12 +275,13 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                 </div>
             </div>
             <div
+                className="tricks-player-header"
                 style={{
-                    position: "absolute",
-                    left: 320,
+                    position: "fixed",
+                    left: 24,
                     right: 24,
-                    top: 0,
-                    zIndex: 2,
+                    top: 30,
+                    zIndex: 40,
                     color: "#e6edf8",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
@@ -270,6 +313,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
 
                             return (
                                 <div
+                                    className="tricks-player-info"
                                     key={player.name || index}
                                     data-tricks-player={player.name}
                                     style={{
@@ -277,8 +321,8 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                         padding: "7px 10px",
                                         borderRadius: 10,
                                         border: isMe ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)",
-                                        background: isMe ? "rgba(255, 255, 255, 0.16)" : "rgba(148, 163, 184, 0.09)",
-                                        color: isMe ? "#ffffff" : "#9aa8bd",
+                                        background: panelBackground,
+                                        color: panelColor,
                                         boxShadow: isMe ? "0 0 12px rgba(255, 255, 255, 0.18)" : "none",
                                         transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
                                     }}
@@ -290,10 +334,14 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                         <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
                                             {shortenTricksText(screenName, 14)}
                                         </div>
-                                        <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                            確定 {player.confirmed_rank_points ?? player.rank_points ?? 0}
-                                            {" / "}
-                                            暫定 {player.provisional_rank_points ?? 0}
+                                        <div data-tricks-player-collected-count style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
+                                            回収カード {player.collected_card_count ?? 0}枚
+                                        </div>
+                                        <div
+                                            data-tricks-take-level
+                                            style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}
+                                        >
+                                            Lv.{player.take_level ?? 0} / テイクコスト {player.take_cost ?? 2}
                                         </div>
                                         <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
                                             <span
@@ -311,7 +359,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                             <span> / 手札 {player.card_count}</span>
                                         </div>
                                         {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
-                                            <div style={{fontSize: 10, marginTop: 2, color: "#ffcf6e"}}>
+                                            <div style={{fontSize: 10, marginTop: 2, color: "var(--color-text-base)"}}>
                                                 次回テイク {new Date(player.next_take_at).toLocaleTimeString("ja-JP")}
                                             </div>
                                         )}

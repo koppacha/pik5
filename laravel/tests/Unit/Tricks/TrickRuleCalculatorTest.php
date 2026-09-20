@@ -11,23 +11,28 @@ class TrickRuleCalculatorTest extends TestCase
     {
         $rules = new TrickRuleCalculator();
 
-        self::assertSame(3, $rules->requiredHand(0));
-        self::assertSame(6, $rules->requiredHand(7));
-        self::assertSame(4, $rules->requiredHand(3));
+        self::assertSame(0, $rules->takeLevel(0));
+        self::assertSame(1, $rules->takeLevel(1));
+        self::assertSame(2, $rules->takeLevel(4));
+        self::assertSame(3, $rules->takeLevel(9));
+        self::assertSame(2, $rules->requiredHand(0));
+        self::assertSame(3, $rules->requiredHand(1));
+        self::assertSame(3, $rules->requiredHand(3));
+        self::assertSame(4, $rules->requiredHand(4));
         self::assertSame(1, $rules->fieldCap(1));
         self::assertSame(15, $rules->fieldCap(16));
         self::assertSame(16, $rules->fieldCap(30));
-        self::assertSame(5, $rules->initialPostCost(5, 0));
-        self::assertSame(0, $rules->initialPostCost(5, 1));
-        self::assertSame(0, $rules->initialPostCost(5, 2));
-        self::assertSame(5, $rules->initialPostCost(5, 3));
-        self::assertSame(0, $rules->extensionMinutes(1));
-        self::assertSame(60, $rules->extensionMinutes(2));
-        self::assertSame(55, $rules->extensionMinutes(3));
-        self::assertSame(5, $rules->extensionMinutes(13));
-        self::assertSame(40, $rules->extensionMinutes(2, true));
-        self::assertSame(35, $rules->extensionMinutes(3, true));
-        self::assertSame(5, $rules->extensionMinutes(10, true));
+        self::assertSame(0, $rules->initialPostCost(5, false, false));
+        self::assertSame(5, $rules->initialPostCost(5, true, false));
+        self::assertSame(5, $rules->initialPostCost(5, false, true));
+        self::assertSame([60, 60, 80, 100, 120], array_map(
+            fn (int $difficulty): int => $rules->initialCountdownMinutes($difficulty),
+            range(1, 5),
+        ));
+        self::assertSame(15, $rules->extensionMinutes(1, 15));
+        self::assertSame(30, $rules->extensionMinutes(1, 14.99));
+        self::assertSame(10, $rules->extensionMinutes(2, 1));
+        self::assertSame(10, $rules->extensionMinutes(16, 100));
         self::assertTrue($rules->emptyFieldSubsidyEligible(5, 2));
         self::assertFalse($rules->emptyFieldSubsidyEligible(5, 3));
         self::assertTrue($rules->emptyFieldSubsidyEligible(-2, 9));
@@ -36,7 +41,10 @@ class TrickRuleCalculatorTest extends TestCase
 
     public function test_total_reward(): void
     {
-        self::assertSame(14, (new TrickRuleCalculator())->totalReward(6, 3, 5));
+        $rules = new TrickRuleCalculator();
+        self::assertSame(8, $rules->totalReward(6, 3, 5, 2));
+        self::assertSame(6, $rules->totalReward(6, 3, 5, 1));
+        self::assertSame(0, $rules->totalReward(6, 3, 5, 0));
     }
 
     public function test_subsidy_and_rarity_boundaries(): void
