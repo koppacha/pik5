@@ -93,6 +93,37 @@ class TrickSubsidyService
                 }
                 $player->save();
             }
+            $taxed = 0;
+            foreach ($players as $player) {
+                $player->refresh();
+                if ($player->draw_points <= $this->rules->balanceTaxThreshold((int) $player->take_count)) {
+                    continue;
+                }
+                $before = (int) $player->draw_points;
+                $player->decrement('draw_points');
+                $taxed++;
+                LimitLog::query()->create([
+                    'event' => 'balance_tax_collected',
+                    'event_id' => $event->event_id,
+                    'actor_name' => $actor,
+                    'affected_player_name' => $player->name,
+                    'points_delta' => -1,
+                    'remaining_draw_points' => $before - 1,
+                    'route' => $request?->path(),
+                    'ip' => $request?->ip(),
+                    'user_agent' => $request?->userAgent(),
+                    'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
+                    'context' => [
+                        'slot' => $slot->toIso8601String(),
+                        'threshold' => $this->rules->balanceTaxThreshold((int) $player->take_count),
+                        'points_before' => $before,
+                        'points_after' => $before - 1,
+                    ],
+                ]);
+            }
+            if ($taxed > 0) {
+                $event->increment('pot_points', $taxed);
+            }
             $event->last_subsidy_slot_at = $slot;
             $event->save();
 
@@ -101,6 +132,8 @@ class TrickSubsidyService
                 'field_empty' => $fieldIsEmpty,
                 'processed' => $processed,
                 'paid' => $paid,
+                'taxed' => $taxed,
+                'pot_points' => (int) $event->fresh()->pot_points,
             ];
         });
     }

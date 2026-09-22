@@ -16,6 +16,7 @@ class TrickEvent extends Model
         'test_mode' => 'boolean',
         'debug_now' => 'datetime',
         'last_subsidy_slot_at' => 'datetime',
+        'pot_points' => 'integer',
         'initialized_at' => 'datetime',
         'ended_at' => 'datetime',
     ];

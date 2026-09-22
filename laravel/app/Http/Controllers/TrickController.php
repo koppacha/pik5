@@ -7,6 +7,7 @@ use App\Models\LimitLog;
 use App\Models\Player;
 use App\Models\Record;
 use App\Models\TrickCardHolder;
+use App\Models\TrickCardPayment;
 use App\Models\TrickCollectionReward;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
@@ -95,12 +96,13 @@ class TrickController extends Controller
             : $events->current());
         $cards = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)
             ->where('state', '_collected')->orderBy('collected_at')->get();
+        $holders = TrickCardHolder::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
+        $cards = $cards->filter(fn (TrickEventCard $card) => $holders->has($card->id))->values();
         $rankings = $records->rankingsByCards($cards);
         $collectionLogs = LimitLog::query()->where('event_id', $event->event_id)
             ->where('event', 'collect')->whereIn('event_card_id', $cards->pluck('id'))
             ->get()->keyBy('event_card_id');
-        $holders = TrickCardHolder::query()->where('event_id', $event->event_id)
-            ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
         $rewards = TrickCollectionReward::query()->where('event_id', $event->event_id)
             ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
 
@@ -117,12 +119,32 @@ class TrickController extends Controller
             return [
                 ...$state->normalizeCard($card),
                 'holders' => $cardHolders,
-                'holder_label' => $cardHolders === [] ? 'ホルダーなし' : implode(' / ', $cardHolders),
-                'returns_next_event' => $cardHolders === [],
+                'holder_label' => implode(' / ', $cardHolders),
+                'returns_next_event' => false,
                 'rankings' => is_array($finalRankings) ? $finalRankings : ($rankings[$card->id] ?? []),
                 'rewards' => $rewards->get($card->id, collect())->values()->all(),
+                'total_reward_points' => $rewards->get($card->id, collect())->sum('points_delta'),
             ];
         })->values());
+    }
+
+    public function collectedAdminStats(
+        Request $request,
+        TrickEventResolver $events,
+        TrickRequestIdentity $identity,
+    ): JsonResponse {
+        if ($identity->role($request) !== 10) {
+            abort(403);
+        }
+
+        $eventId = (int) $request->query('event_id', 0);
+        $event = $identity->isTest($request)
+            ? $events->forRequest($request, $identity)
+            : ($eventId > 0
+            ? TrickEvent::query()->where('event_id', $eventId)->firstOrFail()
+            : $events->current());
+
+        return response()->json($this->collectedAdminStatsPayload($event));
     }
 
     public function join(Request $request, TrickEventResolver $events, TrickGameService $game): JsonResponse
@@ -728,6 +750,70 @@ class TrickController extends Controller
             'user_agent' => $request?->header('User-Agent'),
             'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
         ], $data));
+    }
+
+    private function collectedAdminStatsPayload(TrickEvent $event): array
+    {
+        $stats = Player::query()->where('event_id', $event->event_id)->get()
+            ->mapWithKeys(fn (Player $player) => [$player->name => [
+                'user_id' => $player->name,
+                'total_rank_points' => (int) $player->rank_points,
+                'collected_card_count' => 0,
+                'take_count' => (int) $player->take_count,
+                'draw_count' => 0,
+                'return_count' => 0,
+                'post_count' => 0,
+                'spent_points' => 0,
+                'creator_take_count' => 0,
+            ]])->all();
+        $cards = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)->get();
+
+        foreach ($cards->whereNotNull('taker') as $card) {
+            $creator = $card->deck?->creator;
+            if ($creator && isset($stats[$creator])) {
+                $stats[$creator]['creator_take_count']++;
+            }
+        }
+
+        $logs = LimitLog::query()->where('event_id', $event->event_id)
+            ->whereIn('event', ['draw', 'return_to_deck', 'record_posted', 'record_updated', 'player_extension', 'balance_tax_collected'])
+            ->get();
+        foreach ($logs as $log) {
+            $playerName = $log->event === 'balance_tax_collected' ? $log->affected_player_name : $log->actor_name;
+            if (! $playerName || ! isset($stats[$playerName])) {
+                continue;
+            }
+            if ($log->event === 'draw') {
+                $stats[$playerName]['draw_count']++;
+            }
+            if ($log->event === 'return_to_deck') {
+                $stats[$playerName]['return_count']++;
+            }
+            if (in_array($log->event, ['record_posted', 'record_updated'], true)) {
+                $stats[$playerName]['post_count']++;
+            }
+            if ((int) $log->points_delta < 0) {
+                $stats[$playerName]['spent_points'] -= (int) $log->points_delta;
+            }
+        }
+
+        $holders = TrickCardHolder::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->where('state', '_collected')->pluck('id'))
+            ->orderBy('id')->get()->groupBy('event_card_id');
+        $payments = TrickCardPayment::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $holders->keys())->orderBy('event_card_id')->orderBy('created_at')->orderBy('id')->get()
+            ->groupBy('event_card_id');
+        foreach ($holders as $eventCardId => $cardHolders) {
+            $holderNames = $cardHolders->pluck('player_name');
+            $firstHolder = $payments->get($eventCardId, collect())
+                ->first(fn (TrickCardPayment $payment) => $holderNames->contains($payment->player_name))?->player_name
+                ?? $holderNames->first();
+            if ($firstHolder && isset($stats[$firstHolder])) {
+                $stats[$firstHolder]['collected_card_count']++;
+            }
+        }
+
+        return collect($stats)->sortByDesc('total_rank_points')->values()->all();
     }
 
     private function userId(Request $request, TrickEvent $event = null): ?string

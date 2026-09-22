@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useMemo, useRef, useState} from "react"
-import {faCheck, faClockRotateLeft, faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
+import {faCheck, faClockRotateLeft, faMedal, faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {
     cardLimitLabel,
@@ -405,15 +405,32 @@ function FxLayer({burst}) {
 }
 
 // DOMカード1枚を表示する。
-function TricksDomCard({card, type, layout, usersById, selected, disabled, hidden, motionStyle, motionType, nowValue, onClick}) {
+export function TricksDomCard({
+    card,
+    type,
+    layout = {x: 0, y: 0},
+    usersById,
+    selected,
+    disabled,
+    hidden,
+    motionStyle,
+    motionType,
+    nowValue,
+    onClick,
+    staticLayout = false,
+    showStackBacks = true,
+    footerLabel,
+    footerValue,
+    holderLabel,
+}) {
     const rarity = Number(card?.rarity || 1)
     const isField = type === "field"
     const stackCount = Math.max(Number(card?.stack_count || 1), 1)
-    const stackBacks = isField ? Math.min(Math.max(stackCount - 1, 0), FIELD_MAX_STACK_BACKS) : 0
+    const stackBacks = isField && showStackBacks ? Math.min(Math.max(stackCount - 1, 0), FIELD_MAX_STACK_BACKS) : 0
     const width = isField ? FIELD_CARD_WIDTH : HAND_CARD_WIDTH
     const height = isField ? FIELD_CARD_HEIGHT : HAND_CARD_HEIGHT
     const borderColor = rarityColors[rarity] || rarityColors[1]
-    const expired = isField && isTricksCardLimitExpired(card, nowValue)
+    const expired = isField && !staticLayout && isTricksCardLimitExpired(card, nowValue)
 
     return (
         <button
@@ -422,17 +439,17 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
             onClick={(event) => {
                 event.preventDefault()
                 event.stopPropagation()
-                if (!disabled) onClick?.()
+                if (!disabled) onClick?.(event)
             }}
             data-tricks-motion={motionType}
             className={`tricks-dom-card tricks-dom-card-${type} rarity-${rarity}${selected ? " is-selected" : ""}${expired ? " is-expired" : ""}`}
             style={{
-                position: "absolute",
+                position: staticLayout ? "relative" : "absolute",
                 left: 0,
                 top: 0,
                 width,
                 height,
-                transform: cardTransform(layout),
+                transform: staticLayout ? "none" : cardTransform(layout),
                 zIndex: layout.zIndex,
                 "--card-border": borderColor,
                 ...motionStyle,
@@ -460,16 +477,17 @@ function TricksDomCard({card, type, layout, usersById, selected, disabled, hidde
                 {isField && (
                     <>
                         <span className="tricks-dom-card-users">
-                            <span><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText(displayName(usersById, card.creator), 12)}</span>
-                            <span><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
+                            <span className="tricks-dom-card-user tricks-dom-card-creator"><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText(displayName(usersById, card.creator), 12)}</span>
+                            <span className="tricks-dom-card-user tricks-dom-card-taker"><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
+                            {holderLabel && <span className="tricks-dom-card-user tricks-dom-card-holder" data-tricks-card-holder><FontAwesomeIcon icon={faMedal} title="ホルダー" aria-label="ホルダー" /> {shortenTricksText(holderLabel, 18)}</span>}
                         </span>
                         <span className="tricks-dom-card-footer">
-                            <span>{cardLimitLabel(card, nowValue)}{!expired && card.my_can_post && card.my_initial_post_cost === 0 && (
+                            <span>{footerLabel ?? cardLimitLabel(card, nowValue)}{!footerLabel && !expired && card.my_can_post && card.my_initial_post_cost === 0 && (
                                 <span data-tricks-free style={{marginLeft: 6, color: "#237a39", fontWeight: 700}}>無料！</span>
                             )}</span>
-                            {card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
+                            {!footerLabel && card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
                             <span className={`tricks-dom-stack${stackCount >= 7 ? " has-gradient" : ""}`}>
-                                <span className="tricks-dom-stack-value">{stackCount}</span>
+                                <span className="tricks-dom-stack-value">{footerValue ?? card.provisional_total_reward ?? 0}</span>
                             </span>
                         </span>
                     </>
@@ -508,7 +526,6 @@ function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, ha
                     <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
                     <button type="button" data-tricks-hand-toggle onClick={onToggleHand}>{handVisible ? "手札非表示" : "手札を表示"}</button>
                     <button type="button" data-tricks-how-to-play onClick={onShowHowToPlay}>遊び方</button>
-                    <div className="tricks-dom-deck-count">残り {deckCount ?? 0}枚 / 捨て札 {trashCount ?? 0}枚</div>
                     {disabledReason && <div className="tricks-dom-deck-reason">{disabledReason}</div>}
                 </div>
                 <button className="tricks-command-toggle" type="button" aria-expanded={open} aria-controls="tricks-command-body" onClick={() => setOpen((value) => !value)}>コマンド</button>
@@ -1209,18 +1226,27 @@ export default function TricksLayeredGame({
                     padding-top: 10px;
                     font-size: 12px;
                     font-weight: 600;
+                    display: grid;
+                    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                    gap: 6px 10px;
                 }
-                .tricks-dom-card-users span {
+                .tricks-dom-card-user {
                     display: inline-flex;
                     align-items: center;
                     gap: 5px;
                     min-width: 0;
+                    overflow: hidden;
+                    white-space: nowrap;
+                    text-overflow: ellipsis;
                 }
+                .tricks-dom-card-taker { grid-column: 2; }
+                .tricks-dom-card-holder { grid-column: 1 / -1; }
                 .tricks-dom-card-footer {
                     align-items: center;
                     color: #9a5f00;
                     font-size: 14px;
                 }
+                .tricks-dom-card-footer > :first-child { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
                 .tricks-dom-stack {
                     display: inline-grid;
                     place-items: center;

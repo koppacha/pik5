@@ -14,6 +14,7 @@ function uiState({me = null, players = [], subsidyFlag = false} = {}) {
             available: true,
             debug: false,
             test_mode: false,
+            pot_points: 0,
         },
         server_now: "2026-09-15T12:00:00+09:00",
         me,
@@ -37,6 +38,10 @@ function uiState({me = null, players = [], subsidyFlag = false} = {}) {
             difficulty: 1,
             rarity: 1,
             stack_count: 2,
+            paid_points_total: 3,
+            participant_count: 2,
+            provisional_total_reward: 5,
+            my_initial_post_cost: 1,
             limit_at: "2026-09-15T13:00:00+09:00",
             my_can_post: Boolean(me),
             my_can_extend: Boolean(me),
@@ -49,6 +54,121 @@ function uiState({me = null, players = [], subsidyFlag = false} = {}) {
 }
 
 test.describe("limited tricks phase 6", () => {
+    test("ended tournament shows only holder cards and opens their final rankings", async ({page}) => {
+        const player = {
+            name: "pw_collected_holder",
+            draw_points: 3,
+            rank_points: 7,
+            total_rank_points: 7,
+            card_count: 0,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 1,
+            subsidy_flag: false,
+        }
+        const state = uiState({me: player, players: [player]})
+        state.tournament.state = "ended"
+        state.field = []
+        const collected = [
+            {
+                ...state.hand[0],
+                id: 301,
+                event_card_id: 1301,
+                title: "ホルダーあり回収カード",
+                stack_count: 4,
+                taker: player.name,
+                taken_at: "2026-09-15T10:00:00+09:00",
+                collected_at: "2026-09-15T11:35:00+09:00",
+                holders: [player.name],
+                holder_label: player.name,
+                rankings: [{user_id: player.name, rank: 1, score: 123, rps: 2}],
+                rewards: [{points_delta: 9}],
+                total_reward_points: 9,
+            },
+            {
+                ...state.hand[0],
+                id: 302,
+                event_card_id: 1302,
+                title: "ホルダーなし回収カード",
+                holders: [],
+                rankings: [],
+            },
+        ]
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: [{userId: player.name, name: "ホルダープレイヤー"}]}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.endsWith("/collected")) {
+                return route.fulfill({json: collected})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.getByTestId("tricks-collected-card")).toHaveCount(1)
+        await expect(page.getByText("ホルダーなし回収カード")).toHaveCount(0)
+        const card = page.getByTestId("tricks-collected-card")
+        await expect(card.locator("[data-tricks-card-holder]")).toContainText("ホルダープレイヤー")
+        await expect(card.getByLabel("ホルダー")).toBeVisible()
+        await expect(card.locator(".tricks-dom-stack-value")).toHaveText("4")
+        await expect(card).toContainText("アクティブ時間 1:35")
+        await card.getByRole("button").click()
+        const detailPanel = page.locator(".tricks-collected-detail-panel")
+        await expect(detailPanel).toContainText("回収時の総還元 9P / アクティブ時間 1:35")
+        await expect(detailPanel).toHaveClass(/tricks-field-detail-panel-right/)
+        await expect(page.locator(".tricks-collected-detail-panel")).not.toContainText("投稿コスト")
+    })
+
+    test("administrators can open collected-card statistics", async ({page}) => {
+        const player = {
+            name: "pw_collected_admin",
+            draw_points: 3,
+            rank_points: 7,
+            total_rank_points: 7,
+            card_count: 0,
+            take_level: 0,
+            take_cost: 2,
+            collected_card_count: 1,
+            subsidy_flag: false,
+        }
+        const state = uiState({me: player, players: [player]})
+        state.tournament.state = "ended"
+        state.field = []
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 10},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: [{userId: player.name, name: "管理者表示名"}]}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            const path = new URL(route.request().url()).pathname
+            if (path.endsWith("/admin-stats")) {
+                return route.fulfill({json: [{
+                    user_id: player.name,
+                    total_rank_points: 7,
+                    collected_card_count: 1,
+                    take_count: 2,
+                    draw_count: 3,
+                    return_count: 1,
+                    post_count: 4,
+                    spent_points: 5,
+                    creator_take_count: 2,
+                }]})
+            }
+            if (path.endsWith("/collected")) return route.fulfill({json: []})
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.locator("[data-tricks-admin-stats]")).toHaveCount(0)
+        await page.locator("[data-tricks-admin-stats-toggle]").click()
+        const stats = page.locator("[data-tricks-admin-stats]")
+        await expect(stats).toContainText("管理者表示名")
+        await expect(stats.locator("[data-tricks-admin-stat=spent_points]")).toHaveText("5")
+        await expect(stats.locator("[data-tricks-admin-stat=spent_points]")).toHaveCSS("background-color", "rgb(54, 83, 20)")
+    })
+
     test("unauthenticated visitors can only use the login link", async ({page}) => {
         await page.route("**/api/auth/session", async (route) => route.fulfill({json: {}}))
         await page.route("**/api/users", async (route) => route.fulfill({json: []}))
@@ -153,7 +273,7 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.locator(".tricks-dom-card-hand.is-selected")).toHaveCSS("z-index", "310")
         await page.getByRole("button", {name: "キャンセル", exact: true}).click()
 
-        await page.locator(".tricks-dom-card-field").click()
+        await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         await expect(page.locator('[data-tricks-card-backdrop="field"]')).toBeVisible()
         await expect(page.locator(".tricks-dom-card-field.is-selected")).toHaveCount(1)
         await expect(page.locator(".tricks-field-detail-panel")).toBeVisible()
@@ -209,6 +329,57 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.locator("[data-tricks-subsidy-remaining]")).toContainText("次回給付")
     })
 
+    test("new economy values are shown in the tournament player and field UI", async ({page}) => {
+        const player = {
+            name: "pw_economy_ui",
+            draw_points: 11,
+            rank_points: 0,
+            total_rank_points: 0,
+            card_count: 6,
+            take_level: 0,
+            take_cost: 2,
+            hand_limit: 6,
+            balance_tax_threshold: 10,
+            balance_tax_eligible: true,
+            collected_card_count: 0,
+            subsidy_flag: false,
+        }
+        const state = uiState({me: player, players: [player]})
+        state.tournament.pot_points = 4
+        state.hand = Array.from({length: 6}, (_, index) => ({
+            ...state.hand[0],
+            id: 201 + index,
+            stage_id: 7201 + index,
+            title: `手札確認カード${index + 1}`,
+        }))
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.includes("/rankings")) {
+                return route.fulfill({json: []})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("Pot 4P")
+        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("山札 198枚")
+        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("捨て札 0枚")
+        await expect(page.locator("[data-tricks-balance-tax=active]")).toContainText("P 11")
+        await expect(page.locator("[data-tricks-player='pw_economy_ui']")).toContainText("手札 6 / 6")
+        await expect(page.getByRole("button", {name: "ドロー", exact: true})).toBeDisabled()
+        await expect(page.locator(".tricks-command-window")).not.toContainText("捨て札")
+        await expect(page.locator(".tricks-dom-card-field .tricks-dom-stack-value")).toHaveText("5")
+
+        await page.locator(".tricks-dom-card-field").dispatchEvent("click")
+        await expect(page.locator(".tricks-field-detail-panel")).toContainText(
+            "スタック 2 / 支払い総額 3P / 参加者 2人 / あなたの投稿コスト 1P",
+        )
+    })
+
     test("draw stays disabled while the deck is empty and re-enables after refill state arrives", async ({page}) => {
         const player = {
             name: "pw_deck_refill_ui",
@@ -244,7 +415,7 @@ test.describe("limited tricks phase 6", () => {
         await expect(drawButton).toBeDisabled()
         await expect(page.getByText("山札を補充しています", {exact: true})).toBeVisible()
         await expect(drawButton).toBeEnabled({timeout: 7000})
-        await expect(page.getByText("残り 3枚", {exact: true})).toBeVisible()
+        await expect(page.locator("[data-tricks-deck-count]")).toHaveText("山札 3枚")
     })
 
     test("fixture API creates 200 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
@@ -816,7 +987,7 @@ test.describe("limited tricks phase 6", () => {
         await page.goto("/limited/tricks")
         const playerPanel = page.locator(`[data-tricks-player="${userId}"]`)
         await expect(playerPanel.locator("[data-tricks-take-level]")).toHaveText("Lv.1 / テイクコスト 3")
-        await page.locator(".tricks-dom-card-field").click()
+        await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         const extendButton = page.locator("[data-tricks-extend-button]")
         await expect(extendButton).toBeEnabled()
         page.once("dialog", async (dialog) => {
@@ -824,13 +995,13 @@ test.describe("limited tricks phase 6", () => {
             await dialog.accept()
         })
         await extendButton.click()
-        await expect(page.getByText("P 19 / 手札 0", {exact: true})).toBeVisible()
+        await expect(page.getByText("P 19 / 手札 0 / 9", {exact: true})).toBeVisible()
         expect(extensionPayload.idempotency_key).toMatch(/^(?:[0-9a-f-]{36}|extend-)/)
-        await expect(page.getByText("支払総額 1P", {exact: false})).toBeVisible()
+        await expect(page.getByText("支払い総額 1P", {exact: false})).toBeVisible()
 
         player.draw_points = 0
         await page.reload()
-        await page.locator(".tricks-dom-card-field").click()
+        await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         await expect(page.locator("[data-tricks-extend-button]")).toBeDisabled()
     })
 

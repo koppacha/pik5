@@ -12,8 +12,8 @@ import {postTricks, tricksApi, tricksFetcher, tricksOperationState} from "../../
 import RecordForm from "../../../components/modal/RecordForm"
 import TricksCollectedResults from "../../../components/tricks/TricksCollectedResults"
 import TricksDebugPanel from "../../../components/tricks/TricksDebugPanel"
+import TricksFieldDetailPanel from "../../../components/tricks/TricksFieldDetailPanel"
 import TricksHud from "../../../components/tricks/TricksHud"
-import Record from "../../../components/record/Record"
 
 const TricksGame = dynamic(() => import("../../../components/tricks/TricksLayeredGame"), {
     ssr: false,
@@ -87,6 +87,12 @@ export default function TricksPage() {
     const eventEnded = state?.tournament?.state === "ended"
     const {data: collected = [], mutate: mutateCollected} = useSWR(
         eventEnded && state?.tournament?.event_id ? tricksApi.collected(state.tournament.event_id) : null,
+        tricksFetcher,
+        {revalidateOnFocus: false}
+    )
+    const isAdmin = Number(session?.user?.role) === 10
+    const {data: collectedAdminStats = []} = useSWR(
+        eventEnded && isAdmin && state?.tournament?.event_id ? tricksApi.collectedAdminStats(state.tournament.event_id) : null,
         tricksFetcher,
         {revalidateOnFocus: false}
     )
@@ -381,7 +387,7 @@ export default function TricksPage() {
                     nowValue={nowValue}
                 />
                 <TricksHud state={state} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
-                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} />}
+                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} adminStats={collectedAdminStats} isAdmin={isAdmin} />}
                 {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy} onOperation={runDebugOperation} />}
                 <div
                     style={{
@@ -436,20 +442,20 @@ export default function TricksPage() {
                     />
                 )}
                 {selectedCard && !postOpen && (
-                    <div
-                        className={`tricks-field-detail-panel tricks-field-detail-panel-${fieldSide}`}
-                        onMouseDown={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                        }}
-                        onMouseUp={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                        }}
-                        onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                        }}
+                    <TricksFieldDetailPanel
+                        className={`tricks-field-detail-panel-${fieldSide}`}
+                        rankings={rankings}
+                        usersById={usersById}
+                        summary={
+                            <>
+                                スタック {selectedCard.stack_count ?? 0}
+                                {" / "}支払い総額 {selectedCard.paid_points_total ?? 0}P
+                                {" / "}参加者 {selectedCard.participant_count ?? 0}人
+                                {" / "}あなたの投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
+                                {selectedCard.my_initial_payment_recorded ? "（支払記録済み）" : ""}
+                            </>
+                        }
+                        onClose={closeFieldDetail}
                         style={{
                             position: "absolute",
                             zIndex: 50,
@@ -460,63 +466,32 @@ export default function TricksPage() {
                             pointerEvents: "auto",
                         }}
                     >
-                        <div style={{padding: 22, minHeight: 180, maxHeight: 390, overflowY: "auto"}}>
-                            <div style={{fontSize: 12, color: "#64748b", marginBottom: 10}}>
-                                現在の投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
-                                {selectedCard.my_initial_payment_recorded ? "（支払記録済み）" : ""}
-                                {" / "}参加者 {selectedCard.participant_count ?? 0}人
-                                {" / "}支払総額 {selectedCard.paid_points_total ?? 0}P
-                            </div>
-                            {!rankings && <div style={{color: "#4b5563"}}>読み込み中...</div>}
-                            {rankings && rankings.length === 0 && (
-                                <div style={{color: "#4b5563"}}>投稿はまだありません</div>
-                            )}
-                            {rankings && rankings.length > 0 && (
-                                <div style={{display: "grid", gap: 8}}>
-                                    {rankings.map((row) => (
-                                        <Record
-                                            key={row.unique_id || row.post_id || `${row.post_rank}-${row.user_id}`}
-                                            mini
-                                            showMiniRps
-                                            swapScoreRpsLabel
-                                            data={{
-                                                ...row,
-                                                user_name: usersById[row.user_id]?.name || row.user_name || row.user_id,
-                                            }}
-                                        />
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        <div style={{display: "flex", justifyContent: "flex-end", gap: 8, padding: "10px 18px 16px", borderTop: "1px solid #e5e7eb"}}>
+                        <Button
+                            data-tricks-post-button
+                            variant="contained"
+                            onClick={openPostModal}
+                            disabled={busy || !selectedCard?.stage_id || !operation.available || !me}
+                        >
+                            投稿
+                        </Button>
+                        <Button
+                            data-tricks-extend-button
+                            variant="outlined"
+                            onClick={() => extendCard(selectedCard)}
+                            disabled={busy || !me || Number(me.draw_points) < 1 || !selectedCard.my_can_extend}
+                        >
+                            延長
+                        </Button>
+                        {isDebugAdmin && (
                             <Button
-                                data-tricks-post-button
-                                variant="contained"
-                                onClick={openPostModal}
-                                disabled={busy || !selectedCard?.stage_id || !operation.available || !me}
+                                color="warning"
+                                onClick={() => debugCollect(selectedCard)}
+                                disabled={busy}
                             >
-                                投稿
+                                即時回収
                             </Button>
-                            <Button
-                                data-tricks-extend-button
-                                variant="outlined"
-                                onClick={() => extendCard(selectedCard)}
-                                disabled={busy || !me || Number(me.draw_points) < 1 || !selectedCard.my_can_extend}
-                            >
-                                延長
-                            </Button>
-                            <Button onClick={closeFieldDetail}>閉じる</Button>
-                            {isDebugAdmin && (
-                                <Button
-                                    color="warning"
-                                    onClick={() => debugCollect(selectedCard)}
-                                    disabled={busy}
-                                >
-                                    即時回収
-                                </Button>
-                            )}
-                        </div>
-                    </div>
+                        )}
+                    </TricksFieldDetailPanel>
                 )}
                 {postingCard && postOpen && (
                     <RecordForm

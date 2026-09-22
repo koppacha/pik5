@@ -232,7 +232,7 @@ class TrickRecordService
         $card = $card->fresh() ?? $card;
         $rankings = $this->rankingsByCards(collect([$card]))[$card->id] ?? [];
 
-        return $this->withProvisionalRewards($card, $rankings);
+        return $this->withProvisionalRewards($card, $rankings, $this->provisionalPotFor($card));
     }
 
     /** @return array<string, int> */
@@ -315,7 +315,7 @@ class TrickRecordService
         })->sortBy('rank')->values()->all();
     }
 
-    private function withProvisionalRewards(TrickEventCard $card, array $rankings): array
+    private function withProvisionalRewards(TrickEventCard $card, array $rankings, int $potPoints = 0): array
     {
         if ($rankings === []) {
             return [];
@@ -324,8 +324,8 @@ class TrickRecordService
             $rankings[0]['provisional_reward_points'] = $this->rules->totalReward(
                 (int) $card->stack_count,
                 (int) $card->paid_points_total,
-                (int) $card->difficulty,
                 1,
+                $potPoints,
             );
 
             return $rankings;
@@ -337,8 +337,8 @@ class TrickRecordService
             $this->rules->totalReward(
                 (int) $card->stack_count,
                 (int) $card->paid_points_total,
-                (int) $card->difficulty,
                 count($rankings),
+                $potPoints,
             ),
             $rankGroups,
         );
@@ -357,6 +357,21 @@ class TrickRecordService
 
             return $ranking;
         })->all();
+    }
+
+    private function provisionalPotFor(TrickEventCard $card): int
+    {
+        if ($card->state !== '_field' || $card->post_count <= 0) {
+            return 0;
+        }
+        $targetId = TrickEventCard::query()->where('event_id', $card->event_id)
+            ->where('state', '_field')->where('post_count', '>', 0)
+            ->orderBy('limit_at')->orderBy('id')->value('id');
+        if ((int) $targetId !== (int) $card->id) {
+            return 0;
+        }
+
+        return (int) (TrickEvent::query()->where('event_id', $card->event_id)->value('pot_points') ?? 0);
     }
 
     private function authorizeSavedRecord(
