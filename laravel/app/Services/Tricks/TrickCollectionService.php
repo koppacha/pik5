@@ -59,6 +59,7 @@ class TrickCollectionService
             $remainderDistribution = [];
             $holders = [];
             $subsidyFlaggedHolders = [];
+            $potPoints = $rankings === [] ? 0 : (int) $event->pot_points;
 
             if ($rankings !== []) {
                 foreach ($rankings as $ranking) {
@@ -73,8 +74,8 @@ class TrickCollectionService
                     $distribution[$rankings[0]['user_id']] = $this->rules->totalReward(
                         (int) $card->stack_count,
                         (int) $card->paid_points_total,
-                        (int) $card->difficulty,
                         1,
+                        $potPoints,
                     );
                     $rewardType = 'single_fixed';
                 } else {
@@ -84,8 +85,8 @@ class TrickCollectionService
                         $this->rules->totalReward(
                             (int) $card->stack_count,
                             (int) $card->paid_points_total,
-                            (int) $card->difficulty,
                             count($rankings),
+                            $potPoints,
                         ),
                         $rankGroups,
                     );
@@ -144,6 +145,10 @@ class TrickCollectionService
                     ], ['event_card_id' => $card->id]);
                 }
                 Deck::query()->whereKey($card->deck_id)->update(['state' => '_held']);
+                if ($potPoints > 0) {
+                    $event->pot_points = 0;
+                    $event->save();
+                }
             }
 
             $naturallyExpired = ! $force
@@ -198,6 +203,7 @@ class TrickCollectionService
                         'rps' => $ranking['rps'],
                     ])->all(),
                     'distribution' => $distribution,
+                    'pot_points_used' => $potPoints,
                     'last_place_remainder' => $remainderDistribution,
                     'recycled_unposted' => $rankings === [],
                     'emergency_grant_points' => $emergencyGrant['points'],

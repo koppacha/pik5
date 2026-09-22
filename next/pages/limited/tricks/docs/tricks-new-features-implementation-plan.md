@@ -2,6 +2,8 @@
 
 調査日: 2026-09-20
 
+実装結果: 2026-09-20に本計画のバックエンド、状態API、UI、Laravel test、Playwright UI testを実装した。未導入環境では`2026_09_20_000000_add_pot_points_to_trick_events.php`のmigration適用が必要である。
+
 ## 1. 調査対象
 
 - 正式ルール: `docs/tricks-rules.md`

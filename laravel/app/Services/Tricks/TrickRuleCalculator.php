@@ -44,6 +44,16 @@ class TrickRuleCalculator
         return $this->takeLevel($takeCount) + 2;
     }
 
+    public function handLimit(int $takeCount): int
+    {
+        return $this->requiredHand($takeCount) * 3;
+    }
+
+    public function balanceTaxThreshold(int $takeCount): int
+    {
+        return $this->requiredHand($takeCount) * 5;
+    }
+
     public function fieldCap(int $participantCount): int
     {
         return min(max(1, $participantCount - 1), 16);
@@ -74,19 +84,13 @@ class TrickRuleCalculator
     public function totalReward(
         int $stackCount,
         int $paidPointsTotal,
-        int $difficulty,
         int $participantCount,
+        int $potPoints = 0,
     ): int {
         if ($participantCount <= 0) {
             return 0;
         }
-        $base = max(0, $stackCount + $paidPointsTotal);
-        $baseReward = intdiv(3 * $base + 4, 5);
-        if ($participantCount === 1) {
-            return $baseReward;
-        }
-        $difficultyBonus = max(1, $difficulty) * intdiv($base, 5);
 
-        return $baseReward + intdiv($difficultyBonus, 2);
+        return max(0, $stackCount + $paidPointsTotal + $potPoints);
     }
 }

@@ -19,6 +19,12 @@ class TrickRuleCalculatorTest extends TestCase
         self::assertSame(3, $rules->requiredHand(1));
         self::assertSame(3, $rules->requiredHand(3));
         self::assertSame(4, $rules->requiredHand(4));
+        self::assertSame(6, $rules->handLimit(0));
+        self::assertSame(9, $rules->handLimit(1));
+        self::assertSame(12, $rules->handLimit(4));
+        self::assertSame(15, $rules->handLimit(9));
+        self::assertSame(10, $rules->balanceTaxThreshold(0));
+        self::assertSame(15, $rules->balanceTaxThreshold(1));
         self::assertSame(1, $rules->fieldCap(1));
         self::assertSame(15, $rules->fieldCap(16));
         self::assertSame(16, $rules->fieldCap(30));
@@ -42,9 +48,9 @@ class TrickRuleCalculatorTest extends TestCase
     public function test_total_reward(): void
     {
         $rules = new TrickRuleCalculator();
-        self::assertSame(8, $rules->totalReward(6, 3, 5, 2));
-        self::assertSame(6, $rules->totalReward(6, 3, 5, 1));
-        self::assertSame(0, $rules->totalReward(6, 3, 5, 0));
+        self::assertSame(9, $rules->totalReward(6, 3, 2));
+        self::assertSame(13, $rules->totalReward(6, 3, 1, 4));
+        self::assertSame(0, $rules->totalReward(6, 3, 0, 4));
     }
 
     public function test_subsidy_and_rarity_boundaries(): void

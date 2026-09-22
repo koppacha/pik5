@@ -1,6 +1,7 @@
 export const tricksApi = {
     state: "/api/server/tricks/state",
     collected: (eventId) => `/api/server/tricks/collected${eventId ? `?event_id=${eventId}` : ""}`,
+    collectedAdminStats: (eventId) => `/api/server/tricks/collected/admin-stats${eventId ? `?event_id=${eventId}` : ""}`,
     join: "/api/server/tricks/join",
     draw: "/api/server/tricks/draw",
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
@@ -248,6 +249,7 @@ export const tricksOperationState = (state, options = {}) => {
     const handCount = state?.hand?.length || 0
     const playerCount = state?.players?.length || 0
     const requiredHand = Number(me?.take_cost ?? 2)
+    const handLimit = Number(me?.hand_limit ?? requiredHand * 3)
     const fieldCap = Math.min(Math.max(1, playerCount - 1), 16)
     const endAt = tournament.end_at ? new Date(tournament.end_at).getTime() : 0
     const nextTakeAt = me?.next_take_at ? new Date(me.next_take_at).getTime() : 0
@@ -256,6 +258,7 @@ export const tricksOperationState = (state, options = {}) => {
     let drawReason = ""
     if (me && !available) drawReason = "大会開催時間外です"
     else if (me && Number(me.draw_points) <= 0) drawReason = "ポイントが0P以下です"
+    else if (me && handCount >= handLimit) drawReason = `手札上限 ${handLimit}枚に達しています`
     else if (Number(state?.deck_count || 0) <= 0) {
         drawReason = Number(state?.trash_count || 0) > 0
             ? "山札を補充しています"
@@ -282,6 +285,7 @@ export const tricksOperationState = (state, options = {}) => {
         canReturnToDeck: Boolean(me) && returnReason === "",
         returnReason,
         requiredHand,
+        handLimit,
         fieldCap,
         fieldCount,
         handCount,

@@ -14,59 +14,23 @@ class TrickRewardDistributor
             return ['distribution' => [], 'taker_remainder' => max(0, $total)];
         }
 
-        $eligibleGroups = $this->eligibleGroups($rankGroups);
-        $amounts = array_fill(0, count($eligibleGroups), 0);
-        $remaining = $total;
-        $selected = 0;
-        foreach ($eligibleGroups as $index => $group) {
-            $cost = count($group);
-            if ($remaining < $cost) {
-                break;
-            }
-            $amounts[$index] = 1;
-            $remaining -= $cost;
-            $selected = $index + 1;
-        }
-        if ($selected === 0) {
-            return ['distribution' => [], 'taker_remainder' => $total];
-        }
-
-        $protectedGaps = min(3, $selected - 1);
-        for ($index = 0; $index < $protectedGaps; $index++) {
-            $needed = $amounts[$index + 1] + 1 - $amounts[$index];
-            $cost = $needed * count($eligibleGroups[$index]);
-            if ($needed > 0 && $remaining >= $cost) {
-                $amounts[$index] += $needed;
-                $remaining -= $cost;
-            }
-        }
-
-        do {
-            $changed = false;
-            for ($index = 0; $index < $selected; $index++) {
-                $cost = count($eligibleGroups[$index]);
-                if ($remaining < $cost) {
-                    continue;
-                }
-                $trial = $amounts;
-                $trial[$index]++;
-                if ($this->gapsAreValid($trial, $protectedGaps)) {
-                    $amounts = $trial;
-                    $remaining -= $cost;
-                    $changed = true;
-                    break;
-                }
-            }
-        } while ($changed);
+        $participantCount = array_sum(array_map('count', $rankGroups));
+        $amounts = $this->strictRankAmounts($participantCount, $total);
 
         $distribution = [];
-        foreach (array_slice($eligibleGroups, 0, $selected) as $index => $group) {
+        $remainder = 0;
+        $offset = 0;
+        foreach ($rankGroups as $group) {
+            $groupTotal = array_sum(array_slice($amounts, $offset, count($group)));
+            $share = intdiv($groupTotal, count($group));
+            $remainder += $groupTotal % count($group);
             foreach ($group as $player) {
-                $distribution[$player] = $amounts[$index];
+                $distribution[$player] = $share;
             }
+            $offset += count($group);
         }
 
-        return ['distribution' => $distribution, 'taker_remainder' => $remaining];
+        return ['distribution' => $distribution, 'taker_remainder' => $remainder];
     }
 
     /** @param list<string> $lastPlayers */
@@ -89,25 +53,45 @@ class TrickRewardDistributor
         return $distribution;
     }
 
-    /** @param  list<list<string>>  $rankGroups */
-    private function eligibleGroups(array $rankGroups): array
+    /** @return list<int> */
+    private function strictRankAmounts(int $participantCount, int $total): array
     {
-        if (count($rankGroups) < 2) {
-            return $rankGroups;
+        if ($participantCount === 1) {
+            return [$total];
         }
-        $playersAboveLast = array_sum(array_map('count', array_slice($rankGroups, 0, -1)));
 
-        return $playersAboveLast >= 3 ? array_slice($rankGroups, 0, -1) : $rankGroups;
-    }
-
-    private function gapsAreValid(array $amounts, int $protectedGaps): bool
-    {
-        for ($index = 0; $index < $protectedGaps; $index++) {
-            if ($amounts[$index] <= $amounts[$index + 1]) {
-                return false;
+        $amounts = match ($participantCount) {
+            2 => [3, 2],
+            3 => [4, 2, 0],
+            4 => [4, 2, 1, 0],
+            default => [3, 2, 2, ...array_fill(0, $participantCount - 4, 1), 0],
+        };
+        $baseEqual = [];
+        for ($index = 1; $index < count($amounts); $index++) {
+            $baseEqual[$index] = $amounts[$index - 1] === $amounts[$index];
+        }
+        while (array_sum($amounts) > $total) {
+            for ($index = count($amounts) - 1; $index >= 0 && array_sum($amounts) > $total; $index--) {
+                if ($amounts[$index] > 0) {
+                    $amounts[$index]--;
+                }
+            }
+        }
+        while (array_sum($amounts) < $total) {
+            $added = false;
+            for ($index = 1; $index < count($amounts) - 1; $index++) {
+                $requiredGap = $index === 1 ? 2 : ($baseEqual[$index] ? 0 : 1);
+                if ($amounts[$index - 1] - $amounts[$index] > $requiredGap) {
+                    $amounts[$index]++;
+                    $added = true;
+                    break;
+                }
+            }
+            if (! $added) {
+                $amounts[0]++;
             }
         }
 
-        return true;
+        return $amounts;
     }
 }

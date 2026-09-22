@@ -103,7 +103,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
             className="tricks-tournament-info"
             data-tricks-tournament-info
             style={{
-                minWidth: 156,
+                minWidth: 272,
                 padding: "7px 10px",
                 borderRadius: 10,
                 border: "1px solid rgba(148, 163, 184, 0.25)",
@@ -115,20 +115,15 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                 <span>大会情報</span>
                 {(state?.tournament?.debug || state?.tournament?.test_mode) && <button type="button" onClick={onToggleDebug} disabled={!onToggleDebug} aria-expanded={debugOpen} style={{color: "#279c59", background: "transparent", border: 0, cursor: onToggleDebug ? "pointer" : "default"}}>DEBUG</button>}
             </div>
-            <div style={{fontSize: 13, fontWeight: 500, marginTop: 3}}>
-                場札上限 {operation.fieldCap}枚
+            <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", columnGap: 12, rowGap: 2, marginTop: 3, fontSize: 11}}>
+                <div style={{fontSize: 13, fontWeight: 500}}>場札上限 {operation.fieldCap}枚</div>
+                <div data-tricks-tournament-remaining>残り {remaining}</div>
+                <div data-tricks-collected-count style={{opacity: 0.78}}>回収カード総数 {state?.collected_count ?? 0}枚</div>
+                <div data-tricks-deck-count>山札 {state?.deck_count ?? 0}枚</div>
+                <div data-tricks-trash-count>捨て札 {state?.trash_count ?? 0}枚</div>
+                {Number(state?.tournament?.pot_points || 0) > 0 && <div data-tricks-pot>Pot {state.tournament.pot_points}P</div>}
+                {hasSubsidyRecipient && <div data-tricks-subsidy-remaining style={{color: panelColor}}>次回給付 {nextSubsidyRemaining}</div>}
             </div>
-            <div data-tricks-collected-count style={{fontSize: 11, marginTop: 2, opacity: 0.78}}>
-                回収カード総数 {state?.collected_count ?? 0}枚
-            </div>
-            <div data-tricks-tournament-remaining style={{fontSize: 11, marginTop: 2, color: "var(--color-text-base)"}}>
-                残り {remaining}
-            </div>
-            {hasSubsidyRecipient && (
-                <div data-tricks-subsidy-remaining style={{fontSize: 11, marginTop: 2, color: panelColor}}>
-                    次回給付 {nextSubsidyRemaining}
-                </div>
-            )}
         </div>
     )
 
@@ -346,7 +341,8 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                         <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
                                             <span
                                                 data-tricks-subsidy-flag={player.subsidy_flag ? "active" : "inactive"}
-                                                style={{color: player.subsidy_flag ? "#d84b8c" : "inherit"}}
+                                                data-tricks-balance-tax={player.balance_tax_eligible ? "active" : "inactive"}
+                                                style={{color: player.balance_tax_eligible ? "#279c59" : player.subsidy_flag ? "#d84b8c" : "inherit"}}
                                             >
                                                 <span
                                                     data-tricks-points-label
@@ -356,7 +352,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                                 </span>
                                                 {" "}{player.draw_points}
                                             </span>
-                                            <span> / 手札 {player.card_count}</span>
+                                            <span> / 手札 {player.card_count} / {player.hand_limit ?? (player.take_cost ?? 2) * 3}</span>
                                         </div>
                                         {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
                                             <div style={{fontSize: 10, marginTop: 2, color: "var(--color-text-base)"}}>

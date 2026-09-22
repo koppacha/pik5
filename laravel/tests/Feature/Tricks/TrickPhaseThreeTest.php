@@ -111,7 +111,7 @@ class TrickPhaseThreeTest extends TestCase
         $rankings = $records->rankings($card);
         self::assertSame([1, 1, 3, 4], collect($rankings)->pluck('rank')->all());
         self::assertSame([5, 5, 2, 1], collect($rankings)->pluck('rps')->all());
-        self::assertSame([1, 1, 0, 0], collect($rankings)->pluck('provisional_reward_points')->all());
+        self::assertSame([1, 1, 0, 1], collect($rankings)->pluck('provisional_reward_points')->all());
         self::assertNotContains(false, collect($rankings)->pluck('initial_payment_recorded')->all(), true);
 
         Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['rank_points' => 2]);

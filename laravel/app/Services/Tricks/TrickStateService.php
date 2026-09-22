@@ -37,6 +37,7 @@ class TrickStateService
             'test_mode' => $event->test_mode,
             'state' => $event->state,
             'available' => $this->available($event, $now),
+            'pot_points' => (int) $event->pot_points,
         ];
     }
 
@@ -67,6 +68,23 @@ class TrickStateService
             ->get();
         $ended = $event->state === 'ended';
         $field = $ended ? [] : $this->fieldWithPostingState($event, $cards->where('state', '_field'), $userId);
+        if (! $ended) {
+            $potTargetId = $cards->where('state', '_field')->where('post_count', '>', 0)
+                ->sortBy(fn (TrickEventCard $card) => sprintf('%s:%020d', $card->limit_at?->format('Y-m-d H:i:s.u') ?? '9999', $card->id))
+                ->first()?->id;
+            $field = collect($field)->map(function (array $card) use ($event, $potTargetId): array {
+                $pot = (int) $card['event_card_id'] === (int) $potTargetId ? (int) $event->pot_points : 0;
+                $card['provisional_pot_points'] = $pot;
+                $card['provisional_total_reward'] = $this->rules->totalReward(
+                    (int) $card['stack_count'],
+                    (int) $card['paid_points_total'],
+                    (int) $card['participant_count'],
+                    $pot,
+                );
+
+                return $card;
+            })->values()->all();
+        }
 
         $payload = [
             'tournament' => $this->tournament($event),
@@ -298,6 +316,9 @@ class TrickStateService
             'take_count' => (int) $player->take_count,
             'take_level' => $this->rules->takeLevel((int) $player->take_count),
             'take_cost' => $this->rules->requiredHand((int) $player->take_count),
+            'hand_limit' => $this->rules->handLimit((int) $player->take_count),
+            'balance_tax_threshold' => $this->rules->balanceTaxThreshold((int) $player->take_count),
+            'balance_tax_eligible' => $player->draw_points > $this->rules->balanceTaxThreshold((int) $player->take_count),
             'last_take_at' => $player->last_take_at?->toIso8601String(),
             'points' => $player->draw_points,
             'confirmed_rank_points' => $player->rank_points,

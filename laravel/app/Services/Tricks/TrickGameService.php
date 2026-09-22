@@ -70,6 +70,12 @@ class TrickGameService
             if ($player->draw_points <= 0) {
                 abort(response()->json(['message' => 'ポイントが0P以下のためドローできません'], 422));
             }
+            $handCount = TrickEventCard::query()->where('event_id', $event->event_id)
+                ->where('state', $userId)->lockForUpdate()->count();
+            $handLimit = $this->rules->handLimit((int) $player->take_count);
+            if ($handCount >= $handLimit) {
+                abort(response()->json(['message' => "手札上限 {$handLimit}枚に達しています"], 422));
+            }
 
             $recycledCount = $this->recycleTrashIfDeckEmpty($event);
             $available = TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_deck')
@@ -242,6 +248,7 @@ class TrickGameService
                 'returned_count' => $card->returned_count + 1,
             ])->save();
             $player->decrement('draw_points');
+            $event->increment('pot_points');
             $player->card_count = TrickEventCard::query()
                 ->where('event_id', $event->event_id)
                 ->where('state', $userId)
@@ -457,6 +464,9 @@ class TrickGameService
             'points' => $player->draw_points,
             'take_level' => $this->rules->takeLevel((int) $player->take_count),
             'take_cost' => $this->rules->requiredHand((int) $player->take_count),
+            'hand_limit' => $this->rules->handLimit((int) $player->take_count),
+            'balance_tax_threshold' => $this->rules->balanceTaxThreshold((int) $player->take_count),
+            'balance_tax_eligible' => $player->draw_points > $this->rules->balanceTaxThreshold((int) $player->take_count),
             'subsidy_flag' => (bool) $player->subsidy_flag || (
                 ! TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_field')->exists()
                 && $this->rules->emptyFieldSubsidyEligible($player->draw_points, $player->card_count)
