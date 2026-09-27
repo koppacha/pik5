@@ -82,6 +82,11 @@ export default async function handle(req, res){
     res.status(400).json({error: true, message: 'invalid path'})
     return
   }
+  // 大会の更新は管理者専用APIを通す。汎用プロキシからの迂回を防ぐ。
+  if (req.method !== 'GET' && path.split('/')[0] === 'swiss-tournaments') {
+    res.status(403).json({error: true, message: 'forbidden'})
+    return
+  }
 
   const searchParams = buildSearchParams(req.query)
   const upstreamUrl = `${LARAVEL_API_BASE}/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')

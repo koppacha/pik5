@@ -8,6 +8,17 @@
 - 大量ページの `getStaticProps` で個別に `prisma.user.findMany` しない。
 - `addName2posts()` の `users.find()` は大規模ランキングでボトルネックになり得る。必要なら userId -> user の Map を使う。
 
+## 動的ページ生成の失敗判定
+
+- `/total/[...series]` は `fallback: 'blocking'` の `getStaticProps` で Laravel のステージ情報・総合記録・対象ステージを並列取得し、続いて `getCachedUsers()` を使う。現在は不正URLやステージ情報の実際の欠落だけを404とし、APIの非2xx応答や取得例外はサーバーエラーにする。
+- ローカル開発ではページ生成のたびにこの依存経路を通る。`getCachedUsers()` 自体には1時間のプロセス内キャッシュと処理中Promiseの共有があり、ページキャッシュとは別物。
+- `/stage/[...stage]`、`/limited/[limited]`、`/compare/[...compare]` にも上流APIの非2xx応答を `notFound` にする経路がある。リソース不存在と一時的な障害を同じ404として扱わない設計が必要。
+- 2026-09-27 のローカル調査では Laravel 総合APIの応答は ID=21で約0.12秒、ID=22で約0.16秒、ID=20で約0.27秒、ID=1で約0.8秒（バックエンド内部キャッシュを含む観測値）。Next.js 側は応答ヘッダー取得後の本文読込で停止し、Node 22.23.2 の Undici `Parser.finish` で `assert(!this.paused)` が失敗していた。Content-Lengthなし・Connection: closeの64KiB超の模擬JSONでも、読込を遅らせるとNode内蔵fetchだけが異常終了し、node-fetchは正常終了した。上流の既知不具合 https://github.com/nodejs/undici/issues/5360 と一致する。
+- 総合ページ（ID=4を含む）のサーバー取得を既存依存node-fetchの `lib/serverFetchJson.mjs` に変更した。各応答を直ちにJSON化し、並列取得を維持する。非2xx・不正JSONは例外を伝播する。重い集計に一律のタイムアウトは設けず、集計内容・ISR期間・開発時のページ再生成は変更しない。
+- 修正後の実ページ検証は11件すべて200。ID=21/22は各3回成功し、初回コンパイルを除き約0.99〜1.47秒（再起動後初回21は約11.2秒）。ID=1/2/3/20/4も成功し、全11件のprops.postsがAPI応答と完全一致。不正ID=999は404。修正後ログに対象assertionは0件。大容量の切断終端JSONの並列反復、503、不正JSONの回帰テストは `node --test tests/serverFetchJson.test.mjs` で実行する。
+- Axiosへの切替案も通信層の迂回として妥当だが、既存Fetch APIとエラー処理を保てるnode-fetchを採用した。今回の停止は集計計算量が原因ではないため、DB索引・集計方式の変更は行わない。
+- 通信層を解消してからSSR・データ受渡しを測る。全ユーザー一覧を総合ページpropsへ含める必要があるかを確認し、投稿者に必要な名前だけを渡すことや、`addName2posts()` の `users.find()` をMap参照にすることを検討する。Laravel集計は現状1秒未満なので、DB索引変更は冷キャッシュ時の計測と `EXPLAIN` 後に判断する。
+
 ## Dashboard Summary
 
 - 簡易版ダッシュボードには Laravel 側に専用 `dashboard-summary` API を追加する方針。
