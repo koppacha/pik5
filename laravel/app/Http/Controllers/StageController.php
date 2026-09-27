@@ -9,9 +9,26 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class StageController extends Controller
 {
+    public function treasures(int $id): JsonResponse
+    {
+        if ($id < 201 || $id > 230) {
+            return response()->json([], 404);
+        }
+
+        return response()->json(
+            DB::table('stage_treasures')
+                ->select('legacy_object_id', 'floor', 'object_name', 'quantity', 'value', 'value_na', 'value_eu', 'weight_jp', 'weight_na', 'weight_eu')
+                ->where('stage_id', $id)
+                ->orderBy('floor')
+                ->orderBy('legacy_object_id')
+                ->get()
+        );
+    }
+
     /**
      * Display a listing of the resource.
      *

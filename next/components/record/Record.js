@@ -45,6 +45,7 @@ export default function Record({
     prevUser,
     history,
     swapScoreRpsLabel = false,
+    rankCellMetric = "rps",
     scoreUnit = null,
     rankPointUnit = null,
     hideRankProgress = false,
@@ -280,7 +281,7 @@ export default function Record({
                                                             {t.stage[r.stage] + " " + (!hideRuleNames.includes(r.rule) ? `（${t.rule[r.rule]})` : "")}
                                                         </div>
                                                         <div>
-                                                            {(!r.post_rank ? "未投稿" : `${r.post_rank} 位 / ${r.rps.toLocaleString()} RPS`)}
+                                                            {(!r.post_rank ? "未投稿" : `${r.post_rank} 位 / ${Number(rankCellMetric === "score" ? r.score : r.rps).toLocaleString()} ${rankCellMetric === "score" ? "pts" : "RPS"}`)}
                                                         </div>
                                                     </>
                                                 return <Tooltip key={i} style={{fontSize:"1.2em"}} placement="top" title={title} arrow><RankCell item style={{backgroundColor:rankCellColor(r.post_rank)}} className={`rank-cell ${series < 10 && "mini-cell"}`}/></Tooltip>

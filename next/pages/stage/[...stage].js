@@ -29,6 +29,7 @@ import DifficultyList from "../../components/record/DifficultyList";
 import PullDownDifficulty from "../../components/form/PullDownDifficulty";
 import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
 import {useRouter} from "next/router";
+import TreasureSimulator from "../../components/modal/TreasureSimulator";
 
 export async function getStaticPaths(){
     return {
@@ -122,6 +123,12 @@ export async function getStaticProps({params}){
         const guide_res = await fetch(`http://laravel:8000/api/keyword/${stage}`)
         guide = (guide_res.status < 300) ? await guide_res.json() : {}
     }
+    let treasures = []
+    if (Number(stage) >= 201 && Number(stage) <= 230) {
+        const treasureRes = await fetch(`http://laravel:8000/api/stage/${stage}/treasures`)
+        if (treasureRes.ok) treasures = await treasureRes.json()
+    }
+
     // スクリーンネームをリクエスト
     const users = await getCachedUsers()
 
@@ -129,7 +136,7 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: {
-            stages, specialStages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide, eventCategory
+            stages, specialStages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide, eventCategory, treasures
         },
         revalidate: 86400,
     }
@@ -144,6 +151,7 @@ export default function Stage(param){
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
     const [editOpen, setEditOpen] = useState(false)
+    const [treasureOpen, setTreasureOpen] = useState(false)
 
     // ボタンフラグ
     const [isProcessing, setIsProcessing] = useState(false)
@@ -304,13 +312,21 @@ export default function Stage(param){
                 }
                 {param.info?.treasure > 0 &&
                     <Grid className="user-info-box" item>
-                        <span>{Number(param.stage) < 200 ? t.g.max : t.g.value}：</span>{param.info?.treasure}
+                        {Number(param.stage) >= 201 && Number(param.stage) <= 230 && param.treasures?.length > 0
+                            ? <button type="button" onClick={() => setTreasureOpen(true)} aria-label={`${t.g.value} ${param.info.treasure} お宝価値シミュレーターを開く`} style={{background: 'none', border: 0, color: 'inherit', padding: 0, font: 'inherit', cursor: 'pointer', textDecoration: 'underline', textUnderlineOffset: 3}}>
+                                <span>{t.g.value}：</span>{param.info.treasure}
+                            </button>
+                            : <><span>{Number(param.stage) < 200 ? t.g.max : t.g.value}：</span>{param.info?.treasure}</>
+                        }
                     </Grid>
                 }
                 <Grid className="user-info-box" item>
                     <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                 </Grid>
             </Grid>
+            {Number(param.stage) >= 201 && Number(param.stage) <= 230 && param.treasures?.length > 0 &&
+                <TreasureSimulator open={treasureOpen} onClose={() => setTreasureOpen(false)} stageId={param.stage} stageName={stageName} treasures={param.treasures} displayedTotal={param.info?.treasure}/>
+            }
             <RuleList
                 param={param}
                 displayedRule={displayedRule}
