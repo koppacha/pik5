@@ -24,12 +24,14 @@ class DatabaseSeeder extends Seeder
 //            RecordSeeder::class,
             UsersTableSeeder::class,
             StageCsvSeeder::class,
+            StageTreasureSeeder::class,
             RecordCsvSeeder::class,
             UserCsvSeeder::class,
             KeywordSeeder::class,
             EventCsvSeeder::class,
             EventResultCsvSeeder::class,
-            ArenaCsvSeeder::class
+            ArenaCsvSeeder::class,
+            SwissFirstTournamentSeeder::class
         ]);
     }
 }

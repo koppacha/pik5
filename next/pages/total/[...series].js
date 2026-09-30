@@ -1,4 +1,4 @@
-import {AppBar, Box, Button, Container, FormControl, Grid, MenuItem, Select, Typography} from "@mui/material";
+import {AppBar, Box, Button, Container, FormControl, FormHelperText, Grid, MenuItem, Select, Typography} from "@mui/material";
 import Link from "next/link";
 import Record from "../../components/record/Record";
 import PullDownConsole from "../../components/form/PullDownConsole";
@@ -34,8 +34,7 @@ export async function getStaticPaths(){
     }
 }
 export async function getStaticProps({params}){
-    const { getCachedUsers } = await import("../../lib/usersCache")
-
+    const {serverFetchJson} = await import("../../lib/serverFetchJson.mjs")
     const query   = params.series
     const series  = query[0]
 
@@ -48,30 +47,21 @@ export async function getStaticProps({params}){
             }
         }
 
-        try {
-            const postsRes = await fetch(`http://laravel:8000/api/event-total/${category}`)
-            if(!postsRes.ok){
-                return {notFound: true}
-            }
+        const eventTotal = await serverFetchJson(`http://laravel:8000/api/event-total/${category}`)
+        const {getCachedUsers} = await import("../../lib/usersCache")
+        const users = await getCachedUsers()
 
-            const eventTotal = await postsRes.json()
-            const users = await getCachedUsers()
-
-            return {
-                props: {
-                    eventTotalMode: true,
-                    series,
-                    category,
-                    users,
-                    posts: eventTotal.posts ?? [],
-                    events: eventTotal.events ?? [],
-                    lastUpdatedAt: eventTotal.last_updated_at ?? null,
-                },
-                revalidate: 60,
-            }
-        } catch (error) {
-            console.error('Error fetching event total:', error)
-            return {notFound: true}
+        return {
+            props: {
+                eventTotalMode: true,
+                series,
+                category,
+                users,
+                posts: eventTotal.posts ?? [],
+                events: eventTotal.events ?? [],
+                lastUpdatedAt: eventTotal.last_updated_at ?? null,
+            },
+            revalidate: 60,
         }
     }
 
@@ -91,40 +81,27 @@ export async function getStaticProps({params}){
             notFound: true,
         }
     }
-    try {
-        const isSeriesTop = ["10", "20", "30", "40"].includes(series) && rule === series
-        const stagesUrl = isSeriesTop
-            ? `http://laravel:8000/api/stages/${series}?include_special=1&series=${Number(series) / 10}`
-            : `http://laravel:8000/api/stages/${series}`
-        const [stage_res, posts_res, stages_res] = await Promise.all([
-            fetch(`http://laravel:8000/api/stage/${series}`),
-            fetch(`http://laravel:8000/api/total/${series}/${consoles}/${rule}/${year}`),
-            fetch(stagesUrl)
-        ]);
+    const isSeriesTop = ["10", "20", "30", "40"].includes(series) && rule === series
+    const stagesUrl = isSeriesTop
+        ? `http://laravel:8000/api/stages/${series}?include_special=1&series=${Number(series) / 10}`
+        : `http://laravel:8000/api/stages/${series}`
+    const [info, posts, stagesPayload] = await Promise.all([
+        serverFetchJson(`http://laravel:8000/api/stage/${series}`),
+        serverFetchJson(`http://laravel:8000/api/total/${series}/${consoles}/${rule}/${year}`),
+        serverFetchJson(stagesUrl)
+    ])
+    const stages = Array.isArray(stagesPayload) ? stagesPayload : stagesPayload.stages
+    const specialStages = Array.isArray(stagesPayload) ? [] : stagesPayload.specialStages
 
-        if (!stage_res.ok || !posts_res.ok || !stages_res.ok) {
-            console.error('One or more API requests failed');
-            return { notFound: true };
-        }
+    if (!info) return {notFound: true}
 
-        const [info, posts, stagesPayload] = await Promise.all([
-            stage_res.json(),
-            posts_res.json(),
-            stages_res.json()
-        ]);
-        const stages = Array.isArray(stagesPayload) ? stagesPayload : stagesPayload.stages
-        const specialStages = Array.isArray(stagesPayload) ? [] : stagesPayload.specialStages
+    const {getCachedUsers} = await import("../../lib/usersCache")
+    const users = await getCachedUsers()
 
-        const users = await getCachedUsers();
-
-        const fDate = formattedDate();
-        return {
-            props: { stages, specialStages, series, rule, consoles, year, info, users, fDate, posts },
-            revalidate: 604800
-        };
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        return { notFound: true };
+    const fDate = formattedDate()
+    return {
+        props: { stages, specialStages, series, rule, consoles, year, info, users, fDate, posts },
+        revalidate: 604800
     }
 }
 
@@ -135,8 +112,31 @@ export default function Series(param){
     // ルール確認用モーダルの管理用変数
     const [open, setOpen] = useState(false)
     const [isProcessing, setIsProcessing] = useState(false)
+    const defaultRankingMetric = Number(param.series) >= 1 && Number(param.series) <= 3 ? "rps" : "score"
+    const [rankingMetric, setRankingMetric] = useState(defaultRankingMetric)
+
+    useEffect(() => setRankingMetric(defaultRankingMetric), [defaultRankingMetric, param.series, param.consoles, param.rule, param.year])
 
     const stages = param.stages
+    const rankingPosts = !param.eventTotalMode && param.posts && (() => {
+        const apiUsesRpsAsScore = Number(param.series) < 10
+        const rows = param.posts.map(post => {
+            const score = apiUsesRpsAsScore ? post.rps : post.score
+            const rps = apiUsesRpsAsScore ? post.score : post.rps
+            return {
+                ...post,
+                score: rankingMetric === "rps" ? rps : score,
+                rps: rankingMetric === "rps" ? score : rps
+            }
+        })
+        rows.sort((a, b) => Number(b.score) - Number(a.score))
+        let rank = 0
+        rows.forEach((post, index) => {
+            if(index === 0 || Number(post.score) !== Number(rows[index - 1].score)) rank = index + 1
+            post.post_rank = rank
+        })
+        return rows
+    })()
 
     // 呼び出すレギュレーション本文
     const uniqueId = param.series
@@ -275,6 +275,13 @@ export default function Series(param){
                 <Grid item xs={6}>
                     <PullDownConsole props={param}/>
                     <PullDownYear props={param}/>
+                    <FormControl style={{marginLeft: 3}}>
+                        <FormHelperText className="form-helper-text-themed">{t.g.rankingMetric}</FormHelperText>
+                        <Select className="styled-select" value={rankingMetric} onChange={event => setRankingMetric(event.target.value)} MenuProps={{disableScrollLock: true}}>
+                            <MenuItem value="score">{t.g.gameScore}</MenuItem>
+                            <MenuItem value="rps">{t.g.rankPoints}</MenuItem>
+                        </Select>
+                    </FormControl>
                 </Grid>
                 <Grid className="rule-wrapper" container item xs={6} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                     <Box className={"rule-box active"}
@@ -286,7 +293,7 @@ export default function Series(param){
                 </Grid>
             </Grid>
             <ModalKeyword open={open} uniqueId={uniqueId} handleClose={handleClose} handleEditOpen={null}/>
-            <RankingTotal posts={param.posts} users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages} isRpsTotalMode={Number(param.series) < 10}/>
+            <RankingTotal posts={rankingPosts} users={param.users} series={param.series} console={param.consoles} rule={param.rule} year={param.year} stages={param.stages} rankingMetric={rankingMetric}/>
         </>
     )
 }

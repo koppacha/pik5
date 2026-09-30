@@ -5,7 +5,7 @@ import NowLoading from "../NowLoading"
 import Record from "./Record"
 import * as React from "react"
 
-export default function RankingTotal({posts, series, console:consoles, rule, year, users, stages, isRpsTotalMode = false}){
+export default function RankingTotal({posts, series, console:consoles, rule, year, users, stages, rankingMetric = null}){
     const {t} = useLocale()
 
     if(!posts){
@@ -15,7 +15,7 @@ export default function RankingTotal({posts, series, console:consoles, rule, yea
     // 取得したデータにPrismaから取ってきたスクリーンネームを入れる
     const data = addName2posts(posts, users)
 
-    const showClassBorders = Number(series) === 1
+    const showClassBorders = Number(series) === 1 && rankingMetric !== "score"
     const stageCount = stageCounts[Number(year)] ?? Object.values(stageCounts)[0]
     const classBorders = Array.from({length: 14}, (_, idx) => {
         const cls = idx + 1
@@ -61,7 +61,8 @@ export default function RankingTotal({posts, series, console:consoles, rule, yea
                 series={series}
                 consoles={consoles}
                 year={year}
-                swapScoreRpsLabel={isRpsTotalMode}
+                swapScoreRpsLabel={rankingMetric === "rps"}
+                rankCellMetric={rankingMetric ?? "rps"}
             />
         )
 
