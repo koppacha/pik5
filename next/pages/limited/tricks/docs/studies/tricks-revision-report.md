@@ -111,4 +111,4 @@ python3 docs/studies/tricks_hoarding_check.py
 
 画面確認ではマークの色を濃くして白背景のコントラストを改善した。PC前提の既存レイアウトは維持し、スマートフォン幅では従来のログ重なり・ヘッダーの横方向制約が残る。新たな常時描画ループやポーリングは追加していない。
 
-最新画面：[PC](../../output/playwright/tricks-marks-desktop.png)、[スマートフォン](../../output/playwright/tricks-marks-mobile.png)。再現用CLIコード：[tricks_marks_smoke.js](tricks_marks_smoke.js)。`docs/studies`にある同名PNGは中断前のコントラスト調整前の記録であり、最新画面ではない。
+最新画面：[PC](../../output/playwright/tricks-marks-desktop.png)、[スマートフォン](../../output/playwright/tricks-marks-mobile.png)。再現用CLIコード：[tricks_marks_smoke.mjs](tricks_marks_smoke.mjs)。`docs/studies`にある同名PNGは中断前のコントラスト調整前の記録であり、最新画面ではない。
