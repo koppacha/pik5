@@ -18,6 +18,7 @@ use App\Http\Controllers\TotalController;
 use App\Http\Controllers\TournamentController;
 use App\Http\Controllers\TrickController;
 use App\Http\Controllers\TrickFixtureController;
+use App\Http\Controllers\SwissTournamentController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
 use App\Http\Controllers\VoteController;
@@ -82,6 +83,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'stage/all' , [ StageController::class, 'index' ]);
     Route::get ( 'stage/member' , [ StageController::class, 'allStageMember']);
     Route::get ( 'stage/max' , [ StageController::class, 'maxMember']);
+    Route::get ( 'stage/{id}/treasures' , [ StageController::class, 'treasures'])->whereNumber('id');
     Route::get ( 'stage/{id}' , [ StageController::class, 'show' ]);
 });
 // ユーザーIDからユーザー名を取得する
@@ -119,6 +121,18 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route::get('file/{path}/{file}', [GetImageController::class, 'showAny'])
         ->where('path', '.*')
         ->where('file', '[^/]+');
+});
+// スイス式トーナメントAPI
+Route::group(['middleware' => ['api']], static function () {
+    Route::get('swiss-tournaments', [SwissTournamentController::class, 'index']);
+    Route::post('swiss-tournaments', [SwissTournamentController::class, 'create']);
+    Route::get('swiss-tournaments/{tournament}', [SwissTournamentController::class, 'show']);
+    Route::post('swiss-tournaments/{tournament}/players', [SwissTournamentController::class, 'addPlayer']);
+    Route::delete('swiss-tournaments/{tournament}/players/{userId}', [SwissTournamentController::class, 'removePlayer']);
+    Route::post('swiss-tournaments/{tournament}/draw', [SwissTournamentController::class, 'draw']);
+    Route::post('swiss-tournaments/{tournament}/undo-result', [SwissTournamentController::class, 'undoResult']);
+    Route::post('swiss-tournaments/{tournament}/matches/{match}/games', [SwissTournamentController::class, 'startGame']);
+    Route::post('swiss-tournaments/{tournament}/matches/{match}/games/{game}', [SwissTournamentController::class, 'submitGame']);
 });
 // アリーナ情報取得API
 Route::group ([ 'middleware' => [ 'api' ]], static function () {
