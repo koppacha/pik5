@@ -442,7 +442,11 @@ const html = `<!doctype html>
         : ''
       const rarityPolicyNote = log.policy?.rarity_growth === 'exponential'
         ? '★2以上を開始' + log.policy.rarity_initial_rate + '%から' + log.policy.rarity_boost_peak_hour + '時間で' + log.policy.rarity_peak_rate + '%へ指数増加。'
-        : log.policy
+        : log.policy?.rarity_growth === 'final_three_hours'
+          ? '通常はレア度1〜5を87/8/4/0.9/0.1%、終了3時間前から0/87/8/4/1%で抽選。'
+        : log.policy?.rarity_growth === 'fixed'
+          ? 'レア度1〜5を毎回87/8/4/0.9/0.1%で抽選。'
+          : log.policy
           ? log.policy.rarity_boost_interval_minutes + '分ごとにレア率を' + Number(log.policy.rarity_boost_per_step).toFixed(4) + 'ポイント加算。'
           : ''
       const policyNote = log.policy ? '施策: ' + taxPolicyNote + rarityPolicyNote : ''

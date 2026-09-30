@@ -51,9 +51,16 @@ class TrickRuleCalculatorTest extends TestCase
         self::assertSame(9, $rules->totalReward(6, 3, 2));
         self::assertSame(13, $rules->totalReward(6, 3, 1, 4));
         self::assertSame(0, $rules->totalReward(6, 3, 0, 4));
+        self::assertSame(15, $rules->totalReward(6, 3, 2, 0, 3));
+        self::assertSame(20, $rules->totalReward(6, 3, 2, 0, 4));
+        self::assertSame(30, $rules->totalReward(6, 3, 2, 0, 5));
+        self::assertSame([0, 1, 2, 4, 5, 7, 9, 15, 18], array_map(
+            fn (array $pair): int => $rules->stackBonus(...$pair),
+            [[1, 6], [2, 0], [2, 3], [3, 0], [3, 3], [4, 0], [4, 3], [5, 0], [5, 3]],
+        ));
     }
 
-    public function test_subsidy_and_rarity_boundaries(): void
+    public function test_subsidy_and_final_three_hour_rarity_weights(): void
     {
         $rules = new TrickRuleCalculator();
 
@@ -62,12 +69,11 @@ class TrickRuleCalculatorTest extends TestCase
         self::assertTrue($rules->returnSubsidyEligible(4));
         self::assertFalse($rules->returnSubsidyEligible(5));
 
-        self::assertEquals([1 => 90.0, 2 => 6.0, 3 => 3.0, 4 => 0.9, 5 => 0.1], $rules->rarityWeights(0));
-        self::assertEqualsWithDelta(31.6227766, array_sum(array_slice($rules->rarityWeights(23), 1)), 0.000001);
-        self::assertEqualsWithDelta(0.0, $rules->rarityWeights(46)[1], 0.000001);
-        self::assertEqualsWithDelta(60.0, $rules->rarityWeights(46)[2], 0.000001);
-        self::assertEqualsWithDelta(30.0, $rules->rarityWeights(46)[3], 0.000001);
-        self::assertEqualsWithDelta(9.0, $rules->rarityWeights(46)[4], 0.000001);
-        self::assertEqualsWithDelta(1.0, $rules->rarityWeights(46)[5], 0.000001);
+        $normal = [1 => 87.0, 2 => 8.0, 3 => 4.0, 4 => 0.9, 5 => 0.1];
+        $final = [1 => 0.0, 2 => 87.0, 3 => 8.0, 4 => 4.0, 5 => 1.0];
+        self::assertEquals($normal, $rules->rarityWeights(3 * 60 * 60 + 1));
+        self::assertEquals($final, $rules->rarityWeights(3 * 60 * 60));
+        self::assertEquals($final, $rules->rarityWeights(70 * 60));
+        self::assertEqualsWithDelta(100.0, array_sum($rules->rarityWeights(3 * 60 * 60)), 0.000001);
     }
 }

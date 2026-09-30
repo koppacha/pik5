@@ -46,8 +46,8 @@ class TrickPhaseSixTest extends TestCase
         ]);
         $created->assertCreated()
             ->assertJsonPath('counts.events', 1)
-            ->assertJsonPath('counts.decks', 200)
-            ->assertJsonPath('counts.event_cards', 200)
+            ->assertJsonPath('counts.decks', 160)
+            ->assertJsonPath('counts.event_cards', 160)
             ->assertJsonPath('counts.players', 3)
             ->assertJsonPath('counts.stages', 1);
 

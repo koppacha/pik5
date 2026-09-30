@@ -8,10 +8,12 @@ import {
     buildTricksShakerSortSteps,
     formatNextSubsidyRemaining,
     formatTournamentRemaining,
+    tricksTournamentCountdownAlert,
     shortenTricksText,
     syncTricksOrder,
     targetTricksPlayerOrder,
     tricksOperationState,
+    tricksRarityColors,
 } from "../../lib/tricks"
 
 const visibleLogEvents = new Set(["join", "take", "record_posted", "record_updated", "player_extension", "empty_field_floor_grant", "subsidy_paid", "collect"])
@@ -52,7 +54,7 @@ function logText(log, usersById) {
     if (log?.event === "empty_field_floor_grant") text = `循環再開のため合計${Number(log?.granted_points_total || 0)}Pが配布されました。`
     if (log?.event === "collect") {
         text = Number(log?.records_count || 0) === 0
-            ? `${cardTitle}がトラッシュされました`
+            ? `${cardTitle}が除外されました。`
             : `${cardTitle}が${topUser}に回収され、ポイントが還元されました。`
     }
 
@@ -72,9 +74,14 @@ function LiveClock() {
     return <time className="tricks-live-clock" style={{fontVariantNumeric: "tabular-nums"}}>{time || "----/--/-- --:--:--"}</time>
 }
 
-export default function TricksHud({state, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false}) {
+export default function TricksHud({state, stagingMode = false, historicalHolderCounts = {}, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false}) {
     const players = useMemo(() => state?.players || [], [state?.players])
     const logs = useMemo(() => state?.logs || [], [state?.logs])
+    const holderCardsByPlayer = useMemo(() => (state?.holder_cards || []).reduce((grouped, card) => {
+        if (!grouped[card.player_name]) grouped[card.player_name] = []
+        grouped[card.player_name].push(card)
+        return grouped
+    }, {}), [state?.holder_cards])
     const [clockReady, setClockReady] = useState(false)
     const [logOpen, setLogOpen] = useState(false)
     const {resolvedTheme, setTheme} = useTheme()
@@ -93,6 +100,11 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
         .filter(Boolean)
     const operation = useMemo(() => tricksOperationState(state, {nowValue}), [nowValue, state])
     const remaining = formatTournamentRemaining(state?.tournament?.end_at, nowValue)
+    const countdownAlert = tricksTournamentCountdownAlert(state?.tournament?.end_at, nowValue)
+    const countdownColors = resolvedTheme === "dark"
+        ? {legendary: "#fde047", "take-closing": "#fb923c", "take-closed": "#f87171"}
+        : {legendary: "#a16207", "take-closing": "#c2410c", "take-closed": "#b91c1c"}
+    const countdownColor = countdownAlert ? countdownColors[countdownAlert.phase] : undefined
     const nextSubsidyRemaining = clockReady ? formatNextSubsidyRemaining(nowValue) : "--:--"
     const hasSubsidyRecipient = players.some((player) => player?.subsidy_flag)
     const visibleLogs = useMemo(() => {
@@ -117,7 +129,10 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
             </div>
             <div style={{display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", columnGap: 12, rowGap: 2, marginTop: 3, fontSize: 11}}>
                 <div style={{fontSize: 13, fontWeight: 500}}>場札上限 {operation.fieldCap}枚</div>
-                <div data-tricks-tournament-remaining>残り {remaining}</div>
+                <div data-tricks-tournament-remaining data-tricks-countdown-phase={countdownAlert?.phase || "normal"} style={{color: countdownColor, fontWeight: countdownAlert ? 700 : 400}}>
+                    <div>残り {remaining}</div>
+                    {countdownAlert && <div data-tricks-countdown-alert style={{fontSize: 11, lineHeight: 1.3, marginTop: 2}}>{countdownAlert.text}</div>}
+                </div>
                 <div data-tricks-collected-count style={{opacity: 0.78}}>回収カード総数 {state?.collected_count ?? 0}枚</div>
                 <div data-tricks-deck-count>山札 {state?.deck_count ?? 0}枚</div>
                 <div data-tricks-trash-count>捨て札 {state?.trash_count ?? 0}枚</div>
@@ -179,7 +194,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
             <nav className="tricks-top-bar" aria-label="イベントナビゲーション" style={{
                 position: "fixed", top: 0, left: '40px', zIndex: 40, display: "flex", alignItems: "center", gap: 12, width: "max-content", maxWidth: "100vw", boxSizing: "border-box", overflowX: "auto", whiteSpace: "nowrap", padding: "3px 18px", borderRadius: "0 0 18px 18px", background: "#3c3c3c", color: "#fff", fontSize: 13, lineHeight: "22px"
             }}>
-                <span style={{fontWeight:'bold'}}>第19回期間限定ランキング</span>
+                <span style={{fontWeight:'bold'}}>{stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"}</span>
                 <span style={{fontSize:'0.85em'}}>トリックテイキング制×スタンダード</span>
                 <LiveClock />
                 <Link href="/" aria-label="ホーム" style={{color: "inherit"}}><FontAwesomeIcon icon={faHome} /></Link>
@@ -308,11 +323,15 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
 
                             return (
                                 <div
-                                    className="tricks-player-info"
                                     key={player.name || index}
+                                    style={{width: 154, flex: "0 0 154px"}}
+                                >
+                                <div
+                                    className="tricks-player-info"
                                     data-tricks-player={player.name}
                                     style={{
-                                        minWidth: 132,
+                                        width: "100%",
+                                        boxSizing: "border-box",
                                         padding: "7px 10px",
                                         borderRadius: 10,
                                         border: isMe ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)",
@@ -330,7 +349,7 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                             {shortenTricksText(screenName, 14)}
                                         </div>
                                         <div data-tricks-player-collected-count style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                            回収カード {player.collected_card_count ?? 0}枚
+                                            ホルダー：今大会 {player.collected_card_count ?? 0}枚 / 累計 {Number(historicalHolderCounts[player.name] || 0) + Number(player.collected_card_count || 0)}枚
                                         </div>
                                         <div
                                             data-tricks-take-level
@@ -359,6 +378,20 @@ export default function TricksHud({state, usersById = {}, dimmed = false, curren
                                                 次回テイク {new Date(player.next_take_at).toLocaleTimeString("ja-JP")}
                                             </div>
                                         )}
+                                </div>
+                                {Boolean(holderCardsByPlayer[player.name]?.length) && (
+                                    <div data-tricks-mini-holder-cards style={{display: "flex", flexWrap: "wrap", gap: 2, width: "100%", boxSizing: "border-box", marginTop: 4, whiteSpace: "normal"}}>
+                                        {holderCardsByPlayer[player.name].map((card) => (
+                                            <span
+                                                key={card.stage_id}
+                                                title={`ステージ #${card.stage_id} / 難易度 ${card.difficulty ?? "-"}`}
+                                                style={{display: "inline-grid", placeItems: "center", width: 17, height: 23, border: `2px solid ${tricksRarityColors[Number(card.rarity)] || tricksRarityColors[1]}`, borderRadius: 2, background: "#fff", color: "#334155", fontSize: 10, fontWeight: 800, lineHeight: 1, textAlign: "center", boxSizing: "border-box"}}
+                                            >
+                                                {card.difficulty == null ? "-" : String(card.difficulty)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
                                 </div>
                             )
                         })}

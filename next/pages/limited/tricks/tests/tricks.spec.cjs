@@ -40,6 +40,7 @@ function uiState({me = null, players = [], subsidyFlag = false} = {}) {
             stack_count: 2,
             paid_points_total: 3,
             participant_count: 2,
+            live_total_reward: 5,
             provisional_total_reward: 5,
             my_initial_post_cost: 1,
             limit_at: "2026-09-15T13:00:00+09:00",
@@ -220,6 +221,28 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.getByRole("dialog").getByRole("button", {name: "閉じる"})).toBeVisible()
     })
 
+    test("join authentication failure shows its HTTP status inside the access gate", async ({page}) => {
+        const userId = "pw_existing_join_error"
+        const participant = {name: userId, draw_points: 5, rank_points: 0, card_count: 0}
+        const state = uiState({players: [participant]})
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.endsWith("/join")) {
+                return route.fulfill({status: 401, json: {error: true, status: 401, data: {message: "認証が必要です"}}})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await page.getByRole("button", {name: "参加する", exact: true}).click()
+        await expect(page.locator("[data-tricks-join-error]")).toHaveText("HTTP 401: 認証が必要です")
+        await expect(page.getByRole("button", {name: "参加する", exact: true})).toBeEnabled()
+    })
+
     test("participant HUD, hand controls, guide, and focus layers follow the UI rules", async ({page}) => {
         const userId = "pw_participant_ui"
         const player = {
@@ -329,6 +352,72 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.locator("[data-tricks-subsidy-remaining]")).toContainText("次回給付")
     })
 
+    test("failed subsidy shows HTTP 500 and retries at most once within thirty seconds", async ({page}) => {
+        const userId = "pw_subsidy_error"
+        const player = {name: userId, draw_points: 2, rank_points: 0, card_count: 0}
+        const state = uiState({me: player, players: [player]})
+        let subsidyCalls = 0
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => {
+            if (new URL(route.request().url()).pathname.endsWith("/maintenance/subsidy")) {
+                subsidyCalls += 1
+                return route.fulfill({status: 500, body: "Internal Server Error"})
+            }
+            return route.fulfill({json: state})
+        })
+
+        await page.goto("/limited/tricks")
+        await expect(page.getByText("HTTP 500: API request failed")).toBeVisible()
+        await page.waitForTimeout(3500)
+        expect(subsidyCalls).toBe(1)
+    })
+
+    test("tournament countdown changes its message and color at three hours, seventy minutes, and one hour", async ({page}) => {
+        const player = {name: "pw_countdown_ui", draw_points: 2, rank_points: 0, card_count: 1}
+        const state = uiState({me: player, players: [player]})
+        state.tournament.end_at = "2026-09-15T15:00:00+09:00"
+        state.tournament.debug = true
+        state.debug_state = {frozen: true}
+        await page.route("**/api/auth/session", async (route) => route.fulfill({json: {
+            user: {userId: player.name, role: 0},
+            expires: "2099-01-01T00:00:00.000Z",
+        }}))
+        await page.route("**/api/users", async (route) => route.fulfill({json: []}))
+        await page.route("**/api/server/tricks/**", async (route) => route.fulfill({json: state}))
+
+        const remaining = page.locator("[data-tricks-tournament-remaining]")
+        const alert = page.locator("[data-tricks-countdown-alert]")
+        const cases = [
+            ["2026-09-15T11:59:59+09:00", "normal", null, null],
+            ["2026-09-15T12:00:00+09:00", "legendary", "レジェンダリー排出率10倍！", /rgb\(253, 224, 71\)|rgb\(161, 98, 7\)/],
+            ["2026-09-15T13:50:00+09:00", "take-closing", "まもなくテイクできなくなります！", /rgb\(251, 146, 60\)|rgb\(194, 65, 12\)/],
+            ["2026-09-15T14:00:00+09:00", "take-closed", "まもなく大会終了します。テイクはできません", /rgb\(248, 113, 113\)|rgb\(185, 28, 28\)/],
+        ]
+        for (const [serverNow, phase, message, color] of cases) {
+            state.server_now = serverNow
+            await page.goto("/limited/tricks")
+            await expect(remaining).toHaveAttribute("data-tricks-countdown-phase", phase)
+            if (message) {
+                await expect(alert).toHaveText(message)
+                await expect(remaining).toHaveCSS("color", color)
+            } else {
+                await expect(alert).toHaveCount(0)
+            }
+        }
+        await page.waitForFunction(() => window.__TRICKS_DEBUG_SNAPSHOT__?.().phaserLoopSleeping === true)
+        const before = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
+        await page.waitForTimeout(3500)
+        const after = await page.evaluate(() => window.__TRICKS_DEBUG_SNAPSHOT__())
+        expect(after.phaserGameObjects).toBe(before.phaserGameObjects)
+        expect(after.domCards).toBe(before.domCards)
+        expect(after.activeRaf).toBe(0)
+        expect(after.phaserRenderCount).toBe(before.phaserRenderCount)
+    })
+
     test("new economy values are shown in the tournament player and field UI", async ({page}) => {
         const player = {
             name: "pw_economy_ui",
@@ -346,6 +435,9 @@ test.describe("limited tricks phase 6", () => {
         }
         const state = uiState({me: player, players: [player]})
         state.tournament.pot_points = 4
+        state.field[0].rarity = 3
+        state.field[0].live_total_reward = 9
+        state.field[0].provisional_total_reward = 13
         state.hand = Array.from({length: 6}, (_, index) => ({
             ...state.hand[0],
             id: 201 + index,
@@ -372,7 +464,8 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.locator("[data-tricks-player='pw_economy_ui']")).toContainText("手札 6 / 6")
         await expect(page.getByRole("button", {name: "ドロー", exact: true})).toBeDisabled()
         await expect(page.locator(".tricks-command-window")).not.toContainText("捨て札")
-        await expect(page.locator(".tricks-dom-card-field .tricks-dom-stack-value")).toHaveText("5")
+        await expect(page.locator(".tricks-dom-card-field .tricks-dom-stack-value")).toHaveText("9")
+        await expect(page.locator(".tricks-dom-card-field .tricks-dom-stack")).toHaveAttribute("title", "総還元P")
 
         await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         await expect(page.locator(".tricks-field-detail-panel")).toContainText(
@@ -418,13 +511,13 @@ test.describe("limited tricks phase 6", () => {
         await expect(page.locator("[data-tricks-deck-count]")).toHaveText("山札 3枚")
     })
 
-    test("fixture API creates 200 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
+    test("fixture API creates 160 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
         const fixture = await createTricksFixture(request, baseURL)
         try {
             expect(fixture.result.counts).toEqual(expect.objectContaining({
                 events: 1,
-                decks: 200,
-                event_cards: 200,
+                decks: 160,
+                event_cards: 160,
                 players: 2,
             }))
             const [alice, bob] = await Promise.all([
@@ -506,7 +599,7 @@ test.describe("limited tricks phase 6", () => {
                 return entries.map((entry) => entry.getAttribute("data-tricks-log-entry"))
             })
             expect(displayedLogIds).toEqual(expectedLogIds)
-            const trashMessage = `${taken.card.title}がトラッシュされました`
+            const trashMessage = `${taken.card.title}が除外されました。`
             const displayedLogTexts = await page.locator("[data-tricks-log-entry]").allTextContents()
             expect(displayedLogTexts.some((text) => text.endsWith(` - ${trashMessage}`))).toBe(true)
 

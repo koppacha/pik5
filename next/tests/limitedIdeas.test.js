@@ -20,9 +20,9 @@ test('JST publication boundaries and administrator exception', () => {
 
 test('ratio counts rules, minimum 1.00', () => {
     assert.equal(limitedIdeasRatio(0), '1.00')
-    assert.equal(limitedIdeasRatio(200), '1.00')
-    assert.equal(limitedIdeasRatio(201), '1.01')
-    assert.equal(limitedIdeasRatio(300), '1.50')
+    assert.equal(limitedIdeasRatio(160), '1.00')
+    assert.equal(limitedIdeasRatio(161), '1.01')
+    assert.equal(limitedIdeasRatio(240), '1.50')
 })
 
 test('validation rejects forged fields, invalid ranges and excessive Unicode lengths', () => {

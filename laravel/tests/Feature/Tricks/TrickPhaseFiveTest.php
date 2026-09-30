@@ -22,7 +22,7 @@ class TrickPhaseFiveTest extends TestCase
 
         self::assertSame(1, $result['collected']);
         self::assertSame(1, $result['subsidy_paid']);
-        self::assertSame('_trash', $card->fresh()->state);
+        self::assertSame('_collected', $card->fresh()->state);
         self::assertSame(6, Player::query()->where('event_id', $event->event_id)->value('draw_points'));
 
         $ended = app(TrickDebugTimeService::class)->advance($event->fresh(), 4 * 3600, 'admin');

@@ -8,7 +8,7 @@ import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Dialog from "@mui/material/Dialog"
 import DialogContent from "@mui/material/DialogContent"
-import {postTricks, tricksApi, tricksFetcher, tricksOperationState} from "../../../lib/tricks"
+import {postTricks, tricksApi, tricksFetcher, tricksOperationState, tricksStackBonus} from "../../../lib/tricks"
 import RecordForm from "../../../components/modal/RecordForm"
 import TricksCollectedResults from "../../../components/tricks/TricksCollectedResults"
 import TricksDebugPanel from "../../../components/tricks/TricksDebugPanel"
@@ -40,11 +40,19 @@ function stateContentSignature(state) {
         deck_count: state.deck_count,
         trash_count: state.trash_count,
         collected_count: state.collected_count,
+        holder_cards: state.holder_cards,
         logs: state.logs,
     })
 }
 
-export default function TricksPage() {
+function tricksErrorMessage(error, fallback = "操作に失敗しました") {
+    const code = Number(error?.status)
+    const detail = error?.message || fallback
+
+    return Number.isInteger(code) && code >= 400 ? `HTTP ${code}: ${detail}` : detail
+}
+
+function TricksGamePage({stagingMode = false}) {
     const {data: session, status} = useSession()
     const userId = session?.user?.userId || session?.user?.id
     const [message, setMessage] = useState("")
@@ -61,6 +69,8 @@ export default function TricksPage() {
     const debugMetricsRef = useRef({stateFetchCount: 0, stateChangeCount: 0})
     const collectingExpiredRef = useRef(false)
     const processedSubsidySlotRef = useRef(null)
+    const subsidyRetryAtRef = useRef(0)
+    const subsidyErrorMessageRef = useRef(null)
     const stateKey = tricksApi.state
     const selectedCard = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
@@ -76,6 +86,10 @@ export default function TricksPage() {
     })
     const {data: users = []} = useSWR("/api/users", tricksFetcher, {
         revalidateOnFocus: false,
+    })
+    const {data: holderCatalog} = useSWR(tricksApi.holders(), tricksFetcher, {
+        refreshInterval: 30000,
+        revalidateOnFocus: true,
     })
     const {
         data: rankings,
@@ -146,7 +160,7 @@ export default function TricksPage() {
             if (options.collected) await mutateCollected()
             return result ?? true
         } catch (e) {
-            setMessage(e.message || "操作に失敗しました")
+            setMessage(tricksErrorMessage(e))
             return false
         } finally {
             setBusy(false)
@@ -174,7 +188,10 @@ export default function TricksPage() {
     }, [runAction])
     const take = useCallback((card) => {
         if (!card?.id) return
-        if (!window.confirm(`「${card.title || "このカード"}」を場に出します。手札${operation.handCount}枚を使用しますか？`)) {
+        const bonus = Number(card.rarity) >= 2
+            ? `\nスタックボーナス：+${tricksStackBonus(card.rarity, operation.handCount)}P`
+            : ""
+        if (!window.confirm(`「${card.title || "このカード"}」を場に出します。手札${operation.handCount}枚を使用しますか？${bonus}`)) {
             return false
         }
 
@@ -269,7 +286,7 @@ export default function TricksPage() {
                 if (!cancelled) await mutate()
             })
             .catch((collectionError) => {
-                if (!cancelled) setMessage(collectionError.message || "期限切れカードの回収に失敗しました")
+                if (!cancelled) setMessage(tricksErrorMessage(collectionError, "期限切れカードの回収に失敗しました"))
             })
             .finally(() => {
                 collectingExpiredRef.current = false
@@ -281,24 +298,34 @@ export default function TricksPage() {
     }, [expiredFieldKey, me, mutate])
 
     useEffect(() => {
-        if (!me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey) return undefined
+        if (!clockInitializedRef.current || !me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey
+            || Date.now() < subsidyRetryAtRef.current) return undefined
         let cancelled = false
         processedSubsidySlotRef.current = subsidySlotKey
         postTricks(tricksApi.subsidy)
             .then(async () => {
-                if (!cancelled) await mutate()
+                subsidyRetryAtRef.current = 0
+                if (!cancelled) {
+                    setMessage(currentMessage => currentMessage === subsidyErrorMessageRef.current ? "" : currentMessage)
+                    subsidyErrorMessageRef.current = null
+                    await mutate()
+                }
             })
             .catch((subsidyError) => {
-                if (!cancelled) {
+                if (processedSubsidySlotRef.current === subsidySlotKey) {
                     processedSubsidySlotRef.current = null
-                    setMessage(subsidyError.message || "ポイント給付の確認に失敗しました")
+                }
+                subsidyRetryAtRef.current = Date.now() + 30000
+                if (!cancelled) {
+                    subsidyErrorMessageRef.current = tricksErrorMessage(subsidyError, "ポイント給付の確認に失敗しました")
+                    setMessage(subsidyErrorMessageRef.current)
                 }
             })
 
         return () => {
             cancelled = true
         }
-    }, [me, mutate, operation.available, subsidySlotKey])
+    }, [me, mutate, nowValue, operation.available, subsidySlotKey])
 
     useEffect(() => {
         const serverNow = state?.server_now || state?.tournament?.server_now
@@ -355,7 +382,7 @@ export default function TricksPage() {
     return (
         <>
             <Head>
-                <title>第19回期間限定ランキング - ピクチャレ大会</title>
+                <title>{stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"} - ピクチャレ大会</title>
             </Head>
             <div
                 data-tricks-root
@@ -386,7 +413,7 @@ export default function TricksPage() {
                     busy={busy}
                     nowValue={nowValue}
                 />
-                <TricksHud state={state} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
+                <TricksHud state={state} stagingMode={stagingMode} historicalHolderCounts={holderCatalog?.historical_counts || {}} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
                 {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} adminStats={collectedAdminStats} isAdmin={isAdmin} />}
                 {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy} onOperation={runDebugOperation} />}
                 <div
@@ -403,7 +430,7 @@ export default function TricksPage() {
                 >
                     {(message || error || isLoading) && (
                         <div style={{fontSize: 13, color: error ? "#ff8a8a" : "#ffcf6e"}}>
-                            {isLoading ? "読み込み中..." : message || error?.message}
+                            {isLoading ? "読み込み中..." : message || tricksErrorMessage(error)}
                         </div>
                     )}
                 </div>
@@ -536,7 +563,7 @@ export default function TricksPage() {
                             <div style={{fontSize: "clamp(18px, 2.2vw, 30px)", fontWeight: 800, textAlign: "center", textShadow: "0 2px 8px #000"}}>
                                 {authenticated ? (
                                     <>
-                                        第19回期間限定ランキングに
+                                        {stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"}に
                                         <button
                                             type="button"
                                             onClick={join}
@@ -552,6 +579,11 @@ export default function TricksPage() {
                                         <Link href="/auth/login" style={{...accessActionStyle, color: "#8db4ff"}}>ログイン</Link>
                                         が必要です
                                     </>
+                                )}
+                                {message && authenticated && (
+                                    <div role="alert" data-tricks-join-error style={{marginTop: 14, fontSize: 15, color: "#ff9c9c"}}>
+                                        {message}
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -616,6 +648,70 @@ export default function TricksPage() {
             </div>
         </>
     )
+}
+
+export async function getServerSideProps({req, res}) {
+    const {hasStagingAccess, stagingAccessEnabled, stagingAccessReady, STAGING_CLOSE_AT} = await import("../../../lib/tricks/stagingAccess")
+    if (!stagingAccessEnabled()) return {props: {stagingGate: null}}
+    res.setHeader("Cache-Control", "no-store")
+    if (Date.now() >= STAGING_CLOSE_AT) return {notFound: true}
+
+    return {props: {stagingGate: {
+        allowed: hasStagingAccess(req),
+        ready: stagingAccessReady(),
+        closeAt: STAGING_CLOSE_AT,
+    }}}
+}
+
+export default function TricksPage({stagingGate}) {
+    const [password, setPassword] = useState("")
+    const [gateMessage, setGateMessage] = useState("")
+    const [gateBusy, setGateBusy] = useState(false)
+
+    useEffect(() => {
+        if (!stagingGate) return undefined
+        const delay = Math.max(0, stagingGate.closeAt - Date.now())
+        const timer = window.setTimeout(() => window.location.reload(), delay)
+        return () => window.clearTimeout(timer)
+    }, [stagingGate])
+
+    const unlock = async (event) => {
+        event.preventDefault()
+        setGateBusy(true)
+        setGateMessage("")
+        try {
+            const response = await fetch("/api/tricks-access", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({password}),
+            })
+            const body = await response.json()
+            if (!response.ok) throw new Error(body.message || "認証に失敗しました")
+            window.location.reload()
+        } catch (error) {
+            setGateMessage(error.message)
+            setGateBusy(false)
+        }
+    }
+
+    if (!stagingGate) return <TricksGamePage />
+    if (stagingGate.allowed) return <TricksGamePage stagingMode />
+
+    return <>
+        <Head><title>テスト大会</title></Head>
+        <main style={{minHeight: "70vh", display: "grid", placeItems: "center"}}>
+            <form onSubmit={unlock} style={{display: "grid", gap: 16, width: "min(360px, 90vw)"}}>
+                <h1>テスト大会</h1>
+                {stagingGate.ready ? <>
+                    <label htmlFor="tricks-test-password">参加パスワード</label>
+                    <input id="tricks-test-password" type="password" autoComplete="off" required value={password}
+                           onChange={(event) => setPassword(event.target.value)} />
+                    <Button type="submit" variant="contained" disabled={gateBusy}>大会へ進む</Button>
+                </> : <p>大会の公開設定が未完了です。</p>}
+                {gateMessage && <p role="alert">{gateMessage}</p>}
+            </form>
+        </main>
+    </>
 }
 
 TricksPage.disableLayout = true

@@ -1,0 +1,156 @@
+{
+  "start_seed": 312000,
+  "runs_per_scenario": 100,
+  "python_hash_seed": "0",
+  "event_hours": 48,
+  "participants": 13,
+  "rarity_initial_weights_percent": {
+    "1": 87.0,
+    "2": 8.0,
+    "3": 4.0,
+    "4": 0.9,
+    "5": 0.1
+  },
+  "rarity_growth": "rare total grows exponentially from 13% to 100% by hour 46; relative proportions of tiers 2-5 remain fixed",
+  "previous_bonus": "rarity 2-5: floor(stack/3) + [1,4,7,15] points respectively",
+  "revised_bonus": "rarity 4: 2*floor(stack/3)+7, rarity 5: 3*floor(stack/3)+15; rarity 1-3 unchanged",
+  "unique_rarity4_or_5_mean": 5.08,
+  "unique_rarity4_or_5_median": 5.0,
+  "unique_rarity4_or_5_max": 12,
+  "runs_with_no_unique_rarity4_or_5": 1,
+  "means": {
+    "previous_rarity_bonus": {
+      "takes": 56.44,
+      "posts": 286.78,
+      "initial_posts": 258.45,
+      "updates": 28.33,
+      "rank_points": 1042.6,
+      "collection_rewards": 490.08,
+      "unique_rarity4": 4.57,
+      "unique_rarity5": 0.51,
+      "draw_events_rarity4": 6.08,
+      "draw_events_rarity5": 0.6,
+      "take_events_rarity4": 1.22,
+      "take_events_rarity5": 0.11
+    },
+    "rarity4_revised": {
+      "takes": 56.58,
+      "posts": 288,
+      "initial_posts": 259.37,
+      "updates": 28.63,
+      "rank_points": 1047.92,
+      "collection_rewards": 494.04,
+      "unique_rarity4": 4.6,
+      "unique_rarity5": 0.47,
+      "draw_events_rarity4": 6.15,
+      "draw_events_rarity5": 0.55,
+      "take_events_rarity4": 1.2,
+      "take_events_rarity5": 0.12
+    },
+    "rarity5_revised": {
+      "takes": 56.54,
+      "posts": 286.66,
+      "initial_posts": 258.41,
+      "updates": 28.25,
+      "rank_points": 1041.64,
+      "collection_rewards": 491.66,
+      "unique_rarity4": 4.55,
+      "unique_rarity5": 0.52,
+      "draw_events_rarity4": 6.09,
+      "draw_events_rarity5": 0.61,
+      "take_events_rarity4": 1.26,
+      "take_events_rarity5": 0.11
+    },
+    "both_revised": {
+      "takes": 56.66,
+      "posts": 287.95,
+      "initial_posts": 259.39,
+      "updates": 28.56,
+      "rank_points": 1047.27,
+      "collection_rewards": 495.46,
+      "unique_rarity4": 4.59,
+      "unique_rarity5": 0.47,
+      "draw_events_rarity4": 6.18,
+      "draw_events_rarity5": 0.55,
+      "take_events_rarity4": 1.23,
+      "take_events_rarity5": 0.12
+    }
+  },
+  "delta_from_previous": {
+    "rarity4_revised": {
+      "takes": 0.14,
+      "posts": 1.22,
+      "rank_points": 5.32,
+      "collection_rewards": 3.96
+    },
+    "rarity5_revised": {
+      "takes": 0.1,
+      "posts": -0.12,
+      "rank_points": -0.96,
+      "collection_rewards": 1.58
+    },
+    "both_revised": {
+      "takes": 0.22,
+      "posts": 1.17,
+      "rank_points": 4.67,
+      "collection_rewards": 5.38
+    }
+  },
+  "paired_approximate_95ci": {
+    "rarity4_revised": {
+      "takes": [
+        -0.045,
+        0.325
+      ],
+      "posts": [
+        0.119,
+        2.321
+      ],
+      "rank_points": [
+        -0.65,
+        11.29
+      ],
+      "collection_rewards": [
+        0.789,
+        7.131
+      ]
+    },
+    "rarity5_revised": {
+      "takes": [
+        -0.043,
+        0.243
+      ],
+      "posts": [
+        -0.628,
+        0.388
+      ],
+      "rank_points": [
+        -4.078,
+        2.158
+      ],
+      "collection_rewards": [
+        -0.502,
+        3.662
+      ]
+    },
+    "both_revised": {
+      "takes": [
+        -0.002,
+        0.442
+      ],
+      "posts": [
+        -0.05,
+        2.39
+      ],
+      "rank_points": [
+        -2.112,
+        11.452
+      ],
+      "collection_rewards": [
+        1.529,
+        9.231
+      ]
+    }
+  },
+  "invariant_errors": 0
+}

@@ -19,18 +19,18 @@ class TrickRuleCalculator
         return $pointsAfterPayment <= 4;
     }
 
-    public function rarityWeights(float $elapsedHours): array
+    public function rarityWeights(int $remainingSeconds): array
     {
-        $elapsedHours = max(0.0, min(46.0, $elapsedHours));
-        $rareRate = min(100.0, 10.0 * (10 ** ($elapsedHours / 46.0)));
-        $scale = $rareRate / 10.0;
+        if ($remainingSeconds <= 3 * 60 * 60) {
+            return [1 => 0.0, 2 => 87.0, 3 => 8.0, 4 => 4.0, 5 => 1.0];
+        }
 
         return [
-            1 => 100.0 - $rareRate,
-            2 => 6.0 * $scale,
-            3 => 3.0 * $scale,
-            4 => 0.9 * $scale,
-            5 => 0.1 * $scale,
+            1 => 87.0,
+            2 => 8.0,
+            3 => 4.0,
+            4 => 0.9,
+            5 => 0.1,
         ];
     }
 
@@ -86,11 +86,25 @@ class TrickRuleCalculator
         int $paidPointsTotal,
         int $participantCount,
         int $potPoints = 0,
+        int $rarity = 1,
     ): int {
         if ($participantCount <= 0) {
             return 0;
         }
 
-        return max(0, $stackCount + $paidPointsTotal + $potPoints);
+        return max(0, $stackCount + $this->stackBonus($rarity, $stackCount) + $paidPointsTotal + $potPoints);
+    }
+
+    public function stackBonus(int $rarity, int $stackCount): int
+    {
+        $groups = intdiv(max(0, $stackCount), 3);
+
+        return match ($rarity) {
+            2 => $groups + 1,
+            3 => $groups + 4,
+            4 => 2 * $groups + 7,
+            5 => 3 * $groups + 15,
+            default => 0,
+        };
     }
 }

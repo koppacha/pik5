@@ -16,6 +16,7 @@ use App\Services\Tricks\TrickDebugTimeService;
 use App\Services\Tricks\TrickEventFinalizer;
 use App\Services\Tricks\TrickEventResolver;
 use App\Services\Tricks\TrickGameService;
+use App\Services\Tricks\TrickHolderCatalog;
 use App\Services\Tricks\TrickOperationAuthorizer;
 use App\Services\Tricks\TrickRecordService;
 use App\Services\Tricks\TrickRequestIdentity;
@@ -126,6 +127,20 @@ class TrickController extends Controller
                 'total_reward_points' => $rewards->get($card->id, collect())->sum('points_delta'),
             ];
         })->values());
+    }
+
+    public function holders(Request $request, TrickHolderCatalog $catalog, TrickStateService $state, TrickRecordService $records): JsonResponse
+    {
+        $userId = trim((string) $request->query('user_id', ''));
+        if ($userId !== '' && (strlen($userId) > 191 || ! preg_match('/^[a-zA-Z0-9_.-]+$/', $userId))) {
+            return response()->json(['message' => 'Invalid user_id'], 422);
+        }
+
+        return response()->json([
+            'counts' => $catalog->counts(),
+            'historical_counts' => $catalog->historicalCounts(),
+            'cards' => $userId === '' ? [] : $catalog->cardsFor($userId, $state, $records),
+        ]);
     }
 
     public function collectedAdminStats(
