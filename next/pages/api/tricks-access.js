@@ -11,7 +11,14 @@ export default function handler(req, res) {
     const origin = req.headers.origin
     const host = req.headers["x-forwarded-host"] || req.headers.host
     const protocol = req.headers["x-forwarded-proto"] || (req.socket?.encrypted ? "https" : "http")
-    if (!host || origin !== `${protocol}://${host}` || req.headers["sec-fetch-site"] === "cross-site") {
+    let publicOrigin = null
+    try {
+        publicOrigin = new URL(process.env.NEXTAUTH_URL).origin
+    } catch {
+        // The request host remains the only accepted origin if no public URL is configured.
+    }
+    if (!host || (origin !== `${protocol}://${host}` && origin !== publicOrigin)
+        || req.headers["sec-fetch-site"] === "cross-site") {
         return res.status(403).json({message: "Forbidden"})
     }
     if (!validStagingPassword(req.body?.password)) return res.status(401).json({message: "パスワードが違います"})
