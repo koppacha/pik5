@@ -73,6 +73,11 @@
 - `laravel/Dockerfile` は `default-mysql-client` を導入済み。`mysqldump or mariadb-dump is not installed` は、通常、本番が Dockerfile 更新前の古い Laravel イメージを使用していることを示す。
 - `git pull` だけでは Dockerfile のパッケージは導入されない。本番 Compose で `laravel` と `laravel-scheduler` を build し、`--force-recreate` で再作成する。
 - 再構築後は `command -v mysqldump || command -v mariadb-dump`、`php artisan db:backup`、生成された `.sql.gz` の `gzip -t` を確認する。
+- 本番DBユーザーに`RELOAD`/`FLUSH_TABLES`権限がない場合、`--master-data=2`を使う通常のバックアップは失敗する。移行前の全量退避には`php artisan db:backup --without-binlog-position`を使えるが、binlog位置を記録しないため厳密な時点復旧には使えない。テーブルがすべてInnoDBであることと、圧縮ファイルの整合性を確認する。定期バックアップの権限不足は別途解消する。
+
+## Redis永続化
+
+- Redisの`/data`が実行ユーザーに書き込めないと、RDB保存失敗から`MISCONF`となりLaravel APIも500を返す。ホスト側のRedisデータディレクトリの所有者をコンテナ内Redisユーザーに合わせ、`BGSAVE`後に`rdb_last_bgsave_status:ok`を確認する。既存RDBを削除しない。
 
 ## Next 本番ビルドと Prisma Seed
 
