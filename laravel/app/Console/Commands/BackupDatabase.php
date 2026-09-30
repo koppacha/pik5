@@ -11,7 +11,8 @@ class BackupDatabase extends Command
 {
     protected $signature = 'db:backup
         {--path= : Backup destination directory}
-        {--keep-days= : Delete backups older than this many days}';
+        {--keep-days= : Delete backups older than this many days}
+        {--without-binlog-position : Omit binlog coordinates when FLUSH_TABLES is unavailable}';
 
     protected $description = 'Create a compressed MySQL backup for point-in-time recovery.';
 
@@ -51,20 +52,23 @@ class BackupDatabase extends Command
         }
 
         $errors = '';
-        $process = new Process([
+        $arguments = [
             $dumpBinary,
             '--host='.$database['host'],
             '--port='.$database['port'],
             '--user='.$database['username'],
             '--single-transaction',
-            '--master-data=2',
             '--quick',
             '--no-tablespaces',
             '--routines',
             '--events',
             '--triggers',
-            $database['database'],
-        ], null, ['MYSQL_PWD' => $database['password']]);
+        ];
+        if (! $this->option('without-binlog-position')) {
+            $arguments[] = '--master-data=2';
+        }
+        $arguments[] = $database['database'];
+        $process = new Process($arguments, null, ['MYSQL_PWD' => $database['password']]);
         $process->setTimeout(null);
         $process->run(function ($type, $buffer) use ($stream, &$errors) {
             if ($type === Process::OUT) {

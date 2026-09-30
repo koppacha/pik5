@@ -33,6 +33,8 @@ docker compose exec laravel php artisan db:backup
 gzip -t backups/mysql/bowsprit-YYYYMMDD-HHMMSS.sql.gz
 ```
 
+If the database user lacks `RELOAD` or `FLUSH_TABLES`, use `php artisan db:backup --without-binlog-position` for a full pre-deployment rollback backup. This omits the binlog position needed for precise point-in-time replay. Confirm all dumped tables use a transactional engine before relying on the `--single-transaction` snapshot, and verify the resulting file with `gzip -t`. Keep the normal scheduled backup with binlog coordinates enabled; arrange the missing privilege for durable point-in-time recovery.
+
 ## Point-In-Time Recovery
 
 1. Stop application writes and preserve the current MySQL volume and binary logs.
