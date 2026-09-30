@@ -4,9 +4,10 @@
 
 1. 本番相当ホストのGit管理外`.env`へ`TRICKS_EVENT_ID=261001`と`TRICKS_TEST_EVENT_PASSWORD`を設定する。パスワード値は配布先以外へ記録しない。`NEXTAUTH_SECRET`と`TRICKS_INTERNAL_SECRET`も設定済みであることを確認する。
 2. `limited-trick`をデプロイし、`docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build`でNext/Laravel/schedulerへ同じ大会IDを渡す。
-3. `docker compose -f docker-compose.yml -f docker-compose.prod.yml exec laravel php artisan migrate --force`を実行する。既存の未適用マイグレーションも適用されるので、実行前に対象一覧を確認する。
-4. ステージデータ投入後、`docker compose -f docker-compose.yml -f docker-compose.prod.yml exec laravel php artisan db:seed --class=TrickStaging261001Seeder --force`を実行する。既存大会データは上書きせず、再実行は160枚の投入済みを確認して終了する。
-5. 未入力・誤入力では大会UIとAPIが閉じ、正しい入力で閲覧できることを確認する。大会時間外の操作、10/2 00:00以降のページ/APIの404も確認する。大会ID、カード160枚、開始・終了日時をDBの非秘密項目で確認する。
+3. DBバックアップを取得し、`gzip -t`とファイルサイズで検証する。実行ユーザーに`FLUSH_TABLES`権限がない場合は`php artisan db:backup --without-binlog-position`を使える。全テーブルがInnoDBであることを確認する。このオプションで作るバックアップにはbinlog位置がなく、厳密な時点復旧には使用できない。
+4. `docker compose -f docker-compose.yml -f docker-compose.prod.yml exec laravel php artisan migrate --force`を実行する。既存の未適用マイグレーションも適用されるので、実行前に対象一覧を確認する。
+5. ステージデータ投入後、`docker compose -f docker-compose.yml -f docker-compose.prod.yml exec laravel php artisan db:seed --class=TrickStaging261001Seeder --force`を実行する。既存大会データは上書きせず、再実行は160枚の投入済みを確認して終了する。
+6. 未入力・誤入力では大会UIとAPIが閉じ、正しい入力で閲覧できることを確認する。大会時間外の操作、10/2 00:00以降のページ/APIの404も確認する。大会ID、カード160枚、開始・終了日時をDBの非秘密項目で確認する。
 
 ## 詳細仕様との照合
 
