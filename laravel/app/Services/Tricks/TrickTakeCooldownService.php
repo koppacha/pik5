@@ -8,7 +8,7 @@ use Carbon\CarbonImmutable;
 
 class TrickTakeCooldownService
 {
-    public const COOLDOWN_MINUTES = 90;
+    public const COOLDOWN_MINUTES = 60;
 
     public const ENDGAME_FREE_MINUTES = 150;
 
@@ -30,12 +30,6 @@ class TrickTakeCooldownService
         )) {
             return null;
         }
-        if ($player->take_cooldown_released_for !== null
-            && CarbonImmutable::instance($player->take_cooldown_released_for)
-                ->equalTo(CarbonImmutable::instance($player->last_take_at))) {
-            return null;
-        }
-
         return $fixedEnd;
     }
 }

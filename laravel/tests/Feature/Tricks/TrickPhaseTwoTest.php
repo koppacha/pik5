@@ -206,7 +206,7 @@ class TrickPhaseTwoTest extends TestCase
         } catch (HttpResponseException $exception) {
             self::assertSame(409, $exception->getResponse()->getStatusCode());
             $payload = $exception->getResponse()->getData(true);
-            self::assertSame($now->addMinutes(90)->toIso8601String(), $payload['next_take_at']);
+            self::assertSame($now->addMinutes(60)->toIso8601String(), $payload['next_take_at']);
         }
 
         $endgameThreshold = CarbonImmutable::instance($event->end_at)->subMinutes(150);

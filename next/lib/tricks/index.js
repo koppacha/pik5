@@ -1,6 +1,26 @@
+export const tricksRarityColors = {
+    1: "#b8b8b8",
+    2: "#e6e6e6",
+    3: "#4fb3ff",
+    4: "#8be05e",
+    5: "#ffd447",
+}
+
+export const tricksStackBonus = (rarity, stackCount) => {
+    const groups = Math.floor(Math.max(0, Number(stackCount) || 0) / 3)
+    switch (Number(rarity)) {
+        case 2: return groups + 1
+        case 3: return groups + 4
+        case 4: return groups * 2 + 7
+        case 5: return groups * 3 + 15
+        default: return 0
+    }
+}
+
 export const tricksApi = {
     state: "/api/server/tricks/state",
     collected: (eventId) => `/api/server/tricks/collected${eventId ? `?event_id=${eventId}` : ""}`,
+    holders: (userId) => `/api/server/tricks/holders${userId ? `?user_id=${encodeURIComponent(userId)}` : ""}`,
     collectedAdminStats: (eventId) => `/api/server/tricks/collected/admin-stats${eventId ? `?event_id=${eventId}` : ""}`,
     join: "/api/server/tricks/join",
     draw: "/api/server/tricks/draw",
@@ -30,7 +50,9 @@ export const tricksFetcher = async (url) => {
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
         const message = body?.data?.message || body?.message || "API request failed"
-        throw new Error(message)
+        const error = new Error(message)
+        error.status = res.status
+        throw error
     }
 
     return body?.data ?? body
@@ -45,7 +67,9 @@ export const postTricks = async (url, payload = {}) => {
     const body = await res.json().catch(() => ({}))
     if (!res.ok) {
         const message = body?.data?.message || body?.message || "API request failed"
-        throw new Error(message)
+        const error = new Error(message)
+        error.status = res.status
+        throw error
     }
 
     return body?.data ?? body
@@ -81,6 +105,18 @@ export const formatTournamentRemaining = (endAt, nowValue = Date.now()) => {
     const seconds = totalSeconds % 60
 
     return `${String(minutes).padStart(2, "0")}分${String(seconds).padStart(2, "0")}秒`
+}
+export const tricksTournamentCountdownAlert = (endAt, nowValue = Date.now()) => {
+    if (!endAt) return null
+    const remainingMs = new Date(endAt).getTime() - nowValue
+    if (!Number.isFinite(remainingMs) || remainingMs > 3 * 60 * 60 * 1000) return null
+    if (remainingMs <= 60 * 60 * 1000) {
+        return {phase: "take-closed", text: "まもなく大会終了します。テイクはできません"}
+    }
+    if (remainingMs <= 70 * 60 * 1000) {
+        return {phase: "take-closing", text: "まもなくテイクできなくなります！"}
+    }
+    return {phase: "legendary", text: "レジェンダリー排出率10倍！"}
 }
 // JSTの毎時00分・30分に訪れる次回ポイント給付までをmm:ssで返す。
 export const formatNextSubsidyRemaining = (nowValue = Date.now()) => {

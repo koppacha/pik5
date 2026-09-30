@@ -22,6 +22,9 @@ import {useState} from "react";
 import {useFetchToken} from "../../hooks/useFetchToken";
 import DashBoard from "../../components/top/DashBoard";
 import BreadCrumb from "../../components/BreadCrumb";
+import useSWR from "swr"
+import TricksCollectorRoom from "../../components/tricks/TricksCollectorRoom"
+import {tricksApi, tricksFetcher} from "../../lib/tricks"
 
 export async function getStaticPaths(){
     return {
@@ -94,6 +97,11 @@ export default function Stage(param){
     const lastPostDate = param.info.last_posted_at ? new Date(param.info.last_posted_at) : null
 
     const [isProcessing, setIsProcessing] = useState(false)
+    const [collectorOpen, setCollectorOpen] = useState(false)
+    const {data: holderData} = useSWR(tricksApi.holders(param.user), tricksFetcher, {refreshInterval: 30000})
+    const holderCards = holderData?.cards || []
+    const holderCount = holderCards.length
+    const usersById = React.useMemo(() => Object.fromEntries(param.users.map((user) => [user.userId, user])), [param.users])
 
     // トークンを取得
     const token = useFetchToken()
@@ -192,11 +200,13 @@ export default function Stage(param){
                     <UserInfoBox className="user-info-box"><span>{t.g.lastPostDate}：</span>{lastPostDate ? dateFormat(lastPostDate) : "-"}</UserInfoBox>
                     <UserInfoBox className="user-info-box"><span>{t.g.keywordEditCount}：</span>{param.info.keyword_edit_count}</UserInfoBox>
                     <UserInfoBox className="user-info-box"><span>{t.g.eventStampCount}：</span>{param.info.event_stamp_count}</UserInfoBox>
+                    {holderCount > 0 && <UserInfoBox className="user-info-box"><Button onClick={() => setCollectorOpen((open) => !open)} aria-expanded={collectorOpen} style={{color: "inherit", padding: 0}}>コレクタールーム：{holderCount}枚</Button></UserInfoBox>}
                     <UserInfoBox className="user-info-box">
                         <span>{t.g.lastUpdate}：</span>{param.fDate} <Button disabled={isProcessing} style={{color:"var(--color-surface-inverse-text)",padding:"0 4px",minWidth:"0"}} onClick={handlePurgeCache}><FontAwesomeIcon icon={faRotate} /></Button>
                     </UserInfoBox>
                 </Grid>
             </Box>
+            {collectorOpen && <TricksCollectorRoom cards={holderCards} usersById={usersById} onClose={() => setCollectorOpen(false)} />}
             <DashBoard user={userId} users={param.users} />
             <Grid container marginBottom="20px">
                 <Grid item xs={12}>

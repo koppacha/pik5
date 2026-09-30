@@ -17,12 +17,12 @@ class TrickTakeCooldownServiceTest extends TestCase
         $player = $this->playerWithLastTake($now->subMinutes(30));
 
         self::assertSame(
-            $now->addMinutes(60)->toIso8601String(),
+            $now->addMinutes(30)->toIso8601String(),
             (new TrickTakeCooldownService())->nextTakeAt($event, $player, $now)?->toIso8601String(),
         );
     }
 
-    public function test_matching_all_field_first_release_removes_current_cooldown_only(): void
+    public function test_legacy_release_marker_does_not_remove_cooldown(): void
     {
         $now = CarbonImmutable::parse('2026-09-20 20:00:00', 'Asia/Tokyo');
         $event = $this->eventEndingAt('2026-09-20 23:59:00');
@@ -31,7 +31,8 @@ class TrickTakeCooldownServiceTest extends TestCase
         $player->take_cooldown_released_for = $lastTake;
         $cooldowns = new TrickTakeCooldownService();
 
-        self::assertNull($cooldowns->nextTakeAt($event, $player, $now));
+        self::assertSame($now->addMinutes(30)->toIso8601String(),
+            $cooldowns->nextTakeAt($event, $player, $now)?->toIso8601String());
 
         $player->last_take_at = $now;
         self::assertNotNull($cooldowns->nextTakeAt($event, $player, $now));

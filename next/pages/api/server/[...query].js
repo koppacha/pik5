@@ -9,6 +9,7 @@ import {getServerSession} from "next-auth/next";
 import {authOptions} from "../auth/[...nextauth]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import {tricksIdentityHeaders, tricksTestIdentityHeaders} from "../../../lib/tricks/proxyAuth";
+import {hasStagingAccess, stagingAccessEnabled, STAGING_CLOSE_AT} from "../../../lib/tricks/stagingAccess";
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || 'http://laravel:8000/api'
 const MAX_RAW_BODY_BYTES = 1024 * 1024
@@ -78,6 +79,23 @@ function getForwardedFor(req) {
 }
 
 export default async function handle(req, res){
+  const path = getSafeQueryPath(req.query.query)
+  if (!path) {
+    res.status(400).json({error: true, message: 'invalid path'})
+    return
+  }
+
+  if (path.startsWith('tricks/') && stagingAccessEnabled()) {
+    res.setHeader('Cache-Control', 'no-store')
+    if (Date.now() >= STAGING_CLOSE_AT) {
+      res.status(404).json({error: true, message: 'not found'})
+      return
+    }
+    if (!hasStagingAccess(req)) {
+      res.status(403).json({error: true, message: '大会パスワードが必要です'})
+      return
+    }
+  }
 
   const session = await getServerSession(req, res, authOptions)
 
@@ -90,11 +108,6 @@ export default async function handle(req, res){
     return
   }
 
-  const path = getSafeQueryPath(req.query.query)
-  if (!path) {
-    res.status(400).json({error: true, message: 'invalid path'})
-    return
-  }
   // 大会の更新は管理者専用APIを通す。汎用プロキシからの迂回を防ぐ。
   if (req.method !== 'GET' && path.split('/')[0] === 'swiss-tournaments') {
     res.status(403).json({error: true, message: 'forbidden'})
@@ -110,6 +123,11 @@ export default async function handle(req, res){
   const searchParams = buildSearchParams(req.query)
   const upstreamUrl = `${LARAVEL_API_BASE}/${path}` + (searchParams.toString() ? `?${searchParams.toString()}` : '')
   const testIdentityHeaders = tricksTestIdentityHeaders(req.headers)
+  if (path.startsWith('tricks/') && session?.user && !process.env.TRICKS_INTERNAL_SECRET
+    && Object.keys(testIdentityHeaders).length === 0) {
+    res.status(503).json({error: true, status: 503, message: '大会APIの認証設定がありません'})
+    return
+  }
   const identityHeaders = path.startsWith('tricks/')
     ? Object.keys(testIdentityHeaders).length > 0
       ? testIdentityHeaders

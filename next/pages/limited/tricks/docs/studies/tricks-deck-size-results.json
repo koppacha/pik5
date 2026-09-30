@@ -1,0 +1,163 @@
+{
+  "participants": 13,
+  "start_seed": 310000,
+  "runs_per_size": 300,
+  "results": [
+    {
+      "deck_size": 145,
+      "runs": 300,
+      "depleted_runs": 15,
+      "total_intervals": 18,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310002,
+        310055,
+        310057,
+        310067,
+        310086,
+        310119,
+        310135,
+        310136,
+        310147,
+        310156
+      ]
+    },
+    {
+      "deck_size": 150,
+      "runs": 300,
+      "depleted_runs": 5,
+      "total_intervals": 5,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310002,
+        310050,
+        310101,
+        310203,
+        310248
+      ]
+    },
+    {
+      "deck_size": 155,
+      "runs": 300,
+      "depleted_runs": 3,
+      "total_intervals": 3,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310003,
+        310223,
+        310248
+      ]
+    },
+    {
+      "deck_size": 156,
+      "runs": 300,
+      "depleted_runs": 4,
+      "total_intervals": 4,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310014,
+        310085,
+        310189,
+        310267
+      ]
+    },
+    {
+      "deck_size": 157,
+      "runs": 300,
+      "depleted_runs": 1,
+      "total_intervals": 1,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310276
+      ]
+    },
+    {
+      "deck_size": 158,
+      "runs": 300,
+      "depleted_runs": 1,
+      "total_intervals": 2,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310294
+      ]
+    },
+    {
+      "deck_size": 159,
+      "runs": 300,
+      "depleted_runs": 1,
+      "total_intervals": 1,
+      "minimum_available_cards": 0,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": [
+        310275
+      ]
+    },
+    {
+      "deck_size": 160,
+      "runs": 300,
+      "depleted_runs": 0,
+      "total_intervals": 0,
+      "minimum_available_cards": 1,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": []
+    },
+    {
+      "deck_size": 165,
+      "runs": 300,
+      "depleted_runs": 0,
+      "total_intervals": 0,
+      "minimum_available_cards": 3,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": []
+    },
+    {
+      "deck_size": 170,
+      "runs": 300,
+      "depleted_runs": 0,
+      "total_intervals": 0,
+      "minimum_available_cards": 15,
+      "blocked_draws_with_points": 0,
+      "sample_depleted_seeds": []
+    }
+  ],
+  "independent_validation": {
+    "participants": 13,
+    "start_seed": 310300,
+    "runs_per_size": 300,
+    "results": [
+      {
+        "deck_size": 160,
+        "runs": 300,
+        "depleted_runs": 0,
+        "total_intervals": 0,
+        "minimum_available_cards": 3,
+        "blocked_draws_with_points": 0,
+        "sample_depleted_seeds": []
+      },
+      {
+        "deck_size": 170,
+        "runs": 300,
+        "depleted_runs": 0,
+        "total_intervals": 0,
+        "minimum_available_cards": 2,
+        "blocked_draws_with_points": 0,
+        "sample_depleted_seeds": []
+      },
+      {
+        "deck_size": 180,
+        "runs": 300,
+        "depleted_runs": 0,
+        "total_intervals": 0,
+        "minimum_available_cards": 13,
+        "blocked_draws_with_points": 0,
+        "sample_depleted_seeds": []
+      }
+    ]
+  }
+}

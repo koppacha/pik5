@@ -76,6 +76,7 @@ class TrickCollectionService
                         (int) $card->paid_points_total,
                         1,
                         $potPoints,
+                        (int) ($card->rarity ?? 1),
                     );
                     $rewardType = 'single_fixed';
                 } else {
@@ -87,6 +88,7 @@ class TrickCollectionService
                             (int) $card->paid_points_total,
                             count($rankings),
                             $potPoints,
+                            (int) ($card->rarity ?? 1),
                         ),
                         $rankGroups,
                     );
@@ -136,7 +138,10 @@ class TrickCollectionService
                     }
                 }
 
-                $holders = collect($rankings)->where('rank', 1)->pluck('user_id')->values()->all();
+                $firstRanking = collect($rankings)->where('rank', 1)
+                    ->sortBy(fn (array $row) => (int) ($row['post_id'] ?? PHP_INT_MAX))
+                    ->first();
+                $holders = $firstRanking === null ? [] : [$firstRanking['user_id']];
                 foreach ($holders as $holder) {
                     TrickCardHolder::query()->firstOrCreate([
                         'event_id' => $event->event_id,
@@ -173,12 +178,11 @@ class TrickCollectionService
             TrickEventCard::query()->where('event_id', $event->event_id)
                 ->where('stack_parent_id', $card->id)->where('state', '_stack')
                 ->lockForUpdate()->update(['state' => '_trash']);
-            $toState = $rankings === [] ? '_trash' : '_collected';
+            $toState = '_collected';
             $card->fill(['state' => $toState, 'collected_at' => $now])->save();
             $emergencyGrant = $this->emergencyGrants->apply($event, $now, $actor, $request);
-            $this->records->releaseEligibleTakeCooldowns($event, $now);
             $topRanking = collect($rankings)->where('rank', 1)
-                ->sortBy(fn (array $row) => sprintf('%s:%020d', $row['created_at'] ?? '', $row['post_id'] ?? 0))
+                ->sortBy(fn (array $row) => (int) ($row['post_id'] ?? PHP_INT_MAX))
                 ->first();
             LimitLog::query()->create([
                 'event' => 'collect',
@@ -205,7 +209,8 @@ class TrickCollectionService
                     'distribution' => $distribution,
                     'pot_points_used' => $potPoints,
                     'last_place_remainder' => $remainderDistribution,
-                    'recycled_unposted' => $rankings === [],
+                    'recycled_unposted' => false,
+                    'excluded_unposted' => $rankings === [],
                     'emergency_grant_points' => $emergencyGrant['points'],
                     'holders' => $holders,
                     'subsidy_flagged_holders' => $subsidyFlaggedHolders,

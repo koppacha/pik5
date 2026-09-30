@@ -66,6 +66,18 @@ class TrickStateService
             ->with('deck')
             ->where('event_id', $event->event_id)
             ->get();
+        $holderCards = TrickCardHolder::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->where('state', '_collected')->pluck('id'))
+            ->get()->map(function (TrickCardHolder $holder) use ($cards): array {
+                $card = $cards->firstWhere('id', $holder->event_card_id);
+
+                return [
+                    'player_name' => $holder->player_name,
+                    'stage_id' => (int) ($card?->deck?->stage_id ?? 0),
+                    'rarity' => (int) ($card?->rarity ?? 1),
+                    'difficulty' => $card?->difficulty,
+                ];
+            })->values();
         $ended = $event->state === 'ended';
         $field = $ended ? [] : $this->fieldWithPostingState($event, $cards->where('state', '_field'), $userId);
         if (! $ended) {
@@ -75,11 +87,19 @@ class TrickStateService
             $field = collect($field)->map(function (array $card) use ($event, $potTargetId): array {
                 $pot = (int) $card['event_card_id'] === (int) $potTargetId ? (int) $event->pot_points : 0;
                 $card['provisional_pot_points'] = $pot;
+                $card['live_total_reward'] = $this->rules->totalReward(
+                    (int) $card['stack_count'],
+                    (int) $card['paid_points_total'],
+                    1,
+                    0,
+                    (int) ($card['rarity'] ?? 1),
+                );
                 $card['provisional_total_reward'] = $this->rules->totalReward(
                     (int) $card['stack_count'],
                     (int) $card['paid_points_total'],
                     (int) $card['participant_count'],
                     $pot,
+                    (int) ($card['rarity'] ?? 1),
                 );
 
                 return $card;
@@ -93,6 +113,7 @@ class TrickStateService
             'deck_count' => $ended ? 0 : $cards->where('state', '_deck')->count(),
             'trash_count' => $ended ? 0 : $cards->where('state', '_trash')->count(),
             'collected_count' => $cards->where('state', '_collected')->count(),
+            'holder_cards' => $holderCards,
             'field' => $field,
             'hand' => ! $ended && $userId
                 ? $this->normalizeCards($cards->where('state', $userId)->sortBy('drawn_order'))

@@ -5,6 +5,7 @@ import {prismaLogging} from "../[...query]"
 import {ensureServerApiAccess} from "../../../../lib/serverApiAccess"
 import prisma from "../../../../lib/prisma"
 import {tricksIdentityHeaders} from "../../../../lib/tricks/proxyAuth"
+import {hasStagingAccess, stagingAccessEnabled, STAGING_CLOSE_AT} from "../../../../lib/tricks/stagingAccess"
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
 
@@ -49,6 +50,16 @@ export default async function handler(req, res){
         if (!recordRes.ok || !record?.unique_id || Number(record.flg) > 1) {
             res.status(404).json({error: true, message: "record not found"})
             return
+        }
+        if (stagingAccessEnabled() && Number(record.stage_id) >= 1001 && Number(record.stage_id) <= 1999) {
+            if (Date.now() >= STAGING_CLOSE_AT) {
+                res.status(404).json({error: true, message: "not found"})
+                return
+            }
+            if (!hasStagingAccess(req)) {
+                res.status(403).json({error: true, message: "大会パスワードが必要です"})
+                return
+            }
         }
         if (!canDeleteRecord(currentUserId, role, record.created_at, String(record.user_id || ""))) {
             res.status(403).json({error: true, message: "forbidden"})

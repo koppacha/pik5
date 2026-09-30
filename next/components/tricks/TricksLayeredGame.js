@@ -8,6 +8,8 @@ import {
     normalizeTricksState,
     orderTricksHand,
     shortenTricksText,
+    tricksRarityColors,
+    tricksStackBonus,
 } from "../../lib/tricks"
 
 const CARD_RATIO = 88 / 63
@@ -40,13 +42,7 @@ const rarityLabels = {
     5: "L5",
 }
 
-const rarityColors = {
-    1: "#b8b8b8",
-    2: "#e6e6e6",
-    3: "#4fb3ff",
-    4: "#8be05e",
-    5: "#ffd447",
-}
+const rarityColors = tricksRarityColors
 
 // 手札カードの扇状配置座標を計算する。
 function handLayout(width, height, count, index) {
@@ -469,7 +465,7 @@ export function TricksDomCard({
             <span className="tricks-dom-card-face">
                 <span className="tricks-dom-card-meta">
                     <span>#{card.stage_id || card.card_id || card.id}</span>
-                    <span>★{card.difficulty || 1} {rarityLabels[rarity] || `R${rarity}`}</span>
+                    <span>★{card.difficulty ?? "-"} {rarityLabels[rarity] || `R${rarity}`}</span>
                 </span>
                 <span className="tricks-dom-card-title">{shortenTricksText(card.title || "Untitled", isField ? 22 : 18)}</span>
                 <span className="tricks-dom-card-rule">{shortenTricksText(card.rule_name || "", isField ? 28 : 20)}</span>
@@ -486,8 +482,8 @@ export function TricksDomCard({
                                 <span data-tricks-free style={{marginLeft: 6, color: "#237a39", fontWeight: 700}}>無料！</span>
                             )}</span>
                             {!footerLabel && card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
-                            <span className={`tricks-dom-stack${stackCount >= 7 ? " has-gradient" : ""}`}>
-                                <span className="tricks-dom-stack-value">{footerValue ?? card.provisional_total_reward ?? 0}</span>
+                            <span className={`tricks-dom-stack${(footerValue ?? card.live_total_reward ?? 0) >= 7 ? " has-gradient" : ""}`} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
+                                <span className="tricks-dom-stack-value">{footerValue ?? card.live_total_reward ?? 0}</span>
                             </span>
                         </span>
                     </>
@@ -605,6 +601,7 @@ function DomCardsLayer({
     const fieldById = useMemo(() => new Map((view.field || []).map((card) => [card.id, card])), [view.field])
     const orderedField = fieldOrder.map((id) => fieldById.get(id)).filter(Boolean)
     const selectedHandId = selectedHand?.id
+    const selectedHandStackBonus = selectedHand ? tricksStackBonus(selectedHand.rarity, view.hand.length) : 0
     const selectedFieldIndex = orderedField.findIndex((card) => card.id === selectedFieldId)
     const selectedFieldCard = selectedFieldIndex >= 0 ? orderedField[selectedFieldIndex] : null
     const baseDeckLayout = deckLayout(size.height)
@@ -834,7 +831,8 @@ function DomCardsLayer({
                             }}
                         >
                             <div>投稿コスト {Math.max(1, Number(selectedHand.difficulty || 1))}P</div>
-                            <div>スタック数 {view.hand.length}</div>
+                            <div data-tricks-take-stack-count>スタック数 {view.hand.length + selectedHandStackBonus}</div>
+                            {selectedHandStackBonus > 0 && <div data-tricks-take-stack-bonus>（レア度ボーナス {selectedHandStackBonus}）</div>}
                         </div>
                         <button
                             type="button"

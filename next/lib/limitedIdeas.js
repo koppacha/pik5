@@ -1,12 +1,12 @@
 // End is exclusive: submissions are accepted through 19:59:59 JST.
 export const LIMITED_IDEAS_START = '2026-09-13T00:00:00+09:00'
-export const LIMITED_IDEAS_END = '2026-11-06T20:00:00+09:00'
+export const LIMITED_IDEAS_END = '2026-10-09T00:00:00+09:00'
 
 export const isLimitedIdeasAdmin = user => String(user?.role) === '10'
 export const canAccessLimitedIdeas = (user, now = Date.now()) =>
     isLimitedIdeasAdmin(user) || (now >= Date.parse(LIMITED_IDEAS_START) && now < Date.parse(LIMITED_IDEAS_END))
 
-export const limitedIdeasRatio = count => (Math.max(100, Math.round(count / 2)) / 100).toFixed(2)
+export const limitedIdeasRatio = count => (Math.max(160, count) / 160).toFixed(2)
 
 export function validateLimitedIdea(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return '入力形式が不正です。'

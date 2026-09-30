@@ -191,7 +191,6 @@ class TrickGameService
                 'card_count' => 0,
                 'last_take_at' => $now,
                 'take_count' => ((int) $player->take_count) + 1,
-                'take_cooldown_released_for' => null,
             ];
             if ($subsidyEligible) {
                 $playerData['subsidy_flag'] = true;
@@ -405,10 +404,10 @@ class TrickGameService
 
     private function drawRarity(TrickEvent $event, CarbonImmutable $now, string $seedPrefix = null): int
     {
-        $elapsedHours = max(0.0, min(46.0, $event->start_at->diffInSeconds($now, false) / 3600));
+        $remainingSeconds = CarbonImmutable::instance($event->end_at)->getTimestamp() - $now->getTimestamp();
 
         return $this->weightedDraw(
-            $this->rules->rarityWeights($elapsedHours),
+            $this->rules->rarityWeights($remainingSeconds),
             $seedPrefix === null ? null : $seedPrefix.':rarity',
         );
     }

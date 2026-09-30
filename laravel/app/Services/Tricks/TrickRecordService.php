@@ -24,7 +24,6 @@ class TrickRecordService
         private readonly TrickRankCalculator $ranks,
         private readonly TrickRewardDistributor $rewards,
         private readonly TrickRequestIdentity $identity,
-        private readonly TrickTakeCooldownService $cooldowns,
     ) {
     }
 
@@ -107,9 +106,6 @@ class TrickRecordService
         );
         $pointsPaid = $existingOperation === null ? $pointsDue : 0;
         if ($existingOperation === null) {
-            if ($pointsPaid > 0 && $player->draw_points < $pointsPaid) {
-                abort(response()->json(['message' => "投稿には{$pointsPaid}P必要です"], 422));
-            }
             TrickCardPayment::query()->create([
                 'event_id' => $event->event_id,
                 'event_card_id' => $card->id,
@@ -141,7 +137,6 @@ class TrickRecordService
         $card->top_player = $rankings[0]['user_id'] ?? null;
         $card->save();
         $this->log($event, $card, $record, $participantOrder, $pointsPaid, $extension, $rankings, $request);
-        $this->releaseEligibleTakeCooldowns($event, $now);
     }
 
     public function deleted(Record $record, Request $request = null): void
@@ -186,45 +181,6 @@ class TrickRecordService
                 'collection_result_frozen' => $card->state === '_collected',
             ],
         ]);
-        $this->releaseEligibleTakeCooldowns($event, $this->clock->now($event));
-    }
-
-    /** @return array<int, string> */
-    public function releaseEligibleTakeCooldowns(TrickEvent $event, CarbonImmutable $now): array
-    {
-        $field = TrickEventCard::query()->where('event_id', $event->event_id)
-            ->where('state', '_field')->get();
-        if ($field->count() < 2) {
-            return [];
-        }
-
-        $firstPlayersByCard = collect($this->rankingsByCards($field))->map(
-            fn (array $rankings) => collect($rankings)->where('rank', 1)->pluck('user_id')->values(),
-        );
-        $players = Player::query()->where('event_id', $event->event_id)
-            ->whereNotNull('last_take_at')->lockForUpdate()->get();
-        $released = [];
-        foreach ($players as $player) {
-            if ($this->cooldowns->nextTakeAt($event, $player, $now) === null) {
-                continue;
-            }
-            if (! $field->contains(fn (TrickEventCard $card) => $card->taker !== null
-                && (string) $card->taker !== $player->name)) {
-                continue;
-            }
-            $isFirstOnEveryCard = $field->every(
-                fn (TrickEventCard $card) => $firstPlayersByCard->get($card->id, collect())->contains($player->name),
-            );
-            if (! $isFirstOnEveryCard) {
-                continue;
-            }
-
-            $player->take_cooldown_released_for = $player->last_take_at;
-            $player->save();
-            $released[] = $player->name;
-        }
-
-        return $released;
     }
 
     public function rankings(TrickEventCard $card): array
@@ -326,6 +282,7 @@ class TrickRecordService
                 (int) $card->paid_points_total,
                 1,
                 $potPoints,
+                (int) ($card->rarity ?? 1),
             );
 
             return $rankings;
@@ -339,6 +296,7 @@ class TrickRecordService
                 (int) $card->paid_points_total,
                 count($rankings),
                 $potPoints,
+                (int) ($card->rarity ?? 1),
             ),
             $rankGroups,
         );

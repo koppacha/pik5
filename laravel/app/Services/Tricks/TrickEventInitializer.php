@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 class TrickEventInitializer
 {
-    public const DECK_SIZE = 200;
+    public const DECK_SIZE = 160;
 
     /**
      * @return array{already_initialized: bool, prioritized: int, selected: int, available: int}
@@ -45,12 +45,12 @@ class TrickEventInitializer
                 ->lockForUpdate()
                 ->get();
             if ($eligible->count() < self::DECK_SIZE) {
-                throw new DomainException('大会初期化には投入可能なカードが200枚必要です');
+                throw new DomainException('大会初期化には投入可能なカードが160枚必要です');
             }
 
             $priorityIds = $eligibleDeckIds === null ? $this->priorityDeckIds($lockedEvent) : collect();
             if ($priorityIds->count() > self::DECK_SIZE) {
-                throw new DomainException('直前大会の必須再投入カードが200枚を超えています');
+                throw new DomainException('直前大会の必須再投入カードが160枚を超えています');
             }
 
             $seed = $lockedEvent->random_seed ?? random_int(1, PHP_INT_MAX);

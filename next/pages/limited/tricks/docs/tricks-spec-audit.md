@@ -1,5 +1,7 @@
 # トリックテイキング制 4文書整合性監査
 
+> 2026-07-20時点の履歴監査。現行ルールは2026-09-29改訂の[ルール仕様書](tricks-rules.md)、[シミュレーション仕様書](tricks-simulation.md)、[UI設計書](tricks-system.md)を参照する。現在は60分クールダウン、全場札1位解除なし、レア度別スタックボーナスを採用する。
+
 監査日：2026-07-20  
 対象：`tricks-implementation-plan.md`、`tricks-system.md`、`tricks-rules.md`、`tricks-simulation.md`
 

@@ -9,6 +9,7 @@ import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import prisma from "../../../lib/prisma";
 import {tricksIdentityHeaders} from "../../../lib/tricks/proxyAuth";
+import {hasStagingAccess, stagingAccessEnabled, STAGING_CLOSE_AT} from "../../../lib/tricks/stagingAccess";
 import {createRecordValidationSchema} from "../../../lib/recordValidation";
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
@@ -115,6 +116,17 @@ export default async function handler(req, res){
 
     try {
         const {fields, files} = await parseForm(req)
+        const submittedStageId = Number(getFieldValue(fields.stage_id))
+        if (stagingAccessEnabled() && submittedStageId >= 1001 && submittedStageId <= 1999) {
+            if (Date.now() >= STAGING_CLOSE_AT) {
+                res.status(404).json({error: true, message: "not found"})
+                return
+            }
+            if (!hasStagingAccess(req)) {
+                res.status(403).json({error: true, message: "大会パスワードが必要です"})
+                return
+            }
+        }
         const mode = String(getFieldValue(fields.mode) || 'create')
         const editUniqueId = String(getFieldValue(fields.edit_unique_id) || '')
         const isEdit = mode === 'edit'
@@ -149,6 +161,16 @@ export default async function handler(req, res){
             if (!currentRecord?.unique_id || Number(currentRecord?.flg) > 1) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
+            }
+            if (stagingAccessEnabled() && Number(currentRecord.stage_id) >= 1001 && Number(currentRecord.stage_id) <= 1999) {
+                if (Date.now() >= STAGING_CLOSE_AT) {
+                    res.status(404).json({error: true, message: "not found"})
+                    return
+                }
+                if (!hasStagingAccess(req)) {
+                    res.status(403).json({error: true, message: "大会パスワードが必要です"})
+                    return
+                }
             }
             const editable = canEditRecord(
                 currentUserId,
