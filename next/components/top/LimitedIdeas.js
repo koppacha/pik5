@@ -5,7 +5,7 @@ import useSWR from 'swr'
 import {Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField, Typography} from '@mui/material'
 import {TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from '../../styles/pik5.css'
 import {useLocale} from '../../lib/pik5'
-import {canAccessLimitedIdeas, formatLimitedIdeasDate, limitedIdeasRatio, validateLimitedIdea} from '../../lib/limitedIdeas'
+import {LIMITED_IDEAS_STAGE_RANGES, canAccessLimitedIdeas, formatLimitedIdeasDate, limitedIdeasRatio, validateLimitedIdea} from '../../lib/limitedIdeas'
 import {faTicketSimple} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -119,7 +119,8 @@ export default function LimitedIdeas() {
     }
     if (!visible) return null
 
-    const stages = Array.from({length: draft.title === 2 ? 30 : 28}, (_, index) => (draft.title === 2 ? 201 : 401) + index)
+    const [start, end] = LIMITED_IDEAS_STAGE_RANGES[draft.title]
+    const stages = Array.from({length: end - start + 1}, (_, index) => start + index)
     const fieldProps = {fullWidth: true, margin: 'normal', variant: 'standard', disabled: busy}
     const disabled = !identity || status !== 'authenticated'
     const buttonStyle = {...(disabled && {color: 'var(--color-muted-text)', borderColor: 'var(--color-divider-muted)'})}
@@ -201,9 +202,9 @@ export default function LimitedIdeas() {
                         <TextField {...fieldProps} label="ユーザー名" value={draft.creatorName ?? session?.user?.name ?? ''} disabled />
                         <TextField {...fieldProps} select label="タイトル" value={draft.title} onChange={event => {
                             const title = Number(event.target.value)
-                            setDrafts(current => ({...current, [draftKey]: {...draft, title, stageId: title === 2 ? 201 : 401}}))
+                            setDrafts(current => ({...current, [draftKey]: {...draft, title, stageId: LIMITED_IDEAS_STAGE_RANGES[title][0]}}))
                         }}>
-                            {[2, 4].map(title => <MenuItem key={title} value={title}>{t.title[title]}</MenuItem>)}
+                            {Object.keys(LIMITED_IDEAS_STAGE_RANGES).map(Number).map(title => <MenuItem key={title} value={title}>{t.title[title]}</MenuItem>)}
                         </TextField>
                         <TextField {...fieldProps} select label="ステージ" value={draft.stageId} onChange={event => change('stageId', Number(event.target.value))}>
                             {stages.map(stage => <MenuItem key={stage} value={stage}>{t.stage[stage]}</MenuItem>)}
