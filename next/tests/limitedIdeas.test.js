@@ -28,8 +28,16 @@ test('ratio counts rules, minimum 1.00', () => {
 test('validation rejects forged fields, invalid ranges and excessive Unicode lengths', () => {
     assert.equal(validateLimitedIdea(valid), null)
     assert.equal(validateLimitedIdea({...valid, title: 4, stageId: 428, registrationMethod: 'time', ruleName: '😀'.repeat(10), body: 'あ'.repeat(256)}), null)
+    for (const [title, start, end] of [[1, 101, 105], [2, 201, 230], [3, 301, 350], [4, 401, 428]]) {
+        for (let stageId = start; stageId <= end; stageId++) {
+            assert.equal(validateLimitedIdea({...valid, title, stageId}), null)
+        }
+        for (const stageId of [start - 1, end + 1, start + 0.5]) {
+            assert.ok(validateLimitedIdea({...valid, title, stageId}))
+        }
+    }
     for (const patch of [
-        {title: 3}, {title: '2'}, {stageId: 401}, {stageId: 200}, {stageId: 231},
+        {title: 5}, {title: '2'}, {stageId: 401}, {stageId: 200}, {stageId: 231},
         {title: 4, stageId: 429}, {stageId: 201.1}, {ruleName: ''}, {ruleName: ' '.repeat(2)},
         {ruleName: 'あ'.repeat(11)}, {ruleName: '😀'.repeat(11)}, {difficulty: 0}, {difficulty: 6},
         {difficulty: 1.5}, {difficulty: '1'}, {registrationMethod: 'sql'}, {body: ''}, {body: 'あ'.repeat(257)},

@@ -2,6 +2,13 @@
 export const LIMITED_IDEAS_START = '2026-09-13T00:00:00+09:00'
 export const LIMITED_IDEAS_END = '2026-10-09T00:00:00+09:00'
 
+export const LIMITED_IDEAS_STAGE_RANGES = {
+    1: [101, 105],
+    2: [201, 230],
+    3: [301, 350],
+    4: [401, 428],
+}
+
 export const isLimitedIdeasAdmin = user => String(user?.role) === '10'
 export const canAccessLimitedIdeas = (user, now = Date.now()) =>
     isLimitedIdeasAdmin(user) || (now >= Date.parse(LIMITED_IDEAS_START) && now < Date.parse(LIMITED_IDEAS_END))
@@ -10,9 +17,8 @@ export const limitedIdeasRatio = count => (Math.max(160, count) / 160).toFixed(2
 
 export function validateLimitedIdea(value) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return '入力形式が不正です。'
-    if (![2, 4].includes(value.title)) return 'タイトルを選択してください。'
-    const start = value.title === 2 ? 201 : 401
-    const end = value.title === 2 ? 230 : 428
+    if (!Number.isInteger(value.title) || !LIMITED_IDEAS_STAGE_RANGES[value.title]) return 'タイトルを選択してください。'
+    const [start, end] = LIMITED_IDEAS_STAGE_RANGES[value.title]
     if (!Number.isInteger(value.stageId) || value.stageId < start || value.stageId > end) return 'タイトルに対応するステージを選択してください。'
     if (typeof value.ruleName !== 'string' || !value.ruleName.trim() || [...value.ruleName].length > 10) return 'ルール名は1〜10文字で入力してください。'
     if (!Number.isInteger(value.difficulty) || value.difficulty < 1 || value.difficulty > 5) return '難易度は1〜5を選択してください。'
