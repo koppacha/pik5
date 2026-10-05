@@ -73,20 +73,16 @@ class TrickTestFixtureService
                     'eventId' => $eventId,
                     'event_id' => null,
                     'card_id' => null,
-                    'stageId' => $originStageId,
                     'stage_id' => null,
                     'origin_stage_id' => $originStageId,
                     'title' => "fixture card {$eventId}-{$index}",
-                    'ruleName' => "fixture rule {$index}",
                     'rule_name' => "fixture rule {$index}",
                     'state' => '_eligible',
                     'text' => "Playwright fixture {$eventId} card {$index}",
                     'difficulty' => (($index - 1) % 5) + 1,
-                    'rarity' => 1,
                     'rewards' => 0,
                     'creator' => $creator,
                     'taker' => null,
-                    'topPlayer' => null,
                     'top_player' => null,
                     'count' => 0,
                     'post_count' => 0,
@@ -114,7 +110,7 @@ class TrickTestFixtureService
                 $cards = TrickEventCard::query()->where('event_id', $eventId)->where('state', '_deck')
                     ->orderBy('id')->limit($handCount)->get();
                 foreach ($cards as $order => $card) {
-                    $card->update(['state' => $name, 'rarity' => 1, 'drawn_order' => $order + 1]);
+                    $card->update(['state' => $name, 'rarity' => 1, 'draw_count' => 1, 'drawn_order' => $order + 1]);
                 }
                 Player::query()->where('event_id', $eventId)->where('name', $name)->update([
                     'draw_points' => (int) $playerOptions['points'],

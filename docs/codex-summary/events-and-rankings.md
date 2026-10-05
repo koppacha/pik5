@@ -123,3 +123,17 @@
 - パスワードはGit管理外の`TRICKS_TEST_EVENT_PASSWORD`から取得する。`NEXTAUTH_SECRET`で署名したHttpOnly Cookieを発行する。大会APIと、イベント用ステージへの投稿・編集・削除をゲートする。
 - `TrickStaging261001Seeder`は元ステージ201〜230、301〜350、401〜422を使用し、スコア形式のカード160枚を作成・初期化する。既存大会データを上書きしない。通常仕様は48時間だが、このテスト大会だけ3時間で、終了3時間前のレア度補正が開始時から適用される。
 - 公開手順と差分は`next/pages/limited/tricks/docs/staging-261001.md`を参照。秘密値は文書やGitへ残さない。
+
+## イベント成績CSVと名前解決（2026-10-03）
+
+`events.csv`はEventCsvSeeder用の大会設定、`event_results.csv`はEventResultCsvSeeder用のプレイヤー成績。混同しない。成績Seederはヘッダ・行・整数・重複IDを事前検証し、別event_id/categoryとのID衝突時は中止する。既存IDの成績をトランザクション内upsertし、CSV外の行は削除しない。CSVから削除した行の削除は別途明示的に行う。イベント総合の未登録参加者にはRankingLimitedで表示名を補完し、それもなければuserIdを表示する。nitrosmish=NitrosB、yukimidaifuku=ゆきみだいふく。成績CSVではchalumeau→yukimidaifuku、mutou_p2pw→Mutou_p2pwへ統一。イベント日付はフロント表示時にJSTを明示する。ローカルで第12回までの反映を確認済み、本番は未反映。
+
+## 第3回インスタント研究会の一時除外（2026-10-03 18:26 JST）
+
+第3回インスタント研究会（event_id=260221）をEventResultControllerの集計元クエリから一時除外。カテゴリ261だけでなく200と全総合0でも一貫して除外し、同じevent_idの他カテゴリは維持。合計score/stamp等・順位・各ユーザーのevents（rank-cell入力）・イベント一覧から対象を除く。DBとCSVは変更せず、第3回8行・DB全284行を保持。
+上位はnitrosmish（NitrosB）4395点、albut3 4310点、koppacha 3989点。実APIと実ページで除外行0・対象イベント11件。ブラウザrank-cell81件とAPI合計81件が一致。ブラウザコンソールエラー0。SQLiteメモリDBテスト3件成功、git diff --check成功。
+TEMPORARILY_EXCLUDED_INSTANT_EVENT_IDS=[260221]で制御。第13回の追加・Seeder再実行で自動解除しない。ユーザーの明示指示で定数を空配列に戻し、テスト期待値も復元する。本番反映・コミットは未実施。
+
+## 第13回インスタント研究会成績投入（2026-10-03 23:46 JST）
+
+第13回261003の成績10件（ID285〜294）をevent_results.csvへ追記。mutou_p2pwは既存の正規表記Mutou_p2pwへ統一。ローカルDBへSeederを実行し284→294行、再実行全行一致。第3回260221の元データ8行と一時除外を維持。API上は12イベント（第3回を除く第1〜13回）、最終更新2026-10-03、合計順位はNitrosB=4810、albut3=4770、koppacha=3989。Rinkuru0912はドモホルンリンクル表示、350点・15位。SQLiteメモリDBのテスト3件成功、git diff --check成功。実ブラウザのrank-cell91件、表示名・更新日・上位点数を確認。本番反映・コミットは未実施。

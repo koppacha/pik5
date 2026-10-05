@@ -31,8 +31,8 @@ export default function TricksDebugPanel({state, busy = false, onOperation, open
                 {open ? "デバッグを閉じる" : "デバッグ"}
             </button>}
             {open && (
-                <div style={{marginTop: 8, padding: 12, borderRadius: 10, background: "#0d121c", border: "1px solid #53627a"}}>
-                    <div style={{fontSize: 12, color: "#a9b8ce", lineHeight: 1.5}}>
+                <div style={{marginTop: 8, padding: 12, borderRadius: 10, background: "var(--color-bg-base)", border: "1px solid #53627a"}}>
+                    <div style={{fontSize: 12, color: "var(--color-text-sub)", lineHeight: 1.5}}>
                         現在: {displayDateTime(debug.server_now || state?.server_now)}<br />
                         次回給付: {displayDateTime(debug.next_subsidy_slot_at)}<br />
                         時計: {debug.frozen ? "固定" : "実時刻"}
@@ -50,7 +50,7 @@ export default function TricksDebugPanel({state, busy = false, onOperation, open
                             type="datetime-local"
                             value={setValue}
                             onChange={(event) => setSetValue(event.target.value)}
-                            style={{padding: 7, colorScheme: "dark", background: "#111827", color: "#fff", border: "1px solid #53627a"}}
+                            style={{padding: 7, colorScheme: "inherit", background: "var(--color-bg-base)", color: "var(--color-text-base)", border: "1px solid #53627a"}}
                         />
                     </label>
                     <div style={{display: "flex", gap: 6, marginTop: 8}}>
@@ -74,8 +74,8 @@ const buttonStyle = {
     border: "1px solid #71d99b",
     borderRadius: 7,
     padding: "7px 10px",
-    background: "#173b2a",
-    color: "#dffbea",
+    background: "var(--color-bg-base)",
+    color: "var(--color-text-base)",
     cursor: "pointer",
 }
 
@@ -83,7 +83,7 @@ const smallButtonStyle = {
     border: "1px solid #607089",
     borderRadius: 6,
     padding: "6px 8px",
-    background: "#263247",
-    color: "#fff",
+    background: "var(--color-bg-base)",
+    color: "var(--color-text-base)",
     cursor: "pointer",
 }

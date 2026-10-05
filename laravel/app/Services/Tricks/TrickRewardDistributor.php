@@ -74,6 +74,7 @@ class TrickRewardDistributor
             for ($index = count($amounts) - 1; $index >= 0 && array_sum($amounts) > $total; $index--) {
                 if ($amounts[$index] > 0) {
                     $amounts[$index]--;
+                    break;
                 }
             }
         }

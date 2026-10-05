@@ -28,9 +28,9 @@ export default function TricksFieldDetailPanel({
             style={style}
         >
             <div style={{padding: 22, minHeight: 180, maxHeight: 390, overflowY: "auto"}}>
-                <div style={{fontSize: 12, color: "#64748b", marginBottom: 10}}>{summary}</div>
-                {!rankings && <div style={{color: "#4b5563"}}>読み込み中...</div>}
-                {rankings && rankings.length === 0 && <div style={{color: "#4b5563"}}>投稿はまだありません</div>}
+                <div style={{fontSize: 12, color: "var(--color-text-sub)", marginBottom: 10}}>{summary}</div>
+                {!rankings && <div style={{color: "var(--color-text-base)"}}>読み込み中...</div>}
+                {rankings && rankings.length === 0 && <div style={{color: "var(--color-text-base)"}}>投稿はまだありません</div>}
                 {rankings && rankings.length > 0 && (
                     <div style={{display: "grid", gap: 8}}>
                         {rankings.map((row) => (
@@ -48,7 +48,7 @@ export default function TricksFieldDetailPanel({
                     </div>
                 )}
             </div>
-            <div style={{display: "flex", justifyContent: "flex-end", gap: 8, padding: "10px 18px 16px", borderTop: "1px solid #e5e7eb"}}>
+            <div style={{display: "flex", justifyContent: "flex-end", gap: 8, padding: "10px 18px 16px", borderTop: "1px solid var(--color-border-base)"}}>
                 {children}
                 <Button onClick={onClose}>閉じる</Button>
             </div>

@@ -182,17 +182,14 @@ class TrickPhaseThreeTest extends TestCase
         $secondDeck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => 7102,
             'origin_stage_id' => 399,
             'card_id' => 920102,
             'title' => 'Phase 3 second card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => 2,
-            'rarity' => 3,
             'rewards' => 0,
         ]);
         $secondCard = TrickEventCard::query()->create([
@@ -225,17 +222,14 @@ class TrickPhaseThreeTest extends TestCase
             $deck = Deck::query()->create([
                 'eventId' => $event->event_id,
                 'event_id' => $event->event_id,
-                'stageId' => 399,
                 'stage_id' => 7200 + $index,
                 'origin_stage_id' => 399,
                 'card_id' => 920200 + $index,
                 'title' => 'Cooldown hand '.$index,
-                'ruleName' => 'Rule',
                 'rule_name' => 'Rule',
                 'state' => '_in_event',
                 'text' => 'Test rule',
                 'difficulty' => 1,
-                'rarity' => 1,
                 'rewards' => 0,
             ]);
             TrickEventCard::query()->create([
@@ -316,17 +310,14 @@ class TrickPhaseThreeTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => 0,
             'event_id' => 0,
-            'stageId' => 399,
             'stage_id' => 7199,
             'origin_stage_id' => 399,
             'card_id' => 920199,
             'title' => 'Non-event card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_eligible',
             'text' => 'Normal record',
             'difficulty' => 1,
-            'rarity' => 1,
             'rewards' => 0,
         ]);
         $payload = $this->recordPayloadForStage($deck->stage_id, 'outsider', 101);
@@ -403,17 +394,14 @@ class TrickPhaseThreeTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => 7101,
             'origin_stage_id' => 399,
             'card_id' => 920101,
             'title' => 'Phase 3 card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => 2,
-            'rarity' => 3,
             'rewards' => 0,
         ]);
         $card = TrickEventCard::query()->create([

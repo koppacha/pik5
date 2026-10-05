@@ -83,17 +83,14 @@ class TrickPhaseFiveTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => 7301,
             'origin_stage_id' => 399,
             'card_id' => 940001,
             'title' => 'Phase 5 card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => 1,
-            'rarity' => 1,
             'rewards' => 0,
         ]);
         $card = TrickEventCard::query()->create([

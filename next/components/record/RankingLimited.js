@@ -4,6 +4,13 @@ import NowLoading from "../NowLoading"
 import Record from "./Record"
 import * as React from "react"
 
+// Display names for historical participants without a registered user profile.
+const historicalParticipantNames = {
+    nitrosmish: "NitrosB",
+    yukimidaifuku: "ゆきみだいふく",
+    Rinkuru0912: "ドモホルンリンクル",
+}
+
 export default function RankingLimited({posts, users, category}){
     if(!posts){
         return <NowLoading/>
@@ -15,7 +22,12 @@ export default function RankingLimited({posts, users, category}){
     }
 
     return data.map(function(post, index) {
-        const view = {...post}
+        const view = {
+            ...post,
+            user_name: post.user_name || (Object.prototype.hasOwnProperty.call(historicalParticipantNames, post.user_id) && historicalParticipantNames[post.user_id]) || post.user_id,
+            // Event dates are in JST; keep server and browser parsing consistent.
+            created_at: post.created_at?.replace(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/, "$1T$2+09:00"),
+        }
         let scoreUnit = "stamps"
         let rankPointUnit = "rps"
 

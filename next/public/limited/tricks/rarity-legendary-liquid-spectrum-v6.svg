@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 460">
+  <defs>
+    <linearGradient id="spectrum" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffdd00"/><stop offset=".2" stop-color="#ffad10"/><stop offset=".35" stop-color="#ff3e91"/><stop offset=".49" stop-color="#7b2cff"/><stop offset=".61" stop-color="#008ff5"/><stop offset=".73" stop-color="#00ddb4"/><stop offset=".86" stop-color="#d6f238"/><stop offset="1" stop-color="#ffe33c"/></linearGradient>
+    <linearGradient id="light" x1="0" y1="0" x2="1" y2=".6"><stop stop-color="#fff5a4"/><stop offset=".3" stop-color="#ffe052"/><stop offset=".5" stop-color="#ff82ba"/><stop offset=".7" stop-color="#65f6f0"/><stop offset="1" stop-color="#fff29a"/></linearGradient>
+    <path id="a" d="M-70 20C82 152 137 -90 268 54S385 160 437 48M-64 287C80 155 128 378 248 270S366 173 419 305"/>
+    <path id="b" d="M26 -70C-70 113 137 96 70 231S-12 365 70 510M311 -58C211 98 404 129 306 251S372 385 300 510"/>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <g stroke="url(#spectrum)" stroke-width="64"><use href="#a"/><use href="#b"/></g>
+    <g stroke="url(#light)" stroke-width="11" transform="translate(13 10)"><use href="#a"/><use href="#b"/></g>
+    <g stroke="#fff7c4" stroke-width="2.4" opacity=".8" transform="translate(-18 -16)"><use href="#a"/><use href="#b"/></g>
+  </g>
+</svg>

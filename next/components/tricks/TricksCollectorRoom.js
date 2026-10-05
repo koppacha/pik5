@@ -3,6 +3,7 @@ import {faMedal} from "@fortawesome/free-solid-svg-icons"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
 import {TricksDomCard} from "./TricksLayeredGame"
+import {TricksCardBorderStyles} from "./TricksCardBorder"
 import TricksFieldDetailPanel from "./TricksFieldDetailPanel"
 
 export default function TricksCollectorRoom({cards = [], usersById = {}, onClose}) {
@@ -44,16 +45,20 @@ export default function TricksCollectorRoom({cards = [], usersById = {}, onClose
                     />
                 </div>
             )}
+            <TricksCardBorderStyles />
             <style jsx global>{`
                 [data-testid="tricks-collector-room"] .tricks-dom-card {border: 0; padding: 0; background: transparent; cursor: pointer; text-align: left}
-                [data-testid="tricks-collector-room"] .tricks-dom-card-face {position: absolute; inset: 0; display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 8px; padding: 16px; overflow: hidden; border: 8px solid var(--card-border); border-radius: 10px; background: #fff; box-shadow: 0 12px 30px #0004; box-sizing: border-box}
+                [data-testid="tricks-collector-room"] .tricks-dom-card-face {position: absolute; inset: 0; display: grid; grid-template-rows: auto auto auto minmax(0, 1fr) auto auto; gap: 5px; padding: 10px; overflow: hidden; border: 10px solid var(--card-border); border-radius: 18px; background: #fff; box-shadow: 0 12px 30px #0004; box-sizing: border-box}
+                [data-testid="tricks-collector-room"] .tricks-dom-card.rarity-5 .tricks-dom-card-face {background: rgba(255, 255, 255, .9); background-clip: padding-box; border-color: transparent; z-index: 1}
+                [data-testid="tricks-collector-room"] .tricks-dom-card-back {position: absolute; inset: 0; border-radius: 18px; box-sizing: border-box; background: #e4e8ef; border: 10px solid #8994a8}
+                [data-testid="tricks-collector-room"] .tricks-dom-card-back:nth-child(even) {background: #f2f4f8; border-color: #718097}
                 [data-testid="tricks-collector-room"] .tricks-dom-card-meta, [data-testid="tricks-collector-room"] .tricks-dom-card-users, [data-testid="tricks-collector-room"] .tricks-dom-card-footer {display: flex; justify-content: space-between; gap: 8px; color: #667085; font-size: 12px; font-weight: 700}
                 [data-testid="tricks-collector-room"] .tricks-dom-card-title {font-size: 22px; font-weight: 800; color: #141923}
                 [data-testid="tricks-collector-room"] .tricks-dom-card-rule {font-size: 15px; font-weight: 700; color: #4f5a68}
-                [data-testid="tricks-collector-room"] .tricks-dom-card-text {font-size: 14px; color: #243044}
+                [data-testid="tricks-collector-room"] .tricks-dom-card-text {font-size: 14px; color: #243044; line-height: 1.2; min-height: 0; white-space: pre-wrap; overflow-wrap: anywhere; overflow: auto}
                 [data-testid="tricks-collector-room"] .tricks-dom-card-users {display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid #d5dae2; padding-top: 8px}
                 [data-testid="tricks-collector-room"] .tricks-dom-card-holder {grid-column: 1 / -1}
-                [data-testid="tricks-collector-room"] .tricks-dom-stack {display: inline-grid; place-items: center; min-width: 36px; height: 36px; border-radius: 50%; background: #172033; color: #fff}
+                [data-testid="tricks-collector-room"] .tricks-dom-stack {display: inline-grid; place-items: center; min-width: 36px; height: 36px; border-radius: 50%; background: #000000; color: #fff; font-size: 17px}
             `}</style>
         </section>
     )

@@ -73,6 +73,9 @@ class TrickStateService
 
                 return [
                     'player_name' => $holder->player_name,
+                    'id' => $card?->deck_id,
+                    'title' => $card?->deck?->title,
+                    'rule_name' => $card?->deck?->rule_name,
                     'stage_id' => (int) ($card?->deck?->stage_id ?? 0),
                     'rarity' => (int) ($card?->rarity ?? 1),
                     'difficulty' => $card?->difficulty,
@@ -106,11 +109,21 @@ class TrickStateService
             })->values()->all();
         }
 
+        $deckCards = $ended ? collect() : $cards->where('state', '_deck');
+        $deckDifficultyCounts = array_fill_keys(range(1, 5), 0);
+        foreach ($deckCards as $card) {
+            $difficulty = (int) $card->difficulty;
+            if (array_key_exists($difficulty, $deckDifficultyCounts)) {
+                $deckDifficultyCounts[$difficulty]++;
+            }
+        }
+
         $payload = [
             'tournament' => $this->tournament($event),
             'me' => $userId ? $players->firstWhere('name', $userId) : null,
             'players' => $players,
-            'deck_count' => $ended ? 0 : $cards->where('state', '_deck')->count(),
+            'deck_count' => $deckCards->count(),
+            'deck_difficulty_counts' => $deckDifficultyCounts,
             'trash_count' => $ended ? 0 : $cards->where('state', '_trash')->count(),
             'collected_count' => $cards->where('state', '_collected')->count(),
             'holder_cards' => $holderCards,
@@ -179,7 +192,7 @@ class TrickStateService
             'stage_name' => $deck?->title,
             'eng_stage_name' => $deck?->title,
             'title' => $deck?->title,
-            'rule_name' => $deck?->rule_name ?: $deck?->ruleName,
+            'rule_name' => $deck?->rule_name,
             'text' => $deck?->text,
             'state' => $card->state,
             'difficulty' => $card->difficulty,
@@ -195,6 +208,7 @@ class TrickStateService
             'collected_at' => $card->collected_at?->toIso8601String(),
             'stack_parent_id' => $card->stack_parent_id,
             'was_returned' => $card->returned_count > 0,
+            'was_opened' => $card->draw_count > 1,
         ];
     }
 
@@ -238,6 +252,7 @@ class TrickStateService
                 $payload['top_user_id'] = $topRanking['user_id'] ?? $log->top_user_id;
             }
             $payload['card_title'] = $card?->deck?->title;
+            $payload['rule_name'] = $card?->deck?->rule_name;
             $payload['rarity'] = $card?->rarity !== null ? (int) $card->rarity : null;
             $payload['score'] = isset($context['score']) ? (int) $context['score'] : ($ranking['score'] ?? null);
             $payload['rank'] = isset($context['rank']) ? (int) $context['rank'] : ($ranking['rank'] ?? null);
@@ -295,6 +310,7 @@ class TrickStateService
                     && $this->available($event, $this->clock->now($event))
                     && $this->clock->now($event)->lessThan($event->end_at->copy()->subHour())
                     && $card->limit_at !== null
+                    && $card->limit_at->lessThan($event->end_at)
                     && $this->clock->now($event)->lessThan($card->limit_at),
             ];
             if ($event->debug || $event->test_mode) {

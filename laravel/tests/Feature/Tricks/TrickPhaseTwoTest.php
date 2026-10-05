@@ -42,17 +42,14 @@ class TrickPhaseTwoTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => null,
             'origin_stage_id' => 399,
             'card_id' => 990005,
             'title' => 'Allocated card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => 1,
-            'rarity' => 1,
             'rewards' => 0,
         ]);
 
@@ -80,17 +77,14 @@ class TrickPhaseTwoTest extends TestCase
             $deck = Deck::query()->create([
                 'eventId' => $event->event_id,
                 'event_id' => $event->event_id,
-                'stageId' => 399,
                 'stage_id' => 5000 + $index,
                 'origin_stage_id' => 399,
                 'card_id' => 900000 + $index,
                 'title' => 'Card '.$index,
-                'ruleName' => 'Rule',
                 'rule_name' => 'Rule',
                 'state' => '_in_event',
                 'text' => 'Test rule',
                 'difficulty' => ($index % 5) + 1,
-                'rarity' => 1,
                 'rewards' => 0,
             ]);
             TrickEventCard::query()->create([
@@ -100,6 +94,10 @@ class TrickPhaseTwoTest extends TestCase
                 'difficulty' => $deck->difficulty,
             ]);
         }
+
+        $initialSnapshot = app(TrickStateService::class)->snapshot($event, null);
+        self::assertSame([1 => 1, 2 => 2, 3 => 2, 4 => 2, 5 => 1], $initialSnapshot['deck_difficulty_counts']);
+        self::assertSame($initialSnapshot['deck_count'], array_sum($initialSnapshot['deck_difficulty_counts']));
 
         $game = app(TrickGameService::class);
         $aliceJoin = $game->join($event, 'alice');
@@ -114,6 +112,8 @@ class TrickPhaseTwoTest extends TestCase
         $game->draw($event, 'alice');
         $thirdDraw = $game->draw($event, 'alice');
         self::assertSame(3, count($thirdDraw['hand']));
+        self::assertFalse($thirdDraw['card']['was_opened']);
+        self::assertSame(1, TrickEventCard::query()->whereKey($thirdDraw['card']['event_card_id'])->value('draw_count'));
         self::assertSame(3, Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->value('draw_points'));
 
         $selectedDeckId = $thirdDraw['hand'][0]['id'];
@@ -130,6 +130,16 @@ class TrickPhaseTwoTest extends TestCase
         $before = TrickEventCard::query()->where('event_id', $event->event_id)->pluck('state', 'id')->all();
         $snapshot = app(TrickStateService::class)->snapshot($event, 'alice');
         $after = TrickEventCard::query()->where('event_id', $event->event_id)->pluck('state', 'id')->all();
+        self::assertSame(5, array_sum($snapshot['deck_difficulty_counts']));
+        foreach (range(1, 5) as $difficulty) {
+            self::assertSame(
+                TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_deck')->where('difficulty', $difficulty)->count(),
+                $snapshot['deck_difficulty_counts'][$difficulty],
+            );
+        }
+        $event->state = 'ended';
+        $endedSnapshot = app(TrickStateService::class)->snapshot($event, 'alice');
+        self::assertSame([1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0], $endedSnapshot['deck_difficulty_counts']);
         self::assertSame($before, $after);
         self::assertSame(1, count($snapshot['field']));
         self::assertSame(0, count($snapshot['hand']));
@@ -155,17 +165,14 @@ class TrickPhaseTwoTest extends TestCase
             $deck = Deck::query()->create([
                 'eventId' => $event->event_id,
                 'event_id' => $event->event_id,
-                'stageId' => 399,
                 'stage_id' => 6000 + $index,
                 'origin_stage_id' => 399,
                 'card_id' => 910000 + $index,
                 'title' => 'Rule card '.$index,
-                'ruleName' => 'Rule',
                 'rule_name' => 'Rule',
                 'state' => '_in_event',
                 'text' => 'Test rule',
                 'difficulty' => 1,
-                'rarity' => 1,
                 'rewards' => 0,
             ]);
             TrickEventCard::query()->create([
@@ -276,17 +283,14 @@ class TrickPhaseTwoTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => 6401,
             'origin_stage_id' => 399,
             'card_id' => 914001,
             'title' => 'Returned card',
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => 1,
-            'rarity' => 1,
             'rewards' => 0,
         ]);
         $card = TrickEventCard::query()->create([
@@ -340,6 +344,8 @@ class TrickPhaseTwoTest extends TestCase
         ]);
         $drawn = $game->draw($event, 'alice');
         self::assertSame(5, $drawn['card']['rarity']);
+        self::assertTrue($drawn['card']['was_opened']);
+        self::assertSame(2, $card->fresh()->draw_count);
         self::assertTrue($drawn['card']['was_returned']);
         self::assertSame(4, $drawn['player']['points']);
         self::assertTrue($drawn['player']['subsidy_flag']);
@@ -385,17 +391,14 @@ class TrickPhaseTwoTest extends TestCase
             $deck = Deck::query()->create([
                 'eventId' => $event->event_id,
                 'event_id' => $event->event_id,
-                'stageId' => 399,
                 'stage_id' => 9010 + $index,
                 'origin_stage_id' => 399,
                 'card_id' => 9900100 + $index,
                 'title' => 'Recycle card '.$index,
-                'ruleName' => 'Rule',
                 'rule_name' => 'Rule',
                 'state' => '_in_event',
                 'text' => 'Test rule',
                 'difficulty' => 1,
-                'rarity' => 1,
                 'rewards' => 0,
             ]);
             $eventCards->push(TrickEventCard::query()->create([

@@ -70,7 +70,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
                 zIndex: 4,
                 overflowY: "auto",
                 padding: "20px",
-                background: "rgba(12, 16, 22, 0.94)",
+                background: "var(--color-bg-base)",
             }}
         >
             <div style={{display: "flex", alignItems: "center", gap: 12, marginBottom: 6}}>
@@ -81,7 +81,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
                         data-tricks-admin-stats-toggle
                         aria-expanded={adminStatsOpen}
                         onClick={() => setAdminStatsOpen((open) => !open)}
-                        style={{border: "1px solid #64748b", borderRadius: 6, background: "#1f2937", color: "#fff", cursor: "pointer", padding: "5px 9px"}}
+                        style={{border: "1px solid #64748b", borderRadius: 6, background: "var(--color-bg-base)", color: "var(--color-text-base)", cursor: "pointer", padding: "5px 9px"}}
                     >
                         管理統計 {adminStatsOpen ? "閉じる" : "表示"}
                     </button>
@@ -89,22 +89,22 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
             </div>
             {isAdmin && adminStatsOpen && (
                 <div data-tricks-admin-stats style={{display: "grid", gridTemplateColumns: `minmax(120px, 1.5fr) repeat(${adminMetrics.length}, minmax(76px, 1fr))`, overflowX: "auto", gap: 1, marginBottom: 18, background: "#475569", fontSize: 12}}>
-                    <div style={{padding: 8, background: "#1e293b", fontWeight: 800}}>プレイヤー</div>
-                    {adminMetrics.map(([, label]) => <div key={label} style={{padding: 8, background: "#1e293b", fontWeight: 800, whiteSpace: "nowrap"}}>{label}</div>)}
+                    <div style={{padding: 8, background: "var(--color-bg-base)", fontWeight: 800}}>プレイヤー</div>
+                    {adminMetrics.map(([, label]) => <div key={label} style={{padding: 8, background: "var(--color-bg-base)", fontWeight: 800, whiteSpace: "nowrap"}}>{label}</div>)}
                     {adminStats.map((player) => (
                         <div key={player.user_id} style={{display: "contents"}}>
-                            <div style={{padding: 8, background: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{usersById[player.user_id]?.name || player.user_id}</div>
+                            <div style={{padding: 8, background: "var(--color-bg-base)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{usersById[player.user_id]?.name || player.user_id}</div>
                             {adminMetrics.map(([key]) => {
                                 const value = Number(player[key] || 0)
                                 const isMax = value === adminMaxima[key]
 
-                                return <div key={`${player.user_id}-${key}`} data-tricks-admin-stat={key} style={{padding: 8, textAlign: "right", background: isMax ? "#365314" : "#0f172a"}}>{value}</div>
+                                return <div key={`${player.user_id}-${key}`} data-tricks-admin-stat={key} style={{padding: 8, textAlign: "right", background: isMax ? "color-mix(in srgb, var(--color-bg-base) 70%, var(--color-level-1-bg))" : "var(--color-bg-base)"}}>{value}</div>
                             })}
                         </div>
                     ))}
                 </div>
             )}
-            {visibleCards.length === 0 && <div style={{color: "#9aa8bd"}}>回収カードはありません</div>}
+            {visibleCards.length === 0 && <div style={{color: "var(--color-text-sub)"}}>回収カードはありません</div>}
             <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18}}>
                 {visibleCards.map((card) => (
                     <div
@@ -135,7 +135,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
                     <div
                         aria-hidden="true"
                         onClick={() => setSelected(null)}
-                        style={{position: "fixed", inset: 0, zIndex: 5, background: "rgba(3, 6, 12, 0.58)"}}
+                        style={{position: "fixed", inset: 0, zIndex: 5, background: "transparent"}}
                     />
                     <TricksFieldDetailPanel
                         rankings={selectedCard.rankings || []}

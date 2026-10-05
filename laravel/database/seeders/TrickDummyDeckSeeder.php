@@ -22,20 +22,18 @@ class TrickDummyDeckSeeder extends Seeder
         for ($i = 1; $i <= 200; $i++) {
             $originStageId = 200 + (($i - 1) % 30) + 1;
             $difficulty = (($i - 1) % 5) + 1;
-            $rarity = (($i - 1) % 5) + 1;
             $row = [
                 'eventId' => $eventId,
-                'stageId' => $originStageId,
+                'origin_stage_id' => $originStageId,
                 'title' => "ダミートリック{$i}",
-                'ruleName' => "チャレンジルール{$i}",
+                'rule_name' => "チャレンジルール{$i}",
                 'state' => '_eligible',
                 'text' => "制限時間内に指定ステージでできるだけ高いスコアを投稿するダミールールです。カード番号{$i}。",
                 'difficulty' => $difficulty,
-                'rarity' => $rarity,
                 'rewards' => 0,
                 'creator' => 'codex_dummy',
                 'taker' => null,
-                'topPlayer' => null,
+                'top_player' => null,
                 'count' => 0,
                 'limit' => null,
                 'created_at' => $now,
@@ -53,9 +51,6 @@ class TrickDummyDeckSeeder extends Seeder
             }
             if (Schema::hasColumn('decks', 'origin_stage_id')) {
                 $row['origin_stage_id'] = $originStageId;
-            }
-            if (Schema::hasColumn('decks', 'rule_name')) {
-                $row['rule_name'] = $row['ruleName'];
             }
             if (Schema::hasColumn('decks', 'stack_count')) {
                 $row['stack_count'] = 0;

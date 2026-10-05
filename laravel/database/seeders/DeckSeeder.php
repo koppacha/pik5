@@ -28,19 +28,17 @@ class DeckSeeder extends Seeder
                 // 大会ID（6桁のサンプル）
                 'eventId'     => 250905,
                 // ステージID
-                'stageId'     => 1313 + $i,
+                'origin_stage_id'     => 1313 + $i,
                 // カード名
                 'title'              => "サンプルステージ{$i}",
                 // 縛りルール名
-                'ruleName'          => "サンプルルール{$i}",
+                'rule_name'          => "サンプルルール{$i}",
                 // 現在の場所（最初は山札）
                 'state'             => '_deck',
                 // ミニゲームのルール本文
                 'text'         => "これはサンプル{$i}のミニゲームルールです。",
                 // 難易度（1〜5のランダム）
                 'difficulty'        => random_int(1, 5),
-                // レア度（1〜5のランダム）
-                'rarity'            => random_int(1, 5),
                 // リワード値（使用ドローポイントのサンプル）
                 'rewards'     => random_int(1, 3),
                 // クリエイター（システム名など）
@@ -48,7 +46,7 @@ class DeckSeeder extends Seeder
                 // テイカー（まだ誰もテイクしていないので NULL）
                 'taker'             => null,
                 // トップ投稿者（まだスコア無しのため NULL）
-                'topPlayer'        => null,
+                'top_player'        => null,
                 // 参加者数（最初は 0）
                 'count' => 0,
                 // リミットオーバー日時
