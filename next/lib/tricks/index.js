@@ -1,8 +1,8 @@
 export const tricksRarityColors = {
-    1: "#b8b8b8",
-    2: "#e6e6e6",
-    3: "#4fb3ff",
-    4: "#8be05e",
+    1: "var(--tricks-edge-common, #303030)",
+    2: "var(--tricks-edge-uncommon, #111111)",
+    3: "#1976d2",
+    4: "#42bd59",
     5: "#ffd447",
 }
 
@@ -270,6 +270,7 @@ export const normalizeTricksState = (state, options = {}) => {
         hand: orderedHand.hand,
         handOrder: orderedHand.order,
         deckCount: state?.deck_count ?? 0,
+        deckDifficultyCounts: state?.deck_difficulty_counts ?? {},
         trashCount: state?.trash_count ?? 0,
         logs: state?.logs || [],
         me: state?.me || null,

@@ -105,21 +105,22 @@ class TrickPhaseSixTest extends TestCase
             'state' => 'ended',
             'ended_at' => $start->addDays(2),
         ]);
+        // 旧DBインポートを検査するため、このテストだけ旧レア度列を再現する。
+        \Illuminate\Support\Facades\Schema::table('decks', function (\Illuminate\Database\Schema\Blueprint $table) {
+            $table->unsignedTinyInteger('rarity')->default(1);
+        });
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => 9963,
             'origin_stage_id' => 399,
             'title' => 'legacy card',
-            'ruleName' => 'legacy rule',
             'rule_name' => 'legacy rule',
             'state' => '_collected',
             'text' => 'legacy',
             'difficulty' => 3,
             'rarity' => 2,
             'rewards' => 3,
-            'topPlayer' => 'alice',
             'top_player' => 'alice',
         ]);
         $record = Record::query()->create([

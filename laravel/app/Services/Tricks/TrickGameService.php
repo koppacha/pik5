@@ -90,6 +90,7 @@ class TrickGameService
             $card = $available->where('difficulty', $difficulty)->random();
             $now = $this->clock->now($event);
             $card->state = $userId;
+            $card->draw_count = max((int) $card->draw_count, (int) ($card->rarity !== null)) + 1;
             if ($card->rarity === null) {
                 $card->rarity = $this->drawRarity($event, $now, $seedPrefix);
             }

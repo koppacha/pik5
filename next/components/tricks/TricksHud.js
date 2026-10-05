@@ -1,5 +1,7 @@
 import {useTheme} from "next-themes"
 import Link from "next/link"
+import Tooltip from "@mui/material/Tooltip"
+import TricksCardBorder, {TricksCardBorderStyles} from "./TricksCardBorder"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {faHome, faCloudSun, faCloudMoon, faBookBookmark} from "@fortawesome/free-solid-svg-icons"
 import {faDiscord} from "@fortawesome/free-brands-svg-icons"
@@ -15,6 +17,10 @@ import {
     tricksOperationState,
     tricksRarityColors,
 } from "../../lib/tricks"
+
+function playersByTooltipName(players, name) {
+    return name && players?.find((player) => player.name === name)
+}
 
 const visibleLogEvents = new Set(["join", "take", "record_posted", "record_updated", "player_extension", "empty_field_floor_grant", "subsidy_paid", "collect"])
 
@@ -40,7 +46,8 @@ function logText(log, usersById) {
     if (typeof log === "string") return `--:--:-- - ${log}`
     const user = displayName(usersById, log?.actor_name)
     const topUser = displayName(usersById, log?.top_user_id, "ホルダーなし")
-    const cardTitle = log?.card_title || `カード#${log?.card_id || "-"}`
+    const title = log?.card_title || `カード#${log?.card_id || "-"}`
+    const cardTitle = log?.rule_name ? `${title}（${log.rule_name}）` : title
     const rarity = Math.max(1, Number(log?.rarity || 1))
     let text = log?.message || log?.text || log?.event || "イベントが発生しました。"
 
@@ -55,7 +62,7 @@ function logText(log, usersById) {
     if (log?.event === "collect") {
         text = Number(log?.records_count || 0) === 0
             ? `${cardTitle}が除外されました。`
-            : `${cardTitle}が${topUser}に回収され、ポイントが還元されました。`
+            : `${cardTitle}が${topUser}さんに回収され、ポイントが還元されました。`
     }
 
     return `${logTimestamp(log?.created_at)} - ${text}`
@@ -74,7 +81,7 @@ function LiveClock() {
     return <time className="tricks-live-clock" style={{fontVariantNumeric: "tabular-nums"}}>{time || "----/--/-- --:--:--"}</time>
 }
 
-export default function TricksHud({state, stagingMode = false, historicalHolderCounts = {}, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false}) {
+export default function TricksHud({state, stagingMode = false, historicalHolderCounts = {}, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false, onSelectHolder}) {
     const players = useMemo(() => state?.players || [], [state?.players])
     const logs = useMemo(() => state?.logs || [], [state?.logs])
     const holderCardsByPlayer = useMemo(() => (state?.holder_cards || []).reduce((grouped, card) => {
@@ -85,8 +92,30 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
     const [clockReady, setClockReady] = useState(false)
     const [logOpen, setLogOpen] = useState(false)
     const {resolvedTheme, setTheme} = useTheme()
-    const panelBackground = "color-mix(in srgb, var(--color-bg-base) 90%, transparent)"
+    const panelBackground = "color-mix(in srgb, var(--color-bg-base) 97%, transparent)"
+    const playerBackground = "color-mix(in srgb, var(--color-bg-base) 97%, transparent)"
     const panelColor = "var(--color-text-base)"
+    const [playerTooltip, setPlayerTooltip] = useState(null)
+    const playerTooltipRef = useRef(null)
+    const tooltipPlayer = playersByTooltipName(state?.players, playerTooltip?.name)
+    useEffect(() => {
+        if (!playerTooltip) return
+        const closeOutside = (event) => {
+            if (playerTooltipRef.current?.contains(event.target)) return
+            if (event.target.closest?.("[data-tricks-player]")?.getAttribute("data-tricks-player") === playerTooltip.name) return
+            setPlayerTooltip(null)
+        }
+        const close = () => setPlayerTooltip(null)
+        document.addEventListener("pointerdown", closeOutside)
+        window.addEventListener("resize", close)
+        document.addEventListener("scroll", close, true)
+        return () => {
+            document.removeEventListener("pointerdown", closeOutside)
+            window.removeEventListener("resize", close)
+            document.removeEventListener("scroll", close, true)
+        }
+    }, [playerTooltip])
+
     const [playerOrder, setPlayerOrder] = useState([])
     const sortTimerRef = useRef(null)
     const playersByName = useMemo(() => {
@@ -215,7 +244,7 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                     display: "flex",
                     alignItems: "stretch",
                     zIndex: 40,
-                    color: "#e6edf8",
+                    color: "var(--color-text-base)",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
                     transform: logOpen ? "translateX(0)" : "translateX(calc(100% - 44px))",
@@ -231,11 +260,11 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                     style={{
                         width: 44,
                         flex: "0 0 44px",
-                        border: "1px solid rgba(154, 168, 189, 0.45)",
+                        border: "1px solid var(--color-border-base)",
                         borderRight: 0,
                         borderRadius: "8px 0 0 8px",
-                        background: "rgba(21, 29, 43, 0.96)",
-                        color: "#c7d2e6",
+                        background: "var(--color-bg-base)",
+                        color: "var(--color-text-base)",
                         fontSize: 13,
                         fontWeight: 700,
                         letterSpacing: "0.16em",
@@ -257,15 +286,15 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                         height: 178,
                         boxSizing: "border-box",
                         overflowY: "auto",
-                        border: "1px solid rgba(154, 168, 189, 0.35)",
-                        background: "rgba(13, 18, 28, 0.82)",
+                        border: "1px solid var(--color-border-base)",
+                        background: "var(--color-bg-base)",
                         padding: "8px 10px",
                         fontSize: 12,
                         lineHeight: 1.45,
                     }}
                 >
                     {visibleLogs.length === 0 && (
-                        <div style={{color: "#718096"}}>ログはまだありません</div>
+                        <div style={{color: "var(--color-text-sub)"}}>ログはまだありません</div>
                     )}
                     {visibleLogs.slice(0, 100).map((log, index) => (
                         <div
@@ -292,7 +321,7 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                     right: 24,
                     top: 30,
                     zIndex: 40,
-                    color: "#e6edf8",
+                    color: "var(--color-text-base)",
                     pointerEvents: "auto",
                     opacity: dimmed ? 0.35 : 1,
                     overflow: "hidden",
@@ -313,7 +342,7 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                     }}
                 >
                     {orderedPlayers.length === 0 && (
-                        <div style={{padding: "6px 0", color: "#718096", fontSize: 12}}>参加者はまだいません</div>
+                        <div style={{padding: "6px 0", color: "var(--color-text-sub)", fontSize: 12}}>参加者はまだいません</div>
                     )}
                     <div style={{display: "flex", gap: 8, minWidth: "max-content"}}>
                         {infoCard}
@@ -329,13 +358,27 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                                 <div
                                     className="tricks-player-info"
                                     data-tricks-player={player.name}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-expanded={playerTooltip?.name === player.name}
+                                    onClick={(event) => {
+                                        const bounds = event.currentTarget.getBoundingClientRect()
+                                        setPlayerTooltip((current) => current?.name === player.name ? null : {name: player.name, left: bounds.left, top: bounds.bottom + 4})
+                                    }}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                            event.preventDefault()
+                                            event.currentTarget.click()
+                                        }
+                                    }}
                                     style={{
+                                        cursor: "pointer",
                                         width: "100%",
                                         boxSizing: "border-box",
                                         padding: "7px 10px",
                                         borderRadius: 10,
                                         border: isMe ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)",
-                                        background: panelBackground,
+                                        background: playerBackground,
                                         color: panelColor,
                                         boxShadow: isMe ? "0 0 12px rgba(255, 255, 255, 0.18)" : "none",
                                         transition: "background 160ms ease, color 160ms ease, border-color 160ms ease",
@@ -343,35 +386,38 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                                 >
                                         <div style={{display: "flex", justifyContent: "space-between", gap: 8, fontSize: 11}}>
                                             <span>#{index + 1}</span>
-                                            <span>R {player.total_rank_points ?? player.rank_points ?? 0}</span>
+                                            <span>
+                                            <span>RP {player.total_rank_points ?? player.rank_points ?? 0}</span>
+                                                <span> / </span>
+                                                <span
+                                                    data-tricks-subsidy-flag={player.subsidy_flag ? "active" : "inactive"}
+                                                    data-tricks-balance-tax={player.balance_tax_eligible ? "active" : "inactive"}
+                                                    style={{color: player.balance_tax_eligible ? "#279c59" : player.subsidy_flag ? "#d84b8c" : "inherit"}}
+                                                >
+                                                    <span
+                                                        data-tricks-points-label
+                                                        style={{textDecoration: player.subsidy_flag ? "underline" : "none"}}
+                                                    >
+                                                        DP
+                                                    </span>
+                                                    {" "}{player.draw_points}
+                                                </span>
+                                            </span>
                                         </div>
                                         <div style={{fontSize: 13, fontWeight: isMe ? 700 : 500, marginTop: 3}}>
                                             {shortenTricksText(screenName, 14)}
                                         </div>
                                         <div data-tricks-player-collected-count style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                            ホルダー：今大会 {player.collected_card_count ?? 0}枚 / 累計 {Number(historicalHolderCounts[player.name] || 0) + Number(player.collected_card_count || 0)}枚
+                                            ホルダー：{player.collected_card_count ?? 0}枚 (累計 {Number(historicalHolderCounts[player.name] || 0) + Number(player.collected_card_count || 0)}枚)
                                         </div>
                                         <div
                                             data-tricks-take-level
                                             style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}
                                         >
-                                            Lv.{player.take_level ?? 0} / テイクコスト {player.take_cost ?? 2}
+                                            Lv.{player.take_level ?? 0}
                                         </div>
                                         <div style={{fontSize: 11, marginTop: 2, opacity: isMe ? 0.94 : 0.78}}>
-                                            <span
-                                                data-tricks-subsidy-flag={player.subsidy_flag ? "active" : "inactive"}
-                                                data-tricks-balance-tax={player.balance_tax_eligible ? "active" : "inactive"}
-                                                style={{color: player.balance_tax_eligible ? "#279c59" : player.subsidy_flag ? "#d84b8c" : "inherit"}}
-                                            >
-                                                <span
-                                                    data-tricks-points-label
-                                                    style={{textDecoration: player.subsidy_flag ? "underline" : "none"}}
-                                                >
-                                                    P
-                                                </span>
-                                                {" "}{player.draw_points}
-                                            </span>
-                                            <span> / 手札 {player.card_count} / {player.hand_limit ?? (player.take_cost ?? 2) * 3}</span>
+                                            <span>手札 {player.card_count} / {player.hand_limit ?? (player.take_cost ?? 2) * 3}</span>
                                         </div>
                                         {player.next_take_at && new Date(player.next_take_at).getTime() > nowValue && (
                                             <div style={{fontSize: 10, marginTop: 2, color: "var(--color-text-base)"}}>
@@ -382,13 +428,20 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                                 {Boolean(holderCardsByPlayer[player.name]?.length) && (
                                     <div data-tricks-mini-holder-cards style={{display: "flex", flexWrap: "wrap", gap: 2, width: "100%", boxSizing: "border-box", marginTop: 4, whiteSpace: "normal"}}>
                                         {holderCardsByPlayer[player.name].map((card) => (
-                                            <span
-                                                key={card.stage_id}
-                                                title={`ステージ #${card.stage_id} / 難易度 ${card.difficulty ?? "-"}`}
-                                                style={{display: "inline-grid", placeItems: "center", width: 17, height: 23, border: `2px solid ${tricksRarityColors[Number(card.rarity)] || tricksRarityColors[1]}`, borderRadius: 2, background: "#fff", color: "#334155", fontSize: 10, fontWeight: 800, lineHeight: 1, textAlign: "center", boxSizing: "border-box"}}
+                                            <Tooltip key={card.stage_id} title={`#${card.stage_id} ${card.title || ""}（${card.rule_name || ""}）`}>
+                                            <button
+                                                type="button"
+                                                onClick={(event) => {
+                                                    const bounds = event.currentTarget.getBoundingClientRect()
+                                                    onSelectHolder?.({...card, anchor: {left: bounds.left, top: bounds.bottom + 4}})
+                                                }}
+                                                aria-label={`#${card.stage_id} ${card.title || ""}（${card.rule_name || ""}）`}
+                                                style={{position: "relative", "--card-border": tricksRarityColors[Number(card.rarity)] || tricksRarityColors[1], padding: 0, cursor: "pointer", display: "inline-grid", placeItems: "center", width: 17, height: 23, border: `2px solid ${tricksRarityColors[Number(card.rarity)] || tricksRarityColors[1]}`, borderRadius: 2, background: "#fff", color: "#334155", fontSize: 10, fontWeight: 800, lineHeight: 1, textAlign: "center", boxSizing: "border-box"}}
                                             >
+                                                <TricksCardBorder rarity={card.rarity} mini />
                                                 {card.difficulty == null ? "-" : String(card.difficulty)}
-                                            </span>
+                                            </button>
+                                            </Tooltip>
                                         ))}
                                     </div>
                                 )}
@@ -398,6 +451,16 @@ export default function TricksHud({state, stagingMode = false, historicalHolderC
                     </div>
                 </div>
             </div>
+            {tooltipPlayer && (
+                <div ref={playerTooltipRef} role="tooltip" data-tricks-player-tooltip style={{position: "fixed", left: playerTooltip.left, top: playerTooltip.top, zIndex: 410, padding: "7px 10px", borderRadius: 10, border: tooltipPlayer.name === currentUserId ? "1px solid rgba(255, 255, 255, 0.92)" : "1px solid rgba(148, 163, 184, 0.25)", background: playerBackground, color: panelColor, boxShadow: tooltipPlayer.name === currentUserId ? "0 0 12px rgba(255, 255, 255, 0.18)" : "none", fontSize: 12, lineHeight: 1.6}}>
+                    <div>テイクコスト {tooltipPlayer.take_cost ?? 2}</div>
+                    <div>次のレベルまであと {Math.max(0, (Number(tooltipPlayer.take_level ?? Math.floor(Math.sqrt(Number(tooltipPlayer.take_count || 0)))) + 1) ** 2 - Number(tooltipPlayer.take_count || 0))}テイク</div>
+                    <div>手札の上限 {tooltipPlayer.hand_limit ?? (tooltipPlayer.take_cost ?? 2) * 3}枚</div>
+                    {tooltipPlayer.subsidy_flag && <div data-tricks-tooltip-subsidy>次回のポイント給付対象です。</div>}
+                    {tooltipPlayer.balance_tax_eligible && <div data-tricks-tooltip-tax>次回のポイント課税対象です。</div>}
+                </div>
+            )}
+            <TricksCardBorderStyles />
         </>
     )
 }

@@ -16,3 +16,6 @@ __pycache__/
 /next/public/games/mitite_shooting_simulator_build/
 
 /next/generated/
+
+# Generated browser state and console output
+.playwright-cli/

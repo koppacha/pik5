@@ -47,6 +47,9 @@ class EventResultController extends Controller
         262 => ['ピクチャレアリーナ対戦'],
     ];
 
+    // Temporary exclusion. Keep through the 13th-event seed; clear only on explicit instruction.
+    private const TEMPORARILY_EXCLUDED_INSTANT_EVENT_IDS = [260221];
+
     private const SCORE_RANK_CATEGORY_IDS = [161, 191, 211, 241, 261, 262];
 
     public function show(Request $request, EventStampService $eventStampService, ?string $category = null): JsonResponse
@@ -164,6 +167,12 @@ class EventResultController extends Controller
         }
 
         $query = EventResult::query();
+        $query->where(static function ($query) {
+            $query->whereNull('event_id')
+                ->orWhereNotIn('event_id', self::TEMPORARILY_EXCLUDED_INSTANT_EVENT_IDS)
+                ->orWhereNull('category')
+                ->orWhere('category', '!=', 'インスタント研究会');
+        });
         if ($categoryId !== 0) {
             $query->whereIn('category', self::CATEGORY_MAP[$categoryId]);
         }

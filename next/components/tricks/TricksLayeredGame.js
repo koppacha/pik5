@@ -1,6 +1,8 @@
-import {useCallback, useEffect, useMemo, useRef, useState} from "react"
-import {faCheck, faClockRotateLeft, faMedal, faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
+import {useCallback, useEffect, useId, useMemo, useRef, useState} from "react"
+import {faCheck, faSquareCheck, faMedal, faShareFromSquare, faUserPen} from "@fortawesome/free-solid-svg-icons"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
+import {useLocale} from "../../lib/pik5"
+import TricksCardBorder, {TricksCardBorderStyles} from "./TricksCardBorder"
 import {
     cardLimitLabel,
     compareTricksFieldCards,
@@ -43,6 +45,13 @@ const rarityLabels = {
 }
 
 const rarityColors = tricksRarityColors
+
+function cardTextFontSize(text) {
+    const length = Array.from(text || "").length
+    if (length <= 140) return 14
+    if (length <= 200) return 12
+    return 10
+}
 
 // 手札カードの扇状配置座標を計算する。
 function handLayout(width, height, count, index) {
@@ -244,10 +253,6 @@ function PhaserBaseLayer({state, size}) {
 
                 renderBase(nextState) {
                     this.children.removeAll(true)
-                    const width = this.scale.width
-                    const height = this.scale.height
-
-                    this.add.rectangle(0, 0, width, height, 0x0c1016, 1).setOrigin(0, 0)
                     if (typeof window !== "undefined") {
                         const current = window.__TRICKS_RENDER_METRICS__ || {}
                         window.__TRICKS_RENDER_METRICS__ = {
@@ -262,7 +267,7 @@ function PhaserBaseLayer({state, size}) {
             gameRef.current = new Phaser.Game({
                 type: Phaser.CANVAS,
                 parent: containerRef.current,
-                backgroundColor: "#0c1016",
+                transparent: true,
                 autoFocus: false,
                 fps: {
                     target: GAME_FPS,
@@ -419,6 +424,7 @@ export function TricksDomCard({
     footerValue,
     holderLabel,
 }) {
+    const iconTitleId = useId()
     const rarity = Number(card?.rarity || 1)
     const isField = type === "field"
     const stackCount = Math.max(Number(card?.stack_count || 1), 1)
@@ -426,6 +432,7 @@ export function TricksDomCard({
     const width = isField ? FIELD_CARD_WIDTH : HAND_CARD_WIDTH
     const height = isField ? FIELD_CARD_HEIGHT : HAND_CARD_HEIGHT
     const borderColor = rarityColors[rarity] || rarityColors[1]
+    const rewardPoints = Number(footerValue ?? card.live_total_reward ?? 0)
     const expired = isField && !staticLayout && isTricksCardLimitExpired(card, nowValue)
 
     return (
@@ -462,27 +469,28 @@ export function TricksDomCard({
                     }}
                 />
             ))}
+            <TricksCardBorder rarity={rarity} cardId={card.id} active={!hidden} hoverOnly={staticLayout} />
             <span className="tricks-dom-card-face">
                 <span className="tricks-dom-card-meta">
-                    <span>#{card.stage_id || card.card_id || card.id}</span>
+                    <TricksCardIdentity card={card} isField={isField} />
                     <span>★{card.difficulty ?? "-"} {rarityLabels[rarity] || `R${rarity}`}</span>
                 </span>
                 <span className="tricks-dom-card-title">{shortenTricksText(card.title || "Untitled", isField ? 22 : 18)}</span>
                 <span className="tricks-dom-card-rule">{shortenTricksText(card.rule_name || "", isField ? 28 : 20)}</span>
-                <span className="tricks-dom-card-text">{shortenTricksText(card.text || "", isField ? 120 : 74)}</span>
+                <span className="tricks-dom-card-text" style={{fontSize: cardTextFontSize(card.text)}}>{card.text || ""}</span>
                 {isField && (
                     <>
                         <span className="tricks-dom-card-users">
                             <span className="tricks-dom-card-user tricks-dom-card-creator"><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText(displayName(usersById, card.creator), 12)}</span>
                             <span className="tricks-dom-card-user tricks-dom-card-taker"><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
-                            {holderLabel && <span className="tricks-dom-card-user tricks-dom-card-holder" data-tricks-card-holder><FontAwesomeIcon icon={faMedal} title="ホルダー" aria-label="ホルダー" /> {shortenTricksText(holderLabel, 18)}</span>}
+                            {holderLabel && <span className="tricks-dom-card-user tricks-dom-card-holder" data-tricks-card-holder><FontAwesomeIcon icon={faMedal} title="ホルダー" titleId={`${iconTitleId}-holder`} aria-label="ホルダー" /> {shortenTricksText(holderLabel, 18)}</span>}
                         </span>
                         <span className="tricks-dom-card-footer">
                             <span>{footerLabel ?? cardLimitLabel(card, nowValue)}{!footerLabel && !expired && card.my_can_post && card.my_initial_post_cost === 0 && (
                                 <span data-tricks-free style={{marginLeft: 6, color: "#237a39", fontWeight: 700}}>無料！</span>
                             )}</span>
-                            {!footerLabel && card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
-                            <span className={`tricks-dom-stack${(footerValue ?? card.live_total_reward ?? 0) >= 7 ? " has-gradient" : ""}`} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
+                            {!footerLabel && card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" titleId={`${iconTitleId}-posted`} aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
+                            <span className="tricks-dom-stack" style={{color: rewardColor(rewardPoints), fontSize: rewardPoints >= 100 ? "calc(17px - 2pt)" : undefined}} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
                                 <span className="tricks-dom-stack-value">{footerValue ?? card.live_total_reward ?? 0}</span>
                             </span>
                         </span>
@@ -490,17 +498,11 @@ export function TricksDomCard({
                 )}
                 {!isField && (
                     <span className="tricks-dom-card-footer">
-                        <span>手札</span>
-                        {card.was_returned && (
-                            <span
-                                className="tricks-return-history-icon"
-                                title="このカードは以前誰かの手札から山札へ戻されています"
-                                aria-label="返却履歴あり"
-                            >
-                                <FontAwesomeIcon icon={faClockRotateLeft} />
+                        {card.was_opened && (
+                            <span className="tricks-opened-history" data-tricks-opened>
+                                <FontAwesomeIcon icon={faSquareCheck} /> 開封済み
                             </span>
                         )}
-                        <span>{rarityLabels[rarity] || `R${rarity}`}</span>
                     </span>
                 )}
                 {expired && <span className="tricks-dom-card-expired">回収待ち</span>}
@@ -509,14 +511,71 @@ export function TricksDomCard({
     )
 }
 
+// クリエイト元ステージのシリーズを、カード番号と並べて表示する。
+function TricksCardIdentity({card, isField = false}) {
+    const {t: locale} = useLocale()
+    const series = Math.floor(Number(card.origin_stage_id) / 100)
+    const label = series >= 1 && series <= 4 && locale.title[series]
+    const id = isField ? (card.stage_id || card.card_id || card.id) : (card.card_id || card.id)
+
+    return (
+        <span style={{display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap"}}>
+            <span>#{id || "-"}</span>
+            {label && <span data-tricks-series={series} style={{borderRadius: 999, padding: "1px 5px", background: `var(--series-theme-${series})`, color: "#141923", fontSize: 10, lineHeight: 1.3}}>{label}</span>}
+        </span>
+    )
+}
+
+function rewardColor(points) {
+    if (points <= 5) return "#a0a0a0"
+    if (points <= 10) return "#ffffff"
+    if (points <= 15) return "#79d6ff"
+    if (points <= 20) return "#398bff"
+    if (points <= 30) return "#8b70ff"
+    if (points <= 50) return "#d95aff"
+    if (points <= 99) return "#ff4c4c"
+    return "#ff9d38"
+}
+
 // 山札DOMを表示する。
-function TricksDeck({layout, deckCount, trashCount, disabled, disabledReason, handVisible, onDraw, onToggleHand, onShowHowToPlay}) {
+function TricksDeck({layout, deckCount, deckDifficultyCounts, trashCount, disabled, disabledReason, handVisible, onDraw, onToggleHand, onShowHowToPlay}) {
     const [open, setOpen] = useState(true)
+    const [tooltipOpen, setTooltipOpen] = useState(false)
+    const deckRef = useRef(null)
+    const tooltipRef = useRef(null)
+
+    useEffect(() => {
+        if (!handVisible) setTooltipOpen(false)
+    }, [handVisible])
+
+    useEffect(() => {
+        if (!tooltipOpen) return
+        const closeOutside = (event) => {
+            if (!deckRef.current?.contains(event.target) && !tooltipRef.current?.contains(event.target)) {
+                setTooltipOpen(false)
+            }
+        }
+        const closeOnEscape = (event) => {
+            if (event.key === "Escape") setTooltipOpen(false)
+        }
+        document.addEventListener("pointerdown", closeOutside, true)
+        document.addEventListener("keydown", closeOnEscape)
+        return () => {
+            document.removeEventListener("pointerdown", closeOutside, true)
+            document.removeEventListener("keydown", closeOnEscape)
+        }
+    }, [tooltipOpen])
+
     return (
         <>
-            <div className="tricks-dom-deck tricks-deck-object" aria-label={`残り${deckCount ?? 0}枚`} style={{position: "absolute", left: 0, top: 0, width: HAND_CARD_WIDTH, height: HAND_CARD_HEIGHT, transform: cardTransform(layout), zIndex: layout.zIndex, pointerEvents: "none", boxShadow: "5px -5px 0 #32435e, 10px -10px 0 #182338, 15px -15px 0 #32435e"}}>
+            <button ref={deckRef} type="button" className="tricks-dom-deck tricks-deck-object" hidden={!handVisible} aria-label={`山札 残り${deckCount ?? 0}枚`} aria-expanded={tooltipOpen} aria-controls="tricks-deck-tooltip" onClick={() => setTooltipOpen(true)} style={{position: "absolute", left: 0, top: 0, width: HAND_CARD_WIDTH, height: HAND_CARD_HEIGHT, transform: cardTransform(layout), zIndex: layout.zIndex, pointerEvents: "auto", cursor: "pointer", boxShadow: "5px -5px 0 #32435e, 10px -10px 0 #182338, 15px -15px 0 #32435e"}}>
                 <div className="tricks-deck-pattern" />
-            </div>
+            </button>
+            {tooltipOpen && handVisible && (
+                <div ref={tooltipRef} id="tricks-deck-tooltip" className="tricks-deck-tooltip" role="tooltip" aria-label="山札の難易度別枚数" style={{position: "absolute", left: layout.x + HAND_CARD_WIDTH + 24, top: layout.y, zIndex: 450, pointerEvents: "auto", padding: "12px 16px", border: "1px solid var(--color-border-base)", borderRadius: 8, background: "var(--color-bg-base)", color: "var(--color-text-base)", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)", fontSize: 16, lineHeight: 1.8, whiteSpace: "nowrap"}}>
+                    {[1, 2, 3, 4, 5].map((difficulty) => <div key={difficulty}>★{difficulty}：{deckDifficultyCounts[difficulty] ?? 0}枚</div>)}
+                </div>
+            )}
             <aside className="tricks-command-window" style={{position: "absolute", left: 0, bottom: HAND_CARD_HEIGHT + 54 - HAND_AREA_DROP + 24, zIndex: 140, display: "flex", pointerEvents: "auto", transform: open ? "translateX(0)" : "translateX(calc(-100% + 44px))", transition: "transform 240ms ease", maxWidth: "100vw"}}>
                 <div id="tricks-command-body" className="tricks-command-body" style={{visibility: open ? "visible" : "hidden"}}>
                     <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
@@ -555,17 +614,17 @@ function DrawGhost({motion}) {
         >
             <span className="tricks-dom-draw-flipper" data-tricks-draw-flipper>
                 <span className="tricks-dom-card-back tricks-dom-draw-back" />
+                <TricksCardBorder rarity={rarity} cardId={card.id} active={false} />
                 <span className="tricks-dom-card-face tricks-dom-draw-face">
                     <span className="tricks-dom-card-meta">
-                        <span>#{card.stage_id || card.card_id || card.id || "-"}</span>
+                        <TricksCardIdentity card={card} />
                         <span>★{card.difficulty || 1} {rarityLabels[rarity] || `R${rarity}`}</span>
                     </span>
                     <span className="tricks-dom-card-title">{shortenTricksText(card.title || "Untitled", 18)}</span>
                     <span className="tricks-dom-card-rule">{shortenTricksText(card.rule_name || "", 20)}</span>
-                    <span className="tricks-dom-card-text">{shortenTricksText(card.text || "", 74)}</span>
+                    <span className="tricks-dom-card-text" style={{fontSize: cardTextFontSize(card.text)}}>{card.text || ""}</span>
                     <span className="tricks-dom-card-footer">
-                        <span>手札</span>
-                        <span>{rarityLabels[rarity] || `R${rarity}`}</span>
+                        {card.was_opened && <span className="tricks-opened-history" data-tricks-opened><FontAwesomeIcon icon={faSquareCheck} /> 開封済み</span>}
                     </span>
                 </span>
             </span>
@@ -626,7 +685,7 @@ function DomCardsLayer({
                 {Array.from({length: Math.max(operation.fieldCap || 0, orderedField.length)}, (_, index) => {
                     const slot = fieldLayout(index, fieldScrollY, size.width)
                     if (slot.y + FIELD_CARD_HEIGHT < HEADER_HEIGHT || slot.y > fieldViewportBottom(size.height) + 48) return null
-                    return <div key={index} className="tricks-field-slot" style={{position: "absolute", left: slot.x, top: slot.y, width: FIELD_CARD_WIDTH, height: FIELD_CARD_HEIGHT, boxSizing: "border-box", border: "1px solid #63738b", borderRadius: 10, color: "#9aa8bd"}}><span className="tricks-field-slot-number" style={{position: "absolute", right: 10, top: 6}}>{index + 1}</span></div>
+                    return <div key={index} className="tricks-field-slot" style={{position: "absolute", left: slot.x, top: slot.y, width: FIELD_CARD_WIDTH, height: FIELD_CARD_HEIGHT, boxSizing: "border-box", border: "1px solid var(--color-border-base)", borderRadius: 10, background: "color-mix(in srgb, var(--color-bg-base) 50%, transparent)", color: "var(--color-text-sub)"}}><span className="tricks-field-slot-number" style={{position: "absolute", right: 10, top: 6}}>{index + 1}</span></div>
                 })}
                 {orderedField.map((card, index) => {
                     const base = fieldLayout(index, fieldScrollY, size.width)
@@ -669,6 +728,7 @@ function DomCardsLayer({
                 <TricksDeck
                     layout={baseDeckLayout}
                     deckCount={view.deckCount}
+                    deckDifficultyCounts={view.deckDifficultyCounts}
                     trashCount={view.trashCount}
                     disabled={busy || !operation.canDraw}
                     disabledReason={operation.drawReason}
@@ -772,7 +832,7 @@ function DomCardsLayer({
                         inset: 0,
                         zIndex: 280,
                         border: 0,
-                        background: "rgba(3, 6, 12, 0.58)",
+                        background: "transparent",
                         pointerEvents: "auto",
                     }}
                 />
@@ -803,17 +863,21 @@ function DomCardsLayer({
                             inset: 0,
                             zIndex: 280,
                             border: 0,
-                            background: "rgba(3, 6, 12, 0.54)",
+                            background: "transparent",
                             pointerEvents: "auto",
                         }}
                     />
                     <div
+                        data-tricks-hand-actions
                         style={{
                             position: "absolute",
                             left: size.width / 2 + HAND_CARD_WIDTH / 2 + 16,
                             top: selectedHandLayout(size.width, size.height).y + 78,
                             display: "grid",
                             gap: 14,
+                            padding: 16,
+                            borderRadius: 10,
+                            background: "rgba(0, 0, 0, 0.7)",
                             zIndex: 320,
                             pointerEvents: "auto",
                         }}
@@ -822,12 +886,11 @@ function DomCardsLayer({
                             data-tricks-take-summary
                             style={{
                                 maxWidth: 220,
-                                color: "#fff",
+                                color: "#ffffff",
                                 fontSize: 14,
                                 fontWeight: 800,
                                 lineHeight: 1.5,
                                 textAlign: "center",
-                                textShadow: "0 1px 4px rgba(0, 0, 0, 0.85)",
                             }}
                         >
                             <div>投稿コスト {Math.max(1, Number(selectedHand.difficulty || 1))}P</div>
@@ -951,6 +1014,12 @@ export default function TricksLayeredGame({
 
     const handleWheel = useCallback((event) => {
         if (selectedHand || selectedFieldId) return
+        const text = event.target.closest?.(".tricks-dom-card-text")
+        if (text && text.scrollHeight > text.clientHeight) {
+            const canScrollUp = event.deltaY < 0 && text.scrollTop > 0
+            const canScrollDown = event.deltaY > 0 && text.scrollTop + text.clientHeight < text.scrollHeight - 1
+            if (canScrollUp || canScrollDown) return
+        }
         const rect = rootRef.current?.getBoundingClientRect()
         if (!rect) return
         const y = event.clientY - rect.top
@@ -1122,6 +1191,7 @@ export default function TricksLayeredGame({
                 onShowHowToPlay={onShowHowToPlay}
                 nowValue={nowValue}
             />
+            <TricksCardBorderStyles />
             <style jsx global>{`
                 .tricks-dom-card {
                     border: 0;
@@ -1144,35 +1214,33 @@ export default function TricksLayeredGame({
                     box-sizing: border-box;
                 }
                 .tricks-dom-card-back {
-                    background: #d9dde5;
-                    border: 2px solid #8d96a6;
+                    border-radius: 18px;
+                    background: #e4e8ef;
+                    border: 10px solid #8994a8;
+                }
+                .tricks-dom-card-back:nth-child(even) {
+                    background: #f2f4f8;
+                    border-color: #718097;
                 }
                 .tricks-dom-card-face {
+                    border-radius: 18px;
                     display: grid;
-                    grid-template-rows: auto auto auto 1fr auto;
+                    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
                     gap: 8px;
                     padding: 16px;
                     overflow: hidden;
                     background: #ffffff;
-                    border: 8px solid var(--card-border);
+                    color: #141923;
+                    border: 10px solid var(--card-border);
                     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-card-field .tricks-dom-card-face {
-                    padding: 18px;
-                    gap: 9px;
+                    padding: 10px;
+                    gap: 5px;
+                    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
                 }
                 .tricks-dom-card.is-selected .tricks-dom-card-face {
                     filter: drop-shadow(0 0 18px rgba(255, 255, 255, 0.34));
-                }
-                .tricks-dom-card.rarity-3 .tricks-dom-card-face {
-                    border-color: #4fb3ff;
-                    box-shadow: inset 0 0 0 2px rgba(26, 102, 255, 0.26), 0 12px 30px rgba(0, 0, 0, 0.26);
-                }
-                .tricks-dom-card.rarity-4 .tricks-dom-card-face {
-                    box-shadow: inset 0 0 14px rgba(139, 224, 94, 0.34), 0 12px 30px rgba(0, 0, 0, 0.26);
-                }
-                .tricks-dom-card.rarity-5 .tricks-dom-card-face {
-                    box-shadow: inset 0 0 18px rgba(255, 212, 71, 0.46), 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-card-meta,
                 .tricks-dom-card-users,
@@ -1184,14 +1252,11 @@ export default function TricksLayeredGame({
                     font-size: 13px;
                     font-weight: 700;
                 }
-                .tricks-return-history-icon {
-                    display: inline-grid;
-                    place-items: center;
-                    width: 24px;
-                    height: 24px;
-                    border-radius: 999px;
-                    background: #7c3aed;
-                    color: #ffffff;
+                .tricks-opened-history {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 5px;
+                    color: #808080;
                 }
                 .tricks-dom-card-title,
                 .tricks-dom-card-rule,
@@ -1217,7 +1282,14 @@ export default function TricksLayeredGame({
                 .tricks-dom-card-text {
                     color: #243044;
                     font-size: 14px;
-                    line-height: 1.45;
+                    line-height: 1.3;
+                    min-height: 0;
+                    white-space: pre-wrap;
+                    overflow-wrap: anywhere;
+                    overflow: auto;
+                }
+                .tricks-dom-card-field .tricks-dom-card-text {
+                    line-height: 1.2;
                 }
                 .tricks-dom-card-users {
                     border-top: 1px solid #d5dae2;
@@ -1251,17 +1323,10 @@ export default function TricksLayeredGame({
                     min-width: 36px;
                     height: 36px;
                     border-radius: 999px;
-                    background: #172033;
+                    background: #000000;
                     color: #ffffff;
-                    border: 2px solid #6b7280;
+                    border: 0;
                     font-size: 17px;
-                }
-                .tricks-dom-stack.has-gradient .tricks-dom-stack-value {
-                    color: transparent;
-                    background-image: linear-gradient(90deg, #ffffff 0%, #ffb347 50%, #ffffff 100%);
-                    background-clip: text;
-                    -webkit-background-clip: text;
-                    -webkit-text-fill-color: transparent;
                 }
                 .tricks-dom-card-expired {
                     position: absolute;
@@ -1274,19 +1339,47 @@ export default function TricksLayeredGame({
                     font-size: 22px;
                     font-weight: 800;
                 }
-                .tricks-command-body { padding: 12px; background: rgba(21,29,43,.96); border: 1px solid #63738b; display: grid; gap: 4px; width: 220px; box-sizing: border-box; }
-                .tricks-command-toggle { width: 44px; border: 1px solid #63738b; border-radius: 0 8px 8px 0; background: #151d2b; color: #e6edf8; writing-mode: vertical-rl; cursor: pointer; }
-                .tricks-deck-pattern { position: absolute; inset: 10px; border: 1px solid #8db4ff; border-radius: 8px; background: repeating-linear-gradient(45deg, transparent, transparent 12px, #354968 12px, #354968 14px); }
+                .tricks-dom-card-field .tricks-dom-card-face { background: #ffffff; }
+                .tricks-dom-card.rarity-5 .tricks-dom-card-face {
+                    background: rgba(255, 255, 255, .9);
+                    background-clip: padding-box;
+                    border-color: transparent;
+                    z-index: 1;
+                }
+                .tricks-dom-card-field .tricks-dom-card-title,
+                .tricks-dom-card-field .tricks-dom-card-rule,
+                .tricks-dom-card-field .tricks-dom-card-text { color: #141923; }
+                .tricks-dom-card-field .tricks-dom-card-meta,
+                .tricks-dom-card-field .tricks-dom-card-users,
+                .tricks-dom-card-field .tricks-dom-card-footer { color: #667085; }
+                .tricks-command-body { padding: 12px; background: var(--color-bg-base); border: 1px solid var(--color-border-base); display: grid; gap: 4px; width: 220px; box-sizing: border-box; }
+                .tricks-command-toggle { width: 44px; border: 1px solid var(--color-border-base); border-radius: 0 8px 8px 0; background: var(--color-bg-base); color: var(--color-text-base); writing-mode: vertical-rl; cursor: pointer; }
+                .tricks-deck-pattern,
+                .tricks-dom-draw-back::after {
+                    position: absolute;
+                    inset: 0;
+                    border: 0;
+                    border-radius: 8px;
+                    background: repeating-linear-gradient(45deg, transparent 0 12px, rgba(131, 154, 226, .32) 12px 14px), repeating-linear-gradient(-45deg, transparent 0 12px, rgba(88, 114, 196, .22) 12px 14px), linear-gradient(135deg, #253b80, #172451 55%, #233771);
+                }
+                .tricks-dom-deck[hidden] { display: none; }
+                @media (max-width: 480px) {
+                    .tricks-deck-tooltip {
+                        transform: translateX(-8px);
+                        padding: 10px 8px !important;
+                        font-size: 14px !important;
+                    }
+                }
                 .tricks-dom-deck {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     padding: 16px 12px 0;
-                    border-radius: 10px;
-                    background: #263247;
+                    border-radius: 18px;
+                    background: #172451;
                     border: 10px solid #101620;
                     box-sizing: border-box;
-                    color: #ffffff;
+                    color: #141923;
                     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
                 }
                 .tricks-dom-draw-ghost {
@@ -1314,17 +1407,14 @@ export default function TricksLayeredGame({
                 }
                 .tricks-dom-draw-back {
                     transform: rotateY(180deg);
-                    background: #263247;
+                    background: #172451;
                     border: 10px solid #101620;
                     box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
                 }
                 .tricks-dom-draw-back::after {
                     content: "";
                     position: absolute;
-                    inset: 10px;
-                    border-radius: 8px;
-                    border: 1px solid rgba(141, 180, 255, 0.62);
-                    background: linear-gradient(135deg, rgba(141, 180, 255, 0.18), rgba(255, 255, 255, 0.04));
+
                 }
                 .tricks-dom-draw-face {
                     transform: rotateY(0deg);
@@ -1335,10 +1425,10 @@ export default function TricksLayeredGame({
                 }
                 .tricks-command-body button,
                 .tricks-hand-action {
-                    border: 1px solid #8db4ff;
+                    border: 1px solid var(--color-border-base);
                     border-radius: 8px;
-                    background: #2556a3;
-                    color: #ffffff;
+                    background: color-mix(in srgb, var(--color-bg-base) 80%, var(--color-page-main));
+                    color: var(--color-text-base);
                     min-width: 128px;
                     min-height: 44px;
                     padding: 0 18px;
@@ -1363,7 +1453,7 @@ export default function TricksLayeredGame({
                 .tricks-dom-deck-reason {
                     max-width: 210px;
                     margin-top: 2px;
-                    color: #ffcf6e;
+                    color: var(--color-text-sub);
                     font-size: 11px;
                     line-height: 1.3;
                     text-align: center;
@@ -1374,12 +1464,15 @@ export default function TricksLayeredGame({
                     opacity: 0.45;
                 }
                 .tricks-hand-action {
-                    background: #253044;
-                    border-color: #7f8da3;
+                    background: var(--color-bg-base);
+                    color: var(--color-text-base);
+                    border-color: var(--color-border-base);
                 }
+                .tricks-command-body button,
                 .tricks-hand-action-take {
-                    background: #1f7a43;
-                    border-color: #6edb9a;
+                    background: #1976d2;
+                    color: #ffffff;
+                    border-color: #1565c0;
                 }
                 @keyframes tricksDrawToHand {
                     0% {

@@ -93,7 +93,7 @@ class CardController extends Controller
                 'event'                    => 'draw',
                 'actor_name'               => $userId,
                 'card_id'                  => $card->id,
-                'stage_id'                 => $card->stage_id ?? ($card->stageId ?? null),
+                'stage_id'                 => $card->stage_id,
                 'from_state'               => $prevState,
                 'to_state'                 => $userId,
                 'remaining_draw_points'    => $player->draw_points,
@@ -203,7 +203,7 @@ class CardController extends Controller
             'event'                  => 'take',
             'actor_name'             => $userId,
             'card_id'                => $id,
-            'stage_id'               => $selectedAfter?->stage_id ?? ($selectedAfter?->stageId ?? null),
+            'stage_id'               => $selectedAfter?->stage_id,
             'from_state'             => $fromState ?? null,
             'to_state'               => '_field',
             'hand_count'             => $handCount ?? null,
@@ -234,14 +234,14 @@ class CardController extends Controller
                 'event'      => 'limit_over',
                 'actor_name' => null,
                 'card_id'    => $card->id,
-                'stage_id'   => $card->stage_id ?? ($card->stageId ?? null),
+                'stage_id'   => $card->stage_id,
                 'from_state' => $fromState,
                 'to_state'   => $card->state,
                 'card_snapshot' => $card->toArray(),
             ], $request);
 
-            // 3) stageId & rewards(n) を取得（stageId or stage_id どちらでも対応）
-            $stageId = $card->stageId ?? $card->stage_id ?? null;
+            // 3) 投稿用stage_idとrewards(n)を取得
+            $stageId = $card->stage_id;
             $n = (int) ($card->rewards ?? 0);
 
             if (!$stageId || $n <= 0) {
@@ -326,7 +326,7 @@ class CardController extends Controller
                     'event'                 => 'limit_over_update',
                     'actor_name'            => null,
                     'card_id'               => $card->id,
-                    'stage_id'              => $card->stage_id ?? ($card->stageId ?? null),
+                    'stage_id'              => $card->stage_id,
                     'affected_player_id'    => $playerId,
                     'rank_points_delta'     => $rankDelta ?: null,
                     'draw_points_delta'     => $drawDelta ?: null,
@@ -358,10 +358,7 @@ class CardController extends Controller
 
             // 2) 該当の Deck 行をロックして取得
             $decks = Deck::query()
-                ->where(function ($q) use ($stage_id) {
-                    $q->where('stageId', $stage_id);
-                    $q->orWhere('stage_id', $stage_id);
-                })
+                ->where('stage_id', $stage_id)
                 ->lockForUpdate()
                 ->get();
 
@@ -393,7 +390,7 @@ class CardController extends Controller
                 $newLimit = $currentLimit->copy()->addMinutes(15)->format('Y-m-d H:i:s');
 
                 $deck->count     = $totalCount;      // 記録総数
-                $deck->topPlayer = $topPlayerId;     // 最高スコアの user_id
+                $deck->top_player = $topPlayerId;     // 最高スコアの user_id
                 $deck->limit     = $newLimit;        // 15分加算
                 $deck->save();
 
@@ -401,7 +398,7 @@ class CardController extends Controller
                     'event'          => 'update_stage_on_record',
                     'actor_name'     => null,
                     'card_id'        => $deck->id,
-                    'stage_id'       => $deck->stage_id ?? ($deck->stageId ?? null),
+                    'stage_id'       => $deck->stage_id,
                     'previous_limit' => optional($prevLimit)?->format('Y-m-d H:i:s'),
                     'new_limit'      => $newLimit,
                     'top_user_id'    => $top?->user_id,

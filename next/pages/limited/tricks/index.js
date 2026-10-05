@@ -58,9 +58,9 @@ function TricksGamePage({stagingMode = false}) {
     const [message, setMessage] = useState("")
     const [busy, setBusy] = useState(false)
     const [selectedField, setSelectedField] = useState(null)
+    const [selectedHolder, setSelectedHolder] = useState(null)
     const [postingCard, setPostingCard] = useState(null)
     const [postOpen, setPostOpen] = useState(false)
-    const [handDetailOpen, setHandDetailOpen] = useState(false)
     const [debugOpen, setDebugOpen] = useState(false)
     const [howToOpen, setHowToOpen] = useState(false)
     const [fieldSorting, setFieldSorting] = useState(false)
@@ -71,6 +71,7 @@ function TricksGamePage({stagingMode = false}) {
     const processedSubsidySlotRef = useRef(null)
     const subsidyRetryAtRef = useRef(0)
     const subsidyErrorMessageRef = useRef(null)
+    const {data: holderRankings} = useSWR(selectedHolder?.id ? tricksApi.scores(selectedHolder.id) : null, tricksFetcher)
     const stateKey = tricksApi.state
     const selectedCard = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
@@ -235,8 +236,6 @@ function TricksGamePage({stagingMode = false}) {
             .join(",")
     }, [nowValue, state?.field])
     const subsidySlotKey = Math.floor(nowValue / (30 * 60 * 1000))
-    const cardDetailOpen = Boolean(selectedCard) && !postOpen
-    const focusBackdropOpen = handDetailOpen || cardDetailOpen
     const accessGateOpen = Boolean(state) && !me && status !== "loading"
     const handlePosted = async () => {
         setPostOpen(false)
@@ -393,8 +392,8 @@ function TricksGamePage({stagingMode = false}) {
                     minHeight: 540,
                     marginLeft: "calc(50% - 50vw)",
                     marginRight: "calc(50% - 50vw)",
-                    background: "#0c1016",
-                    color: "#fff",
+                    background: '#0c1016 url("/img/limited_19_bg.jpg") center / min(100%, 2000px) auto repeat',
+                    color: "var(--color-text-base)",
                     overflow: "hidden",
                 }}
             >
@@ -407,13 +406,15 @@ function TricksGamePage({stagingMode = false}) {
                     onReturnToDeck={returnToDeck}
                     onSelectField={setSelectedField}
                     onFieldSortingChange={setFieldSorting}
-                    onHandSelectionChange={setHandDetailOpen}
                     onShowHowToPlay={() => setHowToOpen(true)}
                     operation={operation}
                     busy={busy}
                     nowValue={nowValue}
                 />
-                <TricksHud state={state} stagingMode={stagingMode} historicalHolderCounts={holderCatalog?.historical_counts || {}} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
+                <TricksHud onSelectHolder={(card) => {
+                    setSelectedField(null)
+                    setSelectedHolder(card)
+                }} state={state} stagingMode={stagingMode} historicalHolderCounts={holderCatalog?.historical_counts || {}} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
                 {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} adminStats={collectedAdminStats} isAdmin={isAdmin} />}
                 {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy} onOperation={runDebugOperation} />}
                 <div
@@ -425,7 +426,6 @@ function TricksGamePage({stagingMode = false}) {
                         alignItems: "center",
                         gap: 12,
                         zIndex: 2,
-                        opacity: focusBackdropOpen ? 0.35 : 1,
                     }}
                 >
                     {(message || error || isLoading) && (
@@ -434,19 +434,6 @@ function TricksGamePage({stagingMode = false}) {
                         </div>
                     )}
                 </div>
-                {focusBackdropOpen && (
-                    <div
-                        data-tricks-focus-backdrop
-                        aria-hidden="true"
-                        style={{
-                            position: "absolute",
-                            inset: 0,
-                            zIndex: 25,
-                            background: "rgba(3, 6, 12, 0.58)",
-                            pointerEvents: "auto",
-                        }}
-                    />
-                )}
                 {selectedCard && !postOpen && (
                     <div
                         role="presentation"
@@ -475,7 +462,8 @@ function TricksGamePage({stagingMode = false}) {
                         usersById={usersById}
                         summary={
                             <>
-                                スタック {selectedCard.stack_count ?? 0}
+                                スタック {Number(selectedCard.stack_count || 0) + tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}
+                                {tricksStackBonus(selectedCard.rarity, selectedCard.stack_count) > 0 && `（レア度ボーナス ${tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}を含む）`}
                                 {" / "}支払い総額 {selectedCard.paid_points_total ?? 0}P
                                 {" / "}参加者 {selectedCard.participant_count ?? 0}人
                                 {" / "}あなたの投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
@@ -560,7 +548,7 @@ function TricksGamePage({stagingMode = false}) {
                                 pointerEvents: "none",
                             }}
                         >
-                            <div style={{fontSize: "clamp(18px, 2.2vw, 30px)", fontWeight: 800, textAlign: "center", textShadow: "0 2px 8px #000"}}>
+                            <div style={{background: "var(--color-bg-base)", color: "var(--color-text-base)", padding: 24, borderRadius: 10, fontSize: "clamp(18px, 2.2vw, 30px)", fontWeight: 800, textAlign: "center"}}>
                                 {authenticated ? (
                                     <>
                                         {stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"}に
@@ -589,7 +577,18 @@ function TricksGamePage({stagingMode = false}) {
                         </div>
                     </>
                 )}
-                <Dialog open={howToOpen} onClose={() => setHowToOpen(false)}>
+                {selectedHolder && (
+                    <div data-tricks-holder-popup onClick={() => setSelectedHolder(null)} style={{position: "fixed", inset: 0, zIndex: 400, display: "grid", placeItems: "center", background: "transparent"}}>
+                        <TricksFieldDetailPanel
+                            rankings={holderRankings}
+                            usersById={usersById}
+                            summary={`#${selectedHolder.stage_id} ${selectedHolder.title || ""}（${selectedHolder.rule_name || ""}）`}
+                            onClose={() => setSelectedHolder(null)}
+                            style={{position: "fixed", left: Math.max(16, Math.min(selectedHolder.anchor?.left ?? 16, (typeof window !== "undefined" ? window.innerWidth : 1024) - 576)), top: selectedHolder.anchor?.top ?? 150, width: "min(560px, calc(100vw - 32px))"}}
+                        />
+                    </div>
+                )}
+                <Dialog open={howToOpen} onClose={() => setHowToOpen(false)} PaperProps={{style: {background: "var(--color-bg-base)", backgroundImage: "none"}}}>
                     <Box style={{width: "min(720px, 90vw)"}}>
                         <DialogContent style={{fontSize: 15, lineHeight: 1.75}}>
                             <p>期間限定ランキングは、みんなが考えたルールをあなたが選んでみんなで遊ぶイベントです。</p>
@@ -608,6 +607,10 @@ function TricksGamePage({stagingMode = false}) {
                     </Box>
                 </Dialog>
                 <style jsx global>{`
+                    [data-tricks-root] { color: var(--color-text-base); color-scheme: light; }
+                    [data-theme="dark"] [data-tricks-root] { color-scheme: dark; }
+                    [data-tricks-root] .MuiButton-root { color: var(--color-text-base); }
+                    [data-tricks-root] .MuiButton-root.Mui-disabled { color: var(--color-muted-text); }
                     @keyframes tricksFieldPanelOpenRight {
                         0% { transform: scaleX(0); opacity: 0.5; }
                         42% { transform: scaleX(1); opacity: 1; }

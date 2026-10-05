@@ -343,40 +343,6 @@ class TrickController extends Controller
         return response()->json($time->reset($event));
     }
 
-    private function drawOne(Player $player, bool $consumePoint): ?Deck
-    {
-        if ($consumePoint && $player->draw_points <= 0) {
-            abort(response()->json(['message' => 'ドローポイントがありません'], 422));
-        }
-
-        if ($this->deckQuery()->where('state', '_deck')->count() === 0) {
-            $this->deckQuery()->where('state', '_trash')->update(['state' => '_deck']);
-        }
-
-        $difficulty = $this->drawDifficulty();
-        $rarity = $this->drawRarity();
-        $query = $this->deckQuery()->where('state', '_deck')->where($this->deckColumn('difficulty'), $difficulty);
-        if (! $query->exists()) {
-            $query = $this->deckQuery()->where('state', '_deck');
-        }
-
-        $card = $query->inRandomOrder()->lockForUpdate()->first();
-        if (! $card) {
-            return null;
-        }
-
-        $card->state = $player->name;
-        $this->setCardValue($card, 'rarity', $rarity);
-        $this->setCardValue($card, 'drawn_order', $this->nextDrawnOrder($player->name));
-        $card->save();
-
-        if ($consumePoint) {
-            $player->draw_points--;
-        }
-
-        return $card;
-    }
-
     private function drawRarity(): int
     {
         return $this->weightedDraw([1 => 820, 2 => 100, 3 => 50, 4 => 25, 5 => 5]);
@@ -673,7 +639,7 @@ class TrickController extends Controller
 
     private function originStageId(Deck $card): ?int
     {
-        $value = $this->cardValue($card, 'origin_stage_id', 'stageId');
+        $value = $this->cardValue($card, 'origin_stage_id');
 
         return $value ? (int) $value : null;
     }
@@ -713,15 +679,15 @@ class TrickController extends Controller
             'stage_name' => $this->cardValue($card, 'title'),
             'eng_stage_name' => $this->cardValue($card, 'title'),
             'title' => $this->cardValue($card, 'title'),
-            'rule_name' => $this->cardValue($card, 'rule_name', 'ruleName'),
+            'rule_name' => $this->cardValue($card, 'rule_name'),
             'text' => $this->cardValue($card, 'text'),
             'state' => $card->state,
             'difficulty' => (int) $this->cardValue($card, 'difficulty'),
-            'rarity' => (int) $this->cardValue($card, 'rarity'),
+            'rarity' => $card->eventCards()->where('event_id', $this->configuredEventId())->value('rarity'),
             'stack_count' => (int) $this->cardValue($card, 'stack_count', 'rewards'),
             'creator' => $this->cardValue($card, 'creator'),
             'taker' => $this->cardValue($card, 'taker'),
-            'top_player' => $this->cardValue($card, 'top_player', 'topPlayer'),
+            'top_player' => $this->cardValue($card, 'top_player'),
             'post_count' => (int) $this->cardValue($card, 'post_count', 'count'),
             'limit_at' => $this->cardValue($card, 'limit_at', 'limit'),
             'taken_at' => $this->cardValue($card, 'taken_at'),

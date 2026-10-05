@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 460">
+  <defs>
+    <linearGradient id="glint" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#fffbc9"/><stop offset=".25" stop-color="#ffdc38"/>
+      <stop offset=".48" stop-color="#ff8bcc"/><stop offset=".7" stop-color="#86ffff"/>
+      <stop offset="1" stop-color="#fff7ac"/>
+    </linearGradient>
+    <path id="filament" d="M-60 69C47-2 49 151 163 103S326-17 420 130M-47 332C33 208 141 404 237 303S352 241 418 365M45-61C153 36-41 173 94 250S138 425 63 524M320-54C194 61 399 142 282 241S211 397 340 514"/>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <use href="#filament" stroke="#f9aa00" stroke-width="7" opacity=".45"/>
+    <use href="#filament" stroke="url(#glint)" stroke-width="2.6"/>
+    <use href="#filament" stroke="#fff7be" stroke-width="1" opacity=".8" transform="translate(10 -7)"/>
+  </g>
+</svg>

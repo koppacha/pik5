@@ -11,6 +11,8 @@ use App\Models\TrickEventCard;
 use App\Models\TrickEventRecord;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use DomainException;
 
 class TrickLegacyMigrationService
 {
@@ -54,22 +56,28 @@ class TrickLegacyMigrationService
         $created = DB::transaction(function () use ($event): array {
             $counts = ['event_cards' => 0, 'record_links' => 0, 'payments' => 0, 'holders' => 0];
             foreach ($this->legacyDecks($event) as $deck) {
-                $card = TrickEventCard::query()->firstOrCreate(
-                    ['event_id' => $event->event_id, 'deck_id' => $deck->id],
-                    [
-                        'state' => $this->legacyState($deck),
-                        'difficulty' => max(1, min(5, (int) $deck->difficulty)),
-                        'rarity' => max(1, min(5, (int) ($deck->rarity ?: 1))),
-                        'stack_count' => (int) ($deck->stack_count ?? $deck->rewards ?? 0),
-                        'taker' => $deck->taker,
-                        'top_player' => $this->topPlayer($deck),
-                        'post_count' => (int) ($deck->post_count ?? $deck->count ?? 0),
-                        'limit_at' => $deck->limit_at ?? $deck->limit,
-                        'taken_at' => $deck->taken_at,
-                        'collected_at' => $deck->collected_at,
-                        'drawn_order' => $deck->drawn_order,
-                    ],
-                );
+                $card = TrickEventCard::query()->where('event_id', $event->event_id)->where('deck_id', $deck->id)->first();
+                if ($card === null && ! Schema::hasColumn('decks', 'rarity') && ! in_array($this->legacyState($deck), ['_deck', '_excluded'], true)) {
+                    throw new DomainException('旧カードの確定済みレア度は、decks.rarityの削除前に移行してください');
+                }
+                $card ??= TrickEventCard::query()->create([
+                    'event_id' => $event->event_id,
+                    'deck_id' => $deck->id,
+                    'state' => $this->legacyState($deck),
+                    'difficulty' => max(1, min(5, (int) $deck->difficulty)),
+                    'rarity' => in_array($this->legacyState($deck), ['_deck', '_excluded'], true) ? null : max(1, min(5, (int) $deck->rarity)),
+                    ...(Schema::hasColumn('trick_event_cards', 'draw_count') ? [
+                        'draw_count' => in_array($this->legacyState($deck), ['_deck', '_excluded'], true) ? 0 : 1,
+                    ] : []),
+                    'stack_count' => (int) ($deck->stack_count ?? $deck->rewards ?? 0),
+                    'taker' => $deck->taker,
+                    'top_player' => $this->topPlayer($deck),
+                    'post_count' => (int) ($deck->post_count ?? $deck->count ?? 0),
+                    'limit_at' => $deck->limit_at ?? $deck->limit,
+                    'taken_at' => $deck->taken_at,
+                    'collected_at' => $deck->collected_at,
+                    'drawn_order' => $deck->drawn_order,
+                ]);
                 if ($card->wasRecentlyCreated) {
                     $counts['event_cards']++;
                 }
@@ -170,7 +178,7 @@ class TrickLegacyMigrationService
 
     private function topPlayer(Deck $deck): ?string
     {
-        $player = trim((string) ($deck->top_player ?? $deck->topPlayer ?? ''));
+        $player = trim((string) ($deck->top_player ?? ''));
 
         return $player === '' ? null : $player;
     }

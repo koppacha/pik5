@@ -49,6 +49,14 @@ class TrickPhaseFourTest extends TestCase
         self::assertSame('_trash', $stack->fresh()->state);
         self::assertSame(7, $result['rankings'][0]['provisional_reward_points']);
 
+        $holderCard = app(TrickStateService::class)->snapshot($event, 'alice')['holder_cards'][0];
+        self::assertSame($card->deck_id, $holderCard['id']);
+        self::assertSame($card->deck->title, $holderCard['title']);
+        self::assertSame($card->deck->rule_name, $holderCard['rule_name']);
+        self::assertSame($card->deck->stage_id, $holderCard['stage_id']);
+        $this->getJson('/api/tricks/cards/'.$holderCard['id'].'/scores?event_id='.$event->event_id)
+            ->assertOk()->assertJsonPath('0.user_id', 'alice');
+
         $second = app(TrickCollectionService::class)->collect($event, $card->deck_id);
         self::assertFalse($second['collected_now']);
         self::assertSame(15, Player::query()->where('event_id', $event->event_id)
@@ -95,6 +103,24 @@ class TrickPhaseFourTest extends TestCase
             ->last(fn (array $log) => $log['event'] === 'collect');
         self::assertSame('alice', $publicCollectLog['top_user_id']);
         self::assertSame($card->deck->title, $publicCollectLog['card_title']);
+        self::assertSame($card->deck->rule_name, $publicCollectLog['rule_name']);
+    }
+
+    public function test_four_point_collection_reduces_lower_ranks_before_the_winner(): void
+    {
+        [$event, $card] = $this->fixture(['alice', 'bob', 'carol'], [
+            'rarity' => 1, 'difficulty' => 2, 'stack_count' => 2, 'taker' => 'alice',
+        ]);
+        foreach (['alice' => 100, 'bob' => 80, 'carol' => 60] as $player => $score) {
+            app(TrickRecordService::class)->saved($this->record($card, $player, $score));
+        }
+        self::assertSame(2, $card->fresh()->paid_points_total);
+        app(TrickCollectionService::class)->collect($event, $card->deck_id, true);
+        $rewards = TrickCollectionReward::query()->where('event_card_id', $card->id)->get();
+        self::assertSame(4, $rewards->sum('points_delta'));
+        self::assertSame(4, $rewards->where('player_name', 'alice')->sum('points_delta'));
+        self::assertSame(0, $rewards->where('player_name', 'bob')->sum('points_delta'));
+        self::assertSame(0, $rewards->where('player_name', 'carol')->sum('points_delta'));
     }
 
     public function test_tied_group_remainder_is_returned_to_the_last_place_group(): void
@@ -465,6 +491,25 @@ class TrickPhaseFourTest extends TestCase
         self::assertFalse(app(TrickStateService::class)->snapshot($event->fresh(), 'outsider')['field'][0]['my_can_extend']);
     }
 
+    public function test_extension_flag_matches_end_limit_and_rejection_does_not_charge(): void
+    {
+        [$event, $card] = $this->fixture(['alice']);
+        foreach ([-1, 0, 15] as $minutes) {
+            $card->update(['limit_at' => $event->end_at->copy()->addMinutes($minutes)]);
+            self::assertSame($minutes < 0, app(TrickStateService::class)->snapshot($event, 'alice')['field'][0]['my_can_extend']);
+            if ($minutes >= 0) {
+                try {
+                    app(TrickGameService::class)->extend($event, 'alice', $card->deck_id, 'end-limit-'.$minutes);
+                    self::fail('終了時刻以上の期限は延長不可');
+                } catch (\Illuminate\Http\Exceptions\HttpResponseException $exception) {
+                    self::assertSame(409, $exception->getResponse()->getStatusCode());
+                }
+            }
+        }
+        self::assertSame(10, Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->value('draw_points'));
+        self::assertSame(0, $card->fresh()->paid_points_total);
+    }
+
     public function test_player_extension_is_rejected_during_the_final_hour_without_charging(): void
     {
         [$event, $card] = $this->fixture(['alice']);
@@ -591,17 +636,14 @@ class TrickPhaseFourTest extends TestCase
         $deck = Deck::query()->create([
             'eventId' => $event->event_id,
             'event_id' => $event->event_id,
-            'stageId' => 399,
             'stage_id' => $stageId,
             'origin_stage_id' => 399,
             'card_id' => $cardId,
             'title' => 'Phase 4 card '.$cardId,
-            'ruleName' => 'Rule',
             'rule_name' => 'Rule',
             'state' => '_in_event',
             'text' => 'Test rule',
             'difficulty' => $options['difficulty'] ?? 2,
-            'rarity' => $options['rarity'] ?? 1,
             'rewards' => 0,
         ]);
 

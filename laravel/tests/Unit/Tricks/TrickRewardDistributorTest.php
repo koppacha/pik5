@@ -36,6 +36,25 @@ class TrickRewardDistributorTest extends TestCase
         );
     }
 
+    public function test_below_base_totals_reduce_the_lowest_positive_rank_first(): void
+    {
+        $distributor = new TrickRewardDistributor();
+        self::assertSame(['A' => 4, 'B' => 0, 'C' => 0], $distributor->distribute(4, [['A'], ['B'], ['C']])['distribution']);
+        self::assertSame(['A' => 3, 'B' => 0], $distributor->distribute(3, [['A'], ['B']])['distribution']);
+        self::assertSame(['A' => 2, 'B' => 2, 'C' => 0], $distributor->distribute(4, [['A', 'B'], ['C']])['distribution']);
+        foreach (range(2, 8) as $count) {
+            $groups = array_map(fn ($index) => ['player-'.$index], range(1, $count));
+            foreach (range(1, $count + 2) as $total) {
+                $result = $distributor->distribute($total, $groups);
+                self::assertSame($total, array_sum($result['distribution']) + $result['taker_remainder']);
+                self::assertGreaterThanOrEqual(0, min($result['distribution']));
+                if ($count > 2) {
+                    self::assertSame(0, $result['distribution']['player-'.$count]);
+                }
+            }
+        }
+    }
+
     public function test_four_player_excess_uses_the_documented_cycle(): void
     {
         $distributor = new TrickRewardDistributor();

@@ -185,7 +185,7 @@ export default function Record({
                         <Grid item xs={12} sm={3}>
                             <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                         </Grid>
-                        {mini || <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
+                        {!mini && <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                             {data.stage_id &&
                                 <Link href={stageLink}>{data.stage_id + '#' + t.stage[data.stage_id]}
                                     {(!hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
