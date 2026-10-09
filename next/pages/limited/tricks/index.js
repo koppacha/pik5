@@ -95,8 +95,10 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
         debugMetricsRef.current.stateFetchCount += 1
         return tricksFetcher(url)
     }, [])
+    const stateRefreshInterval = useCallback((latest) =>
+        latest?.tournament?.state === "ended" || fieldSorting ? 0 : 3000, [fieldSorting])
     const {data: state, error, mutate, isLoading} = useSWR(stateKey, stateFetcher, {
-        refreshInterval: (latest) => latest?.tournament?.state === "ended" || fieldSorting ? 0 : 3000,
+        refreshInterval: stateRefreshInterval,
         revalidateOnFocus: true,
         keepPreviousData: true,
     })
