@@ -22,7 +22,7 @@ async (page) => {
             || !state.end_at.startsWith('2026-10-11T19:59:00')) throw new Error(JSON.stringify(state))
         results.push({path, ...state})
     }
-    await page.locator('canvas').waitFor({state: 'attached'})
+    await page.locator('canvas').first().waitFor({state: 'attached'})
     await page.screenshot({path: 'output/playwright/tricks-261009-live.png'})
     await page.goto('about:blank')
     return results
