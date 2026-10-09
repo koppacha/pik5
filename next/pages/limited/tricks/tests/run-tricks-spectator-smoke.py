@@ -6,7 +6,7 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 variant = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] in ('extra', 'access') else 'smoke'
-scenario = root / 'tests' / f'tricks-spectator-{variant}.js'
+scenario = root / 'tests' / f'tricks-spectator-{variant}.cjs'
 wrapper = Path.home() / '.codex/skills/playwright/scripts/playwright_cli.sh'
 output = root / 'output/playwright'
 output.mkdir(parents=True, exist_ok=True)
