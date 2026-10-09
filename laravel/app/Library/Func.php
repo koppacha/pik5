@@ -3,6 +3,7 @@
 namespace App\Library;
 
 use App\Http\Controllers\TotalController;
+use App\Models\Deck;
 use App\Models\Record;
 use App\Models\Stage;
 use DateTime;
@@ -25,7 +26,9 @@ class Func extends Facade
         // イベントはカードから割り当てたステージの明示的な種別で判定する。
         if ((int) $id >= 1001 && (int) $id <= 1999 &&
             Stage::query()->where('stage_id', (int) $id)->value('display') === 'time') {
-            return ['score', 'ASC'];
+            $originStageId = (int) Deck::query()->where('stage_id', (int) $id)->value('origin_stage_id');
+
+            return ['score', $originStageId >= 419 && $originStageId <= 428 ? 'DESC' : 'ASC'];
         }
 
         // カウントアップRTAのステージリスト
