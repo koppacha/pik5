@@ -46,6 +46,15 @@ class RouteServiceProvider extends ServiceProvider
     protected function configureRateLimiting()
     {
         RateLimiter::for('api', function (Request $request) {
+            if ($request->is('api/tricks/*')) {
+                // NextAuth users reach Laravel through one proxy IP. Only a
+                // verified signature may select an individual request budget.
+                $userId = app(\App\Services\Tricks\TrickRequestIdentity::class)->resolve($request);
+                $identity = $userId === null ? 'ip:'.$request->ip() : 'user:'.$userId;
+
+                return Limit::perMinute(60)->by('tricks:'.$identity);
+            }
+
             return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
         });
     }
