@@ -26,13 +26,8 @@ import useSWR from "swr"
 import TricksCollectorRoom from "../../components/tricks/TricksCollectorRoom"
 import {tricksApi, tricksFetcher} from "../../lib/tricks"
 
-export async function getStaticPaths(){
-    return {
-        paths: [],
-        fallback: 'blocking',
-    }
-}
-export async function getStaticProps({params}){
+export async function getServerSideProps({params, res: response}){
+    response.setHeader('Cache-Control', 'private, no-store')
     const { getCachedUsers } = await import("../../lib/usersCache")
     const prisma = (await import("../../lib/prisma")).default
 
@@ -86,7 +81,6 @@ export async function getStaticProps({params}){
         props: {
             users, user, userName, consoles, rule, year, info, marker, posts, fDate, userSettings: userSettings ?? null
         },
-        revalidate: 604800,
     }
 }
 // レンダラー本体（フロントサイド）

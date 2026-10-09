@@ -11,6 +11,7 @@ use App\Models\TrickCardPayment;
 use App\Models\TrickCollectionReward;
 use App\Models\TrickEvent;
 use App\Models\TrickEventCard;
+use App\Services\Tricks\TrickClock;
 use App\Services\Tricks\TrickCollectionService;
 use App\Services\Tricks\TrickDebugTimeService;
 use App\Services\Tricks\TrickEventFinalizer;
@@ -47,6 +48,34 @@ class TrickController extends Controller
     private const STAGE_ID_END = 1999;
 
     private array $deckColumns = [];
+
+    public function stageContext(Request $request, int $stageId, TrickRequestIdentity $identity): JsonResponse
+    {
+        abort_if($identity->resolve($request) === null || $identity->isTest($request), 401);
+        $request->validate(['event_id' => ['nullable', 'integer', 'min:1', 'max:2147483647']]);
+        $query = TrickEventCard::query()->join('decks as d', 'd.id', '=', 'trick_event_cards.deck_id')
+            ->join('trick_events as e', 'e.event_id', '=', 'trick_event_cards.event_id')
+            ->where('d.stage_id', $stageId)->where('trick_event_cards.state', '_field')
+            ->where('e.state', '<>', 'ended');
+        if ($request->query('event_id') !== null) $query->where('e.event_id', (int) $request->query('event_id'));
+        $eventId = $query->orderByDesc('e.event_id')->value('e.event_id');
+        return response()->json(['event_id' => $eventId === null ? null : (int) $eventId]);
+    }
+
+    public function recordContext(Request $request, string $uniqueId, TrickRequestIdentity $identity): JsonResponse
+    {
+        $userId = $identity->resolve($request);
+        abort_if($userId === null || $identity->isTest($request), 401);
+        abort_unless(ctype_digit($uniqueId), 404);
+        $record = DB::table('records as r')->leftJoin('trick_event_records as ter', 'ter.record_id', '=', 'r.post_id')
+            ->where('r.unique_id', $uniqueId)->where('r.flg', '<', 2)->orderByDesc('r.post_id')
+            ->first(['r.unique_id', 'r.stage_id', 'r.flg', 'r.created_at', 'r.user_id', 'ter.event_id as tricks_event_id']);
+        abort_if($record === null, 404);
+        $role = $identity->role($request);
+        abort_unless($role === 10 || ($role > 0 || $record->user_id === $userId)
+            && now()->lessThanOrEqualTo(\Carbon\CarbonImmutable::parse($record->created_at)->addDay()), 403);
+        return response()->json($record);
+    }
 
     public function tournament(Request $request, TrickEventResolver $events, TrickRequestIdentity $identity, TrickStateService $state): JsonResponse
     {
@@ -218,6 +247,34 @@ class TrickController extends Controller
             ->where('deck_id', $deckId)->firstOrFail();
 
         return response()->json($records->rankings($card));
+    }
+
+    public function changeRule(Request $request, int $deckId, TrickEventResolver $events, TrickOperationAuthorizer $authorization): JsonResponse
+    {
+        return $this->applyRuling($request, $deckId, $events, $authorization, false);
+    }
+
+    public function resetRanking(Request $request, int $deckId, TrickEventResolver $events, TrickOperationAuthorizer $authorization): JsonResponse
+    {
+        return $this->applyRuling($request, $deckId, $events, $authorization, true);
+    }
+
+    private function applyRuling(Request $request, int $deckId, TrickEventResolver $events, TrickOperationAuthorizer $authorization, bool $reset): JsonResponse
+    {
+        $event = $events->forRequest($request, app(TrickRequestIdentity::class));
+        $actor = $authorization->assertAdminForEvent($event, $request);
+        $rules = ['idempotency_key' => ['required', 'string', 'min:8', 'max:96']];
+        if (! $reset) {
+            $rules += [
+                'title' => ['required', 'string', 'max:255'],
+                'rule_name' => ['required', 'string', 'max:255'],
+                'text' => ['required', 'string', 'max:10000'],
+                'difficulty' => ['required', 'integer', 'between:1,5'],
+            ];
+        }
+
+        return response()->json(app(\App\Services\Tricks\TrickRulingService::class)
+            ->apply($event, $deckId, $actor, $request->validate($rules), $reset, $request));
     }
 
     public function collect(
@@ -735,10 +792,12 @@ class TrickController extends Controller
 
     private function collectedAdminStatsPayload(TrickEvent $event): array
     {
+        $provisional = app(TrickRecordService::class)->provisionalByEvent($event);
         $stats = Player::query()->where('event_id', $event->event_id)->get()
             ->mapWithKeys(fn (Player $player) => [$player->name => [
                 'user_id' => $player->name,
-                'total_rank_points' => (int) $player->rank_points,
+                'total_rank_points' => (int) $player->rank_points + (int) ($provisional[$player->name] ?? 0),
+                'draw_points' => (int) $player->draw_points,
                 'collected_card_count' => 0,
                 'take_count' => (int) $player->take_count,
                 'draw_count' => 0,
@@ -757,10 +816,9 @@ class TrickController extends Controller
         }
 
         $logs = LimitLog::query()->where('event_id', $event->event_id)
-            ->whereIn('event', ['draw', 'return_to_deck', 'record_posted', 'record_updated', 'player_extension', 'balance_tax_collected'])
-            ->get();
+            ->get(['event', 'event_card_id', 'actor_name', 'affected_player_name', 'points_delta', 'context']);
         foreach ($logs as $log) {
-            $playerName = $log->event === 'balance_tax_collected' ? $log->affected_player_name : $log->actor_name;
+            $playerName = $log->affected_player_name ?: $log->actor_name;
             if (! $playerName || ! isset($stats[$playerName])) {
                 continue;
             }
@@ -794,7 +852,41 @@ class TrickController extends Controller
             }
         }
 
-        return collect($stats)->sortByDesc('total_rank_points')->values()->all();
+        foreach ($stats as &$playerStats) {
+            // Cumulative income includes initial points, grants and collected rewards.
+            $playerStats['earned_points'] = $playerStats['draw_points'] + $playerStats['spent_points'];
+        }
+        unset($playerStats);
+        $rankings = app(TrickRecordService::class)->rankingsByCards($cards);
+        $collectionLogs = $logs->where('event', 'collect')->keyBy('event_card_id');
+        $rewards = TrickCollectionReward::query()->where('event_id', $event->event_id)
+            ->get()->groupBy('event_card_id');
+        $now = app(TrickClock::class)->now($event);
+        $cardStats = $cards->sortBy(fn (TrickEventCard $card) => $card->deck?->stage_id)
+            ->map(function (TrickEventCard $card) use ($rankings, $collectionLogs, $holders, $rewards, $now): array {
+                $final = $collectionLogs->get($card->id)?->context['final_rankings'] ?? null;
+                $rows = is_array($final) ? $final : ($rankings[$card->id] ?? []);
+
+                return [
+                    'event_card_id' => $card->id,
+                    'stage_id' => $card->deck?->stage_id,
+                    'title' => $card->deck?->title,
+                    'rule_name' => $card->deck?->rule_name,
+                    'difficulty' => $card->difficulty,
+                    'rarity' => $card->rarity,
+                    'field_seconds' => $card->taken_at === null ? 0
+                        : max(0, $card->taken_at->diffInSeconds($card->collected_at ?? $now, false)),
+                    'post_count' => (int) $card->post_count,
+                    'total_reward_points' => $card->collected_at === null ? null
+                        : (int) $rewards->get($card->id, collect())->sum('points_delta'),
+                    'participants' => collect($rows)->pluck('user_id')->unique()->values()->all(),
+                    'creator' => $card->deck?->creator,
+                    'taker' => $card->taker,
+                    'holders' => $holders->get($card->id, collect())->pluck('player_name')->values()->all(),
+                ];
+            })->values()->all();
+
+        return ['users' => collect($stats)->sortByDesc('total_rank_points')->values()->all(), 'cards' => $cardStats];
     }
 
     private function userId(Request $request, TrickEvent $event = null): ?string

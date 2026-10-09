@@ -7,7 +7,7 @@ import {useForm} from "react-hook-form";
 import {yupResolver} from "@hookform/resolvers/yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
-import {convertToSeconds, currentYear, fetcher, rule2consoles, useLocale} from "../../lib/pik5";
+import {convertToSeconds, currentYear, fetcher, sec2time, rule2consoles, useLocale} from "../../lib/pik5";
 import {Backdrop, Box, CircularProgress, MenuItem, ToggleButton, Typography} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
@@ -24,6 +24,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // 送信イベント判定
     const isSubmit = useRef(false)
 
+    const isTricksStage = Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999
+    const {data: stageMetadata} = useSWR(isTricksStage && !info?.score_type && !initialData?.score_type ? `/api/server/stage/${info.stage_id}` : null, fetcher)
+    const isTricksTime = (info?.score_type || initialData?.score_type) === "time" || (isTricksStage && (info?.display === "time" || stageMetadata?.data?.display === "time" || stageMetadata?.display === "time"))
     const consoleList = useMemo(() => rule2consoles(rule), [rule])
 
     const {t, locale} = useLocale()
@@ -55,6 +58,8 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // バリデーションルール
     const schema = createRecordValidationSchema({
         isTime: isTime(),
+        isTricksTime,
+        isTricks: Boolean(info?.tricks_event_id) || (Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999),
         time2score,
         rule,
         stageId: info?.stage_id,
@@ -88,7 +93,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         const defaultVideoUrl = isEditMode ? (initialData.video_url || "") : ""
         const defaultComment = isEditMode ? (initialData.post_comment || "") : ""
         const defaultRegion = Number(isEditMode ? initialData.region : 0) || 0
-        const defaultTime = "00:00:00"
+        const defaultTime = isTricksTime && defaultScore > 0 ? sec2time(defaultScore) : "00:00:00"
 
         reset({
             time: defaultTime,
@@ -111,7 +116,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         setRegion(defaultRegion)
         setRegionSelected(defaultRegion > 0)
         setTimeValue(defaultTime)
-    }, [consoleList, initialData, mode, reset, rule])
+    }, [consoleList, initialData, isTricksTime, mode, reset, rule])
 
     // データをバックエンドに送信する
     const onSubmit = async () => {
@@ -144,6 +149,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
             // 送信するデータをオブジェクトに追加
             formData.append('stage_id', info.stage_id)
+            if (info.tricks_event_id) formData.append('tricks_event_id', info.tricks_event_id)
             formData.append('rule', payloadRule)
             formData.append('region', payloadRegion)
             formData.append('score', payloadScore)
@@ -256,7 +262,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // タイム表示判定（RecordController.phpと共通）
     function isTime() {
-        return [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
+        return isTricksTime || [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
     }
 
     // 難易度追加判定
@@ -272,6 +278,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // タイムからスコアに変換
     function time2score(time) {
         const sec = convertToSeconds(time)
+        if (isTricksTime) return sec
         const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
         if (lestTime) {
             // 経過時間が表示されるタイプ（ピクミン３）→残り時間に変換して登録
@@ -365,7 +372,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         fullWidth
                         disabled
                         variant="standard"
-                        defaultValue={t.rule[rule]}
+                        defaultValue={info?.category_name || (Number(rule) === Number(info?.tricks_event_id) && info?.tricks_event_id && "期間限定ランキング") || t.rule[rule]}
                         margin="normal"
                     />
                     <TextField
@@ -512,6 +519,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                                 syncScore(time2score(e.target.value))
                                 setTime(e.target.value)
                                 setTimeValue(e.target.value)
+                                setValue('time', e.target.value, {shouldValidate: true})
                             }
                         }
                         fullWidth

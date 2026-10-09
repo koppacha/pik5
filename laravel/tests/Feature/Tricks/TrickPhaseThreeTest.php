@@ -102,7 +102,7 @@ class TrickPhaseThreeTest extends TestCase
             TrickCardPayment::query()->where('event_id', $event->event_id)
                 ->orderBy('id')->pluck('points_paid', 'player_name')->all(),
         );
-        self::assertSame(2, Player::query()->where('event_id', $event->event_id)
+        self::assertSame(3, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
         self::assertSame(0, $card->fresh()->paid_points_total);
         self::assertSame('2026-07-20 14:15:00', $card->fresh()->limit_at->format('Y-m-d H:i:s'));
@@ -110,7 +110,7 @@ class TrickPhaseThreeTest extends TestCase
         $rankings = $records->rankings($card);
         self::assertSame([1, 1, 3, 4], collect($rankings)->pluck('rank')->all());
         self::assertSame([5, 5, 2, 1], collect($rankings)->pluck('rps')->all());
-        self::assertSame([3, 3, 1, 1], collect($rankings)->pluck('provisional_reward_points')->all());
+        self::assertSame([3, 3, 1, 0], collect($rankings)->pluck('provisional_reward_points')->all());
         self::assertNotContains(false, collect($rankings)->pluck('initial_payment_recorded')->all(), true);
 
         Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update(['rank_points' => 2]);
@@ -134,7 +134,7 @@ class TrickPhaseThreeTest extends TestCase
         $original->update(['flg' => 2]);
         $records->saved($this->record($card, 'alice', 120), $original);
 
-        self::assertSame(-2, Player::query()->where('event_id', $event->event_id)
+        self::assertSame(-1, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
         self::assertSame(2, TrickCardPayment::query()->where('event_id', $event->event_id)
             ->where('player_name', 'alice')->where('payment_type', 'score_update')->value('points_paid'));
@@ -264,6 +264,16 @@ class TrickPhaseThreeTest extends TestCase
             ->where('record_id', $current->post_id)->value('event_id'));
     }
 
+    public function test_event_record_endpoint_accepts_six_digit_maximum_and_rejects_overflow(): void
+    {
+        [$event, $card] = $this->fixture();
+        $this->withHeaders($this->signedHeaders('alice'))
+            ->postJson('/api/record', $this->recordPayload($card, 'alice', 999999))
+            ->assertOk()->assertExactJson(['OK', 200]);
+        $this->postJson('/api/record', $this->recordPayload($card, 'alice', 1000000))->assertStatus(422);
+        self::assertSame(1, Record::query()->where('stage_id', $card->deck->stage_id)->count());
+    }
+
     public function test_record_endpoint_rolls_back_normal_record_when_event_validation_fails(): void
     {
         [$event, $card] = $this->fixture();
@@ -377,6 +387,22 @@ class TrickPhaseThreeTest extends TestCase
     }
 
     /** @return array{0: TrickEvent, 1: TrickEventCard} */
+    public function test_post_uses_selected_event_when_a_deck_exists_in_two_live_events(): void
+    {
+        [$event, $card] = $this->fixture();
+        $other = $event->replicate();
+        $other->event_id = 990102;
+        $other->save();
+        $otherCard = $card->replicate();
+        $otherCard->event_id = $other->event_id;
+        $otherCard->save();
+        $payload = $this->recordPayload($card, 'alice', 123);
+        $payload['tricks_event_id'] = $event->event_id;
+        $this->withHeaders($this->signedHeaders('alice'))->postJson('/api/record', $payload)->assertOk();
+        self::assertSame($event->event_id, (int) TrickEventRecord::query()->value('event_id'));
+        self::assertSame(0, $otherCard->fresh()->post_count);
+    }
+
     private function fixture(): array
     {
         $now = CarbonImmutable::parse('2026-07-20 12:00:00', 'Asia/Tokyo');

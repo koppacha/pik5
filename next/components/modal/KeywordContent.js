@@ -221,7 +221,7 @@ function linkifyWikiLinks(text, opts = {}) {
   return replaceTwitchUrlsWithEmbed(withYouTube, opts)
 }
 
-export function KeywordContent({data, users}){
+export function KeywordContent({data, users, readOnly = false}){
 
     const {t} = useLocale()
 
@@ -328,16 +328,16 @@ export function KeywordContent({data, users}){
             `}</style>
             <Typography variant="" style={{fontSize:"0.8em",color:"#777"}}>{data.yomi}</Typography><br/>
             <Typography variant="" className="mini-title">
-                <Link href={`/keyword/${data.keyword}`}>{displayKeyword}</Link>
+                {readOnly ? displayKeyword : <Link href={`/keyword/${data.keyword}`}>{displayKeyword}</Link>}
             </Typography><br/>
             <Box style={{
                 borderTop: "1px solid #555",
                 borderBottom: "1px solid #555",
                 marginBottom: "1em"
             }}>
-                <Button variant="outlined" style={{margin:"8px",padding:"2px"}}>
+                {!readOnly && <Button variant="outlined" style={{margin:"8px",padding:"2px"}}>
                     <Link href={`/keyword/${data.tag}`}>{data.tag}</Link>
-                </Button>
+                </Button>}
                 <Box
                   ref={mdRootRef}
                   style={{
@@ -353,15 +353,15 @@ export function KeywordContent({data, users}){
                     </ReactMarkdown>
                 </Box>
             </Box>
-            <Grid container spacing={1.5} style={{marginBottom:"2em"}}>
+            {!readOnly && <Grid container spacing={1.5} style={{marginBottom:"2em"}}>
                 <Grid item xs={6}>
                     <Button type="button" variant="contained" onClick={handleOpen}>{t.g.edit}</Button>
                 </Grid>
                 <Grid item xs={6} style={{textAlign:"right"}}>
                     <Typography variant="span" className="subtitle">{id2name(users, data.last_editor)} (<time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>)</Typography>
                 </Grid>
-            </Grid>
-            <ModalKeywordEdit uniqueId={data.unique_id} editOpen={open} handleEditClose={handleClose}/>
+            </Grid>}
+            {!readOnly && <ModalKeywordEdit uniqueId={data.unique_id} editOpen={open} handleEditClose={handleClose}/>}
         </>
     )
 }

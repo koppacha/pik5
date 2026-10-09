@@ -16,6 +16,7 @@ class TrickGameService
 {
     public function __construct(
         private readonly TrickClock $clock,
+        private readonly TrickSubsidyService $subsidies,
         private readonly TrickEmergencyGrantService $emergencyGrants,
         private readonly TrickRuleCalculator $rules,
         private readonly TrickTakeCooldownService $cooldowns,
@@ -26,6 +27,9 @@ class TrickGameService
 
     public function join(TrickEvent $event, string $userId, Request $request = null): array
     {
+        if (! TrickRequestIdentity::isSafeUserId($userId)) {
+            abort(response()->json(['message' => '大会では利用できないユーザーIDです'], 403));
+        }
         return DB::transaction(function () use ($event, $userId, $request): array {
             $event = $this->lockAvailableEvent($event);
             $now = $this->clock->now($event);
@@ -68,7 +72,7 @@ class TrickGameService
             $event = $this->lockAvailableEvent($event);
             $player = $this->lockPlayer($event, $userId);
             if ($player->draw_points <= 0) {
-                abort(response()->json(['message' => 'ポイントが0P以下のためドローできません'], 422));
+                abort(response()->json(['message' => 'ドローポイントが0P以下のためドローできません'], 422));
             }
             $handCount = TrickEventCard::query()->where('event_id', $event->event_id)
                 ->where('state', $userId)->lockForUpdate()->count();
@@ -81,16 +85,15 @@ class TrickGameService
             $available = TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_deck')
                 ->lockForUpdate()->get();
             if ($available->isEmpty()) {
-                abort(response()->json(['message' => '山札と捨て札が空です'], 409));
+                abort(response()->json(['message' => 'デッキと捨て札が空です'], 409));
             }
 
             $drawSequence = LimitLog::query()->where('event_id', $event->event_id)->where('event', 'draw')->count() + 1;
             $seedPrefix = $event->test_mode ? $event->random_seed.':'.$drawSequence : null;
-            $difficulty = $this->drawDifficulty($available->pluck('difficulty')->unique()->all(), $seedPrefix);
-            $card = $available->where('difficulty', $difficulty)->random();
+            $card = $available->random();
             $now = $this->clock->now($event);
             $card->state = $userId;
-            $card->draw_count = max((int) $card->draw_count, (int) ($card->rarity !== null)) + 1;
+            $card->draw_count = $card->rarity === null ? 1 : max(1, (int) $card->draw_count) + 1;
             if ($card->rarity === null) {
                 $card->rarity = $this->drawRarity($event, $now, $seedPrefix);
             }
@@ -104,7 +107,6 @@ class TrickGameService
                 ->where('event_id', $event->event_id)->where('state', '_trash')->count();
             $player->decrement('draw_points');
             $player->card_count = TrickEventCard::query()->where('event_id', $event->event_id)->where('state', $userId)->count();
-            $this->flagSubsidyAfterPointSpend($event, $player, $now);
             $player->save();
             $card->load('deck');
             $this->log($event, 'draw', $userId, [
@@ -136,6 +138,7 @@ class TrickGameService
     public function take(TrickEvent $event, string $userId, int $deckId, Request $request = null): array
     {
         return DB::transaction(function () use ($event, $userId, $deckId, $request): array {
+            $this->stages->lock();
             $event = $this->lockAvailableEvent($event);
             $player = $this->lockPlayer($event, $userId);
             $now = $this->clock->now($event);
@@ -157,7 +160,7 @@ class TrickGameService
             }
             $participantCount = Player::query()->where('event_id', $event->event_id)->count();
             if ($fieldCount >= $this->rules->fieldCap($participantCount)) {
-                abort(response()->json(['message' => '場札の上限に達しています'], 409));
+                abort(response()->json(['message' => '切り札の上限に達しています'], 409));
             }
             $nextTakeAt = $this->cooldowns->nextTakeAt($event, $player, $now);
             if ($nextTakeAt !== null) {
@@ -186,18 +189,14 @@ class TrickGameService
                 'collected_at' => null,
                 'late_first_extension' => false,
             ])->save();
-            $participantCount = Player::query()->where('event_id', $event->event_id)->count();
-            $subsidyEligible = $this->rules->subsidyEligible($player->draw_points, $participantCount);
-            $playerData = [
+            $player->fill([
                 'card_count' => 0,
                 'last_take_at' => $now,
                 'take_count' => ((int) $player->take_count) + 1,
-            ];
-            if ($subsidyEligible) {
-                $playerData['subsidy_flag'] = true;
-                $playerData['subsidy_flag_slot_at'] = $this->nextSubsidySlot($now);
-            }
-            $player->fill($playerData)->save();
+                'subsidy_flag' => false,
+                'subsidy_flag_slot_at' => null,
+            ])->save();
+            $this->subsidies->grantInstant($event, $player, $now, $hand->count(), 'take', $request);
             $selected->load('deck');
             $this->log($event, 'take', $userId, [
                 'event_card_id' => $selected->id,
@@ -229,7 +228,7 @@ class TrickGameService
             $event = $this->lockAvailableEvent($event);
             $player = $this->lockPlayer($event, $userId);
             if ($player->draw_points <= 0) {
-                abort(response()->json(['message' => 'ポイントが0P以下のため山札に戻せません'], 422));
+                abort(response()->json(['message' => 'ドローポイントが0P以下のためデッキに戻せません'], 422));
             }
 
             $card = TrickEventCard::query()->with('deck')
@@ -253,7 +252,6 @@ class TrickGameService
                 ->where('event_id', $event->event_id)
                 ->where('state', $userId)
                 ->count();
-            $this->flagSubsidyAfterPointSpend($event, $player, $now, true);
             $player->save();
 
             $this->log($event, 'return_to_deck', $userId, [
@@ -300,7 +298,7 @@ class TrickGameService
 
             $now = $this->clock->now($event);
             if ($card->state !== '_field' || $card->limit_at === null || $now->greaterThanOrEqualTo($card->limit_at)) {
-                abort(response()->json(['message' => '期限到達後または場札でないカードは延長できません'], 409));
+                abort(response()->json(['message' => '期限到達後または切り札でないカードは延長できません'], 409));
             }
             if ($now->greaterThanOrEqualTo(CarbonImmutable::instance($event->end_at)->subHour())) {
                 abort(response()->json(['message' => '大会終了1時間前以降は延長できません'], 403));
@@ -363,6 +361,9 @@ class TrickGameService
 
     private function lockPlayer(TrickEvent $event, string $userId): Player
     {
+        if (! TrickRequestIdentity::isSafeUserId($userId)) {
+            abort(response()->json(['message' => '大会では利用できないユーザーIDです'], 403));
+        }
         $player = Player::query()->where('event_id', $event->event_id)->where('name', $userId)
             ->lockForUpdate()->first();
         if ($player === null) {
@@ -372,33 +373,20 @@ class TrickGameService
         return $player;
     }
 
-    private function drawDifficulty(array $available, string $seedPrefix = null): int
-    {
-        $weights = [1 => 54.0, 2 => 30.0, 3 => 10.0, 4 => 5.0, 5 => 1.0];
-        $missing = 0.0;
-        foreach ($weights as $difficulty => $weight) {
-            if (! in_array($difficulty, $available, true)) {
-                $missing += $weight;
-                unset($weights[$difficulty]);
-            }
-        }
-        $weights[min(array_keys($weights))] += $missing;
-
-        return $this->weightedDraw($weights, $seedPrefix === null ? null : $seedPrefix.':difficulty');
-    }
-
     private function recycleTrashIfDeckEmpty(TrickEvent $event): int
     {
         if (TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_deck')->exists()) {
             return 0;
         }
 
-        return TrickEventCard::query()
-            ->where('event_id', $event->event_id)
-            ->where('state', '_trash')
+        $trash = TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_trash');
+
+        return $trash
             ->lockForUpdate()
             ->update([
                 'state' => '_deck',
+                'rarity' => null,
+                'draw_count' => 0,
                 'stack_parent_id' => null,
             ]);
     }
@@ -430,31 +418,6 @@ class TrickGameService
         return (int) array_key_last($weights);
     }
 
-    private function nextSubsidySlot(CarbonImmutable $now): CarbonImmutable
-    {
-        $base = $now->setSecond(0)->setMicrosecond(0);
-        if ($now->minute < 30) {
-            return $base->setMinute(30);
-        }
-
-        return $base->setMinute(0)->addHour();
-    }
-
-    private function flagSubsidyAfterPointSpend(
-        TrickEvent $event,
-        Player $player,
-        CarbonImmutable $now,
-        bool $includeReturnRule = false,
-    ): void {
-        // Empty-field subsidy is evaluated live, never converted into an action grant.
-        if (! $includeReturnRule || ! $this->rules->returnSubsidyEligible($player->draw_points)) {
-            return;
-        }
-
-        $player->subsidy_flag = true;
-        $player->subsidy_flag_slot_at = $this->nextSubsidySlot($now);
-    }
-
     private function playerPayload(TrickEvent $event, Player $player, CarbonImmutable $now): array
     {
         $player = $player->fresh();
@@ -467,10 +430,10 @@ class TrickGameService
             'hand_limit' => $this->rules->handLimit((int) $player->take_count),
             'balance_tax_threshold' => $this->rules->balanceTaxThreshold((int) $player->take_count),
             'balance_tax_eligible' => $player->draw_points > $this->rules->balanceTaxThreshold((int) $player->take_count),
-            'subsidy_flag' => (bool) $player->subsidy_flag || (
-                ! TrickEventCard::query()->where('event_id', $event->event_id)->where('state', '_field')->exists()
-                && $this->rules->emptyFieldSubsidyEligible($player->draw_points, $player->card_count)
-            ),
+            'subsidy_flag' => $event->state !== 'ended' && $now->greaterThanOrEqualTo($event->start_at)
+                && $now->lessThan($event->end_at)
+                && $this->rules->recurringSubsidyEligible($player->draw_points, $player->card_count),
+            'subsidy_flag_slot_at' => null,
             'next_take_at' => $this->cooldowns->nextTakeAt($event, $player, $now)?->toIso8601String(),
         ];
     }

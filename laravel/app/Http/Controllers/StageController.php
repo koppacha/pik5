@@ -56,15 +56,15 @@ class StageController extends Controller
     // すべてのステージの参加者数を取得
     public function allStageMember(): array
     {
-        $records = Record::select('stage_id', 'user_id')->where('stage_id', '<', 10000)->where('flg', '<', 2)->get();
+        $records = Record::publiclyVisible()->select('stage_id', 'user_id')->where('stage_id', '<', 10000)->where('flg', '<', 2)->get();
         return $records->groupBy('stage_id')->map(function($group){
             return count($group->pluck('user_id')->unique());
         })->all();
     }
     public function maxMember(): int
     {
-        return Cache::remember('maxMember', 300, static function () {
-            return (int)(Record::where('stage_id', '<', 10000)
+        return Cache::remember('maxMember:'.Record::publicVisibilityCacheKey(), 300, static function () {
+            return (int)(Record::publiclyVisible()->where('stage_id', '<', 10000)
                 ->where('flg', '<', 2)
                 ->selectRaw('COUNT(DISTINCT user_id) AS members')
                 ->groupBy('stage_id')
@@ -86,7 +86,7 @@ class StageController extends Controller
             // ５桁以下ならステージ情報データベースから取得
             $data = Stage::where('stage_id', $id)->first();
 
-            $collect = Record::where('stage_id', $id)->where('flg', '<', 2);
+            $collect = Record::publiclyVisible()->where('stage_id', $id)->where('flg', '<', 2);
 
             // 総投稿数
             $data["count"] = $collect->count();

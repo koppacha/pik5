@@ -22,6 +22,12 @@ class Func extends Facade
     // 順位づけのための並び変え条件
     public static function orderByRule($id, $rule): array
     {
+        // イベントはカードから割り当てたステージの明示的な種別で判定する。
+        if ((int) $id >= 1001 && (int) $id <= 1999 &&
+            Stage::query()->where('stage_id', (int) $id)->value('display') === 'time') {
+            return ['score', 'ASC'];
+        }
+
         // カウントアップRTAのステージリスト
         $rta_stages = array_merge(range(245, 254), range(351, 362), range(429, 444),  range(901, 916));
 
@@ -90,9 +96,9 @@ class Func extends Facade
         }
 
         try {
-            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
+            $cacheKey = 'func:memberCount:v3:' . Record::publicVisibilityCacheKey() . 'console=' . $console . 'date=' . $date . 'rules=' . md5(json_encode($rule, JSON_THROW_ON_ERROR)) . 'stages=' . md5(json_encode($stages, JSON_THROW_ON_ERROR));
         } catch (JsonException) {
-            $cacheKey = 'func:memberCount:v2' . 'console=' . $console . 'date=' . $date . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
+            $cacheKey = 'func:memberCount:v3:' . Record::publicVisibilityCacheKey() . 'console=' . $console . 'date=' . $date . 'rules=' . implode(',', $rule) . 'stages=' . implode(',', $stages);
         }
         static $memo = [];
         if (isset($memo[$cacheKey])) {
@@ -108,7 +114,7 @@ class Func extends Facade
         // ---- Backend cache ----
         $result = Cache::remember($cacheKey, $ttlSeconds, static function () use ($stages, $console_operation, $console, $rule, $date) {
             try {
-                $rows = Record::whereIn('stage_id', $stages)
+                $rows = Record::publiclyVisible()->whereIn('stage_id', $stages)
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)
                     ->where('created_at', '<', $date)

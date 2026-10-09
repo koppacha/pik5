@@ -10,7 +10,7 @@ class InitializeTrickEvent extends Command
 {
     protected $signature = 'tricks:initialize-event {event_id} {--dry-run}';
 
-    protected $description = 'トリックテイキング制の大会山札を200枚で初期化する';
+    protected $description = 'トリックテイキング制の大会山札を160枚で初期化する';
 
     public function handle(TrickEventInitializer $initializer): int
     {

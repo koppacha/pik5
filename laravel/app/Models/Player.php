@@ -15,6 +15,7 @@ class Player extends Model
         'rank_points' => 'integer',
         'card_count' => 'integer',
         'subsidy_flag' => 'boolean',
+        'ranking_reset_tax_exempt' => 'boolean',
         'subsidy_flag_slot_at' => 'datetime',
         'last_subsidy_paid_slot_at' => 'datetime',
         'last_take_at' => 'datetime',

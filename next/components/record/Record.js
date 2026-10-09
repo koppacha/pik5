@@ -43,6 +43,7 @@ export default function Record({
     history,
     swapScoreRpsLabel = false,
     showMiniRps = false,
+    commentPreviewLength = null,
     rankCellMetric = "rps",
     scoreUnit = null,
     rankPointUnit = null,
@@ -54,6 +55,10 @@ export default function Record({
     const {t} = useLocale()
     const {data: session } = useSession()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
+
+    const [commentOpen, setCommentOpen] = useState(false)
+    const commentCharacters = Array.from(data.post_comment || "")
+    const commentPreview = commentCharacters.slice(0, commentPreviewLength).join("") + (commentCharacters.length > commentPreviewLength ? "…" : "")
 
     const [imgOpen, setImgOpen] = useState(
         false)
@@ -166,7 +171,7 @@ export default function Record({
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
+                    <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
@@ -187,7 +192,7 @@ export default function Record({
                         </Grid>
                         {!mini && <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                             {data.stage_id &&
-                                <Link href={stageLink}>{data.stage_id + '#' + t.stage[data.stage_id]}
+                                <Link href={stageLink}>{data.stage_id + '#' + ((Number(data.stage_id) >= 1000 && data.stage_name) || t.stage[data.stage_id] || data.stage_name || `#${data.stage_id}`)}
                                     {(!hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
                                 </Link>
                             }
@@ -260,7 +265,12 @@ export default function Record({
                             {(data.console && !displayDifficulty.includes(Number(data.rule))) && <span className="tags">{t.cnsl[data.console]}</span>}
                             {(data.difficulty && displayDifficulty.includes(Number(data.rule))) && <span className={`tags level-${data.difficulty}`}>{t.difficulty[data.difficulty]}</span>}
                             {data.post_comment &&
-                                mini ?
+                                commentPreviewLength !== null ?
+                                <span data-tricks-comment>
+                                    <button type="button" aria-label="コメント全文を表示" aria-expanded={commentOpen} onClick={() => setCommentOpen((open) => !open)} style={{border: 0, padding: "0 4px", background: "transparent", color: "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={faComment} /></button>
+                                    <span style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>{commentOpen ? data.post_comment : commentPreview}</span>
+                                </span>
+                                : mini ?
                                 <Tooltip title={data.post_comment} arrow><FontAwesomeIcon icon={faComment} /></Tooltip>
                                 :
                                 <>

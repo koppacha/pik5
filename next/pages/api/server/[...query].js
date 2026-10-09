@@ -85,13 +85,9 @@ export default async function handle(req, res){
     return
   }
 
-  if (path.startsWith('tricks/') && stagingAccessEnabled()) {
+  if (path.startsWith('tricks/') && path !== 'tricks/tournament' && stagingAccessEnabled(req.query.event_id) && Date.now() < STAGING_CLOSE_AT) {
     res.setHeader('Cache-Control', 'no-store')
-    if (Date.now() >= STAGING_CLOSE_AT) {
-      res.status(404).json({error: true, message: 'not found'})
-      return
-    }
-    if (!hasStagingAccess(req)) {
+    if (!hasStagingAccess(req, Date.now(), req.query.event_id)) {
       res.status(403).json({error: true, message: '大会パスワードが必要です'})
       return
     }

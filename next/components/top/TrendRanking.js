@@ -46,11 +46,12 @@ export default function TrendRanking(){
             {
                 trends?.data?.map(function(post, i){
 
+                    const stageName = (Number(post.stage_id) >= 1000 && post.stage_name) || t.stage[post.stage_id] || post.stage_name || `ステージ #${post.stage_id}`
                     return (
                         <Grid item key={i} xs={4} sm={3} md={2} component={Link} href={"/stage/"+post.stage_id}>
                             <TrendCellBox className="cell-box">
                                 <span className="cell-box-caption">{post.month}</span>
-                                {t.stage[post.stage_id].length > 10 ? t.stage[post.stage_id].substring(0, 9)+".." : t.stage[post.stage_id]}<br/>
+                                {stageName.length > 10 ? stageName.substring(0, 9)+".." : stageName}<br/>
                                 <span className="cell-box-caption trend-fire-row">{repeatElement(<FontAwesomeIcon icon={faFire} style={{color:(post.cnt > 52) ? "#e77d7d": "inherit"}} />, post.cnt)}</span>
                             </TrendCellBox>
                         </Grid>

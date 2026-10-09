@@ -30,7 +30,7 @@ class RecordController extends Controller
      */
     public function index(): JsonResponse
     {
-        $data = Record::select(config('const.selected'))->get();
+        $data = Record::publiclyVisible()->select(config('const.selected'))->get();
 
         return response()->json(
             $data
@@ -40,6 +40,10 @@ class RecordController extends Controller
     // スコア比較時の条件分岐（RecordForm.jsと共通）
     public function isTime($rule, $stage): bool
     {
+        if ((int) $stage >= 1001 && (int) $stage <= 1999 &&
+            \App\Models\Stage::query()->where('stage_id', (int) $stage)->value('display') === 'time') {
+            return true;
+        }
         $ruleArray = [11, 29, 33, 35, 43, 46, 47, 91];
         $stageArray = [338, 341, 343, 345, 346, 347, 348, 349, 350];
 
@@ -71,17 +75,16 @@ class RecordController extends Controller
     // 単独記録を取得する関数
     public function getRecord(Request $request): JsonResponse
     {
-        $record = Record::select(config('const.selected'))
+        $record = Record::publiclyVisible()->select(config('const.selected'))
             ->where('unique_id', $request['id'])
             ->where('flg', '<', 2)
             ->orderBy('post_id', 'DESC')
             ->first();
-        $data = $record ? $record->toArray() : [];
-        $data['post_rank'] = $this->getRankArray($data, false);
-
-        if (! $data) {
-            $data = collect(['message' => 'Record Not Found']);
+        if ($record === null) {
+            return response()->json(['message' => 'Record Not Found'], 404);
         }
+        $data = $record->toArray();
+        $data['post_rank'] = $this->getRankArray($data, false);
 
         return response()->json(
             $data
@@ -95,7 +98,7 @@ class RecordController extends Controller
         $diff_operator = $request['difficulty'] ? '=' : '>';
         $cnsl_operator = $request['console'] ? '=' : '>';
 
-        $query = Record::select(config('const.selected'))
+        $query = Record::publiclyVisible()->select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
             ->where('console', $cnsl_operator, $request['console'] ?: 0)
@@ -112,12 +115,11 @@ class RecordController extends Controller
             ->orderBy('post_id', 'ASC')
             ->first();
 
-        $data = $record ? $record->toArray() : [];
-        $data['post_rank'] = 1; // トップ記録なので順位は1
-        if (! $data) {
-            $data = collect(['message' => 'Record Not Found']);
+        if ($record === null) {
+            return response()->json(['message' => 'Record Not Found'], 404);
         }
-
+        $data = $record->toArray();
+        $data['post_rank'] = 1; // トップ記録なので順位は1
         return response()->json(
             $data
         );
@@ -127,7 +129,7 @@ class RecordController extends Controller
     public function getRecordHistory(Request $request): JsonResponse
     {
         $record = new Record();
-        $data = $record::select(config('const.selected'))
+        $data = $record::publiclyVisible()->select(config('const.selected'))
             ->where('stage_id', $request['stage_id'])
             ->where('rule', $request['rule'])
             ->where('user_id', $request['user_id'])
@@ -156,7 +158,7 @@ class RecordController extends Controller
     {
         $operator = $this->isTime($request['rule'], $request['stage']) ? '<' : '>';
 
-        $data = Record::select('user_id')->where('stage_id', $request['stage'])
+        $data = Record::publiclyVisible()->select('user_id')->where('stage_id', $request['stage'])
             ->where('rule', $request['rule'])
             ->where('score', $operator, (int) $request['score'])
             ->where('flg', '<', 2)
@@ -180,7 +182,7 @@ class RecordController extends Controller
         }
         $orderBy = Func::orderByRule($request['stage_id'], $request['rule']);
         $inequality = ($orderBy[1] === 'ASC') ? '<' : '>';
-        $data = Record::query();
+        $data = Record::publiclyVisible();
 
         $data->when($history, function ($query) use ($request) {
             return $query->where('created_at', '<', $request['created_at']);
@@ -217,8 +219,9 @@ class RecordController extends Controller
      */
     public function create(Request $request, TrickRecordService $trickRecords): JsonResponse
     {
+        $maxScore = \App\Models\Deck::query()->where('stage_id', (int) $request->input('stage_id'))->exists() ? 999999 : 99999;
         $request->validate([
-            'score' => ['required', 'integer', 'min:1', 'max:99999'],
+            'score' => ['required', 'integer', 'min:1', 'max:'.$maxScore],
             'rule' => ['required', 'integer', 'min:1'],
             'console' => ['required', 'integer', 'min:1'],
             'post_comment' => ['nullable', 'string', 'max:128'],
@@ -443,9 +446,14 @@ class RecordController extends Controller
         $orderBy = Func::orderByRule($request['id'], $rule);
 
         // サブカテゴリが存在するシリーズの総合ランキングはサブカテゴリのルールを包括する
-        if ($rule === '1') {
+        if ($where === 'stage_id'
+            && \App\Models\Deck::where('stage_id', $request['id'])->exists()
+            && in_array((int) $rule, [0, 1, (int) $stage?->parent], true)) {
+            // 新大会のrule=1と旧来のカテゴリIDの両方を、終了後のステージページで取得する。
+            $rule = [1, (int) $stage?->parent];
+        } elseif ($rule === '1') {
             // 全総合（2P、TAS、無差別級を除く）
-            $rule = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
+            $rule = [1, 10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
 
         } elseif ($rule === '2') {
             // 通常総合
@@ -490,7 +498,7 @@ class RecordController extends Controller
         $date = $datetime->format('Y-m-d H:i:s');
 
         // 記録をリクエスト
-        $new_data = Record::select(config('const.selected'))
+        $new_data = Record::publiclyVisible()->select(config('const.selected'))
             ->where($where, $request['id'])
             ->where('console', $console_operation, $console)
             ->where('difficulty', $diff_operation, $diff)
@@ -526,7 +534,7 @@ class RecordController extends Controller
                 // 絞り込み条件を再定義
                 $score_operation = ($orderBy[1] === 'ASC') ? '<' : '>';
 
-                $temp = Record::selectRaw('COUNT(DISTINCT user_id) as user_rank')
+                $temp = Record::publiclyVisible()->selectRaw('COUNT(DISTINCT user_id) as user_rank')
                     ->where('stage_id', $value['stage_id'])
                     ->where('console', $console_operation, $console)
                     ->whereIn('rule', $rule)

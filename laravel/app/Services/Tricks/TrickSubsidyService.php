@@ -5,7 +5,6 @@ namespace App\Services\Tricks;
 use App\Models\LimitLog;
 use App\Models\Player;
 use App\Models\TrickEvent;
-use App\Models\TrickEventCard;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -42,8 +41,7 @@ class TrickSubsidyService
                 && CarbonImmutable::instance($event->last_subsidy_slot_at)->greaterThanOrEqualTo($slot)) {
                 return ['slot' => $slot->toIso8601String(), 'processed' => 0, 'paid' => 0];
             }
-            $fieldIsEmpty = ! TrickEventCard::query()->where('event_id', $event->event_id)
-                ->where('state', '_field')->lockForUpdate()->exists();
+
             $players = Player::query()->where('event_id', $event->event_id)->lockForUpdate()->get();
             $participantCount = $players->count();
             $processed = 0;
@@ -56,11 +54,13 @@ class TrickSubsidyService
                     && CarbonImmutable::instance($player->last_subsidy_paid_slot_at)->greaterThanOrEqualTo($slot)) {
                     continue;
                 }
-                $actionDue = $player->subsidy_flag && $player->subsidy_flag_slot_at !== null
-                    && CarbonImmutable::instance($player->subsidy_flag_slot_at)->lessThanOrEqualTo($slot);
-                $emptyFieldDue = $fieldIsEmpty
-                    && $this->rules->emptyFieldSubsidyEligible($player->draw_points, $player->card_count);
-                if (! $emptyFieldDue && ! $actionDue) {
+                // Legacy one-shot flags no longer grant an entitlement.
+                if ($player->subsidy_flag || $player->subsidy_flag_slot_at !== null) {
+                    $player->subsidy_flag = false;
+                    $player->subsidy_flag_slot_at = null;
+                    $player->save();
+                }
+                if (! $this->rules->recurringSubsidyEligible($player->draw_points, $player->card_count)) {
                     continue;
                 }
 
@@ -80,22 +80,24 @@ class TrickSubsidyService
                     'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
                     'context' => [
                         'slot' => $slot->toIso8601String(),
-                        'field_empty' => $fieldIsEmpty,
                         'participant_count' => $participantCount,
-                        'reason' => $actionDue ? 'action_flag' : 'empty_field',
+                        'reason' => 'low_resources',
                     ],
                 ]);
                 $player->last_subsidy_paid_slot_at = $slot;
-                // Only action entitlements are persisted. Empty-field eligibility is live.
-                if ($actionDue) {
-                    $player->subsidy_flag = false;
-                    $player->subsidy_flag_slot_at = null;
-                }
                 $player->save();
             }
             $taxed = 0;
             foreach ($players as $player) {
+                if ($player->created_at !== null && CarbonImmutable::instance($player->created_at)->greaterThan($slot)) {
+                    continue;
+                }
                 $player->refresh();
+                if ($player->ranking_reset_tax_exempt) {
+                    $player->ranking_reset_tax_exempt = false;
+                    $player->save();
+                    continue;
+                }
                 if ($player->draw_points <= $this->rules->balanceTaxThreshold((int) $player->take_count)) {
                     continue;
                 }
@@ -129,13 +131,50 @@ class TrickSubsidyService
 
             return [
                 'slot' => $slot->toIso8601String(),
-                'field_empty' => $fieldIsEmpty,
                 'processed' => $processed,
                 'paid' => $paid,
                 'taxed' => $taxed,
                 'pot_points' => (int) $event->fresh()->pot_points,
             ];
         });
+    }
+
+    // Call inside the successful action's transaction, with event and player locked.
+    public function grantInstant(
+        TrickEvent $event,
+        Player $player,
+        CarbonImmutable $now,
+        int $handCountBefore,
+        string $reason,
+        Request $request = null,
+    ): bool {
+        if (! $this->rules->instantSubsidyEligible($player->draw_points, $handCountBefore)) {
+            return false;
+        }
+
+        $player->draw_points++;
+        $player->subsidy_flag = false;
+        $player->subsidy_flag_slot_at = null;
+        $player->save();
+        LimitLog::query()->create([
+            'event' => 'instant_subsidy_paid',
+            'event_id' => $event->event_id,
+            'actor_name' => $player->name,
+            'affected_player_name' => $player->name,
+            'points_delta' => 1,
+            'remaining_draw_points' => $player->draw_points,
+            'route' => $request?->path(),
+            'ip' => $request?->ip(),
+            'user_agent' => $request?->userAgent(),
+            'request_id' => (string) ($request?->header('X-Request-Id') ?: Str::uuid()),
+            'context' => [
+                'reason' => $reason,
+                'hand_count_before' => $handCountBefore,
+                'granted_at' => $now->toIso8601String(),
+            ],
+        ]);
+
+        return true;
     }
 
     public function currentSlot(CarbonImmutable $now): CarbonImmutable

@@ -183,6 +183,8 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 
 // 第19回期間限定ランキング（トリックテイキング制）
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get('tricks/stage-context/{stageId}', [TrickController::class, 'stageContext']);
+    Route::get('tricks/record-context/{uniqueId}', [TrickController::class, 'recordContext']);
     Route::get('tricks/tournament', [TrickController::class, 'tournament']);
     Route::get('tricks/state', [TrickController::class, 'state']);
     Route::get('tricks/players', [TrickController::class, 'players']);
@@ -198,6 +200,8 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::post('tricks/cards/{deckId}/take', [TrickController::class, 'take']);
     Route::post('tricks/cards/{deckId}/return-to-deck', [TrickController::class, 'returnToDeck']);
     Route::post('tricks/cards/{deckId}/extend', [TrickController::class, 'extend']);
+    Route::post('tricks/cards/{deckId}/rule', [TrickController::class, 'changeRule']);
+    Route::post('tricks/cards/{deckId}/reset', [TrickController::class, 'resetRanking']);
     Route::post('tricks/cards/{deckId}/collect', [TrickController::class, 'collect']);
     Route::post('tricks/cards/{deckId}/debug-collect', [TrickController::class, 'debugCollect']);
     Route::post('tricks/maintenance/collect-expired', [TrickController::class, 'collectExpired']);

@@ -39,10 +39,10 @@ class TrickRuleCalculatorTest extends TestCase
         self::assertSame(30, $rules->extensionMinutes(1, 14.99));
         self::assertSame(10, $rules->extensionMinutes(2, 1));
         self::assertSame(10, $rules->extensionMinutes(16, 100));
-        self::assertTrue($rules->emptyFieldSubsidyEligible(5, 2));
-        self::assertFalse($rules->emptyFieldSubsidyEligible(5, 3));
-        self::assertTrue($rules->emptyFieldSubsidyEligible(-2, 9));
-        self::assertFalse($rules->emptyFieldSubsidyEligible(-2, 10));
+        self::assertTrue($rules->recurringSubsidyEligible(1, 1));
+        self::assertFalse($rules->recurringSubsidyEligible(1, 2));
+        self::assertTrue($rules->recurringSubsidyEligible(-2, 4));
+        self::assertFalse($rules->recurringSubsidyEligible(-2, 5));
     }
 
     public function test_total_reward(): void
@@ -64,10 +64,8 @@ class TrickRuleCalculatorTest extends TestCase
     {
         $rules = new TrickRuleCalculator();
 
-        self::assertTrue($rules->subsidyEligible(4, 5));
-        self::assertFalse($rules->subsidyEligible(5, 5));
-        self::assertTrue($rules->returnSubsidyEligible(4));
-        self::assertFalse($rules->returnSubsidyEligible(5));
+        self::assertTrue($rules->instantSubsidyEligible(2, 2));
+        self::assertFalse($rules->instantSubsidyEligible(2, 3));
 
         $normal = [1 => 87.0, 2 => 8.0, 3 => 4.0, 4 => 0.9, 5 => 0.1];
         $final = [1 => 0.0, 2 => 87.0, 3 => 8.0, 4 => 4.0, 5 => 1.0];

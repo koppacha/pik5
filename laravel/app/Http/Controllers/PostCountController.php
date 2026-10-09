@@ -72,11 +72,11 @@ class PostCountController extends Controller
             $endOfMonth = (clone $targetMonth)->modify('last day of this month')->format('Y-m-d 23:59:59');
 
             // 月ごとの集計を取得
-            $monthlyTopStage = Record::select('stage_id')
+            $monthlyTopStage = Record::publiclyVisible()->select('stage_id')
                 ->selectRaw('COUNT(stage_id) as cnt')
                 ->where('created_at', '>=', $startOfMonth)
                 ->where('created_at', '<=', $endOfMonth)
-                ->where('stage_id', '<', 1000)
+                ->where('stage_id', '<', 10000)
                 ->where('flg', '<', 2)
                 ->groupBy('stage_id')
                 ->orderBy('cnt', 'DESC')
@@ -88,6 +88,7 @@ class PostCountController extends Controller
                     'month' => (clone $targetMonth)->format('Y年m月'),
                     'stage_id' => $monthlyTopStage->stage_id,
                     'cnt' => $monthlyTopStage->cnt,
+                    'stage_name' => \App\Models\Stage::where('stage_id', $monthlyTopStage->stage_id)->value('stage_name'),
                 ];
             }
         }
@@ -103,19 +104,22 @@ class PostCountController extends Controller
         $startOfYear = (clone $currentDate)->modify('first day of January')->format('Y-m-01 00:00:00');
 
         // 年初から現在までのstage_id集計を取得
-        $topStage = Record::select('stage_id')
+        $topStage = Record::publiclyVisible()->select('stage_id')
             ->selectRaw('COUNT(stage_id) as cnt')
             ->where('created_at', '>=', $startOfYear) // 年初から現在までの範囲
-            ->where('stage_id', '<', 1000)
+            ->where('stage_id', '<', 10000)
             ->where('flg', '<', 2)
             ->groupBy('stage_id') // stage_idごとにグループ化
             ->orderBy('cnt', 'DESC') // カウントが多い順に並べる
             ->limit(1) // 最も多いstage_idを1つ取得
             ->first();
 
-        // 年初から現在までのユニークユーザー数を取得
+        if ($topStage !== null) {
+            $topStage->stage_name = \App\Models\Stage::where('stage_id', $topStage->stage_id)->value('stage_name');
+        }
+
+        // 非公開の期間限定記録も含めた年初来投稿総数
         $uniqueUserCount = Record::where('created_at', '>=', $startOfYear) // 年初から現在までの範囲
-        ->where('stage_id', '<', 1000)
             ->where('flg', '<', 2)
             ->count('unique_id');
 

@@ -31,15 +31,10 @@ import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/Specia
 import {useRouter} from "next/router";
 import TreasureSimulator from "../../components/modal/TreasureSimulator";
 
-export async function getStaticPaths(){
-    return {
-        paths: [],
-        fallback: 'blocking',
-    }
-}
 
 // サーバーサイドの処理
-export async function getStaticProps({params}){
+export async function getServerSideProps({params, res: response}){
+    response.setHeader('Cache-Control', 'private, no-store')
     const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query      = params.stage
@@ -138,7 +133,6 @@ export async function getStaticProps({params}){
         props: {
             stages, specialStages, stage, rule, consoles, year, difficulty, info, users, parent, posts, ruleId, keyword, fDate, guide, eventCategory, treasures
         },
-        revalidate: 86400,
     }
 }
 export default function Stage(param){

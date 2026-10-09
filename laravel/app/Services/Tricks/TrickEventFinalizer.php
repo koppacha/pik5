@@ -36,7 +36,8 @@ class TrickEventFinalizer
             }
 
             $fieldDeckIds = TrickEventCard::query()->where('event_id', $event->event_id)
-                ->where('state', '_field')->lockForUpdate()->pluck('deck_id');
+                ->where('state', '_field')->orderByRaw('limit_at IS NULL')->orderBy('limit_at')->orderBy('id')
+                ->lockForUpdate()->pluck('deck_id');
             $collected = 0;
             foreach ($fieldDeckIds as $deckId) {
                 $result = $this->collections->collect($event, (int) $deckId, true, $actor, $request);
