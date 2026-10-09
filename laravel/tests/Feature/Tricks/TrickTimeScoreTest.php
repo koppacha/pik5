@@ -37,9 +37,10 @@ class TrickTimeScoreTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_time_card_uses_integer_seconds_shortest_personal_best_and_shared_ranks(): void
+    /** @dataProvider elapsedTimeOrigins */
+    public function test_time_card_uses_integer_seconds_shortest_personal_best_and_shared_ranks(int $originStageId): void
     {
-        [$event, $card] = $this->fixture('time');
+        [$event, $card] = $this->fixture('time', $originStageId);
         $stageId = $card->deck->stage_id;
         self::assertSame(['score', 'ASC'], Func::orderByRule($stageId, 1));
         self::assertSame('time', app(TrickStateService::class)->normalizeCard($card)['score_type']);
@@ -75,11 +76,39 @@ class TrickTimeScoreTest extends TestCase
         self::assertSame(1, app(TrickRecordService::class)->rankings($card)[0]['score']);
     }
 
-    private function fixture(string $type): array
+    /** @dataProvider remainingTimeOrigins */
+    public function test_remaining_time_uses_largest_personal_best_and_shared_ranks(int $originStageId): void
+    {
+        [$event, $card] = $this->fixture('time', $originStageId);
+        self::assertSame(['score', 'DESC'], Func::orderByRule($card->deck->stage_id, 1));
+        foreach ([['fast', 83], ['slow', 120], ['fast', 95], ['tie', 120]] as [$name, $seconds]) {
+            $this->postSeconds($card, $name, $seconds)->assertOk();
+        }
+        self::assertSame([83, 120, 95, 120], Record::query()->orderBy('post_id')->pluck('score')->map(fn ($score) => (int) $score)->all());
+        $rankings = app(TrickRecordService::class)->rankings($card);
+        self::assertSame([120, 120, 95], array_column($rankings, 'score'));
+        self::assertSame([1, 1, 3], array_column($rankings, 'rank'));
+        self::assertSame(['time', 'time', 'time'], array_column($rankings, 'score_type'));
+        $collected = app(TrickCollectionService::class)->collect($event, $card->deck_id, true);
+        self::assertSame([120, 120, 95], array_column($collected['rankings'], 'score'));
+        self::assertSame('time', $collected['card']['score_type']);
+    }
+
+    public static function remainingTimeOrigins(): array
+    {
+        return array_map(fn ($id) => [$id], range(419, 428));
+    }
+
+    public static function elapsedTimeOrigins(): array
+    {
+        return [[399], [418], [429]];
+    }
+
+    private function fixture(string $type, int $originStageId = 399): array
     {
         $now = CarbonImmutable::parse('2026-10-09 12:00:00', 'Asia/Tokyo');
         $event = TrickEvent::create(['event_id' => 990412, 'title' => 'Time score test', 'start_at' => $now->subHour(), 'end_at' => $now->addHours(47), 'state' => 'active', 'debug' => true, 'test_mode' => true, 'debug_now' => $now, 'initialized_at' => $now]);
-        $deck = Deck::create(['eventId' => 990412, 'event_id' => 990412, 'origin_stage_id' => 399, 'card_id' => 990412, 'title' => 'Dummy timer stage', 'rule_name' => 'Clear time', 'text' => 'Shorter elapsed time wins', 'difficulty' => 1, 'state' => '_in_event', 'rewards' => 0, 'score_type' => $type]);
+        $deck = Deck::create(['eventId' => 990412, 'event_id' => 990412, 'origin_stage_id' => $originStageId, 'card_id' => 990412, 'title' => 'Dummy timer stage', 'rule_name' => 'Clear time', 'text' => 'Shorter elapsed time wins', 'difficulty' => 1, 'state' => '_in_event', 'rewards' => 0, 'score_type' => $type]);
         app(TrickStageAllocator::class)->ensure($event, $deck);
         $card = TrickEventCard::create(['event_id' => 990412, 'deck_id' => $deck->id, 'state' => '_field', 'rarity' => 1, 'difficulty' => 1, 'stack_count' => 3, 'taker' => 'fast', 'taken_at' => $now, 'limit_at' => $now->addMinutes(90)]);
         $card->load('deck');

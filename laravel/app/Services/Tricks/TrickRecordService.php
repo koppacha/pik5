@@ -239,17 +239,16 @@ class TrickRecordService
             ->groupBy('event_card_id')->map(fn (Collection $payments) => $payments->pluck('player_name')->flip());
 
         return $cards->mapWithKeys(fn (TrickEventCard $card) => [
-            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect()), $card->deck?->score_type === 'time' ? 'time' : 'points'),
+            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect()), $card->deck?->score_type === 'time' ? 'time' : 'points', $card->deck?->score_type === 'time' && ! ((int) $card->deck?->origin_stage_id >= 419 && (int) $card->deck?->origin_stage_id <= 428)),
         ])->all();
     }
 
-    private function rankRows(Collection $rows, Collection $paidPlayers, string $scoreType): array
+    private function rankRows(Collection $rows, Collection $paidPlayers, string $scoreType, bool $ascending): array
     {
         if ($rows->isEmpty()) {
             return [];
         }
 
-        $ascending = $scoreType === 'time';
         $best = [];
         foreach ($rows as $row) {
             $score = (int) $row->score;
