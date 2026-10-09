@@ -86,8 +86,7 @@ export default function TricksCardBorder({rarity = 1, cardId = 0, active = true,
 
 export function TricksCardBorderStyles() {
     return <style jsx global>{`
-        :root { --tricks-edge-common: #303030; --tricks-edge-uncommon: #262626; }
-        [data-theme="dark"] { --tricks-edge-common: #dedede; }
+        :root { --tricks-edge-common: #808080; --tricks-edge-uncommon: #262626; }
         .tricks-card-border {
             position: absolute;
             inset: 0;

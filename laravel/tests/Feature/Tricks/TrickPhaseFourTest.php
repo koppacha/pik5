@@ -94,8 +94,8 @@ class TrickPhaseFourTest extends TestCase
                 ->where('reward_type', 'rank_distribution')
                 ->orderBy('player_name')->pluck('points_delta', 'player_name')->all(),
         );
-        self::assertSame(['dave' => 1], TrickCollectionReward::query()
-            ->where('event_id', $event->event_id)->where('reward_type', 'last_place_remainder')
+        self::assertSame(['alice' => 1], TrickCollectionReward::query()
+            ->where('event_id', $event->event_id)->where('reward_type', 'taker_remainder')
             ->pluck('points_delta', 'player_name')->all());
         self::assertSame(['alice'], TrickCardHolder::query()->where('event_id', $event->event_id)->orderBy('player_name')
             ->pluck('player_name')->all());
@@ -123,7 +123,7 @@ class TrickPhaseFourTest extends TestCase
         self::assertSame(0, $rewards->where('player_name', 'carol')->sum('points_delta'));
     }
 
-    public function test_tied_group_remainder_is_returned_to_the_last_place_group(): void
+    public function test_tied_group_remainder_is_returned_to_the_taker(): void
     {
         [$event, $card] = $this->fixture(['alice', 'bob'], [
             'rarity' => 1,
@@ -139,7 +139,7 @@ class TrickPhaseFourTest extends TestCase
         self::assertSame(6, (int) TrickCollectionReward::query()
             ->where('event_id', $event->event_id)->sum('points_delta'));
         self::assertFalse(TrickCollectionReward::query()->where('event_id', $event->event_id)
-            ->where('reward_type', 'last_place_remainder')->exists());
+            ->where('reward_type', 'taker_remainder')->exists());
         self::assertSame(11, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
         self::assertSame(13, Player::query()->where('event_id', $event->event_id)
@@ -168,42 +168,38 @@ class TrickPhaseFourTest extends TestCase
             ->orderBy('name')->pluck('rank_points', 'name')->all());
     }
 
-    public function test_subsidy_slots_are_boundary_aware_and_idempotent(): void
+    public function test_subsidy_slots_use_current_resources_and_ignore_legacy_flags(): void
     {
-        [$event, $card] = $this->fixture(['alice', 'bob', 'carol']);
-        $createdAt = CarbonImmutable::parse('2026-07-20 08:00:00', 'Asia/Tokyo');
-        Player::query()->where('event_id', $event->event_id)->update(['created_at' => $createdAt]);
-        Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update([
-            'draw_points' => 5, 'subsidy_flag' => true, 'subsidy_flag_slot_at' => '2026-07-20 09:00:00',
+        [$event] = $this->fixture(['alice', 'bob', 'carol']);
+        Player::query()->where('event_id', $event->event_id)->update([
+            'created_at' => '2026-07-20 08:00:00',
+            'subsidy_flag' => true,
+            'subsidy_flag_slot_at' => '2026-07-20 09:30:00',
         ]);
-        Player::query()->where('event_id', $event->event_id)->where('name', 'bob')->update([
-            'draw_points' => 6, 'subsidy_flag' => true, 'subsidy_flag_slot_at' => '2026-07-20 09:00:00',
-        ]);
-        Player::query()->where('event_id', $event->event_id)->where('name', 'carol')->update([
-            'draw_points' => -2, 'subsidy_flag' => true, 'subsidy_flag_slot_at' => '2026-07-20 09:30:00',
-        ]);
+        Player::query()->where('name', 'alice')->update(['draw_points' => 1, 'card_count' => 1]);
+        Player::query()->where('name', 'bob')->update(['draw_points' => 2, 'card_count' => 1]);
+        Player::query()->where('name', 'carol')->update(['draw_points' => -2, 'card_count' => 0]);
         $event->update(['debug_now' => '2026-07-20 09:00:00']);
         $subsidies = app(TrickSubsidyService::class);
 
         self::assertSame(2, $subsidies->processCurrent($event->fresh())['paid']);
         self::assertSame(0, $subsidies->processCurrent($event->fresh())['paid']);
-        $publicSubsidyLog = collect(app(TrickStateService::class)->logs($event->fresh()))
-            ->firstWhere('event', 'subsidy_paid');
-        self::assertStringStartsWith('2026-07-20T09:00:00', $publicSubsidyLog['subsidy_slot']);
-        self::assertSame(2, $publicSubsidyLog['subsidy_recipient_count']);
-        self::assertSame(1, collect(app(TrickStateService::class)->logs($event->fresh()))
-            ->where('event', 'subsidy_paid')->count());
-        self::assertSame(6, Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->value('draw_points'));
-        self::assertSame(7, Player::query()->where('event_id', $event->event_id)->where('name', 'bob')->value('draw_points'));
-        self::assertSame(-2, Player::query()->where('event_id', $event->event_id)->where('name', 'carol')->value('draw_points'));
+        self::assertSame(2, Player::query()->where('name', 'alice')->value('draw_points'));
+        self::assertSame(2, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertSame(-1, Player::query()->where('name', 'carol')->value('draw_points'));
+        $publicLogs = collect(app(TrickStateService::class)->logs($event->fresh()))->where('event', 'subsidy_paid');
+        self::assertCount(1, $publicLogs);
+        self::assertSame(2, $publicLogs->first()['subsidy_recipient_count']);
+        self::assertFalse(app(TrickStateService::class)->snapshot($event->fresh(), 'alice')['me']['subsidy_flag']);
+        self::assertTrue(app(TrickStateService::class)->snapshot($event->fresh(), 'carol')['me']['subsidy_flag']);
 
         $event->update(['debug_now' => '2026-07-20 09:30:00']);
         self::assertSame(1, $subsidies->processCurrent($event->fresh())['paid']);
-        $card->update(['state' => '_collected']);
+        self::assertSame(0, Player::query()->where('name', 'carol')->value('draw_points'));
+        // A participant joining after the slot must wait until the next one.
+        Player::query()->where('name', 'bob')->update(['draw_points' => 0, 'created_at' => '2026-07-20 09:31:00']);
         $event->update(['debug_now' => '2026-07-20 10:00:00']);
-        self::assertSame(3, $subsidies->processCurrent($event->fresh())['paid']);
-        self::assertSame(0, $subsidies->processCurrent($event->fresh())['paid']);
-        self::assertSame(0, Player::query()->where('event_id', $event->event_id)->where('name', 'carol')->value('draw_points'));
+        self::assertSame(2, $subsidies->processCurrent($event->fresh())['paid']);
     }
 
     public function test_empty_field_does_not_reopen_an_already_processed_subsidy_slot(): void
@@ -301,13 +297,13 @@ class TrickPhaseFourTest extends TestCase
         self::assertCount(6, $handCards);
     }
 
-    public function test_empty_field_subsidy_stops_at_combined_eight_without_persisting_action_flag(): void
+    public function test_recurring_subsidy_stops_at_combined_three_without_persisting_action_flag(): void
     {
         [$event, $card] = $this->fixture(['alice', 'bob', 'carol', 'dave', 'erin']);
         $card->update(['state' => '_collected']);
         $event->update(['debug_now' => '2026-07-20 09:00:00']);
         Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->update([
-            'draw_points' => 6,
+            'draw_points' => 1,
             'subsidy_flag' => true,
             'subsidy_flag_slot_at' => '2026-07-20 09:00:00',
         ]);
@@ -315,7 +311,7 @@ class TrickPhaseFourTest extends TestCase
 
         self::assertSame(1, $subsidies->processCurrent($event->fresh())['paid']);
         $alice = Player::query()->where('event_id', $event->event_id)->where('name', 'alice')->firstOrFail();
-        self::assertSame(7, $alice->draw_points);
+        self::assertSame(2, $alice->draw_points);
         self::assertFalse($alice->subsidy_flag);
         self::assertNull($alice->subsidy_flag_slot_at);
         self::assertTrue(app(TrickStateService::class)->snapshot($event->fresh(), 'alice')['me']['subsidy_flag']);
@@ -323,7 +319,7 @@ class TrickPhaseFourTest extends TestCase
         $event->update(['debug_now' => '2026-07-20 09:30:00']);
         self::assertSame(1, $subsidies->processCurrent($event->fresh())['paid']);
         $alice = $alice->fresh();
-        self::assertSame(8, $alice->draw_points);
+        self::assertSame(3, $alice->draw_points);
         self::assertFalse($alice->subsidy_flag);
         self::assertNull($alice->subsidy_flag_slot_at);
         self::assertFalse(app(TrickStateService::class)->snapshot($event->fresh(), 'alice')['me']['subsidy_flag']);
@@ -376,7 +372,7 @@ class TrickPhaseFourTest extends TestCase
         self::assertSame('_collected', $card->fresh()->state);
     }
 
-    public function test_natural_collection_applies_rewards_logs_and_flags_low_point_winner_immediately(): void
+    public function test_natural_collection_does_not_create_one_shot_subsidy(): void
     {
         [$event, $card] = $this->fixture(['alice', 'bob', 'carol']);
         app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
@@ -389,7 +385,7 @@ class TrickPhaseFourTest extends TestCase
         self::assertSame(1, $result['count']);
         self::assertSame(0, Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('draw_points'));
-        self::assertTrue((bool) Player::query()->where('event_id', $event->event_id)
+        self::assertFalse((bool) Player::query()->where('event_id', $event->event_id)
             ->where('name', 'alice')->value('subsidy_flag'));
         $collectLog = collect(app(TrickStateService::class)->logs($event->fresh()))
             ->firstWhere('event', 'collect');
@@ -429,6 +425,7 @@ class TrickPhaseFourTest extends TestCase
     public function test_participant_can_trigger_idempotent_maintenance_endpoints(): void
     {
         [$event, $card] = $this->fixture(['alice']);
+        $card->update(['limit_at' => $event->debug_now->subMinute()]);
         putenv('TRICKS_EVENT_ID='.$event->event_id);
         putenv('TRICKS_INTERNAL_SECRET=phase-four-secret');
         try {
@@ -595,6 +592,100 @@ class TrickPhaseFourTest extends TestCase
             ->where('state', '_collected')->count());
     }
 
+    public function test_take_grants_one_point_based_on_resources_before_consuming_hand(): void
+    {
+        [$event, $existing] = $this->fixture(['alice']);
+        $existing->update(['state' => '_collected']);
+        $first = $this->eventCard($event, 'alice', 940001, 7301);
+        $this->eventCard($event, 'alice', 940002, 7302);
+        Player::query()->where('name', 'alice')->update(['draw_points' => 2, 'card_count' => 2]);
+
+        $result = app(TrickGameService::class)->take($event, 'alice', $first->deck_id);
+
+        self::assertSame(3, $result['player']['draw_points']);
+        self::assertSame(0, $result['player']['card_count']);
+        self::assertFalse($result['player']['subsidy_flag']);
+        self::assertSame(1, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+        self::assertSame(1, collect(app(TrickStateService::class)->logs($event))
+            ->where('event', 'instant_subsidy_paid')->count());
+    }
+
+    public function test_take_at_five_resources_does_not_grant_after_consuming_hand(): void
+    {
+        [$event, $existing] = $this->fixture(['alice']);
+        $existing->update(['state' => '_collected']);
+        $first = $this->eventCard($event, 'alice', 940001, 7301);
+        $this->eventCard($event, 'alice', 940002, 7302);
+        Player::query()->where('name', 'alice')->update(['draw_points' => 3, 'card_count' => 2]);
+
+        $result = app(TrickGameService::class)->take($event, 'alice', $first->deck_id);
+
+        self::assertSame(3, $result['player']['draw_points']);
+        self::assertFalse($result['player']['subsidy_flag']);
+        self::assertSame(0, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+    }
+
+    public function test_free_post_grant_is_once_per_player_and_card_and_clears_recurring_flag(): void
+    {
+        [$event, $card] = $this->fixture(['alice', 'bob']);
+        Player::query()->where('name', 'bob')->update(['draw_points' => 2]);
+        $records = app(TrickRecordService::class);
+        $record = $this->record($card, 'bob', 100);
+        $records->saved($record);
+        self::assertSame(3, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertFalse(app(TrickStateService::class)->snapshot($event, 'bob')['me']['subsidy_flag']);
+        $records->saved($record);
+        self::assertSame(3, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertSame(1, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+
+        $record->update(['flg' => 2]);
+        $records->deleted($record->fresh());
+        $records->saved($this->record($card, 'bob', 110));
+        self::assertSame(1, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+        self::assertSame(1, Player::query()->where('name', 'bob')->value('draw_points'));
+    }
+
+    public function test_free_post_uses_strict_combined_five_threshold(): void
+    {
+        [$event, $card] = $this->fixture(['alice', 'bob', 'carol', 'dave']);
+        Player::query()->where('name', 'bob')->update(['draw_points' => 4]);
+        Player::query()->where('name', 'carol')->update(['draw_points' => 5]);
+        Player::query()->where('name', 'dave')->update(['draw_points' => 2, 'card_count' => 3]);
+        $records = app(TrickRecordService::class);
+        foreach (['bob', 'carol', 'dave'] as $name) {
+            $records->saved($this->record($card, $name, 100));
+        }
+        self::assertSame(5, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertSame(5, Player::query()->where('name', 'carol')->value('draw_points'));
+        self::assertSame(2, Player::query()->where('name', 'dave')->value('draw_points'));
+        self::assertSame(1, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+    }
+
+    public function test_paid_taker_post_has_no_instant_grant_and_negative_resources_are_recurring(): void
+    {
+        [$event, $card] = $this->fixture(['alice']);
+        Player::query()->where('name', 'alice')->update(['draw_points' => 1]);
+        app(TrickRecordService::class)->saved($this->record($card, 'alice', 100));
+        self::assertSame(-1, Player::query()->where('name', 'alice')->value('draw_points'));
+        self::assertSame(0, LimitLog::query()->where('event', 'instant_subsidy_paid')->count());
+        self::assertTrue(app(TrickStateService::class)->snapshot($event, 'alice')['me']['subsidy_flag']);
+    }
+
+    public function test_instant_grant_below_three_keeps_recurring_eligibility_at_next_slot(): void
+    {
+        [$event, $card] = $this->fixture(['alice', 'bob']);
+        Player::query()->where('name', 'bob')->update(['draw_points' => 1]);
+        app(TrickRecordService::class)->saved($this->record($card, 'bob', 100));
+        self::assertSame(2, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertTrue(app(TrickStateService::class)->snapshot($event, 'bob')['me']['subsidy_flag']);
+        $event->update(['debug_now' => $event->debug_now->addMinutes(30)]);
+        $subsidies = app(TrickSubsidyService::class);
+        self::assertSame(1, $subsidies->processCurrent($event->fresh())['paid']);
+        self::assertSame(0, $subsidies->processCurrent($event->fresh())['paid']);
+        self::assertSame(3, Player::query()->where('name', 'bob')->value('draw_points'));
+        self::assertFalse(app(TrickStateService::class)->snapshot($event->fresh(), 'bob')['me']['subsidy_flag']);
+    }
+
     /** @return array{0: TrickEvent, 1: TrickEventCard} */
     private function fixture(array $players, array $options = []): array
     {
@@ -656,7 +747,7 @@ class TrickPhaseFourTest extends TestCase
             'stack_count' => $options['stack_count'] ?? 3,
             'taker' => $options['taker'] ?? 'alice',
             'taken_at' => $event->debug_now,
-            'limit_at' => $state === '_field' ? $event->debug_now->subMinute() : null,
+            'limit_at' => $state === '_field' ? $event->debug_now->addHour() : null,
         ]);
     }
 

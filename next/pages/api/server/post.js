@@ -9,8 +9,8 @@ import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import prisma from "../../../lib/prisma";
 import {tricksIdentityHeaders} from "../../../lib/tricks/proxyAuth";
-import {hasStagingAccess, stagingAccessEnabled, STAGING_CLOSE_AT} from "../../../lib/tricks/stagingAccess";
 import {createRecordValidationSchema} from "../../../lib/recordValidation";
+import {findRecordForMutation, findTricksStageEvent, ensureRecordStagingAccess} from "../../../lib/tricks/recordContext"
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
@@ -116,16 +116,10 @@ export default async function handler(req, res){
 
     try {
         const {fields, files} = await parseForm(req)
-        const submittedStageId = Number(getFieldValue(fields.stage_id))
-        if (stagingAccessEnabled() && submittedStageId >= 1001 && submittedStageId <= 1999) {
-            if (Date.now() >= STAGING_CLOSE_AT) {
-                res.status(404).json({error: true, message: "not found"})
-                return
-            }
-            if (!hasStagingAccess(req)) {
-                res.status(403).json({error: true, message: "大会パスワードが必要です"})
-                return
-            }
+        const tricksEventId = getFieldValue(fields.tricks_event_id)
+        if (tricksEventId && (!/^\d+$/.test(String(tricksEventId)) || Number(tricksEventId) < 1 || Number(tricksEventId) > 2147483647)) {
+            res.status(400).json({error: true, message: 'invalid tricks_event_id'})
+            return
         }
         const mode = String(getFieldValue(fields.mode) || 'create')
         const editUniqueId = String(getFieldValue(fields.edit_unique_id) || '')
@@ -152,26 +146,16 @@ export default async function handler(req, res){
         }
 
         if (isEdit) {
-            const currentRecordRes = await fetch(`${LARAVEL_API_BASE}/record/id/${encodeURIComponent(editUniqueId)}`)
-            if (!currentRecordRes.ok) {
+            if (!/^\d+$/.test(editUniqueId)) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
             }
-            const currentRecord = await currentRecordRes.json()
+            const currentRecord = await findRecordForMutation(editUniqueId, currentUserId, editorRole)
             if (!currentRecord?.unique_id || Number(currentRecord?.flg) > 1) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
             }
-            if (stagingAccessEnabled() && Number(currentRecord.stage_id) >= 1001 && Number(currentRecord.stage_id) <= 1999) {
-                if (Date.now() >= STAGING_CLOSE_AT) {
-                    res.status(404).json({error: true, message: "not found"})
-                    return
-                }
-                if (!hasStagingAccess(req)) {
-                    res.status(403).json({error: true, message: "大会パスワードが必要です"})
-                    return
-                }
-            }
+            if (!ensureRecordStagingAccess(req, res, currentRecord.tricks_event_id)) return
             const editable = canEditRecord(
                 currentUserId,
                 editorRole,
@@ -185,6 +169,8 @@ export default async function handler(req, res){
         }
 
         const stageId = String(getFieldValue(fields.stage_id))
+        const stageEventId = await findTricksStageEvent(stageId, tricksEventId, currentUserId, editorRole)
+        if (!ensureRecordStagingAccess(req, res, stageEventId)) return
         const payloadRule = String(getFieldValue(fields.rule))
         const payloadScore = String(getFieldValue(fields.score))
         const payloadConsole = String(getFieldValue(fields.console))
@@ -199,6 +185,7 @@ export default async function handler(req, res){
                 fetchLaravelJson(`record/rank/${encodeURIComponent(stageId)}/${encodeURIComponent(payloadRule)}/${encodeURIComponent(payloadScore)}`),
             ])
             const schema = createRecordValidationSchema({
+                isTricks: stageEventId !== null,
                 rule: payloadRule,
                 stageId,
                 rank,
@@ -230,6 +217,7 @@ export default async function handler(req, res){
 
         const formData = new FormData()
         formData.append('stage_id', stageId)
+        if (tricksEventId) formData.append('tricks_event_id', String(tricksEventId))
         formData.append('rule', payloadRule)
         formData.append('region', String(getFieldValue(fields.region)))
         formData.append('score', payloadScore)
@@ -282,7 +270,11 @@ export default async function handler(req, res){
             res.status(413).json({error: true, message: "upload too large"})
             return
         }
-        await prismaLogging(session.user.userId, "postProxyError", String(error))
+        if (Number(error?.status) >= 400 && Number(error?.status) < 500) {
+            res.status(Number(error.status)).json({error: true, message: "record context access denied"})
+            return
+        }
+        await prismaLogging(session.user.userId, "postProxyError", {name: error?.name, code: error?.code})
         res.status(502).json({error: true, message: "proxy error"})
         return
     }

@@ -99,6 +99,8 @@ export function getNewUserEvidenceState({rule, stageId, rank, countInfo, videoUr
 
 export function createRecordValidationSchema({
     isTime = false,
+    isTricks = false,
+    isTricksTime = false,
     time2score = null,
     rule = null,
     stageId = null,
@@ -110,7 +112,8 @@ export function createRecordValidationSchema({
         score: yup
             .number()
             .min(1, "０点以下は登録できません。")
-            .max(99999, "スコアの最大値は99,999です"),
+            .test("integerEventScore", "整数で入力してください。", value => !isTricks || Number.isInteger(value))
+            .max(isTricks ? 999999 : 99999, isTricks ? "スコアの最大値は999,999です" : "スコアの最大値は99,999です"),
         videoUrl: yup
             .string()
             .matches(
@@ -140,12 +143,12 @@ export function createRecordValidationSchema({
             .min(1, "操作方法の選択は必須です。"),
         time: yup
             .string()
-            .matches(/^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, "正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。")
-            .test("isTimeValid", "1以下のスコアは登録できません。", function (value) {
+            .matches(isTricksTime ? /^(?:\d{1,3}:)?[0-5]\d:[0-5]\d$/ : /^$|^(?:(?:\d{1,2}:)?\d{2}:)?\d{2}$/, "正しくない時間フォーマットが入力されています。00:00:00形式で入力してください。")
+            .test("isTimeValid", isTricksTime ? "1秒以上の時間を入力してください。" : "1以下のスコアは登録できません。", function (value) {
                 if (!isTime) return true
                 if (typeof time2score !== "function") return true
                 const calculatedScore = time2score(value)
-                return calculatedScore > 1
+                return isTricksTime ? calculatedScore >= 1 : calculatedScore > 1
             }),
         img: yup
             .mixed()

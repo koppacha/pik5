@@ -19,7 +19,7 @@ export async function getServerSideProps(ctx) {
     const { params, res } = ctx
 
     // キャッシュ設定
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+    res.setHeader('Cache-Control', 'private, no-store')
 
     const record = Number(params?.record)
 

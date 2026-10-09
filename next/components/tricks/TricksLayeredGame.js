@@ -29,8 +29,10 @@ const FIELD_COLUMN_GAP = 25
 const FIELD_ROW_GAP = FIELD_CARD_HEIGHT + 32
 const FIELD_SIDE_MARGIN = 24
 const FIELD_MAX_STACK_BACKS = 5
-const FIELD_STACK_OFFSET = 5
+// 最大5枚の裏札でも隣のカードに2px以上の余白を残す。
+const FIELD_STACK_OFFSET = Math.min(4, (FIELD_COLUMN_GAP - 2) / FIELD_MAX_STACK_BACKS)
 const FX_DURATION_MS = 520
+const FIELD_SHIFT_MS = 240
 const CARD_MOTION_MS = 620
 const DRAW_FLIP_MS = 320
 const DRAW_REVEAL_HOLD_MS = 200
@@ -76,43 +78,43 @@ function handLayout(width, height, count, index) {
     }
 }
 
-// 手札・山札領域の上端Y座標を返す。
+// 手札・デッキ領域の上端Y座標を返す。
 function handAreaTop(height) {
     return height - HAND_AREA_HEIGHT + HAND_AREA_DROP
 }
 
-// 場札スクロール領域の下端Y座標を返す。
-function fieldViewportBottom(height) {
-    return handAreaTop(height) - 24
+// 切り札スクロール領域の下端Y座標を返す。
+function fieldViewportBottom(height, handVisible = true) {
+    return handVisible ? handAreaTop(height) - 24 : height
 }
 
-// 画面幅から場札の列数を計算する。
+// 画面幅から切り札の列数を計算する。
 function fieldColumnCount(width) {
     const availableWidth = Math.max(FIELD_CARD_WIDTH, width - FIELD_SIDE_MARGIN * 2)
     return Math.max(1, Math.floor((availableWidth + FIELD_COLUMN_GAP) / (FIELD_CARD_WIDTH + FIELD_COLUMN_GAP)))
 }
 
-// 場札領域の最大スクロール量を計算する。
-function fieldMaxScroll(width, height, count) {
+// 切り札領域の最大スクロール量を計算する。
+function fieldMaxScroll(width, height, count, handVisible = true, startY = FIELD_START_Y) {
     if (count <= 0) return 0
     const rows = Math.ceil(count / fieldColumnCount(width))
-    const contentBottom = FIELD_START_Y + (rows - 1) * FIELD_ROW_GAP + FIELD_CARD_HEIGHT
+    const contentBottom = startY + (rows - 1) * FIELD_ROW_GAP + FIELD_CARD_HEIGHT
 
-    return Math.max(0, contentBottom - fieldViewportBottom(height) + 24)
+    return Math.max(0, contentBottom - fieldViewportBottom(height, handVisible) + 24)
 }
 
-// 場札カードの表示座標を計算する。
-function fieldLayout(index, scrollY = 0, width = 0) {
+// 切り札カードの表示座標を計算する。
+function fieldLayout(index, scrollY = 0, width = 0, startY = FIELD_START_Y) {
     const columns = fieldColumnCount(width)
 
     return {
         x: FIELD_SIDE_MARGIN + (index % columns) * (FIELD_CARD_WIDTH + FIELD_COLUMN_GAP),
-        y: FIELD_START_Y + Math.floor(index / columns) * FIELD_ROW_GAP - scrollY,
+        y: startY + Math.floor(index / columns) * FIELD_ROW_GAP - scrollY,
         angle: 0,
     }
 }
 
-// 山札を擬似カードとして扱うための座標を返す。
+// デッキを擬似カードとして扱うための座標を返す。
 function deckLayout(height) {
     return {
         x: 24,
@@ -137,12 +139,12 @@ function syncCardOrder(currentOrder = [], cards = []) {
     const ids = cards.map((card) => card.id)
 
     return [
-        ...currentOrder.filter((id) => ids.includes(id)),
         ...ids.filter((id) => !currentOrder.includes(id)),
+        ...currentOrder.filter((id) => ids.includes(id)),
     ]
 }
 
-// 場札の目標表示順を算出する。
+// 切り札の目標表示順を算出する。
 function targetFieldOrder(field = [], currentOrder = [], nowValue = Date.now()) {
     const cardsById = new Map(field.map((card) => [card.id, card]))
     const stableIndex = new Map(currentOrder.map((id, index) => [id, index]))
@@ -444,6 +446,7 @@ export function TricksDomCard({
                 event.stopPropagation()
                 if (!disabled) onClick?.(event)
             }}
+            data-tricks-card-id={card.id}
             data-tricks-motion={motionType}
             className={`tricks-dom-card tricks-dom-card-${type} rarity-${rarity}${selected ? " is-selected" : ""}${expired ? " is-expired" : ""}`}
             style={{
@@ -481,16 +484,22 @@ export function TricksDomCard({
                 {isField && (
                     <>
                         <span className="tricks-dom-card-users">
-                            <span className="tricks-dom-card-user tricks-dom-card-creator"><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText(displayName(usersById, card.creator), 12)}</span>
-                            <span className="tricks-dom-card-user tricks-dom-card-taker"><FontAwesomeIcon icon={faShareFromSquare} /> {shortenTricksText(displayName(usersById, card.taker), 12)}</span>
+                            <span className="tricks-dom-card-user tricks-dom-card-creator" title={card.creator || "-"}><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText((card.creator || "-"), 12)}</span>
+                            <span className="tricks-dom-card-user tricks-dom-card-taker"><FontAwesomeIcon icon={faShareFromSquare} /><span style={{minWidth: 0, overflow: "hidden", textOverflow: "ellipsis"}}>{shortenTricksText(displayName(usersById, card.taker), 10)}</span></span>
                             {holderLabel && <span className="tricks-dom-card-user tricks-dom-card-holder" data-tricks-card-holder><FontAwesomeIcon icon={faMedal} title="ホルダー" titleId={`${iconTitleId}-holder`} aria-label="ホルダー" /> {shortenTricksText(holderLabel, 18)}</span>}
                         </span>
                         <span className="tricks-dom-card-footer">
-                            <span>{footerLabel ?? cardLimitLabel(card, nowValue)}{!footerLabel && !expired && card.my_can_post && card.my_initial_post_cost === 0 && (
-                                <span data-tricks-free style={{marginLeft: 6, color: "#237a39", fontWeight: 700}}>無料！</span>
-                            )}</span>
-                            {!footerLabel && card.my_has_record && <FontAwesomeIcon icon={faCheck} data-tricks-posted title="投稿済み" titleId={`${iconTitleId}-posted`} aria-label="投稿済み" style={{marginLeft: "auto", marginRight: 6, color: "#237a39"}} />}
-                            <span className="tricks-dom-stack" style={{color: rewardColor(rewardPoints), fontSize: rewardPoints >= 100 ? "calc(17px - 2pt)" : undefined}} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
+                            <span>{footerLabel ?? cardLimitLabel(card, nowValue)}</span>
+                            {!footerLabel && (card.my_has_record || (!expired && card.my_can_post && card.my_initial_post_cost === 0)) && (
+                                <span className="tricks-dom-post-status" style={{display: "inline-flex", alignItems: "center", gap: 4, width: "5em", flexShrink: 0, marginLeft: "auto", marginRight: 6, color: "#237a39", fontWeight: 700, whiteSpace: "nowrap"}}>
+                                    {card.my_has_record ? (
+                                        <span data-tricks-posted><FontAwesomeIcon icon={faCheck} aria-hidden="true" /> 投稿済み</span>
+                                    ) : (
+                                        <span data-tricks-free style={{marginLeft: "auto"}}>無料！</span>
+                                    )}
+                                </span>
+                            )}
+                            <span className="tricks-dom-stack" style={{color: rewardColor(rewardPoints), fontSize: rewardPoints >= 100 ? "calc(17px - 1pt)" : undefined}} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
                                 <span className="tricks-dom-stack-value">{footerValue ?? card.live_total_reward ?? 0}</span>
                             </span>
                         </span>
@@ -498,8 +507,9 @@ export function TricksDomCard({
                 )}
                 {!isField && (
                     <span className="tricks-dom-card-footer">
+                        <span className="tricks-dom-card-user tricks-dom-card-creator" title={(card.creator || "-")}><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText((card.creator || "-"), 12)}</span>
                         {card.was_opened && (
-                            <span className="tricks-opened-history" data-tricks-opened>
+                            <span className="tricks-opened-history" data-tricks-opened style={{marginLeft: "auto", flexShrink: 0}}>
                                 <FontAwesomeIcon icon={faSquareCheck} /> 開封済み
                             </span>
                         )}
@@ -527,19 +537,22 @@ function TricksCardIdentity({card, isField = false}) {
 }
 
 function rewardColor(points) {
-    if (points <= 5) return "#a0a0a0"
+    if (points <= 5) return "#d1d1d1"
     if (points <= 10) return "#ffffff"
-    if (points <= 15) return "#79d6ff"
-    if (points <= 20) return "#398bff"
-    if (points <= 30) return "#8b70ff"
-    if (points <= 50) return "#d95aff"
-    if (points <= 99) return "#ff4c4c"
-    return "#ff9d38"
+    if (points <= 15) return "#97e0ff"
+    if (points <= 20) return "#5b9fff"
+    if (points <= 30) return "#a794ff"
+    if (points <= 50) return "#df76fd"
+    if (points <= 99) return "#fb7272"
+    return "#ffb56c"
 }
 
-// 山札DOMを表示する。
-function TricksDeck({layout, deckCount, deckDifficultyCounts, trashCount, disabled, disabledReason, handVisible, onDraw, onToggleHand, onShowHowToPlay}) {
+// デッキDOMを表示する。
+function TricksDeck({layout, size, usersById, deckCount, deckDifficultyCounts, deckSeriesCounts, deckCreatorCounts, trashCount, disabled, disabledReason, handVisible, spectatorMode, onExitSpectator, onDraw, onToggleHand, onShowHowToPlay}) {
     const [open, setOpen] = useState(true)
+    const [spectatorCommandOpen, setSpectatorCommandOpen] = useState(false)
+    useEffect(() => setSpectatorCommandOpen(false), [spectatorMode])
+    const commandOpen = spectatorMode ? spectatorCommandOpen : open
     const [tooltipOpen, setTooltipOpen] = useState(false)
     const deckRef = useRef(null)
     const tooltipRef = useRef(null)
@@ -568,28 +581,44 @@ function TricksDeck({layout, deckCount, deckDifficultyCounts, trashCount, disabl
 
     return (
         <>
-            <button ref={deckRef} type="button" className="tricks-dom-deck tricks-deck-object" hidden={!handVisible} aria-label={`山札 残り${deckCount ?? 0}枚`} aria-expanded={tooltipOpen} aria-controls="tricks-deck-tooltip" onClick={() => setTooltipOpen(true)} style={{position: "absolute", left: 0, top: 0, width: HAND_CARD_WIDTH, height: HAND_CARD_HEIGHT, transform: cardTransform(layout), zIndex: layout.zIndex, pointerEvents: "auto", cursor: "pointer", boxShadow: "5px -5px 0 #32435e, 10px -10px 0 #182338, 15px -15px 0 #32435e"}}>
+            <button ref={deckRef} type="button" className="tricks-dom-deck tricks-deck-object" aria-label={`デッキ 残り${deckCount ?? 0}枚`} aria-hidden={!handVisible} tabIndex={handVisible ? 0 : -1} aria-expanded={tooltipOpen} aria-controls="tricks-deck-tooltip" onClick={() => setTooltipOpen(true)} style={{position: "absolute", left: 0, top: 0, width: HAND_CARD_WIDTH, height: HAND_CARD_HEIGHT, transform: cardTransform({...layout, y: layout.y + (handVisible ? 0 : size.height)}), transition: "transform 240ms ease", zIndex: layout.zIndex, pointerEvents: handVisible ? "auto" : "none", cursor: "pointer", boxShadow: "5px -5px 0 #32435e, 10px -10px 0 #182338, 15px -15px 0 #32435e"}}>
                 <div className="tricks-deck-pattern" />
             </button>
             {tooltipOpen && handVisible && (
-                <div ref={tooltipRef} id="tricks-deck-tooltip" className="tricks-deck-tooltip" role="tooltip" aria-label="山札の難易度別枚数" style={{position: "absolute", left: layout.x + HAND_CARD_WIDTH + 24, top: layout.y, zIndex: 450, pointerEvents: "auto", padding: "12px 16px", border: "1px solid var(--color-border-base)", borderRadius: 8, background: "var(--color-bg-base)", color: "var(--color-text-base)", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)", fontSize: 16, lineHeight: 1.8, whiteSpace: "nowrap"}}>
-                    {[1, 2, 3, 4, 5].map((difficulty) => <div key={difficulty}>★{difficulty}：{deckDifficultyCounts[difficulty] ?? 0}枚</div>)}
+                <div ref={tooltipRef} id="tricks-deck-tooltip" className="tricks-deck-tooltip" role="tooltip" aria-label="デッキ情報" style={{position: "absolute", left: Math.max(16, Math.min(layout.x + HAND_CARD_WIDTH + 24, size.width - 576)), top: Math.max(16, Math.min(layout.y, size.height - 310)), width: 560, maxWidth: "calc(100vw - 32px)", maxHeight: "calc(100vh - 32px)", overflow: "auto", boxSizing: "border-box", zIndex: 450, pointerEvents: "auto", padding: "12px 16px", border: "1px solid var(--color-border-base)", borderRadius: 8, background: "var(--color-bg-base)", color: "var(--color-text-base)", boxShadow: "0 4px 16px rgba(0, 0, 0, 0.25)", fontSize: 16, lineHeight: 1.8, whiteSpace: "nowrap"}}>
+                    <strong style={{display: "block", marginBottom: 8}}>デッキ 残り{deckCount ?? 0}枚</strong>
+                    <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1.4fr", gap: 24, minWidth: 450}}>
+                        <div data-tricks-deck-difficulty>
+                            <strong>難易度別</strong>
+                            {[1, 2, 3, 4, 5].map((difficulty) => <div key={difficulty}>★{difficulty}：{deckDifficultyCounts[difficulty] ?? 0}枚</div>)}
+                        </div>
+                        <div data-tricks-deck-series>
+                            <strong>シリーズ別</strong>
+                            {[1, 2, 3, 4].map((series) => <div key={series}>ピクミン{series}：{deckSeriesCounts[series] ?? 0}枚</div>)}
+                            {Number(deckSeriesCounts[0]) > 0 && <div>その他：{deckSeriesCounts[0]}枚</div>}
+                        </div>
+                        <div data-tricks-deck-creators>
+                            <strong>クリエイター上位5名</strong>
+                            {deckCreatorCounts.map(({creator, count}) => <div key={creator} style={{whiteSpace: "normal", overflowWrap: "anywhere"}}>{creator}：{count}枚</div>)}
+                            {deckCreatorCounts.length === 0 && <div>なし</div>}
+                        </div>
+                    </div>
                 </div>
             )}
-            <aside className="tricks-command-window" style={{position: "absolute", left: 0, bottom: HAND_CARD_HEIGHT + 54 - HAND_AREA_DROP + 24, zIndex: 140, display: "flex", pointerEvents: "auto", transform: open ? "translateX(0)" : "translateX(calc(-100% + 44px))", transition: "transform 240ms ease", maxWidth: "100vw"}}>
-                <div id="tricks-command-body" className="tricks-command-body" style={{visibility: open ? "visible" : "hidden"}}>
+            <aside className="tricks-command-window" style={{position: "absolute", left: 0, bottom: handVisible ? HAND_CARD_HEIGHT + 54 - HAND_AREA_DROP + 24 : 0, zIndex: 140, display: "flex", pointerEvents: "auto", transform: commandOpen ? "translateX(0)" : "translateX(calc(-100% + 44px))", transition: "transform 240ms ease", maxWidth: "100vw"}}>
+                <div id="tricks-command-body" className="tricks-command-body" style={{visibility: commandOpen ? "visible" : "hidden", transition: commandOpen ? "visibility 0s" : "visibility 0s 240ms"}}>
                     <button type="button" disabled={disabled} title={disabledReason} onClick={onDraw}>ドロー</button>
-                    <button type="button" data-tricks-hand-toggle onClick={onToggleHand}>{handVisible ? "手札非表示" : "手札を表示"}</button>
+                    <button type="button" data-tricks-hand-toggle onClick={spectatorMode ? onExitSpectator : onToggleHand}>{spectatorMode ? "観戦モードを終了" : handVisible ? "手札非表示" : "手札を表示"}</button>
                     <button type="button" data-tricks-how-to-play onClick={onShowHowToPlay}>遊び方</button>
                     {disabledReason && <div className="tricks-dom-deck-reason">{disabledReason}</div>}
                 </div>
-                <button className="tricks-command-toggle" type="button" aria-expanded={open} aria-controls="tricks-command-body" onClick={() => setOpen((value) => !value)}>コマンド</button>
+                <button className="tricks-command-toggle" type="button" aria-expanded={commandOpen} aria-controls="tricks-command-body" onClick={() => spectatorMode ? setSpectatorCommandOpen((value) => !value) : setOpen((value) => !value)}>コマンド</button>
             </aside>
         </>
     )
 }
 
-// 山札上で表返り、静止後に手札へ移動するゴーストカードを表示する。
+// デッキ上で表返り、静止後に手札へ移動するゴーストカードを表示する。
 function DrawGhost({motion}) {
     if (!motion) return null
     const card = motion.card || {}
@@ -624,7 +653,8 @@ function DrawGhost({motion}) {
                     <span className="tricks-dom-card-rule">{shortenTricksText(card.rule_name || "", 20)}</span>
                     <span className="tricks-dom-card-text" style={{fontSize: cardTextFontSize(card.text)}}>{card.text || ""}</span>
                     <span className="tricks-dom-card-footer">
-                        {card.was_opened && <span className="tricks-opened-history" data-tricks-opened><FontAwesomeIcon icon={faSquareCheck} /> 開封済み</span>}
+                        <span className="tricks-dom-card-creator" title={card.creator || "-"} style={{minWidth: 0, overflow: "hidden", whiteSpace: "nowrap"}}><FontAwesomeIcon icon={faUserPen} /> {shortenTricksText(card.creator || "-", 12)}</span>
+                        {card.was_opened && <span className="tricks-opened-history" data-tricks-opened style={{marginLeft: "auto", flexShrink: 0}}><FontAwesomeIcon icon={faSquareCheck} /> 開封済み</span>}
                     </span>
                 </span>
             </span>
@@ -641,6 +671,10 @@ function DomCardsLayer({
     selectedFieldId,
     fieldScrollY,
     fieldOrder,
+    fieldTop,
+    fieldTopClip,
+    fieldBottom,
+    onExitSpectator,
     onDraw,
     onSelectHand,
     onCancelHand,
@@ -653,12 +687,14 @@ function DomCardsLayer({
     operation,
     busy,
     handVisible,
+    spectatorMode,
     onToggleHand,
     onShowHowToPlay,
     nowValue,
 }) {
     const fieldById = useMemo(() => new Map((view.field || []).map((card) => [card.id, card])), [view.field])
-    const orderedField = fieldOrder.map((id) => fieldById.get(id)).filter(Boolean)
+    const orderedField = fieldOrder.map((id) => fieldById.get(id)).filter((card) => card && card.id !== takingMotion?.card?.id)
+    const reservedFieldSlots = takingMotion ? 1 : 0
     const selectedHandId = selectedHand?.id
     const selectedHandStackBonus = selectedHand ? tricksStackBonus(selectedHand.rarity, view.hand.length) : 0
     const selectedFieldIndex = orderedField.findIndex((card) => card.id === selectedFieldId)
@@ -678,19 +714,24 @@ function DomCardsLayer({
                 style={{
                     position: "absolute",
                     inset: 0,
-                    clipPath: `inset(${HEADER_HEIGHT}px 0 ${Math.max(0, size.height - fieldViewportBottom(size.height))}px 0)`,
+                    clipPath: `inset(${fieldTopClip}px 0 ${Math.max(0, size.height - fieldBottom)}px 0)`,
                     pointerEvents: "none",
                 }}
             >
-                {Array.from({length: Math.max(operation.fieldCap || 0, orderedField.length)}, (_, index) => {
-                    const slot = fieldLayout(index, fieldScrollY, size.width)
-                    if (slot.y + FIELD_CARD_HEIGHT < HEADER_HEIGHT || slot.y > fieldViewportBottom(size.height) + 48) return null
-                    return <div key={index} className="tricks-field-slot" style={{position: "absolute", left: slot.x, top: slot.y, width: FIELD_CARD_WIDTH, height: FIELD_CARD_HEIGHT, boxSizing: "border-box", border: "1px solid var(--color-border-base)", borderRadius: 10, background: "color-mix(in srgb, var(--color-bg-base) 50%, transparent)", color: "var(--color-text-sub)"}}><span className="tricks-field-slot-number" style={{position: "absolute", right: 10, top: 6}}>{index + 1}</span></div>
+                {Array.from({length: Math.max(operation.fieldCap || 0, orderedField.length + reservedFieldSlots)}, (_, index) => {
+                    const slot = fieldLayout(index, fieldScrollY, size.width, fieldTop)
+                    if (slot.y + FIELD_CARD_HEIGHT < fieldTopClip || slot.y > fieldBottom + 48) return null
+                    const slotCard = orderedField[index - reservedFieldSlots]
+                    const slotBorder = Number(slotCard?.rarity) >= 3 ? "transparent" : "var(--color-border-base)"
+                    return <div key={index} className="tricks-field-slot" style={{position: "absolute", left: slot.x, top: slot.y, width: FIELD_CARD_WIDTH, height: FIELD_CARD_HEIGHT, boxSizing: "border-box", border: `1px solid ${slotBorder}`, borderRadius: 18, background: "color-mix(in srgb, var(--color-bg-base) 50%, transparent)", color: "var(--color-text-sub)"}}><span className="tricks-field-slot-number" style={{position: "absolute", right: 10, top: 6}}>{index + 1}</span></div>
                 })}
                 {orderedField.map((card, index) => {
-                    const base = fieldLayout(index, fieldScrollY, size.width)
-                    const visible = base.y + FIELD_CARD_HEIGHT >= HEADER_HEIGHT
-                        && base.y <= fieldViewportBottom(size.height) + 48
+                    const base = fieldLayout(index + reservedFieldSlots, fieldScrollY, size.width, fieldTop)
+                    const previousBase = fieldLayout(index, fieldScrollY, size.width, fieldTop)
+                    const visible = (base.y + FIELD_CARD_HEIGHT >= fieldTopClip
+                        && base.y <= fieldBottom + 48)
+                        || (takingMotion && previousBase.y + FIELD_CARD_HEIGHT >= fieldTopClip
+                            && previousBase.y <= fieldBottom + 48)
                     if (!visible) return null
 
                     return (
@@ -729,16 +770,22 @@ function DomCardsLayer({
                     layout={baseDeckLayout}
                     deckCount={view.deckCount}
                     deckDifficultyCounts={view.deckDifficultyCounts}
+                    deckSeriesCounts={view.deckSeriesCounts}
+                    deckCreatorCounts={view.deckCreatorCounts}
+                    usersById={usersById}
+                    size={size}
                     trashCount={view.trashCount}
-                    disabled={busy || !operation.canDraw}
+                    disabled={busy || (!spectatorMode && !operation.canDraw)}
                     disabledReason={operation.drawReason}
                     onDraw={onDraw}
-                    handVisible={handVisible}
+                    handVisible={handVisible && !spectatorMode}
+                    spectatorMode={spectatorMode}
+                    onExitSpectator={onExitSpectator}
                     onToggleHand={onToggleHand}
                     onShowHowToPlay={onShowHowToPlay}
                 />
             )}
-            <DrawGhost motion={drawMotion} />
+            {!spectatorMode && <DrawGhost motion={drawMotion} />}
             {(view.hand || []).map((card, index, list) => {
                 const home = handLayout(size.width, size.height, list.length, index)
                 const isSelected = selectedHandId === card.id
@@ -749,7 +796,7 @@ function DomCardsLayer({
                     ? selectedHandLayout(size.width, size.height)
                     : {
                         ...home,
-                        y: home.y + (handVisible ? 0 : size.height),
+                        y: home.y + (handVisible && !spectatorMode ? 0 : size.height),
                         zIndex: 120 + index,
                     }
 
@@ -762,13 +809,13 @@ function DomCardsLayer({
                         usersById={usersById}
                         selected={isSelected}
                         hidden={isTaking || isDrawing || isReturning}
-                        disabled={busy || !handVisible}
+                        disabled={busy || !handVisible || spectatorMode}
                         nowValue={nowValue}
                         onClick={() => onSelectHand(card)}
                     />
                 )
             })}
-            {takingMotion && (
+            {!spectatorMode && takingMotion && (
                 <TricksDomCard
                     card={takingMotion.card}
                     type="hand"
@@ -781,20 +828,17 @@ function DomCardsLayer({
                     usersById={usersById}
                     disabled
                     nowValue={nowValue}
+                    motionType="take"
                     motionStyle={{
-                        "--from-x": `${takingMotion.from.x}px`,
-                        "--from-y": `${takingMotion.from.y}px`,
-                        "--from-angle": `${takingMotion.from.angle || 0}deg`,
-                        "--arc-x": `${takingMotion.arc.x}px`,
-                        "--arc-y": `${takingMotion.arc.y}px`,
-                        "--to-x": `${takingMotion.to.x}px`,
-                        "--to-y": `${takingMotion.to.y}px`,
-                        "--to-angle": `${takingMotion.to.angle || 0}deg`,
-                        animation: `tricksTakePlace ${CARD_MOTION_MS}ms cubic-bezier(0.22, 0.84, 0.22, 1) forwards`,
+                        transform: takingMotion.phase === "prepare" ? cardTransform(takingMotion.from) : undefined,
+                        offsetPath: takingMotion.phase === "flight" ? `path("${takingMotion.path}")` : undefined,
+                        offsetAnchor: "0 0",
+                        offsetRotate: "0deg",
+                        animation: takingMotion.phase === "flight" ? `tricksTakePlace ${CARD_MOTION_MS}ms linear forwards` : undefined,
                     }}
                 />
             )}
-            {returningMotion && (
+            {!spectatorMode && returningMotion && (
                 <TricksDomCard
                     card={returningMotion.card}
                     type="hand"
@@ -825,7 +869,7 @@ function DomCardsLayer({
                 <button
                     type="button"
                     data-tricks-card-backdrop="field"
-                    aria-label="場札詳細を閉じる"
+                    aria-label="切り札詳細を閉じる"
                     onClick={() => onSelectField?.(null)}
                     style={{
                         position: "absolute",
@@ -842,7 +886,7 @@ function DomCardsLayer({
                     card={selectedFieldCard}
                     type="field"
                     layout={{
-                        ...fieldLayout(selectedFieldIndex, fieldScrollY, size.width),
+                        ...fieldLayout(selectedFieldIndex + reservedFieldSlots, fieldScrollY, size.width, fieldTop),
                         zIndex: 330,
                     }}
                     usersById={usersById}
@@ -894,7 +938,7 @@ function DomCardsLayer({
                             }}
                         >
                             <div>投稿コスト {Math.max(1, Number(selectedHand.difficulty || 1))}P</div>
-                            <div data-tricks-take-stack-count>スタック数 {view.hand.length + selectedHandStackBonus}</div>
+                            <div data-tricks-take-stack-count>トリック {view.hand.length + selectedHandStackBonus}</div>
                             {selectedHandStackBonus > 0 && <div data-tricks-take-stack-bonus>（レア度ボーナス {selectedHandStackBonus}）</div>}
                         </div>
                         <button
@@ -916,7 +960,7 @@ function DomCardsLayer({
                             title={operation.returnReason}
                             onClick={() => onReturnToDeck(selectedHand)}
                         >
-                            山札に戻す
+                            デッキに戻す
                         </button>
                         <button type="button" className="tricks-hand-action" onClick={onCancelHand}>
                             キャンセル
@@ -930,6 +974,10 @@ function DomCardsLayer({
 
 // 3レイヤー構成のトリック画面本体を管理する。
 export default function TricksLayeredGame({
+    spectatorMode = false,
+    headerBottom = HEADER_HEIGHT,
+    onExitSpectator,
+    onRequestSpectatorExit,
     state,
     selectedFieldId,
     usersById = {},
@@ -952,11 +1000,21 @@ export default function TricksLayeredGame({
     const [fieldScrollY, setFieldScrollY] = useState(0)
     const [selectedHand, setSelectedHand] = useState(null)
     const [handVisible, setHandVisible] = useState(true)
+    const visibleHand = handVisible && !spectatorMode
+    const fieldTopClip = spectatorMode ? headerBottom : HEADER_HEIGHT
+    const fieldTop = spectatorMode ? headerBottom + 16 : FIELD_START_Y
+    const fieldBottom = fieldViewportBottom(size.height, visibleHand)
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)
     const [takingMotion, setTakingMotion] = useState(null)
     const [returningMotion, setReturningMotion] = useState(null)
     const motionTimersRef = useRef(new Set())
+    useEffect(() => {
+        if (spectatorMode) setSelectedHand(null)
+        setHandVisible(!spectatorMode)
+    }, [spectatorMode])
+    useEffect(() => setFieldScrollY(0), [fieldTop, visibleHand])
+    const fieldMotionActive = Boolean(takingMotion)
     const interactionBusy = busy || Boolean(drawMotion) || Boolean(takingMotion) || Boolean(returningMotion)
     const view = useMemo(() => normalizeTricksState(state || {}, {handOrder, nowValue}), [handOrder, nowValue, state])
     const handOrderKey = view.handOrder.join(",")
@@ -1002,18 +1060,21 @@ export default function TricksLayeredGame({
     }, [handOrderKey, view.handOrder])
 
     useEffect(() => {
-        setFieldOrder((current) => targetFieldOrder(view.field, syncCardOrder(current, view.field), nowValue))
+        setFieldOrder((current) => {
+            const next = targetFieldOrder(view.field, syncCardOrder(current, view.field), nowValue)
+            return current.length === next.length && current.every((id, index) => id === next[index]) ? current : next
+        })
     }, [fieldIdsKey, nowValue, sortTick, view.field])
 
     useEffect(() => {
         setFieldScrollY((current) => Math.max(0, Math.min(
             current,
-            fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0))
+            fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop)
         )))
-    }, [size.height, size.width, view.field, operation.fieldCap])
+    }, [size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop])
 
     const handleWheel = useCallback((event) => {
-        if (selectedHand || selectedFieldId) return
+        if (selectedHand || selectedFieldId || takingMotion) return
         const text = event.target.closest?.(".tricks-dom-card-text")
         if (text && text.scrollHeight > text.clientHeight) {
             const canScrollUp = event.deltaY < 0 && text.scrollTop > 0
@@ -1023,12 +1084,12 @@ export default function TricksLayeredGame({
         const rect = rootRef.current?.getBoundingClientRect()
         if (!rect) return
         const y = event.clientY - rect.top
-        if (y < HEADER_HEIGHT || y > fieldViewportBottom(size.height)) return
-        const maxScroll = fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0))
+        if (y < fieldTopClip || y > fieldBottom) return
+        const maxScroll = fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop)
         if (maxScroll <= 0) return
         event.preventDefault()
         setFieldScrollY((current) => Math.max(0, Math.min(maxScroll, current + event.deltaY)))
-    }, [selectedFieldId, selectedHand, size.height, size.width, view.field, operation.fieldCap])
+    }, [selectedFieldId, selectedHand, takingMotion, size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop, fieldTopClip, fieldBottom])
 
     useEffect(() => {
         const root = rootRef.current
@@ -1060,52 +1121,60 @@ export default function TricksLayeredGame({
     }, [scheduleMotionEnd, size.height, size.width, view.hand.length])
 
     const handleDraw = useCallback(async () => {
+        if (spectatorMode) {
+            onRequestSpectatorExit?.()
+            return
+        }
         if (!operation.canDraw || interactionBusy) return
         let motionStarted = false
         const result = await onDraw?.((drawResult) => {
             motionStarted = beginDrawMotion(drawResult)
         })
         if (!motionStarted) beginDrawMotion(result)
-    }, [beginDrawMotion, interactionBusy, onDraw, operation.canDraw])
+    }, [beginDrawMotion, interactionBusy, onDraw, operation.canDraw, spectatorMode, onRequestSpectatorExit])
+
+    const beginTakeMotion = useCallback((card, result) => {
+        const popupElement = rootRef.current?.querySelector(".tricks-dom-card-hand.is-selected")
+        const popup = popupElement?.getBoundingClientRect()
+        const layer = popupElement?.offsetParent?.getBoundingClientRect()
+        const start = layer && popup
+            ? {x: popup.left - layer.left, y: popup.top - layer.top, angle: 0}
+            : selectedHandLayout(size.width, size.height)
+        const target = fieldLayout(0, 0, size.width)
+        const id = `take-${card.id}-${Date.now()}`
+        const arcHeight = Math.min(170, Math.max(80, Math.abs(start.y - target.y) * 0.4))
+        const control = {
+            x: (start.x + target.x) / 2,
+            y: (start.y + target.y) / 2 - 2 * arcHeight,
+        }
+        setFieldScrollY(0)
+        setSelectedHand(null)
+        setTakingMotion({
+            id,
+            phase: "prepare",
+            card: result?.card || card,
+            from: start,
+            path: `M ${start.x} ${start.y} Q ${control.x} ${control.y} ${target.x} ${target.y}`,
+            to: target,
+        })
+        // Existing field cards finish shifting before the selected card takes off.
+        scheduleMotionEnd(() => {
+            setTakingMotion((current) => current?.id === id ? {...current, phase: "flight"} : current)
+            scheduleMotionEnd(() => {
+                setTakingMotion((current) => current?.id === id ? null : current)
+            })
+        }, FIELD_SHIFT_MS + 32)
+    }, [scheduleMotionEnd, size.height, size.width])
 
     const handleTake = useCallback(async (card) => {
         if (!operation.canTake || interactionBusy) return
-        const succeeded = await onTake?.(card)
-        if (!succeeded) return
-        const fieldIndex = Math.min(view.field.length, 15)
-        const target = fieldLayout(fieldIndex, fieldScrollY, size.width)
-        const start = selectedHandLayout(size.width, size.height)
-        const stackCount = Math.max(Number(card?.stack_count || view.hand.length || 1), 1)
-        const id = `take-${card.id}-${Date.now()}`
-        const arc = {
-            x: (start.x + target.x) / 2,
-            y: Math.max(24, Math.min(start.y, target.y) - 190),
-        }
-        setTakingMotion({
-            id,
-            card,
-            from: start,
-            arc,
-            to: {
-                x: target.x,
-                y: target.y,
-                angle: 0,
-            },
+        let motionStarted = false
+        const result = await onTake?.(card, (takeResult) => {
+            motionStarted = true
+            beginTakeMotion(card, takeResult)
         })
-        const rarity = Number(card?.rarity || 1)
-        setFxBurst(rarity >= 3 ? {
-            id,
-            x: target.x + FIELD_CARD_WIDTH / 2,
-            y: target.y + FIELD_CARD_HEIGHT / 2,
-            color: rarityColors[rarity] || "#ffd447",
-            count: Math.min(30, 14 + stackCount * 2),
-        } : null)
-        scheduleMotionEnd(() => {
-            setTakingMotion((current) => (current?.id === id ? null : current))
-            setFxBurst((current) => (current?.id === id ? null : current))
-            setSelectedHand(null)
-        })
-    }, [fieldScrollY, interactionBusy, onTake, operation.canTake, scheduleMotionEnd, size.height, size.width, view.field.length, view.hand.length])
+        if (result && !motionStarted) beginTakeMotion(card, result)
+    }, [beginTakeMotion, interactionBusy, onTake, operation.canTake])
 
     const beginReturnMotion = useCallback((card) => {
         if (!card) return false
@@ -1140,8 +1209,9 @@ export default function TricksLayeredGame({
     }, [beginReturnMotion, interactionBusy, onReturnToDeck, operation.canReturnToDeck])
 
     useEffect(() => {
-        onFieldSortingChange?.(false)
-    }, [onFieldSortingChange])
+        onFieldSortingChange?.(fieldMotionActive)
+        return () => onFieldSortingChange?.(false)
+    }, [onFieldSortingChange, fieldMotionActive])
 
     useEffect(() => {
         onHandSelectionChange?.(Boolean(selectedHand))
@@ -1158,10 +1228,12 @@ export default function TricksLayeredGame({
         <div
             ref={rootRef}
             data-tricks-game-layer
+            data-tricks-take-phase={takingMotion?.phase}
             style={{
                 position: "absolute",
                 inset: 0,
-                overflow: "hidden",
+                // フォーカス移動によるネイティブスクロールでカード座標がずれないようにする。
+                overflow: "clip",
                 zIndex: selectedHand || selectedFieldId ? 30 : 0,
             }}
         >
@@ -1171,10 +1243,14 @@ export default function TricksLayeredGame({
                 view={view}
                 size={size}
                 usersById={usersById}
-                selectedHand={selectedHand}
+                selectedHand={spectatorMode ? null : selectedHand}
                 selectedFieldId={selectedFieldId}
                 fieldScrollY={fieldScrollY}
                 fieldOrder={fieldOrder}
+                fieldTop={fieldTop}
+                fieldTopClip={fieldTopClip}
+                fieldBottom={fieldBottom}
+                onExitSpectator={onExitSpectator}
                 onDraw={handleDraw}
                 onSelectHand={setSelectedHand}
                 onCancelHand={() => setSelectedHand(null)}
@@ -1186,6 +1262,7 @@ export default function TricksLayeredGame({
                 returningMotion={returningMotion}
                 operation={operation}
                 busy={interactionBusy}
+                spectatorMode={spectatorMode}
                 handVisible={handVisible}
                 onToggleHand={toggleHand}
                 onShowHowToPlay={onShowHowToPlay}
@@ -1233,6 +1310,9 @@ export default function TricksLayeredGame({
                     color: #141923;
                     border: 10px solid var(--card-border);
                     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
+                }
+                .tricks-dom-card:is(.rarity-3, .rarity-4, .rarity-5) .tricks-dom-card-face {
+                    border-color: transparent;
                 }
                 .tricks-dom-card-field .tricks-dom-card-face {
                     padding: 10px;
@@ -1309,7 +1389,13 @@ export default function TricksLayeredGame({
                     white-space: nowrap;
                     text-overflow: ellipsis;
                 }
-                .tricks-dom-card-taker { grid-column: 2; }
+                .tricks-dom-card-creator {
+                    color: #667085;
+                    font-size: 12px;
+                    font-weight: 600;
+                }
+                .tricks-dom-card-user svg { flex-shrink: 0; }
+                .tricks-dom-card-taker { grid-column: 2; justify-content: flex-end; text-align: right; }
                 .tricks-dom-card-holder { grid-column: 1 / -1; }
                 .tricks-dom-card-footer {
                     align-items: center;
@@ -1377,7 +1463,7 @@ export default function TricksLayeredGame({
                     padding: 16px 12px 0;
                     border-radius: 18px;
                     background: #172451;
-                    border: 10px solid #101620;
+                    border: 10px solid ${rarityColors[1]};
                     box-sizing: border-box;
                     color: #141923;
                     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.26);
@@ -1408,7 +1494,7 @@ export default function TricksLayeredGame({
                 .tricks-dom-draw-back {
                     transform: rotateY(180deg);
                     background: #172451;
-                    border: 10px solid #101620;
+                    border: 10px solid ${rarityColors[1]};
                     box-shadow: 0 20px 42px rgba(0, 0, 0, 0.34);
                 }
                 .tricks-dom-draw-back::after {
@@ -1500,21 +1586,37 @@ export default function TricksLayeredGame({
                         transform: rotateY(0deg);
                     }
                 }
+                .tricks-dom-card-field {
+                    transition: none;
+                }
+                [data-tricks-take-phase="prepare"] .tricks-dom-card-field {
+                    transition: transform ${FIELD_SHIFT_MS}ms ease;
+                }
+                .tricks-dom-card[data-tricks-motion="take"] {
+                    transition: none;
+                    transform-origin: center center;
+                    will-change: transform;
+                }
                 @keyframes tricksTakePlace {
                     0% {
-                        opacity: 1;
-                        transform: translate3d(var(--from-x), var(--from-y), 0) rotate(var(--from-angle)) scale(1);
-                        filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.28));
+                        offset-distance: 0%;
+                        transform: perspective(900px) translateZ(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
                     }
-                    52% {
-                        opacity: 1;
-                        transform: translate3d(var(--arc-x), var(--arc-y), 0) rotate(-9deg) scale(1.08);
-                        filter: drop-shadow(0 46px 38px rgba(0, 0, 0, 0.36));
+                    25% {
+                        offset-distance: 25%;
+                        transform: perspective(900px) translateZ(45px) rotateX(-12deg) rotateY(8deg) rotateZ(-4deg);
+                    }
+                    50% {
+                        offset-distance: 50%;
+                        transform: perspective(900px) translateZ(60px) rotateX(-18deg) rotateY(12deg) rotateZ(-6deg);
+                    }
+                    75% {
+                        offset-distance: 75%;
+                        transform: perspective(900px) translateZ(45px) rotateX(-12deg) rotateY(8deg) rotateZ(-4deg);
                     }
                     100% {
-                        opacity: 0;
-                        transform: translate3d(var(--to-x), var(--to-y), 0) rotate(var(--to-angle)) scale(1);
-                        filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.24));
+                        offset-distance: 100%;
+                        transform: perspective(900px) translateZ(0) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
                     }
                 }
                 @keyframes tricksReturnToDeck {

@@ -246,7 +246,7 @@ class TotalController extends Controller
                 $mode = "stage";
             }
             // 有効データのみ抽出するクエリ
-            $records = Record::whereIn('stage_id', self::stage_list($rule))
+            $records = Record::publiclyVisible()->whereIn('stage_id', self::stage_list($rule))
                 ->where('console', $console_operation, $req["console"])
                 ->where('rule', $rule)
                 ->where('created_at', '<', $date)

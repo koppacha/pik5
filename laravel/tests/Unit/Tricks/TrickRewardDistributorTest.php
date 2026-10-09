@@ -7,6 +7,33 @@ use PHPUnit\Framework\TestCase;
 
 class TrickRewardDistributorTest extends TestCase
 {
+    public function test_integer_remainders_are_bounded_by_tie_sizes_and_totals_are_preserved(): void
+    {
+        $distributor = new TrickRewardDistributor();
+        foreach (range(1, 8) as $count) {
+            foreach (range(0, (1 << ($count - 1)) - 1) as $mask) {
+                $groups = [[]];
+                for ($index = 0; $index < $count; $index++) {
+                    $groups[count($groups) - 1][] = 'p'.$index;
+                    if ($index < $count - 1 && ($mask & (1 << $index))) {
+                        $groups[] = [];
+                    }
+                }
+                $bound = array_sum(array_map(fn ($group) => count($group) - 1, $groups));
+                foreach ([1, 3, 7, 19, 40] as $total) {
+                    $result = $distributor->distribute($total, $groups);
+                    self::assertSame($total, array_sum($result['distribution']) + $result['taker_remainder']);
+                    self::assertLessThanOrEqual($bound, $result['taker_remainder']);
+                    if ($count <= 4) {
+                        self::assertLessThanOrEqual(3, $result['taker_remainder']);
+                    }
+                }
+            }
+        }
+        $allTied = array_map(fn ($index) => 'p'.$index, range(1, 20));
+        self::assertSame(19, $distributor->distribute(19, [$allTied])['taker_remainder']);
+    }
+
     public function test_tied_groups_receive_equal_points(): void
     {
         $result = (new TrickRewardDistributor())->distribute(8, [['A', 'B'], ['C', 'D']]);
@@ -24,16 +51,12 @@ class TrickRewardDistributorTest extends TestCase
         self::assertSame(10, array_sum($result['distribution']) + $result['taker_remainder']);
     }
 
-    public function test_unallocatable_remainder_is_returned_for_last_place_distribution(): void
+    public function test_unallocatable_remainder_is_returned_for_taker(): void
     {
         $result = (new TrickRewardDistributor())->distribute(8, [['A', 'B', 'C']]);
 
         self::assertSame(['A' => 2, 'B' => 2, 'C' => 2], $result['distribution']);
         self::assertSame(2, $result['taker_remainder']);
-        self::assertSame(
-            ['alice' => 2, 'bob' => 2, 'carol' => 1],
-            (new TrickRewardDistributor())->lastPlaceRemainder(5, ['carol', 'alice', 'bob']),
-        );
     }
 
     public function test_below_base_totals_reduce_the_lowest_positive_rank_first(): void

@@ -9,6 +9,17 @@ class TrickRequestIdentity
 {
     private const MAX_AGE_SECONDS = 300;
 
+    public static function isSafeUserId(string $userId): bool
+    {
+        // Match the site's ASCII identifiers; reject collation aliases of system states.
+        return strlen($userId) <= 191
+            && preg_match('/\A[a-zA-Z0-9_.-]+\z/', $userId) === 1
+            && ! in_array(strtolower($userId), [
+                '_deck', '_field', '_stack', '_trash', '_collected', '_excluded',
+                '_held', '_eligible', '_in_event',
+            ], true);
+    }
+
     public function resolve(Request $request): ?string
     {
         return $this->verified($request)['user_id'] ?? null;
@@ -55,7 +66,7 @@ class TrickRequestIdentity
         $testEventId = (string) $request->header('x-tricks-test-event', '');
         $timestamp = (string) $request->header('x-tricks-timestamp', '');
         $signature = (string) $request->header('x-tricks-signature', '');
-        if ($secret === '' || $userId === '' || ! ctype_digit($role)
+        if ($secret === '' || ! self::isSafeUserId($userId) || ! ctype_digit($role)
             || ! in_array($kind, ['session', 'test'], true)
             || ($kind === 'test' && ! ctype_digit($testEventId))
             || ! ctype_digit($timestamp) || $signature === '') {

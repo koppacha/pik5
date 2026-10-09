@@ -27,13 +27,8 @@ import useSWR from "swr";
 import {faTwitch} from "@fortawesome/free-brands-svg-icons";
 import SpecialStages from "../../components/record/SpecialStages";
 
-export async function getStaticPaths(){
-    return {
-        paths: [],
-        fallback: 'blocking',
-    }
-}
-export async function getStaticProps({params}){
+export async function getServerSideProps({params, res: response}){
+    response.setHeader('Cache-Control', 'private, no-store')
     const {serverFetchJson} = await import("../../lib/serverFetchJson.mjs")
     const query   = params.series
     const series  = query[0]
@@ -61,7 +56,6 @@ export async function getStaticProps({params}){
                 events: eventTotal.events ?? [],
                 lastUpdatedAt: eventTotal.last_updated_at ?? null,
             },
-            revalidate: 60,
         }
     }
 
@@ -101,7 +95,6 @@ export async function getStaticProps({params}){
     const fDate = formattedDate()
     return {
         props: { stages, specialStages, series, rule, consoles, year, info, users, fDate, posts },
-        revalidate: 604800
     }
 }
 

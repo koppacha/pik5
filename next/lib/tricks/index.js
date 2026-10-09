@@ -1,5 +1,5 @@
 export const tricksRarityColors = {
-    1: "var(--tricks-edge-common, #303030)",
+    1: "#808080",
     2: "var(--tricks-edge-uncommon, #111111)",
     3: "#1976d2",
     4: "#42bd59",
@@ -27,6 +27,8 @@ export const tricksApi = {
     take: (deckId) => `/api/server/tricks/cards/${deckId}/take`,
     returnToDeck: (deckId) => `/api/server/tricks/cards/${deckId}/return-to-deck`,
     extend: (deckId) => `/api/server/tricks/cards/${deckId}/extend`,
+    changeRule: (deckId) => `/api/server/tricks/cards/${deckId}/rule`,
+    resetRanking: (deckId) => `/api/server/tricks/cards/${deckId}/reset`,
     scores: (deckId) => `/api/server/tricks/cards/${deckId}/scores`,
     debugCollect: (deckId) => `/api/server/tricks/cards/${deckId}/debug-collect`,
     collectExpired: "/api/server/tricks/maintenance/collect-expired",
@@ -35,6 +37,19 @@ export const tricksApi = {
     debugTimeSet: "/api/server/tricks/debug/time/set",
     debugTimeAdvance: "/api/server/tricks/debug/time/advance",
     debugTimeReset: "/api/server/tricks/debug/time/reset",
+}
+
+export function createTricksApi(eventId) {
+    if (!eventId) return tricksApi
+    const scope = (url) => {
+        const [path, query = ""] = url.split("?")
+        const params = new URLSearchParams(query)
+        params.set("event_id", String(eventId))
+        return `${path}?${params.toString()}`
+    }
+    return Object.fromEntries(Object.entries(tricksApi).map(([key, value]) => [
+        key, typeof value === "function" ? (...args) => scope(value(...args)) : scope(value),
+    ]))
 }
 
 export const tricksActions = {
@@ -118,7 +133,7 @@ export const tricksTournamentCountdownAlert = (endAt, nowValue = Date.now()) => 
     }
     return {phase: "legendary", text: "レジェンダリー排出率10倍！"}
 }
-// JSTの毎時00分・30分に訪れる次回ポイント給付までをmm:ssで返す。
+// JSTの毎時00分・30分に訪れる次回ドローポイント給付までをmm:ssで返す。
 export const formatNextSubsidyRemaining = (nowValue = Date.now()) => {
     const slotMs = 30 * 60 * 1000
     const nextSlot = Math.floor(nowValue / slotMs) * slotMs + slotMs
@@ -128,11 +143,11 @@ export const formatNextSubsidyRemaining = (nowValue = Date.now()) => {
 
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
 }
-// 場札のリミット時刻が現在時刻を過ぎているかを判定する。
+// 切り札のリミット時刻が現在時刻を過ぎているかを判定する。
 export const isTricksCardLimitExpired = (card, nowValue = Date.now()) => {
     return Boolean(card?.limit_at) && new Date(card.limit_at).getTime() <= nowValue
 }
-// 場札のリミット表示ラベルを返す。
+// 切り札のリミット表示ラベルを返す。
 export const cardLimitLabel = (card, nowValue = Date.now()) => {
     if (!card?.limit_at) return "初回投稿待ち"
     return formatRemaining(card.limit_at, nowValue)
@@ -144,28 +159,13 @@ const parseTricksTime = (value) => {
 
     return Number.isFinite(time) ? time : null
 }
-// 場札をリミット残り分数とテイク時刻のルールで比較する。
-export const compareTricksFieldCards = (a, b, nowValue = Date.now()) => {
-    const aLimit = parseTricksTime(a?.limit_at)
-    const bLimit = parseTricksTime(b?.limit_at)
-    const aHasLimit = aLimit !== null
-    const bHasLimit = bLimit !== null
+// 新しくテイクされた切り札から左順に並べる。
+export const compareTricksFieldCards = (a, b) => {
+    const aTaken = parseTricksTime(a?.taken_at) || 0
+    const bTaken = parseTricksTime(b?.taken_at) || 0
+    if (aTaken !== bTaken) return bTaken - aTaken
 
-    if (aHasLimit && !bHasLimit) return -1
-    if (!aHasLimit && bHasLimit) return 1
-
-    if (aHasLimit && bHasLimit) {
-        const aMinutes = Math.floor(Math.max(0, aLimit - nowValue) / 60000)
-        const bMinutes = Math.floor(Math.max(0, bLimit - nowValue) / 60000)
-        if (aMinutes !== bMinutes) return aMinutes - bMinutes
-    }
-
-    if (!aHasLimit && !bHasLimit) {
-        const aTaken = parseTricksTime(a?.taken_at) || 0
-        const bTaken = parseTricksTime(b?.taken_at) || 0
-        if (aTaken !== bTaken) return bTaken - aTaken
-    }
-
+    // 同時刻の新規切り札は表示側で先頭に挿入し、その順序を維持する。
     return 0
 }
 // プレイヤーを確定・暫定の合計ランクポイント降順、同点時は名前順で比較する。
@@ -233,6 +233,20 @@ export const targetTricksPlayerOrder = (players = [], currentOrder = []) => {
         return (stableIndex.get(aName) ?? 0) - (stableIndex.get(bName) ?? 0)
     })
 }
+// 同率は同順位とし、次の順位は同率人数ぶん進める（1、1、3）。
+export const tricksPlayerRanks = (players = []) => {
+    const sorted = [...players].sort(compareTricksPlayers)
+    const ranks = new Map()
+    let previousPoints
+    let rank = 0
+    sorted.forEach((player, index) => {
+        const points = Number(player.total_rank_points ?? player.rank_points ?? 0)
+        if (points !== previousPoints) rank = index + 1
+        ranks.set(player.name, rank)
+        previousPoints = points
+    })
+    return ranks
+}
 // 表示テキストを指定文字数へ短縮する。
 export const shortenTricksText = (value, max) => {
     const text = String(value || "")
@@ -249,7 +263,7 @@ export const orderTricksHand = (hand = [], order = []) => {
 
     return {hand: ordered, order: nextOrder}
 }
-// 場札に期限切れ状態と表示ラベルを付与する。
+// 切り札に期限切れ状態と表示ラベルを付与する。
 export const orderTricksField = (field = [], nowValue = Date.now()) => {
     return [...field].map((card) => ({
         ...card,
@@ -271,6 +285,8 @@ export const normalizeTricksState = (state, options = {}) => {
         handOrder: orderedHand.order,
         deckCount: state?.deck_count ?? 0,
         deckDifficultyCounts: state?.deck_difficulty_counts ?? {},
+        deckSeriesCounts: state?.deck_series_counts ?? {},
+        deckCreatorCounts: state?.deck_creator_counts ?? [],
         trashCount: state?.trash_count ?? 0,
         logs: state?.logs || [],
         me: state?.me || null,
@@ -294,24 +310,24 @@ export const tricksOperationState = (state, options = {}) => {
 
     let drawReason = ""
     if (me && !available) drawReason = "大会開催時間外です"
-    else if (me && Number(me.draw_points) <= 0) drawReason = "ポイントが0P以下です"
+    else if (me && Number(me.draw_points) <= 0) drawReason = "ドローポイントが0P以下です"
     else if (me && handCount >= handLimit) drawReason = `手札上限 ${handLimit}枚に達しています`
     else if (Number(state?.deck_count || 0) <= 0) {
         drawReason = Number(state?.trash_count || 0) > 0
-            ? "山札を補充しています"
-            : "山札と捨て札が空です"
+            ? "デッキを補充しています"
+            : "デッキと捨て札が空です"
     }
 
     let takeReason = ""
     if (me && !available) takeReason = "大会開催時間外です"
     else if (endAt && nowValue >= endAt - 60 * 60 * 1000) takeReason = "大会終了1時間前以降はテイクできません"
     else if (nextTakeAt && nowValue < nextTakeAt) takeReason = `次回テイク可能 ${new Date(nextTakeAt).toLocaleTimeString("ja-JP")}`
-    else if (fieldCount >= fieldCap) takeReason = `場札上限 ${fieldCap}枚に達しています`
+    else if (fieldCount >= fieldCap) takeReason = `切り札上限 ${fieldCap}枚に達しています`
     else if (handCount < requiredHand) takeReason = `手札が${requiredHand}枚必要です（現在${handCount}枚）`
 
     let returnReason = ""
     if (me && !available) returnReason = "大会開催時間外です"
-    else if (me && Number(me.draw_points) <= 0) returnReason = "ポイントが0P以下です"
+    else if (me && Number(me.draw_points) <= 0) returnReason = "ドローポイントが0P以下です"
 
     return {
         available,

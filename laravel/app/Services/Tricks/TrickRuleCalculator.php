@@ -4,19 +4,14 @@ namespace App\Services\Tricks;
 
 class TrickRuleCalculator
 {
-    public function subsidyEligible(int $points, int $participantCount): bool
+    public function recurringSubsidyEligible(int $points, int $handCount): bool
     {
-        return $points < $participantCount;
+        return $points + $handCount < 3;
     }
 
-    public function emptyFieldSubsidyEligible(int $points, int $handCount): bool
+    public function instantSubsidyEligible(int $points, int $handCount): bool
     {
-        return $points + $handCount < 8;
-    }
-
-    public function returnSubsidyEligible(int $pointsAfterPayment): bool
-    {
-        return $pointsAfterPayment <= 4;
+        return $points + $handCount < 5;
     }
 
     public function rarityWeights(int $remainingSeconds): array

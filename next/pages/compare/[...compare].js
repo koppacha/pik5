@@ -16,7 +16,7 @@ export async function getServerSideProps(ctx){
     const { params, res } = ctx
 
     // キャッシュ設定
-    res.setHeader('Cache-Control', 'public, s-maxage=43200, stale-while-revalidate=3600')
+    res.setHeader('Cache-Control', 'private, no-store')
 
     let [user1, consoles1Str, rule1Str, year1Str, user2, consoles2Str, rule2Str, year2Str] = params.compare
 

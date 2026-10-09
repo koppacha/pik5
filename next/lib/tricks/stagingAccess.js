@@ -1,11 +1,11 @@
 import {createHmac, timingSafeEqual} from "crypto"
 
 export const STAGING_EVENT_ID = 261001
-export const STAGING_CLOSE_AT = Date.parse("2026-10-02T00:00:00+09:00")
+export const STAGING_CLOSE_AT = Date.parse("2026-10-06T22:00:00+09:00")
 const COOKIE_NAME = "tricks_261001_access"
 
-export function stagingAccessEnabled() {
-    return Number(process.env.TRICKS_EVENT_ID) === STAGING_EVENT_ID
+export function stagingAccessEnabled(eventId = Number(process.env.TRICKS_EVENT_ID)) {
+    return Number(process.env.TRICKS_EVENT_ID) === STAGING_EVENT_ID && Number(eventId) === STAGING_EVENT_ID
 }
 
 export function stagingAccessReady() {
@@ -27,8 +27,8 @@ export function validStagingPassword(value) {
     return supplied.length === expected.length && timingSafeEqual(supplied, expected)
 }
 
-export function hasStagingAccess(req, now = Date.now()) {
-    if (!stagingAccessEnabled()) return true
+export function hasStagingAccess(req, now = Date.now(), eventId) {
+    if (!stagingAccessEnabled(eventId)) return true
     if (now >= STAGING_CLOSE_AT) return false
     const token = expectedToken()
     const supplied = req.cookies?.[COOKIE_NAME]

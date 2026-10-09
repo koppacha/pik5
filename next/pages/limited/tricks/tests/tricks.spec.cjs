@@ -32,9 +32,9 @@ function uiState({me = null, players = [], subsidyFlag = false} = {}) {
             id: 202,
             event_card_id: 1202,
             stage_id: 7202,
-            title: "場札確認カード",
+            title: "切り札確認カード",
             rule_name: "テストルール",
-            text: "場札表示確認用",
+            text: "切り札表示確認用",
             difficulty: 1,
             rarity: 1,
             stack_count: 2,
@@ -457,11 +457,11 @@ test.describe("limited tricks phase 6", () => {
         })
 
         await page.goto("/limited/tricks")
-        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("Pot 4P")
-        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("山札 198枚")
+        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("ポット 4P")
+        await expect(page.locator("[data-tricks-tournament-info]")).toContainText("デッキ 198枚")
         await expect(page.locator("[data-tricks-tournament-info]")).toContainText("捨て札 0枚")
-        await expect(page.locator("[data-tricks-balance-tax=active]")).toContainText("P 11")
-        await expect(page.locator("[data-tricks-player='pw_economy_ui']")).toContainText("手札 6 / 6")
+        await expect(page.locator("[data-tricks-balance-tax=active] strong")).toHaveText("11")
+        await expect(page.locator("[data-tricks-player='pw_economy_ui'] [data-tricks-player-hand-count] strong")).toHaveText("6")
         await expect(page.getByRole("button", {name: "ドロー", exact: true})).toBeDisabled()
         await expect(page.locator(".tricks-command-window")).not.toContainText("捨て札")
         await expect(page.locator(".tricks-dom-card-field .tricks-dom-stack-value")).toHaveText("9")
@@ -469,7 +469,7 @@ test.describe("limited tricks phase 6", () => {
 
         await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         await expect(page.locator(".tricks-field-detail-panel")).toContainText(
-            "スタック 2 / 支払い総額 3P / 参加者 2人 / あなたの投稿コスト 1P",
+            "トリック 2 / 支払い総額 3P / 参加者 2人 / あなたの投稿コスト 1P",
         )
     })
 
@@ -506,9 +506,9 @@ test.describe("limited tricks phase 6", () => {
         await page.goto("/limited/tricks")
         const drawButton = page.getByRole("button", {name: "ドロー", exact: true})
         await expect(drawButton).toBeDisabled()
-        await expect(page.getByText("山札を補充しています", {exact: true})).toBeVisible()
+        await expect(page.getByText("デッキを補充しています", {exact: true})).toBeVisible()
         await expect(drawButton).toBeEnabled({timeout: 7000})
-        await expect(page.locator("[data-tricks-deck-count]")).toHaveText("山札 3枚")
+        await expect(page.locator("[data-tricks-deck-count]")).toHaveText("デッキ 3枚")
     })
 
     test("fixture API creates 160 isolated cards and keeps player identities separate", async ({request, baseURL}) => {
@@ -724,13 +724,13 @@ test.describe("limited tricks phase 6", () => {
             await page.goto("/limited/tricks")
             await page.locator(".tricks-dom-card-hand").first().click()
             const actionButtons = page.locator(".tricks-hand-action")
-            await expect(actionButtons).toHaveText(["場に出す", "山札に戻す", "キャンセル"])
+            await expect(actionButtons).toHaveText(["場に出す", "デッキに戻す", "キャンセル"])
             await expect(page.locator("[data-tricks-take-summary]")).toContainText("投稿コスト 1P")
-            await expect(page.locator("[data-tricks-take-summary]")).toContainText("スタック数 3")
+            await expect(page.locator("[data-tricks-take-summary]")).toContainText("トリック数 3")
             await expect(page.locator("[data-tricks-take-summary]")).toHaveCSS("font-weight", "800")
-            await expect(page.getByRole("button", {name: "山札に戻す", exact: true})).toBeEnabled()
+            await expect(page.getByRole("button", {name: "デッキに戻す", exact: true})).toBeEnabled()
             page.once("dialog", (dialog) => dialog.accept())
-            await page.getByRole("button", {name: "山札に戻す", exact: true}).click()
+            await page.getByRole("button", {name: "デッキに戻す", exact: true}).click()
             const returnMotion = page.locator('[data-tricks-motion="return-to-deck"]')
             await expect(returnMotion).toBeVisible()
             await expect(returnMotion).toHaveCSS("animation-name", "tricksReturnToDeck")
@@ -775,7 +775,7 @@ test.describe("limited tricks phase 6", () => {
         try {
             await page.goto("/limited/tricks")
             await page.locator(".tricks-dom-card-hand").first().click()
-            await expect(page.getByRole("button", {name: "山札に戻す", exact: true})).toBeDisabled()
+            await expect(page.getByRole("button", {name: "デッキに戻す", exact: true})).toBeDisabled()
         } finally {
             await zeroFixture.cleanup()
         }
@@ -879,7 +879,7 @@ test.describe("limited tricks phase 6", () => {
             await fixture.post(fixture.admin, "/api/server/tricks/debug/time/advance", {minutes: 20})
             await page.reload()
             await expect(playerCard.locator('[data-tricks-subsidy-flag="active"]')).toHaveText("P 4")
-            await expect(page.getByText("5人にポイントが給付されました。", {exact: false})).toBeVisible()
+            await expect(page.getByText("5人にドローポイントが給付されました。", {exact: false})).toBeVisible()
         } finally {
             await fixture.cleanup()
         }
@@ -1079,7 +1079,7 @@ test.describe("limited tricks phase 6", () => {
 
         await page.goto("/limited/tricks")
         const playerPanel = page.locator(`[data-tricks-player="${userId}"]`)
-        await expect(playerPanel.locator("[data-tricks-take-level]")).toHaveText("Lv.1 / テイクコスト 3")
+        await expect(playerPanel.locator("[data-tricks-take-level]")).toHaveText("Lv.1")
         await page.locator(".tricks-dom-card-field").dispatchEvent("click")
         const extendButton = page.locator("[data-tricks-extend-button]")
         await expect(extendButton).toBeEnabled()

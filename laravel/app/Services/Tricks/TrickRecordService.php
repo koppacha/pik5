@@ -2,7 +2,6 @@
 
 namespace App\Services\Tricks;
 
-use App\Library\Func;
 use App\Models\Deck;
 use App\Models\LimitLog;
 use App\Models\Player;
@@ -20,6 +19,7 @@ class TrickRecordService
 {
     public function __construct(
         private readonly TrickClock $clock,
+        private readonly TrickSubsidyService $subsidies,
         private readonly TrickRuleCalculator $rules,
         private readonly TrickRankCalculator $ranks,
         private readonly TrickRewardDistributor $rewards,
@@ -29,7 +29,7 @@ class TrickRecordService
 
     public function saved(Record $record, Record $replacedRecord = null, Request $request = null): void
     {
-        $context = $this->resolveContext($record, $replacedRecord);
+        $context = $this->resolveContext($record, $replacedRecord, $request);
         if ($context === null) {
             return;
         }
@@ -44,9 +44,12 @@ class TrickRecordService
             abort(response()->json(['message' => '大会開催時間外です'], 403));
         }
         if ($card->state !== '_field') {
-            abort(response()->json(['message' => '回収済みまたは場札でないカードへは投稿できません'], 409));
+            abort(response()->json(['message' => '回収済みまたは切り札でないカードへは投稿できません'], 409));
         }
-        if ((int) $record->rule !== 1 || (int) $record->score < 1 || (int) $record->score > 99999) {
+        if ($card->limit_at === null || $now->greaterThanOrEqualTo($card->limit_at)) {
+            abort(response()->json(['message' => '切り札の投稿期限を過ぎています'], 409));
+        }
+        if (! in_array((int) $record->rule, [1, (int) $event->event_id], true) || (int) $record->score < 1 || (int) $record->score > 999999) {
             abort(response()->json(['message' => '大会記録のルールまたはスコアが不正です'], 422));
         }
 
@@ -97,7 +100,10 @@ class TrickRecordService
         $existingOperation = TrickCardPayment::query()
             ->where('event_id', $event->event_id)
             ->where('event_card_id', $card->id)
-            ->where('idempotency_key', $idempotencyKey)
+            ->whereIn('idempotency_key', [
+                $idempotencyKey,
+                str_replace(':score_update:', ':initial_post:', $idempotencyKey),
+            ])
             ->first();
         $pointsDue = $this->rules->initialPostCost(
             max(1, (int) $card->difficulty),
@@ -121,6 +127,10 @@ class TrickRecordService
             if ($pointsPaid > 0) {
                 $player->decrement('draw_points', $pointsPaid);
                 $card->increment('paid_points_total', $pointsPaid);
+            }
+
+            if (! $hasInitialPost && $pointsDue === 0) {
+                $this->subsidies->grantInstant($event, $player, $now, $player->card_count, 'free_post', $request);
             }
 
             if (! $hasInitialPost && $card->limit_at !== null) {
@@ -212,6 +222,7 @@ class TrickRecordService
         if ($cards->isEmpty()) {
             return [];
         }
+        $cards = (new \Illuminate\Database\Eloquent\Collection($cards->all()))->loadMissing('deck');
         $cardIds = $cards->pluck('id');
         $rows = Record::query()
             ->join('trick_event_records', 'trick_event_records.record_id', '=', 'records.post_id')
@@ -228,19 +239,17 @@ class TrickRecordService
             ->groupBy('event_card_id')->map(fn (Collection $payments) => $payments->pluck('player_name')->flip());
 
         return $cards->mapWithKeys(fn (TrickEventCard $card) => [
-            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect())),
+            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect()), $card->deck?->score_type === 'time' ? 'time' : 'points'),
         ])->all();
     }
 
-    private function rankRows(Collection $rows, Collection $paidPlayers): array
+    private function rankRows(Collection $rows, Collection $paidPlayers, string $scoreType): array
     {
         if ($rows->isEmpty()) {
             return [];
         }
 
-        $rule = (int) $rows->first()->rule;
-        $stageId = (int) $rows->first()->stage_id;
-        $ascending = (Func::orderByRule($stageId, $rule)[1] ?? 'DESC') === 'ASC';
+        $ascending = $scoreType === 'time';
         $best = [];
         foreach ($rows as $row) {
             $score = (int) $row->score;
@@ -254,7 +263,7 @@ class TrickRecordService
             $ascending,
         );
 
-        return collect($best)->map(function ($row, $userId) use ($rankData, $paidPlayers) {
+        return collect($best)->map(function ($row, $userId) use ($rankData, $paidPlayers, $scoreType) {
             $data = collect($row->toArray())->only([
                 'post_id', 'unique_id', 'user_id', 'user_name', 'score', 'stage_id', 'rule', 'console',
                 'difficulty', 'region', 'post_comment', 'img_url', 'video_url', 'flg', 'team', 'created_at',
@@ -262,6 +271,7 @@ class TrickRecordService
             $data['user_id'] = $userId;
             $data['user_name'] = $data['user_name'] ?: $userId;
             $data['score'] = (int) $data['score'];
+            $data['score_type'] = $scoreType;
             $data['rank'] = $rankData[$userId]['rank'];
             $data['post_rank'] = $rankData[$userId]['rank'];
             $data['rps'] = $rankData[$userId]['rank_points'];
@@ -301,20 +311,29 @@ class TrickRecordService
             $rankGroups,
         );
 
-        $lastRank = max(array_column($rankings, 'rank'));
-        $lastPlayers = collect($rankings)->where('rank', $lastRank)->pluck('user_id')->all();
-        $remainderDistribution = $this->rewards->lastPlaceRemainder(
-            (int) $result['taker_remainder'],
-            $lastPlayers,
-        );
-
-        return collect($rankings)->map(function (array $ranking) use ($result, $remainderDistribution): array {
+        return collect($rankings)->map(function (array $ranking) use ($result, $card): array {
             $points = (int) ($result['distribution'][$ranking['user_id']] ?? 0);
-            $points += (int) ($remainderDistribution[$ranking['user_id']] ?? 0);
+            if ($ranking['user_id'] === $card->taker) {
+                $points += (int) $result['taker_remainder'];
+            }
             $ranking['provisional_reward_points'] = $points;
 
             return $ranking;
         })->all();
+    }
+
+    public function unrankedTakerRemainder(TrickEventCard $card, array $rankings, int $potPoints): int
+    {
+        if (count($rankings) < 2 || collect($rankings)->contains('user_id', $card->taker)) {
+            return 0;
+        }
+        $groups = collect($rankings)->groupBy('rank')->values()
+            ->map(fn ($group) => $group->pluck('user_id')->values()->all())->all();
+
+        return $this->rewards->distribute($this->rules->totalReward(
+            (int) $card->stack_count, (int) $card->paid_points_total, count($rankings),
+            $potPoints, (int) ($card->rarity ?? 1),
+        ), $groups)['taker_remainder'];
     }
 
     private function provisionalPotFor(TrickEventCard $card): int
@@ -324,7 +343,7 @@ class TrickRecordService
         }
         $targetId = TrickEventCard::query()->where('event_id', $card->event_id)
             ->where('state', '_field')->where('post_count', '>', 0)
-            ->orderBy('limit_at')->orderBy('id')->value('id');
+            ->orderByRaw('limit_at IS NULL')->orderBy('limit_at')->orderBy('id')->value('id');
         if ((int) $targetId !== (int) $card->id) {
             return 0;
         }
@@ -356,7 +375,7 @@ class TrickRecordService
     }
 
     /** @return array{0: TrickEvent, 1: TrickEventCard}|null */
-    private function resolveContext(Record $record, ?Record $replacedRecord): ?array
+    private function resolveContext(Record $record, ?Record $replacedRecord, ?Request $request): ?array
     {
         if ($replacedRecord !== null) {
             $oldLink = TrickEventRecord::query()->where('record_id', $replacedRecord->post_id)->first();
@@ -366,6 +385,15 @@ class TrickRecordService
 
                 return [$event, $card];
             }
+        }
+
+        if ($request?->input('tricks_event_id') !== null) {
+            $validated = $request->validate(['tricks_event_id' => ['required', 'integer', 'min:1', 'max:2147483647']]);
+            $event = TrickEvent::query()->where('event_id', $validated['tricks_event_id'])->lockForUpdate()->firstOrFail();
+            $card = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)
+                ->whereHas('deck', fn ($query) => $query->where('stage_id', $record->stage_id))->lockForUpdate()->firstOrFail();
+
+            return [$event, $card];
         }
 
         $deck = Deck::query()->where('stage_id', $record->stage_id)->first();
@@ -390,13 +418,6 @@ class TrickRecordService
         }
 
         return null;
-    }
-
-    private function nextSubsidySlot(CarbonImmutable $now): CarbonImmutable
-    {
-        $base = $now->setSecond(0)->setMicrosecond(0);
-
-        return $now->minute < 30 ? $base->setMinute(30) : $base->setMinute(0)->addHour();
     }
 
     private function log(

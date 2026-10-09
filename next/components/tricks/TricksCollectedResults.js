@@ -5,20 +5,8 @@ import TricksFieldDetailPanel from "./TricksFieldDetailPanel"
 const detailPanelWidth = 560
 const detailPanelGap = 28
 
-const adminMetrics = [
-    ["total_rank_points", "合計R"],
-    ["collected_card_count", "回収"],
-    ["take_count", "テイク"],
-    ["draw_count", "ドロー"],
-    ["return_count", "山札戻し"],
-    ["post_count", "投稿"],
-    ["spent_points", "消費P"],
-    ["creator_take_count", "制作札テイク"],
-]
-
-export default function TricksCollectedResults({cards = [], usersById = {}, adminStats = [], isAdmin = false}) {
+export default function TricksCollectedResults({cards = [], usersById = {}}) {
     const [selected, setSelected] = useState(null)
-    const [adminStatsOpen, setAdminStatsOpen] = useState(false)
     const visibleCards = cards.filter((card) => card.holders?.length)
     const selectedCard = selected?.card
     const fieldDuration = (card) => {
@@ -34,10 +22,6 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
         (total, reward) => total + Number(reward.points_delta || 0),
         0,
     ) ?? 0)
-    const adminMaxima = adminMetrics.reduce((maxima, [key]) => ({
-        ...maxima,
-        [key]: Math.max(0, ...adminStats.map((player) => Number(player[key] || 0))),
-    }), {})
     const panelStyle = selected && {
         position: "fixed",
         zIndex: 6,
@@ -75,35 +59,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
         >
             <div style={{display: "flex", alignItems: "center", gap: 12, marginBottom: 6}}>
                 <h1 style={{fontSize: 22, margin: 0}}>大会結果・回収カード</h1>
-                {isAdmin && (
-                    <button
-                        type="button"
-                        data-tricks-admin-stats-toggle
-                        aria-expanded={adminStatsOpen}
-                        onClick={() => setAdminStatsOpen((open) => !open)}
-                        style={{border: "1px solid #64748b", borderRadius: 6, background: "var(--color-bg-base)", color: "var(--color-text-base)", cursor: "pointer", padding: "5px 9px"}}
-                    >
-                        管理統計 {adminStatsOpen ? "閉じる" : "表示"}
-                    </button>
-                )}
             </div>
-            {isAdmin && adminStatsOpen && (
-                <div data-tricks-admin-stats style={{display: "grid", gridTemplateColumns: `minmax(120px, 1.5fr) repeat(${adminMetrics.length}, minmax(76px, 1fr))`, overflowX: "auto", gap: 1, marginBottom: 18, background: "#475569", fontSize: 12}}>
-                    <div style={{padding: 8, background: "var(--color-bg-base)", fontWeight: 800}}>プレイヤー</div>
-                    {adminMetrics.map(([, label]) => <div key={label} style={{padding: 8, background: "var(--color-bg-base)", fontWeight: 800, whiteSpace: "nowrap"}}>{label}</div>)}
-                    {adminStats.map((player) => (
-                        <div key={player.user_id} style={{display: "contents"}}>
-                            <div style={{padding: 8, background: "var(--color-bg-base)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap"}}>{usersById[player.user_id]?.name || player.user_id}</div>
-                            {adminMetrics.map(([key]) => {
-                                const value = Number(player[key] || 0)
-                                const isMax = value === adminMaxima[key]
-
-                                return <div key={`${player.user_id}-${key}`} data-tricks-admin-stat={key} style={{padding: 8, textAlign: "right", background: isMax ? "color-mix(in srgb, var(--color-bg-base) 70%, var(--color-level-1-bg))" : "var(--color-bg-base)"}}>{value}</div>
-                            })}
-                        </div>
-                    ))}
-                </div>
-            )}
             {visibleCards.length === 0 && <div style={{color: "var(--color-text-sub)"}}>回収カードはありません</div>}
             <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18}}>
                 {visibleCards.map((card) => (
@@ -138,6 +94,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}, admi
                         style={{position: "fixed", inset: 0, zIndex: 5, background: "transparent"}}
                     />
                     <TricksFieldDetailPanel
+                        scoreType={selectedCard.score_type}
                         rankings={selectedCard.rankings || []}
                         usersById={usersById}
                         summary={<>回収時の総還元 {totalReward(selectedCard)}P{" / "}アクティブ時間 {fieldDuration(selectedCard)}</>}

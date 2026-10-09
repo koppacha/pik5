@@ -7,21 +7,22 @@ use Illuminate\Http\Request;
 
 class TrickEventResolver
 {
+    public function __construct(private readonly TrickClock $clock)
+    {
+    }
+
     public function current(): TrickEvent
     {
-        $configured = (int) (getenv('TRICKS_EVENT_ID') ?: env('TRICKS_EVENT_ID', 0));
-        $query = TrickEvent::query();
-        if ($configured > 0) {
-            return $query->where('event_id', $configured)->firstOrFail();
-        }
+        $events = TrickEvent::query()->whereNotNull('initialized_at')->get();
+        $upcoming = $events->filter(fn (TrickEvent $event) => $event->state !== 'ended'
+            && $this->clock->now($event)->lessThan($event->end_at));
+        $active = $upcoming->filter(fn (TrickEvent $event) => $this->clock->now($event)->greaterThanOrEqualTo($event->start_at))
+            ->sortByDesc('start_at')->first();
+        $scheduled = $upcoming->sortBy('start_at')->first();
+        $latest = $events->filter(fn (TrickEvent $event) => $event->state === 'ended'
+            || $this->clock->now($event)->greaterThanOrEqualTo($event->end_at))->sortByDesc('end_at')->first();
 
-        $current = (clone $query)
-            ->whereIn('state', ['active', 'scheduled'])
-            ->whereNotNull('initialized_at')
-            ->orderByDesc('start_at')
-            ->first();
-
-        return $current ?? $query->where('state', 'ended')->orderByDesc('end_at')->firstOrFail();
+        return $active ?? $scheduled ?? $latest ?? abort(404, '大会がありません');
     }
 
     public function forRequest(Request $request, TrickRequestIdentity $identity): TrickEvent
@@ -32,6 +33,11 @@ class TrickEventResolver
                 ->where('event_id', $testEventId)
                 ->where('test_mode', true)
                 ->firstOrFail();
+        }
+        if ($request->query('event_id') !== null) {
+            $validated = $request->validate(['event_id' => ['required', 'integer', 'min:1', 'max:2147483647']]);
+
+            return TrickEvent::query()->where('event_id', $validated['event_id'])->firstOrFail();
         }
 
         return $this->current();

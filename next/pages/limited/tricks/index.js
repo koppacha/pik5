@@ -8,21 +8,25 @@ import Box from "@mui/material/Box"
 import Button from "@mui/material/Button"
 import Dialog from "@mui/material/Dialog"
 import DialogContent from "@mui/material/DialogContent"
-import {postTricks, tricksApi, tricksFetcher, tricksOperationState, tricksStackBonus} from "../../../lib/tricks"
+import DialogTitle from "@mui/material/DialogTitle"
+import DialogActions from "@mui/material/DialogActions"
+import TextField from "@mui/material/TextField"
+import {postTricks, createTricksApi, tricksFetcher, tricksOperationState, tricksStackBonus} from "../../../lib/tricks"
 import RecordForm from "../../../components/modal/RecordForm"
 import TricksCollectedResults from "../../../components/tricks/TricksCollectedResults"
 import TricksDebugPanel from "../../../components/tricks/TricksDebugPanel"
 import TricksFieldDetailPanel from "../../../components/tricks/TricksFieldDetailPanel"
+import useTricksSpectator from "../../../components/tricks/useTricksSpectator"
+import TricksSpectatorPanel from "../../../components/tricks/TricksSpectatorPanel"
+import TricksAdminStats from "../../../components/tricks/TricksAdminStats"
 import TricksHud from "../../../components/tricks/TricksHud"
+import TricksManualContent from "../../../components/tricks/TricksManualContent"
+import {fieldPanelPosition, fieldDetailModalWidth} from "../../../lib/tricks/fieldPanelPosition"
 
 const TricksGame = dynamic(() => import("../../../components/tricks/TricksLayeredGame"), {
     ssr: false,
 })
 
-const fieldDetailCardWidth = 295
-const fieldDetailGap = 28
-const fieldDetailModalWidth = 560
-const fieldDetailDefaultTop = 150
 
 function stateContentSignature(state) {
     if (!state) return ""
@@ -38,6 +42,9 @@ function stateContentSignature(state) {
         field: state.field,
         hand: state.hand,
         deck_count: state.deck_count,
+        deck_difficulty_counts: state.deck_difficulty_counts,
+        deck_series_counts: state.deck_series_counts,
+        deck_creator_counts: state.deck_creator_counts,
         trash_count: state.trash_count,
         collected_count: state.collected_count,
         holder_cards: state.holder_cards,
@@ -52,17 +59,25 @@ function tricksErrorMessage(error, fallback = "操作に失敗しました") {
     return Number.isInteger(code) && code >= 400 ? `HTTP ${code}: ${detail}` : detail
 }
 
-function TricksGamePage({stagingMode = false}) {
+function TricksGamePage({eventId, manualContent, stagingMode = false}) {
+    const tricksApi = useMemo(() => createTricksApi(eventId), [eventId])
     const {data: session, status} = useSession()
     const userId = session?.user?.userId || session?.user?.id
+    const [spectatorMode, setSpectatorMode] = useState(false)
+    const [spectatorExitConfirm, setSpectatorExitConfirm] = useState(false)
+    const [headerBottom, setHeaderBottom] = useState(174)
+    const requestSpectatorExit = useCallback(() => setSpectatorExitConfirm(true), [])
     const [message, setMessage] = useState("")
     const [busy, setBusy] = useState(false)
     const [selectedField, setSelectedField] = useState(null)
     const [selectedHolder, setSelectedHolder] = useState(null)
     const [postingCard, setPostingCard] = useState(null)
     const [postOpen, setPostOpen] = useState(false)
+    const [ruling, setRuling] = useState(null)
+    const [rulingError, setRulingError] = useState("")
     const [debugOpen, setDebugOpen] = useState(false)
     const [howToOpen, setHowToOpen] = useState(false)
+    const [knowledgeOpen, setKnowledgeOpen] = useState(false)
     const [fieldSorting, setFieldSorting] = useState(false)
     const [nowValue, setNowValue] = useState(Date.now())
     const clockInitializedRef = useRef(false)
@@ -73,7 +88,7 @@ function TricksGamePage({stagingMode = false}) {
     const subsidyErrorMessageRef = useRef(null)
     const {data: holderRankings} = useSWR(selectedHolder?.id ? tricksApi.scores(selectedHolder.id) : null, tricksFetcher)
     const stateKey = tricksApi.state
-    const selectedCard = selectedField?.card || selectedField
+    const selectedCardSnapshot = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
     const fieldSide = selectedField?.side || "right"
     const stateFetcher = useCallback(async (url) => {
@@ -81,10 +96,17 @@ function TricksGamePage({stagingMode = false}) {
         return tricksFetcher(url)
     }, [])
     const {data: state, error, mutate, isLoading} = useSWR(stateKey, stateFetcher, {
-        refreshInterval: fieldSorting ? 0 : 3000,
+        refreshInterval: (latest) => latest?.tournament?.state === "ended" || fieldSorting ? 0 : 3000,
         revalidateOnFocus: true,
         keepPreviousData: true,
     })
+    const selectedCard = state?.field?.find((card) => card.id === selectedCardSnapshot?.id) || selectedCardSnapshot
+    const spectatorPresentation = useTricksSpectator(state, spectatorMode)
+    useEffect(() => {
+        if (!spectatorPresentation) return
+        setSelectedField(null)
+        setSelectedHolder(null)
+    }, [spectatorPresentation])
     const {data: users = []} = useSWR("/api/users", tricksFetcher, {
         revalidateOnFocus: false,
     })
@@ -106,10 +128,13 @@ function TricksGamePage({stagingMode = false}) {
         {revalidateOnFocus: false}
     )
     const isAdmin = Number(session?.user?.role) === 10
-    const {data: collectedAdminStats = []} = useSWR(
-        eventEnded && isAdmin && state?.tournament?.event_id ? tricksApi.collectedAdminStats(state.tournament.event_id) : null,
+    const [adminStatsOpen, setAdminStatsOpen] = useState(false)
+    const closeAdminStats = useCallback(() => setAdminStatsOpen(false), [])
+    useEffect(() => { setAdminStatsOpen(false) }, [isAdmin, state?.tournament?.event_id])
+    const {data: collectedAdminStats} = useSWR(
+        adminStatsOpen && isAdmin && state?.tournament?.event_id ? tricksApi.collectedAdminStats(state.tournament.event_id) : null,
         tricksFetcher,
-        {revalidateOnFocus: false}
+        {revalidateOnFocus: true, refreshInterval: eventEnded ? 0 : 10000}
     )
     const operation = useMemo(() => tricksOperationState(state, {nowValue}), [nowValue, state])
     const isDebugAdmin = Boolean(
@@ -123,30 +148,15 @@ function TricksGamePage({stagingMode = false}) {
             return acc
         }, {})
     }, [users])
-    const fieldPanelStyle = useMemo(() => {
-        const anchor = fieldAnchor || {
-            x: 24,
-            y: fieldDetailDefaultTop,
-            width: fieldDetailCardWidth,
-            height: 0,
-        }
-        const left = fieldSide === "left"
-            ? Math.max(24, anchor.x - fieldDetailGap - fieldDetailModalWidth)
-            : anchor.x + anchor.width + fieldDetailGap
-        const top = Math.max(116, Math.min(anchor.y, (typeof window !== "undefined" ? window.innerHeight : 900) - 360))
-
-        return {
-            left,
-            top,
-            transformOrigin: fieldSide === "left" ? "100% 50%" : "0 50%",
-        }
-    }, [fieldAnchor, fieldSide])
+    const fieldPanelStyle = useMemo(() => fieldPanelPosition(fieldAnchor, fieldSide,
+        typeof window !== "undefined" ? window.innerHeight : 900), [fieldAnchor, fieldSide])
 
     const me = state?.me
+    const tournamentTitle = state?.tournament?.title || "期間限定ランキング"
     const authenticated = status === "authenticated" && Boolean(userId)
     const canJoin = authenticated && !me && state?.tournament?.available
     const runAction = useCallback(async (action, options = {}) => {
-        if (!userId) {
+        if (!userId || (spectatorMode && !options.joining)) {
             return false
         }
         setBusy(true)
@@ -166,19 +176,55 @@ function TricksGamePage({stagingMode = false}) {
         } finally {
             setBusy(false)
         }
-    }, [mutate, mutateCollected, userId])
+    }, [mutate, mutateCollected, spectatorMode, userId])
+
+    const openRuling = (type) => {
+        setRulingError("")
+        setRuling({type, card: selectedCard, key: crypto.randomUUID(), values: {
+            title: selectedCard.title || "",
+            rule_name: selectedCard.rule_name || "",
+            text: selectedCard.text || "",
+            difficulty: selectedCard.difficulty || 1,
+        }})
+    }
+    const submitRuling = async (event) => {
+        event.preventDefault()
+        if (busy || !ruling) return
+        setRulingError("")
+        const result = await runAction(async () => {
+            try {
+                return await postTricks(ruling.type === "reset"
+                    ? tricksApi.resetRanking(ruling.card.id) : tricksApi.changeRule(ruling.card.id), {
+                    ...(ruling.type === "rule" && ruling.values),
+                    idempotency_key: ruling.key,
+                })
+            } catch (error) {
+                setRulingError(tricksErrorMessage(error))
+                throw error
+            }
+        })
+        if (result) {
+            await mutateRankings()
+            setSelectedField(null)
+            setRuling(null)
+            setMessage(ruling.type === "reset"
+                ? `${result.deleted}件の投稿を削除し、${result.compensated}人に5Pを配布しました`
+                : "ルールを変更しました")
+        }
+    }
 
     const join = async () => {
-        const result = await runAction(() => postTricks(tricksApi.join))
+        changeSpectatorMode(false)
+        const result = await runAction(() => postTricks(tricksApi.join), {joining: true})
         if (result) setHowToOpen(true)
     }
     const draw = useCallback((beforeMutate) => runAction(
         () => postTricks(tricksApi.draw),
         {beforeMutate}
-    ), [runAction])
+    ), [runAction, tricksApi])
     const returnToDeck = useCallback((card, beforeMutate) => {
         if (!card?.id) return false
-        if (!window.confirm(`「${card.title || "このカード"}」を1P消費して山札に戻しますか？`)) {
+        if (!window.confirm(`「${card.title || "このカード"}」を1P消費してデッキに戻しますか？`)) {
             return false
         }
 
@@ -186,18 +232,18 @@ function TricksGamePage({stagingMode = false}) {
             () => postTricks(tricksApi.returnToDeck(card.id)),
             {beforeMutate}
         )
-    }, [runAction])
-    const take = useCallback((card) => {
+    }, [runAction, tricksApi])
+    const take = useCallback((card, beforeMutate) => {
         if (!card?.id) return
         const bonus = Number(card.rarity) >= 2
-            ? `\nスタックボーナス：+${tricksStackBonus(card.rarity, operation.handCount)}P`
+            ? `\nトリックボーナス：+${tricksStackBonus(card.rarity, operation.handCount)}P`
             : ""
         if (!window.confirm(`「${card.title || "このカード"}」を場に出します。手札${operation.handCount}枚を使用しますか？${bonus}`)) {
             return false
         }
 
-        return runAction(() => postTricks(tricksApi.take(card.id)))
-    }, [operation.handCount, runAction])
+        return runAction(() => postTricks(tricksApi.take(card.id)), {beforeMutate})
+    }, [operation.handCount, runAction, tricksApi])
     const extendCard = useCallback(async (card) => {
         if (!card?.id) return false
         if (!window.confirm("１点支払ってこのカードの期限を延長しますか？")) return false
@@ -215,7 +261,7 @@ function TricksGamePage({stagingMode = false}) {
         }
 
         return result
-    }, [mutateRankings, runAction])
+    }, [mutateRankings, runAction, tricksApi])
     const runDebugOperation = useCallback((type, payload = {}) => {
         const urls = {
             freeze: tricksApi.debugTimeFreeze,
@@ -225,10 +271,10 @@ function TricksGamePage({stagingMode = false}) {
         }
 
         return runAction(() => postTricks(urls[type], payload), {collected: true})
-    }, [runAction])
+    }, [runAction, tricksApi])
     const debugCollect = useCallback((card) => {
         return runAction(() => postTricks(tricksApi.debugCollect(card.id)), {collected: true})
-    }, [runAction])
+    }, [runAction, tricksApi])
     const expiredFieldKey = useMemo(() => {
         return (state?.field || [])
             .filter((card) => card?.limit_at && new Date(card.limit_at).getTime() <= nowValue)
@@ -236,7 +282,7 @@ function TricksGamePage({stagingMode = false}) {
             .join(",")
     }, [nowValue, state?.field])
     const subsidySlotKey = Math.floor(nowValue / (30 * 60 * 1000))
-    const accessGateOpen = Boolean(state) && !me && status !== "loading"
+    const accessGateOpen = !spectatorMode && Boolean(state) && !me && status !== "loading"
     const handlePosted = async () => {
         setPostOpen(false)
         setPostingCard(null)
@@ -268,6 +314,15 @@ function TricksGamePage({stagingMode = false}) {
         }
     }, [])
 
+    const changeSpectatorMode = useCallback((enabled) => {
+        setSpectatorMode(enabled)
+        setSpectatorExitConfirm(false)
+        closePostModal()
+        setSelectedHolder(null)
+        setHowToOpen(false)
+        setDebugOpen(false)
+    }, [closePostModal])
+
     useEffect(() => {
         if (!selectedCard || !state?.field) return
         const fresh = state.field.find((card) => card.id === selectedCard.id)
@@ -277,7 +332,7 @@ function TricksGamePage({stagingMode = false}) {
     }, [nowValue, selectedCard, state?.field])
 
     useEffect(() => {
-        if (!me || !expiredFieldKey || collectingExpiredRef.current) return undefined
+        if (spectatorMode || !me || !expiredFieldKey || collectingExpiredRef.current) return undefined
         let cancelled = false
         collectingExpiredRef.current = true
         postTricks(tricksApi.collectExpired)
@@ -294,10 +349,10 @@ function TricksGamePage({stagingMode = false}) {
         return () => {
             cancelled = true
         }
-    }, [expiredFieldKey, me, mutate])
+    }, [expiredFieldKey, me, mutate, spectatorMode, tricksApi.collectExpired])
 
     useEffect(() => {
-        if (!clockInitializedRef.current || !me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey
+        if (spectatorMode || !clockInitializedRef.current || !me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey
             || Date.now() < subsidyRetryAtRef.current) return undefined
         let cancelled = false
         processedSubsidySlotRef.current = subsidySlotKey
@@ -316,7 +371,7 @@ function TricksGamePage({stagingMode = false}) {
                 }
                 subsidyRetryAtRef.current = Date.now() + 30000
                 if (!cancelled) {
-                    subsidyErrorMessageRef.current = tricksErrorMessage(subsidyError, "ポイント給付の確認に失敗しました")
+                    subsidyErrorMessageRef.current = tricksErrorMessage(subsidyError, "ドローポイント給付の確認に失敗しました")
                     setMessage(subsidyErrorMessageRef.current)
                 }
             })
@@ -324,7 +379,7 @@ function TricksGamePage({stagingMode = false}) {
         return () => {
             cancelled = true
         }
-    }, [me, mutate, nowValue, operation.available, subsidySlotKey])
+    }, [me, mutate, nowValue, operation.available, spectatorMode, subsidySlotKey, tricksApi.subsidy])
 
     useEffect(() => {
         const serverNow = state?.server_now || state?.tournament?.server_now
@@ -381,7 +436,7 @@ function TricksGamePage({stagingMode = false}) {
     return (
         <>
             <Head>
-                <title>{stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"} - ピクチャレ大会</title>
+                <title>{tournamentTitle} - ピクチャレ大会</title>
             </Head>
             <div
                 data-tricks-root
@@ -394,29 +449,46 @@ function TricksGamePage({stagingMode = false}) {
                     marginRight: "calc(50% - 50vw)",
                     background: '#0c1016 url("/img/limited_19_bg.jpg") center / min(100%, 2000px) auto repeat',
                     color: "var(--color-text-base)",
-                    overflow: "hidden",
+                    overflow: "clip",
                 }}
             >
                 <TricksGame
+                    spectatorMode={spectatorMode}
+                    headerBottom={headerBottom}
+                    onExitSpectator={() => changeSpectatorMode(false)}
+                    onRequestSpectatorExit={requestSpectatorExit}
                     state={state}
                     selectedFieldId={selectedCard?.id}
                     usersById={usersById}
                     onDraw={draw}
                     onTake={take}
                     onReturnToDeck={returnToDeck}
-                    onSelectField={setSelectedField}
+                    onSelectField={(selection) => {
+                        if (!spectatorPresentation) setSelectedField(selection)
+                    }}
                     onFieldSortingChange={setFieldSorting}
                     onShowHowToPlay={() => setHowToOpen(true)}
                     operation={operation}
                     busy={busy}
                     nowValue={nowValue}
                 />
-                <TricksHud onSelectHolder={(card) => {
+                <TricksHud onHeaderHeightChange={setHeaderBottom} onToggleAdminStats={isAdmin ? () => setAdminStatsOpen((open) => !open) : undefined} adminStatsOpen={adminStatsOpen} onShowKnowledge={() => setKnowledgeOpen(true)} spectatorMode={spectatorMode} highlightedPlayer={spectatorPresentation?.blinking ? spectatorPresentation.item.log.actor_name : ""} onToggleSpectator={() => changeSpectatorMode(!spectatorMode)}
+                    accessAction={spectatorMode && !me && status !== "loading" && (
+                        authenticated
+                            ? <Button variant="contained" size="large" data-tricks-info-join onClick={join} disabled={busy || !canJoin} style={{padding: "14px 28px", fontSize: 18, minWidth: 200, color: "#fff"}}>参加する</Button>
+                            : <Button component={Link} variant="contained" size="large" data-tricks-info-login href="/auth/login" style={{padding: "14px 28px", fontSize: 18, minWidth: 200, color: "#fff"}}>ログインして参加</Button>
+                    )} onSelectHolder={(card) => {
+                    if (spectatorPresentation) return
                     setSelectedField(null)
                     setSelectedHolder(card)
                 }} state={state} stagingMode={stagingMode} historicalHolderCounts={holderCatalog?.historical_counts || {}} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
-                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} adminStats={collectedAdminStats} isAdmin={isAdmin} />}
-                {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy} onOperation={runDebugOperation} />}
+                {spectatorMode && spectatorPresentation && <TricksSpectatorPanel
+                    key={spectatorPresentation.item.card.event_card_id}
+                    presentation={spectatorPresentation} tricksApi={tricksApi} usersById={usersById}
+                />}
+                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} />}
+                {isAdmin && adminStatsOpen && <TricksAdminStats stats={collectedAdminStats} usersById={usersById} onClose={closeAdminStats} />}
+                {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy || spectatorMode} onOperation={runDebugOperation} />}
                 <div
                     style={{
                         position: "absolute",
@@ -434,7 +506,7 @@ function TricksGamePage({stagingMode = false}) {
                         </div>
                     )}
                 </div>
-                {selectedCard && !postOpen && (
+                {selectedCard && !postOpen && !spectatorPresentation && (
                     <div
                         role="presentation"
                         onMouseDown={(e) => {
@@ -455,19 +527,22 @@ function TricksGamePage({stagingMode = false}) {
                         }}
                     />
                 )}
-                {selectedCard && !postOpen && (
+                {selectedCard && !postOpen && !spectatorPresentation && (
                     <TricksFieldDetailPanel
                         className={`tricks-field-detail-panel-${fieldSide}`}
+                        scoreType={selectedCard?.score_type}
                         rankings={rankings}
+                        taker={selectedCard.taker}
+                        takerRemainder={selectedCard.provisional_taker_remainder}
                         usersById={usersById}
                         summary={
                             <>
-                                スタック {Number(selectedCard.stack_count || 0) + tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}
-                                {tricksStackBonus(selectedCard.rarity, selectedCard.stack_count) > 0 && `（レア度ボーナス ${tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}を含む）`}
+                                トリック {Number(selectedCard.stack_count || 0) + tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}
+                                {tricksStackBonus(selectedCard.rarity, selectedCard.stack_count) > 0 && `（レア度ボーナス ${tricksStackBonus(selectedCard.rarity, selectedCard.stack_count)}）`}
                                 {" / "}支払い総額 {selectedCard.paid_points_total ?? 0}P
                                 {" / "}参加者 {selectedCard.participant_count ?? 0}人
                                 {" / "}あなたの投稿コスト {selectedCard.my_initial_post_cost ?? 0}P
-                                {selectedCard.my_initial_payment_recorded ? "（支払記録済み）" : ""}
+
                             </>
                         }
                         onClose={closeFieldDetail}
@@ -484,8 +559,8 @@ function TricksGamePage({stagingMode = false}) {
                         <Button
                             data-tricks-post-button
                             variant="contained"
-                            onClick={openPostModal}
-                            disabled={busy || !selectedCard?.stage_id || !operation.available || !me}
+                            onClick={spectatorMode ? requestSpectatorExit : openPostModal}
+                            disabled={busy || (!spectatorMode && (!selectedCard?.stage_id || !operation.available || !me))}
                         >
                             投稿
                         </Button>
@@ -493,29 +568,64 @@ function TricksGamePage({stagingMode = false}) {
                             data-tricks-extend-button
                             variant="outlined"
                             onClick={() => extendCard(selectedCard)}
-                            disabled={busy || !me || Number(me.draw_points) < 1 || !selectedCard.my_can_extend}
+                            disabled={spectatorMode || busy || !me || Number(me.draw_points) < 1 || !selectedCard.my_can_extend}
                         >
                             延長
                         </Button>
+                        {isAdmin && (
+                            <>
+                                <Button onClick={() => openRuling("rule")} disabled={spectatorMode || busy || !operation.available}>ルール変更</Button>
+                                <Button color="warning" onClick={() => openRuling("reset")} disabled={spectatorMode || busy || !operation.available}>リセット</Button>
+                            </>
+                        )}
                         {isDebugAdmin && (
                             <Button
                                 color="warning"
                                 onClick={() => debugCollect(selectedCard)}
-                                disabled={busy}
+                                disabled={spectatorMode || busy}
                             >
                                 即時回収
                             </Button>
                         )}
                     </TricksFieldDetailPanel>
                 )}
+                {isAdmin && ruling && (
+                    <Dialog open onClose={() => !busy && setRuling(null)} maxWidth="sm" fullWidth style={{zIndex: 1600}} PaperProps={{style: {backgroundColor: "#fff", color: "#111"}}}>
+                        <form onSubmit={submitRuling}>
+                            <DialogTitle>{ruling.type === "reset" ? "ランキングをリセットしますか？" : "ルール変更"}</DialogTitle>
+                            <DialogContent style={{display: "flex", flexDirection: "column", gap: 16, paddingTop: 12}}>
+                                <div>{ruling.card.title}</div>
+                                {ruling.type === "reset" ? (
+                                    <div>有効投稿をすべて削除します。支払い履歴と総還元ポイントは保持され、次の投稿も有料です。現在の参加者に5Pを配布し、次の給付・徴収タイミングの徴収を免除します。</div>
+                                ) : [
+                                    ["title", "ステージ名"], ["rule_name", "ルール名"], ["text", "ルール本文"], ["difficulty", "難易度（1〜5）"],
+                                ].map(([key, label]) => (
+                                    <TextField key={key} label={label} required value={ruling.values[key]} disabled={busy}
+                                        multiline={key === "text"} minRows={key === "text" ? 5 : undefined}
+                                        type={key === "difficulty" ? "number" : "text"}
+                                        inputProps={key === "difficulty" ? {min: 1, max: 5} : {maxLength: key === "text" ? 10000 : 255}}
+                                        onChange={(event) => setRuling({...ruling, values: {...ruling.values, [key]: event.target.value}})} />
+                                ))}
+                                {rulingError && <div role="alert">{rulingError}</div>}
+                            </DialogContent>
+                            <DialogActions>
+                                <Button disabled={busy} onClick={() => setRuling(null)}>キャンセル</Button>
+                                <Button type="submit" variant="contained" disabled={busy}>{ruling.type === "reset" ? "リセットする" : "変更を保存"}</Button>
+                            </DialogActions>
+                        </form>
+                    </Dialog>
+                )}
                 {postingCard && postOpen && (
                     <RecordForm
                         info={{
                             stage_id: postingCard.stage_id,
+                            tricks_event_id: state?.tournament?.event_id,
+                            category_name: state?.tournament?.title,
+                            score_type: postingCard.score_type || "points",
                             stage_name: postingCard.stage_name || postingCard.title,
                             eng_stage_name: postingCard.eng_stage_name || postingCard.title,
                         }}
-                        rule={1}
+                        rule={state?.tournament?.event_id}
                         mode="create"
                         open={postOpen}
                         setOpen={setPostModalOpen}
@@ -531,7 +641,7 @@ function TricksGamePage({stagingMode = false}) {
                             style={{
                                 position: "absolute",
                                 inset: 0,
-                                zIndex: 100,
+                                zIndex: 35,
                                 background: "rgba(3, 6, 12, 0.62)",
                                 pointerEvents: "auto",
                             }}
@@ -541,7 +651,7 @@ function TricksGamePage({stagingMode = false}) {
                             style={{
                                 position: "absolute",
                                 inset: 0,
-                                zIndex: 110,
+                                zIndex: 36,
                                 display: "grid",
                                 placeItems: "center",
                                 padding: 24,
@@ -549,25 +659,14 @@ function TricksGamePage({stagingMode = false}) {
                             }}
                         >
                             <div style={{background: "var(--color-bg-base)", color: "var(--color-text-base)", padding: 24, borderRadius: 10, fontSize: "clamp(18px, 2.2vw, 30px)", fontWeight: 800, textAlign: "center"}}>
-                                {authenticated ? (
-                                    <>
-                                        {stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング"}に
-                                        <button
-                                            type="button"
-                                            onClick={join}
-                                            disabled={busy || !canJoin}
-                                            style={{...accessActionStyle, color: "#8ef0b2"}}
-                                        >
-                                            参加する
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        このイベントに参加するには
-                                        <Link href="/auth/login" style={{...accessActionStyle, color: "#8db4ff"}}>ログイン</Link>
-                                        が必要です
-                                    </>
-                                )}
+                                <div>{authenticated ? `${tournamentTitle}に参加` : "このイベントへの参加にはログインが必要です"}</div>
+                                <div style={{display: "flex", flexWrap: "wrap", justifyContent: "center", gap: 16, marginTop: 12}}>
+                                    {authenticated
+                                        ? <button type="button" onClick={join} disabled={busy || !canJoin} style={{...accessActionStyle, color: "#8ef0b2"}}>参加する</button>
+                                        : <Link href="/auth/login" style={{...accessActionStyle, color: "#8db4ff"}}>ログインする</Link>}
+                                    <button type="button" data-tricks-start-spectating onClick={() => changeSpectatorMode(true)}
+                                        style={{...accessActionStyle, color: "#8ef0b2"}}>観戦する</button>
+                                </div>
                                 {message && authenticated && (
                                     <div role="alert" data-tricks-join-error style={{marginTop: 14, fontSize: 15, color: "#ff9c9c"}}>
                                         {message}
@@ -580,6 +679,7 @@ function TricksGamePage({stagingMode = false}) {
                 {selectedHolder && (
                     <div data-tricks-holder-popup onClick={() => setSelectedHolder(null)} style={{position: "fixed", inset: 0, zIndex: 400, display: "grid", placeItems: "center", background: "transparent"}}>
                         <TricksFieldDetailPanel
+                            scoreType={selectedHolder.score_type}
                             rankings={holderRankings}
                             usersById={usersById}
                             summary={`#${selectedHolder.stage_id} ${selectedHolder.title || ""}（${selectedHolder.rule_name || ""}）`}
@@ -588,23 +688,36 @@ function TricksGamePage({stagingMode = false}) {
                         />
                     </div>
                 )}
-                <Dialog open={howToOpen} onClose={() => setHowToOpen(false)} PaperProps={{style: {background: "var(--color-bg-base)", backgroundImage: "none"}}}>
-                    <Box style={{width: "min(720px, 90vw)"}}>
-                        <DialogContent style={{fontSize: 15, lineHeight: 1.75}}>
-                            <p>期間限定ランキングは、みんなが考えたルールをあなたが選んでみんなで遊ぶイベントです。</p>
-                            <ol style={{paddingLeft: 24}}>
-                                <li>まずはドローボタンを押してカードを３枚引きましょう。</li>
-                                <li>引いたカードから面白そうなルールを選び、場に出しましょう。</li>
-                                <li>カウントダウンが終わるまで、みんなでそのカードのルールをひたすらプレイ！（ポイントを使えば延長もできるよ）</li>
-                                <li>終了したら、ランキングの順位に応じてドローポイントやランクポイントが還元されます。１位を獲ったらそのカードはあなたのもの！</li>
-                                <li>他のみんなが出したカードも積極的にプレイしてポイントを稼ぎ、新たなカードを引いていこう！</li>
-                                <li>最終的にランクポイントがもっとも多かった人が勝利となります。</li>
-                            </ol>
-                            <div style={{display: "flex", justifyContent: "flex-end", marginTop: 18}}>
-                                <Button variant="contained" onClick={() => setHowToOpen(false)}>閉じる</Button>
-                            </div>
-                        </DialogContent>
-                    </Box>
+                <Dialog
+                    open={howToOpen}
+                    onClose={() => setHowToOpen(false)}
+                    maxWidth={false}
+                    PaperProps={{"aria-label": "遊び方", style: {width: "min(1200px, calc(100vw - 32px))", maxWidth: "calc(100vw - 32px)", height: "calc(100dvh - 32px)", maxHeight: "calc(100dvh - 32px)", margin: 16, background: "var(--color-bg-base)", backgroundImage: "none"}}}
+                >
+                    <DialogContent style={{display: "flex", flexDirection: "column", padding: 16, overflow: "hidden"}}>
+                        <iframe
+                            src="/limited/tricks/limited_19_manual.pdf#view=FitH"
+                            title="第19回期間限定ランキング 遊び方"
+                            style={{display: "block", width: "100%", flex: 1, minHeight: 0, border: 0, background: "#fff"}}
+                        />
+                        <div style={{display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 16, marginTop: 12, flexShrink: 0}}>
+                            <a href="/limited/tricks/limited_19_manual.pdf" target="_blank" rel="noopener noreferrer" style={{color: "var(--color-text-base)", fontSize: 14}}>PDFを別タブで開く</a>
+                            <Button variant="contained" onClick={() => setHowToOpen(false)}>閉じる</Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
+                <Dialog open={spectatorExitConfirm} onClose={() => setSpectatorExitConfirm(false)} maxWidth="xs" fullWidth>
+                    <DialogTitle>観戦モードを終了しますか？</DialogTitle>
+                    <DialogActions>
+                        <Button onClick={() => setSpectatorExitConfirm(false)}>キャンセル</Button>
+                        <Button variant="contained" onClick={() => changeSpectatorMode(false)}>終了する</Button>
+                    </DialogActions>
+                </Dialog>
+                <Dialog open={knowledgeOpen} onClose={() => setKnowledgeOpen(false)} maxWidth="md" fullWidth
+                    PaperProps={{style: {background: "var(--color-bg-base)", color: "var(--color-text-base)", backgroundImage: "none"}}}>
+                    <DialogTitle>ユーザーマニュアル</DialogTitle>
+                    <DialogContent><TricksManualContent content={manualContent} /></DialogContent>
+                    <DialogActions><Button onClick={() => setKnowledgeOpen(false)}>閉じる</Button></DialogActions>
                 </Dialog>
                 <style jsx global>{`
                     [data-tricks-root] { color: var(--color-text-base); color-scheme: light; }
@@ -653,20 +766,34 @@ function TricksGamePage({stagingMode = false}) {
     )
 }
 
-export async function getServerSideProps({req, res}) {
+export async function getServerSideProps({req, res, resolvedUrl}) {
     const {hasStagingAccess, stagingAccessEnabled, stagingAccessReady, STAGING_CLOSE_AT} = await import("../../../lib/tricks/stagingAccess")
-    if (!stagingAccessEnabled()) return {props: {stagingGate: null}}
+    const params = new URL(resolvedUrl, "http://localhost").searchParams
+    const bareIds = [...params.entries()].filter(([key, value]) => /^\d+$/.test(key) && value === "")
+    const requested = params.get("event_id") || bareIds[0]?.[0]
+    if (bareIds.length > 1 || (requested && (!/^\d+$/.test(requested) || Number(requested) < 1 || Number(requested) > 2147483647))) return {notFound: true}
+    let eventId = requested ? Number(requested) : null
+    try {
+        const base = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
+        const response = await fetch(`${base}/tricks/tournament${eventId ? `?event_id=${eventId}` : ""}`, {signal: AbortSignal.timeout(5000)})
+        if (response.status === 404) return {notFound: true}
+        if (response.ok) eventId = (await response.json()).event_id
+    } catch {
+        // 接続障害の詳細はクライアント側のstate APIエラーで表示する
+    }
     res.setHeader("Cache-Control", "no-store")
-    if (Date.now() >= STAGING_CLOSE_AT) return {notFound: true}
-
-    return {props: {stagingGate: {
-        allowed: hasStagingAccess(req),
+    const {readFile} = await import("fs/promises")
+    const manualContent = await readFile(`${process.cwd()}/pages/keyword/tricks-manual.md`, "utf8")
+    const props = {eventId, manualContent, stagingGate: null}
+    if (!stagingAccessEnabled(eventId) || Date.now() >= STAGING_CLOSE_AT) return {props}
+    return {props: {...props, stagingGate: {
+        allowed: hasStagingAccess(req, Date.now(), eventId),
         ready: stagingAccessReady(),
         closeAt: STAGING_CLOSE_AT,
     }}}
 }
 
-export default function TricksPage({stagingGate}) {
+export default function TricksPage({eventId, manualContent, stagingGate}) {
     const [password, setPassword] = useState("")
     const [gateMessage, setGateMessage] = useState("")
     const [gateBusy, setGateBusy] = useState(false)
@@ -697,8 +824,8 @@ export default function TricksPage({stagingGate}) {
         }
     }
 
-    if (!stagingGate) return <TricksGamePage />
-    if (stagingGate.allowed) return <TricksGamePage stagingMode />
+    if (!stagingGate) return <TricksGamePage key={eventId} eventId={eventId} manualContent={manualContent} />
+    if (stagingGate.allowed) return <TricksGamePage key={eventId} eventId={eventId} manualContent={manualContent} stagingMode />
 
     return <>
         <Head><title>テスト大会</title></Head>

@@ -25,6 +25,7 @@ import ModalIdeaPost from "../components/modal/ModalIdeaPost";
 import DashBoard from "../components/top/DashBoard";
 import SeoHead from "../components/SeoHead"
 import {toAbsoluteUrl} from "../lib/seo"
+import TricksActiveEvent from "../components/tricks/TricksActiveEvent"
 import NextEvent from "../components/top/NextEvent"
 import PickupVideo from "../components/top/PickupVideo"
 import RecentKeywordArticle from "../components/top/RecentKeywordArticle"
@@ -117,7 +118,7 @@ export default function Home({users, prev, disablePickupVideoAutoplay}) {
             </Grid>
     // 年初来の最多投稿ステージ
     const PrevTrend = (prev?.stage?.cnt)
-        ? <>{t.g.trendYear}: {t.stage[prev.stage["stage_id"]]} ({prev.stage["cnt"]} {t.g.countTail}）</>
+        ? <>{t.g.trendYear}: {(Number(prev.stage.stage_id) >= 1000 && prev.stage.stage_name) || t.stage[prev.stage["stage_id"]] || prev.stage.stage_name || `#${prev.stage.stage_id}`} ({prev.stage["cnt"]} {t.g.countTail}）</>
         : <></>
 
     // 年初来の参加者数
@@ -179,10 +180,12 @@ export default function Home({users, prev, disablePickupVideoAutoplay}) {
           }
               <WrapTopBox item xs={12} sm={6} className="wrap-top-box top-split-column">
                   <Grid container spacing={1} className="top-split-column-grid">
-                      <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
-                          <NextEvent/>
-                      </WrapTopBox>
-                      <LimitedIdeas/>
+                      <TricksActiveEvent>
+                          <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
+                              <NextEvent/>
+                          </WrapTopBox>
+                          <LimitedIdeas/>
+                      </TricksActiveEvent>
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
                           <RecentKeywordArticle users={users}/>
                       </WrapTopBox>
