@@ -25,7 +25,11 @@ class TrickReplenish261009Seeder extends Seeder
                 if ($csv[$index]['card_key'] !== '261009-'.str_pad((string) ($index + 1), 3, '0', STR_PAD_LEFT)) {
                     throw new RuntimeException('CSVの元カード番号順が不正です');
                 }
-                foreach (self::CONTENT_COLUMNS as $column) {
+                // 開催中に管理者が修正した本文と難易度は現行値を複製する。
+                if ((int) $source->difficulty < 1 || (int) $source->difficulty > 5 || trim((string) $source->text) === '') {
+                    throw new RuntimeException('元カードの本文・難易度が不正です');
+                }
+                foreach (array_diff(self::CONTENT_COLUMNS, ['text', 'difficulty']) as $column) {
                     if ((string) $source->{$column} !== (string) $csv[$index][$column]) {
                         throw new RuntimeException('元カードとCSV内容が一致しません');
                     }

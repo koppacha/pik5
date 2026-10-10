@@ -117,7 +117,7 @@ class TrickReplenish261009SeederTest extends TestCase
     public function test_bad_original_content_aborts_without_inserting_cards(): void
     {
         $this->fixture();
-        Deck::where('eventId', 261009)->orderBy('id')->first()->update(['text' => 'Changed rule']);
+        Deck::where('eventId', 261009)->orderBy('id')->first()->update(['title' => 'Changed identity']);
         try { $this->seed(TrickReplenish261009Seeder::class); self::fail('must abort'); }
         catch (\RuntimeException $e) { self::assertStringContainsString('CSV', $e->getMessage()); }
         self::assertSame(160, Deck::where('eventId', 261009)->count());
@@ -166,6 +166,20 @@ class TrickReplenish261009SeederTest extends TestCase
         try { $this->seed(TrickReplenish261009Seeder::class); self::fail('must abort'); }
         catch (\RuntimeException $e) { self::assertStringContainsString('登録が不足', $e->getMessage()); }
         self::assertSame($before, Deck::orderBy('id')->get()->toArray());
+    }
+
+    public function test_live_rule_and_difficulty_corrections_are_copied_without_reverting_originals(): void
+    {
+        $this->fixture();
+        $source = Deck::where('eventId', 261009)->orderBy('id')->firstOrFail();
+        $source->update(['text' => 'Live corrected synthetic rule', 'difficulty' => 4]);
+        $before = $source->fresh()->toArray();
+        $this->seed(TrickReplenish261009Seeder::class);
+        $copy = Deck::where('clone_source_deck_id', $source->id)->firstOrFail();
+        self::assertSame('Live corrected synthetic rule', $copy->text);
+        self::assertSame(4, (int) $copy->difficulty);
+        self::assertSame(4, (int) TrickEventCard::where('deck_id', $copy->id)->value('difficulty'));
+        self::assertSame($before, $source->fresh()->toArray());
     }
 
 }
