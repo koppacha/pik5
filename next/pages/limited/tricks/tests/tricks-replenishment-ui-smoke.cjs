@@ -3,7 +3,7 @@ async (page) => {
     const assert = (value, message) => { if (!value) throw new Error(message) }
     const origins = [300, 301, 315, 316, 330, 331]
     const player = {name: 'category_dummy', draw_points: 20, total_rank_points: 0, card_count: origins.length, hand_limit: 12}
-    const cards = origins.map((origin, i) => ({id: 990800 + i, event_card_id: 990800 + i, card_key: `261009-${161 + i}`, stage_id: 1800 + i, origin_stage_id: origin, card_id: 990800 + i, card_key: `261009-${161 + i}`, title: `カテゴリ検証${origin}`, rule_name: '合成ルール', text: '合成データのみ', rarity: 1, difficulty: 1, stack_count: 1, creator: '架空作者', taker: player.name, limit_at: '2099-01-01T00:00:00+09:00'}))
+    const cards = origins.map((origin, i) => ({id: 990800 + i, event_card_id: 990800 + i, card_key: String(161 + i), card_reference_key: `261009-${161 + i}`, stage_id: 1800 + i, origin_stage_id: origin, card_id: 990800 + i, card_key: String(161 + i), card_reference_key: `261009-${161 + i}`, title: `カテゴリ検証${origin}`, rule_name: '合成ルール', text: '合成データのみ', rarity: 1, difficulty: 1, stack_count: 1, creator: '架空作者', taker: player.name, limit_at: '2099-01-01T00:00:00+09:00'}))
     const state = {tournament: {event_id: 990498, title: 'カテゴリ表示検証', state: 'active', available: true, debug: true, end_at: '2099-01-01T00:00:00+09:00'}, debug_state: {frozen: true}, server_now: '2026-10-10T03:00:00+09:00', me: player, players: [player], field: cards, hand: cards.map(c => ({...c, id: c.id + 100})), deck_count: 20, logs: []}
     await page.route('**/api/**', async route => {
         const path = new URL(route.request().url()).pathname
@@ -44,7 +44,7 @@ async (page) => {
     await checkCards()
     for (let i = 0; i < cards.length; i += 1) {
         const hand = page.locator(`.tricks-dom-card-hand[data-tricks-card-id="${cards[i].id + 100}"]`)
-        assert((await hand.innerText()).includes(`#261009-${161 + i}`), '公開カードIDを表示')
+        assert((await hand.innerText()).includes(`#${161 + i}`), '公開カードIDを表示')
     }
     await page.screenshot({path: 'output/playwright/tricks-replenished-card-ids.png'})
     await page.getByRole('button', {name: 'テーマ変更', exact: true}).click()
