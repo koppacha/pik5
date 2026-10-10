@@ -524,14 +524,20 @@ export function TricksDomCard({
 // クリエイト元ステージのシリーズを、カード番号と並べて表示する。
 function TricksCardIdentity({card, isField = false}) {
     const {t: locale} = useLocale()
-    const series = Math.floor(Number(card.origin_stage_id) / 100)
+    const originStageId = Number(card.origin_stage_id)
+    const series = Math.floor(originStageId / 100)
     const label = series >= 1 && series <= 4 && locale.title[series]
     const id = isField ? (card.stage_id || card.card_id || card.id) : (card.card_id || card.id)
+    let categoryLabel = ""
+    if (originStageId >= 301 && originStageId <= 315) categoryLabel = "あつめろ"
+    if (originStageId >= 316 && originStageId <= 330) categoryLabel = "たおせ"
+    const badgeStyle = {borderRadius: 999, padding: "1px 5px", background: `var(--series-theme-${series})`, color: "#141923", fontSize: 10, lineHeight: 1.3}
 
     return (
         <span style={{display: "inline-flex", alignItems: "center", gap: 4, whiteSpace: "nowrap"}}>
             <span>#{id || "-"}</span>
-            {label && <span data-tricks-series={series} style={{borderRadius: 999, padding: "1px 5px", background: `var(--series-theme-${series})`, color: "#141923", fontSize: 10, lineHeight: 1.3}}>{label}</span>}
+            {label && <span data-tricks-series={series} style={badgeStyle}>{label}</span>}
+            {categoryLabel && <span data-tricks-stage-category style={badgeStyle}>{categoryLabel}</span>}
         </span>
     )
 }
