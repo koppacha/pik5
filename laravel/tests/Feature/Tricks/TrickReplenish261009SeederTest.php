@@ -65,7 +65,9 @@ class TrickReplenish261009SeederTest extends TestCase
             self::assertSame('_deck', $card->state);
             self::assertNull($card->rarity);
             self::assertSame(0, (int) $card->draw_count);
-            self::assertSame('261009-'.($index + 161), app(TrickStateService::class)->normalizeCard($card)['card_key']);
+            self::assertSame((string) ($index + 161), app(TrickStateService::class)->normalizeCard($card)['card_key']);
+            self::assertSame((string) ($index + 161), app(TrickStateService::class)->normalizeCard($card)['card_id']);
+            self::assertSame('261009-'.($index + 161), app(TrickStateService::class)->normalizeCard($card)['card_reference_key']);
         }
         self::assertSame(320, $event->cards()->count());
         self::assertSame(315, $event->cards()->where('state', '_deck')->count());
@@ -157,7 +159,8 @@ class TrickReplenish261009SeederTest extends TestCase
         $copy = Deck::where('card_key', '261009-161')->firstOrFail();
         TrickEventCard::where('event_id', 261009)->where('deck_id', '!=', $copy->id)->update(['state' => '_excluded']);
         $draw = app(TrickGameService::class)->draw($event, 'seed_bob');
-        self::assertSame('261009-161', $draw['card']['card_key']);
+        self::assertSame('161', $draw['card']['card_key']);
+        self::assertSame('161', $draw['card']['card_id']);
         self::assertSame(1, (int) TrickEventCard::where('deck_id', $copy->id)->value('draw_count'));
         self::assertGreaterThanOrEqual(1, (int) $draw['card']['rarity']);
         self::assertSame(49, Player::where('name', 'seed_bob')->value('draw_points'));
