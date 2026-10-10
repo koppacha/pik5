@@ -483,6 +483,8 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                         boxSizing: "border-box",
                         overflowX: spectatorMode ? "visible" : "auto",
                         overflowY: spectatorMode ? "visible" : "hidden",
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
                         overscrollBehaviorX: "contain",
                         WebkitOverflowScrolling: "touch",
                         padding: "8px 0 0",
@@ -591,6 +593,11 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                 </div>
             )}
             <style jsx global>{`
+                [data-tricks-header-scroll]::-webkit-scrollbar {
+                    display: none;
+                    width: 0;
+                    height: 0;
+                }
                 @keyframes tricksSpectatorBlink {
                     0%, 100% { opacity: 1; }
                     50% { opacity: .35; }

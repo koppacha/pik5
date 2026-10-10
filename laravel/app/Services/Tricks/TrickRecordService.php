@@ -239,7 +239,7 @@ class TrickRecordService
             ->groupBy('event_card_id')->map(fn (Collection $payments) => $payments->pluck('player_name')->flip());
 
         return $cards->mapWithKeys(fn (TrickEventCard $card) => [
-            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect()), $card->deck?->score_type === 'time' ? 'time' : 'points', $card->deck?->score_type === 'time' && ! ((int) $card->deck?->stage_id === 1356 || ((int) $card->deck?->origin_stage_id >= 419 && (int) $card->deck?->origin_stage_id <= 428))),
+            $card->id => $this->rankRows($rows->get($card->id, collect()), $paidPlayers->get($card->id, collect()), $card->deck?->score_type === 'time' ? 'time' : 'points', TrickScoreOrder::ascending($card->deck)),
         ])->all();
     }
 

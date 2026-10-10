@@ -76,7 +76,7 @@ class TrickProduction261009Seeder extends Seeder
         });
     }
 
-    private function readCards(): array
+    public function readCards(): array
     {
         $columns = ['card_key', 'origin_stage_id', 'title', 'rule_name', 'text', 'difficulty', 'creator', 'score_type'];
         $file = fopen(database_path('seeders/data/decks261009.csv'), 'r');

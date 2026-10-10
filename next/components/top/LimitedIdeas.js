@@ -66,7 +66,7 @@ export default function LimitedIdeas() {
         setPage(0)
     }, [identity])
 
-    const visible = Boolean(summary && !summaryError && (summary.admin || periodOpen))
+    const visible = Boolean(summary && !summaryError && periodOpen)
     const draft = drafts[draftKey] || blank()
     const change = (field, value) => setDrafts(current => ({...current, [draftKey]: {...draft, [field]: value}}))
     const closeForm = () => { if (!busy) setFormOpen(false) }

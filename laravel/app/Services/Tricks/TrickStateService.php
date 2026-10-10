@@ -218,6 +218,7 @@ class TrickStateService
             'id' => $card->deck_id,
             'event_card_id' => $card->id,
             'card_id' => (int) ($deck?->card_id ?: $card->deck_id),
+            'card_key' => $deck?->card_key,
             'event_id' => $card->event_id,
             'stage_id' => $deck?->stage_id,
             'origin_stage_id' => $deck?->origin_stage_id,
