@@ -28,7 +28,7 @@ class Func extends Facade
             Stage::query()->where('stage_id', (int) $id)->value('display') === 'time') {
             $originStageId = (int) Deck::query()->where('stage_id', (int) $id)->value('origin_stage_id');
 
-            return ['score', $originStageId >= 419 && $originStageId <= 428 ? 'DESC' : 'ASC'];
+            return ['score', ((int) $id === 1356 || ($originStageId >= 419 && $originStageId <= 428)) ? 'DESC' : 'ASC'];
         }
 
         // カウントアップRTAのステージリスト

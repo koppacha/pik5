@@ -77,9 +77,13 @@ class TrickTimeScoreTest extends TestCase
     }
 
     /** @dataProvider remainingTimeOrigins */
-    public function test_remaining_time_uses_largest_personal_best_and_shared_ranks(int $originStageId): void
+    public function test_remaining_time_uses_largest_personal_best_and_shared_ranks(int $originStageId, ?int $stageId = null): void
     {
         [$event, $card] = $this->fixture('time', $originStageId);
+        if ($stageId !== null) {
+            $card->deck->update(['stage_id' => $stageId]);
+            app(TrickStageAllocator::class)->ensure($event, $card->deck);
+        }
         self::assertSame(['score', 'DESC'], Func::orderByRule($card->deck->stage_id, 1));
         foreach ([['fast', 83], ['slow', 120], ['fast', 95], ['tie', 120]] as [$name, $seconds]) {
             $this->postSeconds($card, $name, $seconds)->assertOk();
@@ -96,12 +100,12 @@ class TrickTimeScoreTest extends TestCase
 
     public static function remainingTimeOrigins(): array
     {
-        return array_map(fn ($id) => [$id], range(419, 428));
+        return [...array_map(fn ($id) => [$id], range(419, 428)), [401, 1356]];
     }
 
     public static function elapsedTimeOrigins(): array
     {
-        return [[399], [418], [429]];
+        return [[399], [401], [418], [429]];
     }
 
     private function fixture(string $type, int $originStageId = 399): array
