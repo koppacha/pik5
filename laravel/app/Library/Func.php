@@ -26,9 +26,9 @@ class Func extends Facade
         // イベントはカードから割り当てたステージの明示的な種別で判定する。
         if ((int) $id >= 1001 && (int) $id <= 1999 &&
             Stage::query()->where('stage_id', (int) $id)->value('display') === 'time') {
-            $originStageId = (int) Deck::query()->where('stage_id', (int) $id)->value('origin_stage_id');
+            $deck = Deck::query()->where('stage_id', (int) $id)->first();
 
-            return ['score', ((int) $id === 1356 || ($originStageId >= 419 && $originStageId <= 428)) ? 'DESC' : 'ASC'];
+            return ['score', ($deck === null || \App\Services\Tricks\TrickScoreOrder::ascending($deck)) ? 'ASC' : 'DESC'];
         }
 
         // カウントアップRTAのステージリスト

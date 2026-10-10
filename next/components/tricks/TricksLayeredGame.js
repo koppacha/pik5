@@ -527,7 +527,7 @@ function TricksCardIdentity({card, isField = false}) {
     const originStageId = Number(card.origin_stage_id)
     const series = Math.floor(originStageId / 100)
     const label = series >= 1 && series <= 4 && locale.title[series]
-    const id = isField ? (card.stage_id || card.card_id || card.id) : (card.card_id || card.id)
+    const id = isField ? (card.stage_id || card.card_id || card.id) : (card.card_key || card.card_id || card.id)
     let categoryLabel = ""
     if (originStageId >= 301 && originStageId <= 315) categoryLabel = "あつめろ"
     if (originStageId >= 316 && originStageId <= 330) categoryLabel = "たおせ"
