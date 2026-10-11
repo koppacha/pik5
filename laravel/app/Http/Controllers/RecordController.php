@@ -93,6 +93,8 @@ class RecordController extends Controller
             $data['score_type'] = $stage?->display === 'time' ? 'time' : 'points';
         }
 
+        $data = $this->withEventCardNames([$data])[0];
+
         return response()->json(
             $data
         );
@@ -156,7 +158,7 @@ class RecordController extends Controller
         }
 
         return response()->json(
-            $new_data
+            $this->withEventCardNames($new_data)
         );
     }
 
@@ -586,26 +588,38 @@ class RecordController extends Controller
 
         // ユーザーページの場合は最後にステージID順にソートする
         if ($where === 'user_id') {
-            // 第19回の動的ステージ名は旧翻訳名ではなく、投稿先カードの名称を使う。
-            $cardNames = DB::table('trick_event_records as links')
-                ->join('decks', 'decks.id', '=', 'links.deck_id')
-                ->where('links.event_id', 261009)
-                ->whereIn('links.record_id', array_column($dataset, 'post_id'))
-                ->get(['links.record_id', 'decks.title', 'decks.rule_name'])
-                ->keyBy('record_id');
-            foreach ($dataset as &$record) {
-                $cardName = $cardNames->get($record['post_id']);
-                if ($cardName !== null) {
-                    $record['stage_name'] = $cardName->title.'（'.$cardName->rule_name.'）';
-                }
-            }
-            unset($record);
+            $dataset = $this->withEventCardNames($dataset);
             array_multisort(array_column($dataset, 'stage_id'), SORT_ASC, $dataset);
         }
 
         return response()->json(
             $dataset
         );
+    }
+
+    // 第19回の投稿先カードを一括照合。旧翻訳名を個別・履歴・ユーザー一覧に出さない。
+    private function withEventCardNames(array $records): array
+    {
+        if ($records === []) {
+            return $records;
+        }
+        $cardNames = DB::table('trick_event_records as links')
+            ->join('decks', 'decks.id', '=', 'links.deck_id')
+            ->where('links.event_id', 261009)
+            ->whereIn('links.record_id', array_column($records, 'post_id'))
+            ->get(['links.record_id', 'decks.title', 'decks.rule_name'])
+            ->keyBy('record_id');
+        foreach ($records as &$record) {
+            $cardName = $cardNames->get($record['post_id']);
+            if ($cardName !== null) {
+                $name = $cardName->title.'（'.$cardName->rule_name.'）';
+                $record['stage_name'] = $name;
+                // カードに英訳の定義はないため、英語表示にも同じ正式名を使う。
+                $record['eng_stage_name'] = $name;
+            }
+        }
+        unset($record);
+        return $records;
     }
 
     /**
