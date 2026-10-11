@@ -57,11 +57,19 @@ class Record extends Model
 
     private static function duringEvent(QueryBuilder $query): void
     {
-        // 最終集計のstate/ended_at更新を待たず、end_atの瞬間から公開する。
+        // 最終集計を待たず公開。261009は19:59締切、20:00公開。
         $clock = 'CASE WHEN (trick_events.debug = 1 OR trick_events.test_mode = 1) AND trick_events.debug_now IS NOT NULL THEN trick_events.debug_now ELSE ? END';
         $now = CarbonImmutable::now()->format('Y-m-d H:i:s');
+        $release = "CASE WHEN trick_events.event_id = 261009 THEN '2026-10-11 20:00:00' ELSE trick_events.end_at END";
         $query->whereRaw("trick_events.start_at <= ($clock)", [$now])
-            ->whereRaw("trick_events.end_at > ($clock)", [$now]);
+            ->whereRaw("($release) > ($clock)", [$now]);
+    }
+
+    public function closedTricksMetadataEditable(): bool
+    {
+        return CarbonImmutable::now()->greaterThanOrEqualTo('2026-10-11 20:00:00')
+            && ((int) $this->rule === 261009 || DB::table('trick_event_records')
+                ->where('record_id', $this->post_id)->where('event_id', 261009)->exists());
     }
 
     public static function publicVisibilityCacheKey(): string

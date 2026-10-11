@@ -424,6 +424,7 @@ export function TricksDomCard({
     showStackBacks = true,
     footerLabel,
     footerValue,
+    footerValueLabel,
     holderLabel,
 }) {
     const iconTitleId = useId()
@@ -499,7 +500,7 @@ export function TricksDomCard({
                                     )}
                                 </span>
                             )}
-                            <span className="tricks-dom-stack" style={{color: rewardColor(rewardPoints), fontSize: rewardPoints >= 100 ? "calc(17px - 1pt)" : undefined}} title={footerLabel ? undefined : "総還元P"} aria-label={footerLabel ? undefined : `総還元P ${card.live_total_reward ?? 0}`}>
+                            <span className="tricks-dom-stack" style={{color: rewardColor(rewardPoints), fontSize: rewardPoints >= 100 ? "calc(17px - 1pt)" : undefined}} title={footerValueLabel || (!footerLabel && "総還元P") || undefined} aria-label={footerValueLabel ? `${footerValueLabel} ${rewardPoints}` : (!footerLabel && `総還元P ${rewardPoints}`) || undefined}>
                                 <span className="tricks-dom-stack-value">{footerValue ?? card.live_total_reward ?? 0}</span>
                             </span>
                         </span>
@@ -1007,8 +1008,8 @@ export default function TricksLayeredGame({
     const [selectedHand, setSelectedHand] = useState(null)
     const [handVisible, setHandVisible] = useState(true)
     const visibleHand = handVisible && !spectatorMode
-    const fieldTopClip = spectatorMode ? headerBottom : HEADER_HEIGHT
-    const fieldTop = spectatorMode ? headerBottom + 16 : FIELD_START_Y
+    const fieldTopClip = headerBottom
+    const fieldTop = spectatorMode ? headerBottom + 16 : Math.max(FIELD_START_Y, headerBottom + 16)
     const fieldBottom = fieldViewportBottom(size.height, visibleHand)
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)

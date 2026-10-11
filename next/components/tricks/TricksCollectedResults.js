@@ -7,7 +7,7 @@ const detailPanelGap = 28
 
 export default function TricksCollectedResults({cards = [], usersById = {}}) {
     const [selected, setSelected] = useState(null)
-    const visibleCards = cards.filter((card) => card.holders?.length)
+    const visibleCards = [...cards].sort((a, b) => Number(b.post_count || 0) - Number(a.post_count || 0) || Number(a.stage_id) - Number(b.stage_id))
     const selectedCard = selected?.card
     const fieldDuration = (card) => {
         const takenAt = new Date(card.taken_at).getTime()
@@ -50,7 +50,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}}) {
             data-testid="tricks-collected-results"
             style={{
                 position: "absolute",
-                inset: "128px 20px 20px",
+                inset: "216px 20px 20px",
                 zIndex: 4,
                 overflowY: "auto",
                 padding: "20px",
@@ -79,8 +79,9 @@ export default function TricksCollectedResults({cards = [], usersById = {}}) {
                             staticLayout
                             showStackBacks={false}
                             footerLabel={`アクティブ時間 ${fieldDuration(card)}`}
-                            footerValue={card.stack_count ?? 0}
-                            holderLabel={card.holders.map((holder) => usersById[holder]?.name || holder).join(" / ")}
+                            footerValue={totalReward(card)}
+                            footerValueLabel="総還元P"
+                            holderLabel={(card.holders || []).map((holder) => usersById[holder]?.name || holder).join(" / ")}
                             onClick={(event) => openCard(card, event)}
                         />
                     </div>

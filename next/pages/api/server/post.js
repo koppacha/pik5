@@ -79,8 +79,9 @@ function getForwardedFor(req) {
     return req.socket?.remoteAddress || ''
 }
 
-function canEditRecord(sessionUserId, role, createdAt, ownerUserId) {
+function canEditRecord(sessionUserId, role, createdAt, ownerUserId, metadataOnly = false) {
     if (Number(role) === 10) return true
+    if (metadataOnly) return sessionUserId === ownerUserId
 
     const postDate = new Date(createdAt)
     if (Number.isNaN(postDate.getTime())) return false
@@ -160,7 +161,8 @@ export default async function handler(req, res){
                 currentUserId,
                 editorRole,
                 currentRecord.created_at,
-                String(currentRecord.user_id || '')
+                String(currentRecord.user_id || ''),
+                currentRecord.metadata_only_edit
             )
             if (!editable) {
                 res.status(403).json({error: true, message: 'forbidden'})

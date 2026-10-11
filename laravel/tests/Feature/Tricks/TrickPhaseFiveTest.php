@@ -9,6 +9,7 @@ use App\Models\TrickEventCard;
 use App\Services\Tricks\TrickDebugTimeService;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class TrickPhaseFiveTest extends TestCase
@@ -98,6 +99,168 @@ class TrickPhaseFiveTest extends TestCase
             $card->update(['draw_count' => 0]);
             $snapshot = app(\App\Services\Tricks\TrickStateService::class)->snapshot($event->fresh(), 'alice');
             self::assertSame(1, $snapshot['draw_total'], 'Opening counter resets do not erase draw history');
+        } finally {
+            putenv('TRICKS_EVENT_ID');
+            putenv('TRICKS_INTERNAL_SECRET');
+        }
+    }
+
+    public function test_admin_metrics_count_pools_without_pots_and_unique_participants_per_creator_card(): void
+    {
+        [$event, $liveCard] = $this->fixture(true);
+        $event->update(['pot_points' => 99]);
+        $liveCard->update(['rarity' => 2, 'paid_points_total' => 2]); // 3 + 2 bonus + 2 paid = 7.
+        foreach (['alice' => '共同作者A', 'bob' => '作者B', 'blank' => ''] as $userId => $screenName) {
+            \App\Models\User::query()->create([
+                'user_id' => $userId, 'user_name' => $screenName,
+                'email' => $userId.'@example.invalid', 'password' => 'unused-test-placeholder',
+            ]);
+            if ($userId !== 'alice') {
+                Player::query()->create(['event_id' => $event->event_id, 'name' => $userId, 'draw_points' => 5]);
+            }
+        }
+        $liveCard->deck->update(['creator' => 'alice']); // ID alone must not match a screen name.
+        foreach ([['alice', 6, 4, 3], ['bob', 3, 1, 1], [null, 30, 90, 5]] as $i => [$taker, $stack, $paid, $rarity]) {
+            $deck = $liveCard->deck->replicate();
+            $deck->stage_id = 7302 + $i;
+            $deck->card_id = 940002 + $i;
+            $deck->creator = '共同作者A ＆ 作者B（共同案）';
+            $deck->save();
+            $card = $liveCard->replicate();
+            $card->deck_id = $deck->id;
+            $card->taker = $taker;
+            $card->stack_count = $stack;
+            $card->paid_points_total = $paid;
+            $card->rarity = $rarity;
+            $card->state = '_collected';
+            $card->collected_at = $event->debug_now;
+            $card->save();
+            foreach (['alice', 'alice', 'bob'] as $j => $userId) {
+                $recordId = 960000 + $i * 10 + $j;
+                DB::table('records')->insert([
+                    'post_id' => $recordId, 'user_id' => $userId, 'score' => 100 + $j,
+                    'stage_id' => $deck->stage_id, 'rule' => $event->event_id, 'console' => 1, 'region' => '1',
+                    'unique_id' => $recordId, 'post_comment' => '', 'user_ip' => '', 'user_host' => '',
+                    'user_agent' => '', 'img_url' => '', 'video_url' => '', 'post_memo' => '',
+                    'flg' => 0, 'team' => 0, 'created_at' => now(), 'updated_at' => now(),
+                ]);
+                \App\Models\TrickEventRecord::query()->create([
+                    'record_id' => $recordId, 'event_id' => $event->event_id,
+                    'event_card_id' => $card->id, 'deck_id' => $card->deck_id,
+                ]);
+            }
+            \App\Models\LimitLog::query()->create([
+                'event_id' => $event->event_id, 'event_card_id' => $card->id, 'event' => 'collect',
+                'context' => ['pot_points_used' => 99, 'final_rankings' => [
+                    ['user_id' => 'alice'], ['user_id' => 'alice'], ['user_id' => 'bob'],
+                ]],
+            ]);
+            \App\Models\TrickCollectionReward::query()->create([
+                'event_id' => $event->event_id, 'event_card_id' => $card->id,
+                'deck_id' => $deck->id, 'player_name' => 'alice', 'points_delta' => 999, 'reward_type' => 'test',
+            ]);
+        }
+        putenv('TRICKS_EVENT_ID='.$event->event_id);
+        putenv('TRICKS_INTERNAL_SECRET=phase-five-secret');
+        try {
+            $response = $this->withHeaders($this->signedHeaders('admin', 10))
+                ->getJson('/api/tricks/collected/admin-stats?event_id='.$event->event_id)->assertOk();
+            $users = collect($response->json('users'))->keyBy('user_id');
+            self::assertSame(23, $users['alice']['generated_points_total']); // Live 7 + collected 16.
+            self::assertSame(4, $users['bob']['generated_points_total']);
+            self::assertSame(4, $users['alice']['popular_creator_index']); // 2 + 2, not 2 globally.
+            self::assertSame(4, $users['bob']['popular_creator_index']);
+            self::assertSame(0, $users['blank']['popular_creator_index']);
+            self::assertArrayNotHasKey('creator_take_count', $users['alice']);
+        } finally {
+            putenv('TRICKS_EVENT_ID');
+            putenv('TRICKS_INTERNAL_SECRET');
+        }
+    }
+
+    public function test_admin_card_stats_count_only_successful_paid_manual_extensions(): void
+    {
+        [$event, $card] = $this->fixture(true);
+        $game = app(\App\Services\Tricks\TrickGameService::class);
+        $game->extend($event, 'alice', $card->deck_id, 'stats-extend-one');
+        $game->extend($event, 'alice', $card->deck_id, 'stats-extend-one'); // Replay is not another extension.
+        $game->extend($event, 'alice', $card->deck_id, 'stats-extend-two');
+        \App\Models\LimitLog::query()->create([
+            'event_id' => $event->event_id, 'event_card_id' => $card->id, 'event' => 'limit_extended',
+            'context' => ['extension_minutes' => 15],
+        ]);
+        foreach (['initial_post', 'score_update', 'player_extension'] as $type) {
+            \App\Models\TrickCardPayment::query()->create([
+                'event_id' => $event->event_id, 'event_card_id' => $card->id, 'deck_id' => $card->deck_id,
+                'stage_id' => 7301, 'player_name' => 'alice', 'payment_type' => $type,
+                'points_paid' => $type === 'player_extension' ? 0 : 1,
+                'idempotency_key' => 'stats-excluded-'.$type,
+            ]);
+        }
+        $otherDeck = $card->deck->replicate();
+        $otherDeck->stage_id = 7302;
+        $otherDeck->save();
+        $otherCard = $card->replicate();
+        $otherCard->deck_id = $otherDeck->id;
+        $otherCard->save();
+        putenv('TRICKS_EVENT_ID='.$event->event_id);
+        putenv('TRICKS_INTERNAL_SECRET=phase-five-secret');
+        try {
+            $path = '/api/tricks/collected/admin-stats?event_id='.$event->event_id;
+            $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.paid_extension_count', 2)
+                ->assertJsonPath('cards.1.paid_extension_count', 0);
+            $card->update(['state' => '_collected', 'collected_at' => $event->debug_now]);
+            $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.paid_extension_count', 2);
+        } finally {
+            putenv('TRICKS_EVENT_ID');
+            putenv('TRICKS_INTERNAL_SECRET');
+        }
+    }
+
+    public function test_admin_card_post_count_counts_valid_records_instead_of_players(): void
+    {
+        [$event, $card] = $this->fixture(true);
+        $card->update(['post_count' => 2]); // Internal counter intentionally remains a player count.
+        foreach ([['alice', 0], ['alice', 0], ['bob', 1], ['deleted_only', 2]] as $i => [$userId, $flag]) {
+            $recordId = 950000 + $i;
+            DB::table('records')->insert([
+                'post_id' => $recordId, 'user_id' => $userId, 'score' => 100 + $i,
+                'stage_id' => 7301, 'rule' => $event->event_id, 'console' => 1, 'region' => '1',
+                'unique_id' => $recordId, 'post_comment' => '', 'user_ip' => '', 'user_host' => '',
+                'user_agent' => '', 'img_url' => '', 'video_url' => '', 'post_memo' => '',
+                'flg' => $flag, 'team' => 0, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            \App\Models\TrickEventRecord::query()->create([
+                'record_id' => $recordId, 'event_id' => $event->event_id,
+                'event_card_id' => $card->id, 'deck_id' => $card->deck_id,
+            ]);
+        }
+        putenv('TRICKS_EVENT_ID='.$event->event_id);
+        putenv('TRICKS_INTERNAL_SECRET=phase-five-secret');
+        try {
+            $path = '/api/tricks/collected/admin-stats?event_id='.$event->event_id;
+            $response = $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.post_count', 3);
+            self::assertCount(2, $response->json('cards.0.participants'));
+            self::assertNotContains('deleted_only', $response->json('cards.0.participants'));
+            self::assertSame(2, $card->fresh()->post_count);
+            $card->update(['state' => '_collected', 'collected_at' => $event->debug_now]);
+            \App\Models\LimitLog::query()->create([
+                'event_id' => $event->event_id, 'event_card_id' => $card->id, 'event' => 'collect',
+                'context' => ['final_rankings' => [['user_id' => 'alice'], ['user_id' => 'bob'], ['user_id' => 'deleted_only']]],
+            ]);
+            $response = $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.post_count', 3);
+            self::assertCount(2, $response->json('cards.0.participants'));
+            DB::table('records')->where('post_id', 950001)->update(['flg' => 2]);
+            $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.post_count', 2);
+            DB::table('records')->where('post_id', 950002)->update(['flg' => 2]);
+            $response = $this->withHeaders($this->signedHeaders('admin', 10))->getJson($path)->assertOk()
+                ->assertJsonPath('cards.0.post_count', 1);
+            self::assertSame(['alice'], $response->json('cards.0.participants'));
         } finally {
             putenv('TRICKS_EVENT_ID');
             putenv('TRICKS_INTERNAL_SECRET');

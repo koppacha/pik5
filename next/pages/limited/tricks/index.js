@@ -400,13 +400,13 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     }, [state?.debug_state?.frozen, state?.server_now, state?.tournament?.server_now])
 
     useEffect(() => {
-        if (state?.debug_state?.frozen) return undefined
+        if (eventEnded || state?.debug_state?.frozen) return undefined
         const timer = window.setInterval(() => {
             setNowValue((current) => current + 1000)
         }, 1000)
 
         return () => window.clearInterval(timer)
-    }, [state?.debug_state?.frozen])
+    }, [eventEnded, state?.debug_state?.frozen])
 
     const stateSignature = stateContentSignature(state)
     useEffect(() => {
@@ -475,7 +475,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                     nowValue={nowValue}
                 />
                 <TricksHud onHeaderHeightChange={setHeaderBottom} onToggleAdminStats={isAdmin ? () => setAdminStatsOpen((open) => !open) : undefined} adminStatsOpen={adminStatsOpen} onShowKnowledge={() => setKnowledgeOpen(true)} spectatorMode={spectatorMode} highlightedPlayer={spectatorPresentation?.blinking ? spectatorPresentation.item.log.actor_name : ""} onToggleSpectator={() => changeSpectatorMode(!spectatorMode)}
-                    accessAction={spectatorMode && !me && status !== "loading" && (
+                    accessAction={!eventEnded && spectatorMode && !me && status !== "loading" && (
                         authenticated
                             ? <Button variant="contained" size="large" data-tricks-info-join onClick={join} disabled={busy || !canJoin} style={{padding: "14px 28px", fontSize: 18, minWidth: 200, color: "#fff"}}>参加する</Button>
                             : <Button component={Link} variant="contained" size="large" data-tricks-info-login href="/auth/login" style={{padding: "14px 28px", fontSize: 18, minWidth: 200, color: "#fff"}}>ログインして参加</Button>
@@ -635,7 +635,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                         onPosted={handlePosted}
                     />
                 )}
-                {accessGateOpen && (
+                {accessGateOpen && !eventEnded && (
                     <>
                         <div
                             data-tricks-access-backdrop

@@ -71,9 +71,12 @@ class TrickController extends Controller
             ->where('r.unique_id', $uniqueId)->where('r.flg', '<', 2)->orderByDesc('r.post_id')
             ->first(['r.unique_id', 'r.stage_id', 'r.flg', 'r.created_at', 'r.user_id', 'ter.event_id as tricks_event_id']);
         abort_if($record === null, 404);
+        $record->metadata_only_edit = Record::query()->where('unique_id', $uniqueId)->where('flg', '<', 2)->firstOrFail()->closedTricksMetadataEditable();
         $role = $identity->role($request);
-        abort_unless($role === 10 || ($role > 0 || $record->user_id === $userId)
-            && now()->lessThanOrEqualTo(\Carbon\CarbonImmutable::parse($record->created_at)->addDay()), 403);
+        abort_unless($record->metadata_only_edit
+            ? ($role === 10 || $record->user_id === $userId)
+            : ($role === 10 || ($role > 0 || $record->user_id === $userId)
+                && now()->lessThanOrEqualTo(\Carbon\CarbonImmutable::parse($record->created_at)->addDay())), 403);
         return response()->json($record);
     }
 
@@ -128,7 +131,15 @@ class TrickController extends Controller
             ->where('state', '_collected')->orderBy('collected_at')->get();
         $holders = TrickCardHolder::query()->where('event_id', $event->event_id)
             ->whereIn('event_card_id', $cards->pluck('id'))->get()->groupBy('event_card_id');
-        $cards = $cards->filter(fn (TrickEventCard $card) => $holders->has($card->id))->values();
+        $validPostCounts = Record::query()
+            ->join('trick_event_records', 'trick_event_records.record_id', '=', 'records.post_id')
+            ->where('trick_event_records.event_id', $event->event_id)
+            ->whereIn('trick_event_records.event_card_id', $cards->pluck('id'))
+            ->where('records.flg', '<', 2)
+            ->selectRaw('trick_event_records.event_card_id, COUNT(*) AS valid_post_count')
+            ->groupBy('trick_event_records.event_card_id')->pluck('valid_post_count', 'event_card_id');
+        $cards = $cards->sort(fn ($a, $b) => (($validPostCounts->get($b->id) ?? 0) <=> ($validPostCounts->get($a->id) ?? 0))
+            ?: ($a->deck->stage_id <=> $b->deck->stage_id))->values();
         $rankings = $records->rankingsByCards($cards);
         $collectionLogs = LimitLog::query()->where('event_id', $event->event_id)
             ->where('event', 'collect')->whereIn('event_card_id', $cards->pluck('id'))
@@ -142,15 +153,17 @@ class TrickController extends Controller
             $collectionLogs,
             $holders,
             $rewards,
+            $validPostCounts,
         ) {
             $cardHolders = $holders->get($card->id, collect())->pluck('player_name')->values()->all();
             $finalRankings = $collectionLogs->get($card->id)?->context['final_rankings'] ?? null;
 
             return [
                 ...$state->normalizeCard($card),
+                'post_count' => (int) ($validPostCounts->get($card->id) ?? 0),
                 'holders' => $cardHolders,
                 'holder_label' => implode(' / ', $cardHolders),
-                'returns_next_event' => false,
+                'returns_next_event' => $cardHolders === [],
                 'rankings' => is_array($finalRankings) ? $finalRankings : ($rankings[$card->id] ?? []),
                 'rewards' => $rewards->get($card->id, collect())->values()->all(),
                 'total_reward_points' => $rewards->get($card->id, collect())->sum('points_delta'),
@@ -804,16 +817,10 @@ class TrickController extends Controller
                 'return_count' => 0,
                 'post_count' => 0,
                 'spent_points' => 0,
-                'creator_take_count' => 0,
+                'generated_points_total' => 0,
+                'popular_creator_index' => 0,
             ]])->all();
         $cards = TrickEventCard::query()->with('deck')->where('event_id', $event->event_id)->get();
-
-        foreach ($cards->whereNotNull('taker') as $card) {
-            $creator = $card->deck?->creator;
-            if ($creator && isset($stats[$creator])) {
-                $stats[$creator]['creator_take_count']++;
-            }
-        }
 
         $logs = LimitLog::query()->where('event_id', $event->event_id)
             ->get(['event', 'event_card_id', 'actor_name', 'affected_player_name', 'points_delta', 'context']);
@@ -857,15 +864,32 @@ class TrickController extends Controller
             $playerStats['earned_points'] = $playerStats['draw_points'] + $playerStats['spent_points'];
         }
         unset($playerStats);
-        $rankings = app(TrickRecordService::class)->rankingsByCards($cards);
-        $collectionLogs = $logs->where('event', 'collect')->keyBy('event_card_id');
         $rewards = TrickCollectionReward::query()->where('event_id', $event->event_id)
             ->get()->groupBy('event_card_id');
+        $postedUsersByCard = Record::query()
+            ->join('trick_event_records', 'trick_event_records.record_id', '=', 'records.post_id')
+            ->where('trick_event_records.event_id', $event->event_id)
+            ->whereIn('trick_event_records.event_card_id', $cards->pluck('id'))
+            ->where('records.flg', '<', 2)
+            ->select('trick_event_records.event_card_id', 'records.user_id')->distinct()->get()
+            ->groupBy('event_card_id');
+        $validPostCounts = Record::query()
+            ->join('trick_event_records', 'trick_event_records.record_id', '=', 'records.post_id')
+            ->where('trick_event_records.event_id', $event->event_id)
+            ->whereIn('trick_event_records.event_card_id', $cards->pluck('id'))
+            ->where('records.flg', '<', 2)
+            ->selectRaw('trick_event_records.event_card_id, COUNT(*) AS valid_post_count')
+            ->groupBy('trick_event_records.event_card_id')->pluck('valid_post_count', 'event_card_id');
+        $paidExtensionCounts = TrickCardPayment::query()->where('event_id', $event->event_id)
+            ->whereIn('event_card_id', $cards->pluck('id'))
+            ->where('payment_type', 'player_extension')->where('points_paid', '>', 0)
+            ->selectRaw('event_card_id, COUNT(*) AS extension_count')
+            ->groupBy('event_card_id')->pluck('extension_count', 'event_card_id');
         $now = app(TrickClock::class)->now($event);
         $cardStats = $cards->sortBy(fn (TrickEventCard $card) => $card->deck?->stage_id)
-            ->map(function (TrickEventCard $card) use ($rankings, $collectionLogs, $holders, $rewards, $now): array {
-                $final = $collectionLogs->get($card->id)?->context['final_rankings'] ?? null;
-                $rows = is_array($final) ? $final : ($rankings[$card->id] ?? []);
+            ->map(function (TrickEventCard $card) use ($holders, $rewards, $postedUsersByCard, $validPostCounts, $paidExtensionCounts, $now): array {
+                $participants = $postedUsersByCard->get($card->id, collect())->pluck('user_id')
+                    ->unique()->values()->all();
 
                 return [
                     'event_card_id' => $card->id,
@@ -876,15 +900,43 @@ class TrickController extends Controller
                     'rarity' => $card->rarity,
                     'field_seconds' => $card->taken_at === null ? 0
                         : max(0, $card->taken_at->diffInSeconds($card->collected_at ?? $now, false)),
-                    'post_count' => (int) $card->post_count,
+                    'post_count' => (int) ($validPostCounts->get($card->id) ?? 0),
+                    'paid_extension_count' => (int) ($paidExtensionCounts->get($card->id) ?? 0),
                     'total_reward_points' => $card->collected_at === null ? null
                         : (int) $rewards->get($card->id, collect())->sum('points_delta'),
-                    'participants' => collect($rows)->pluck('user_id')->unique()->values()->all(),
+                    'participants' => $participants,
                     'creator' => $card->deck?->creator,
                     'taker' => $card->taker,
                     'holders' => $holders->get($card->id, collect())->pluck('player_name')->values()->all(),
                 ];
             })->values()->all();
+
+        // Screen names are display values, not user IDs. Fetch only the required columns.
+        $screenNames = \App\Models\User::query()->whereIn('user_id', array_keys($stats))
+            ->pluck('user_name', 'user_id');
+        $rules = app(\App\Services\Tricks\TrickRuleCalculator::class);
+        $cardsById = $cards->keyBy('id');
+        foreach ($cardStats as $cardStatsRow) {
+            $card = $cardsById->get($cardStatsRow['event_card_id']);
+            if ($card->taker === null) {
+                continue;
+            }
+            if (isset($stats[$card->taker])) {
+                // Count the pool itself, including unpaid-out cards, without the event pot.
+                $stats[$card->taker]['generated_points_total'] += (int) $card->stack_count
+                    + $rules->stackBonus((int) ($card->rarity ?? 1), (int) $card->stack_count)
+                    + (int) $card->paid_points_total;
+            }
+            $creator = (string) ($card->deck?->creator ?? '');
+            $participantCount = count($cardStatsRow['participants']);
+            foreach ($stats as $userId => &$playerStats) {
+                $screenName = (string) ($screenNames->get($userId) ?? '');
+                if ($screenName !== '' && str_contains($creator, $screenName)) {
+                    $playerStats['popular_creator_index'] += $participantCount;
+                }
+            }
+            unset($playerStats);
+        }
 
         return ['users' => collect($stats)->sortByDesc('total_rank_points')->values()->all(), 'cards' => $cardStats];
     }
