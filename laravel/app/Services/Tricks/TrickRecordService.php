@@ -34,6 +34,18 @@ class TrickRecordService
             return;
         }
         [$event, $card] = $context;
+        if ($replacedRecord?->closedTricksMetadataEditable()) {
+            $actor = $request === null ? null : $this->identity->resolveForEvent($request, $event);
+            abort_unless($actor !== null && ($actor === (string) $replacedRecord->user_id
+                || $this->identity->role($request) === 10), 403);
+            foreach (['user_id', 'score', 'stage_id', 'rule', 'region', 'difficulty'] as $field) {
+                abort_unless((string) $record->$field === (string) $replacedRecord->$field, 422);
+            }
+            TrickEventRecord::query()->firstOrCreate(['record_id' => $record->post_id], [
+                'event_id' => $event->event_id, 'event_card_id' => $card->id, 'deck_id' => $card->deck_id,
+            ]);
+            return;
+        }
         $this->authorizeSavedRecord($event, $record, $replacedRecord, $request);
         $deck = $card->relationLoaded('deck') ? $card->deck : $card->deck()->first();
         if ($deck === null || (int) $record->stage_id !== (int) $deck->stage_id) {

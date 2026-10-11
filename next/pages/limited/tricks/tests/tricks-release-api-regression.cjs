@@ -9,9 +9,9 @@ const schema = vm.createContext({yup, newUserEvidenceRequirements: {}, Date, Num
 vm.runInContext(source('lib/recordValidation.js') + '\nthis.schema = createRecordValidationSchema', schema)
 let checks = 0
 
-async function run({score = 123, stageEvent = 251227, eventId = '251227', mode = 'create', action = 'post', role = 0, owner = 'release_test', allowed = true, now = Date.parse('2026-10-09T12:00:00+09:00'), badId = false, recordMissing = false} = {}) {
+async function run({score = 123, stageEvent = 251227, eventId = '251227', mode = 'create', action = 'post', role = 0, owner = 'release_test', allowed = true, now = Date.parse('2026-10-09T12:00:00+09:00'), badId = false, recordMissing = false, ageMs = 3600000, metadataOnly = false} = {}) {
     let forwarded = 0
-    const record = {unique_id: 123456789, stage_id: 1491, user_id: owner, flg: 0, created_at: new Date(now - 3600000).toISOString(), tricks_event_id: stageEvent}
+    const record = {unique_id: 123456789, stage_id: 1491, user_id: owner, flg: 0, created_at: new Date(now - ageMs).toISOString(), tricks_event_id: stageEvent, metadata_only_edit: metadataOnly}
     class Clock extends Date { static now() { return now } }
     const queries = []
     const prisma = {user: {findFirst: async () => ({role})}, $queryRaw: async (strings, ...values) => {
@@ -79,6 +79,11 @@ async function main() {
     await expect({mode: 'edit', stageEvent: 261001, eventId: '261001', now: before, allowed: false}, 403, 0)
     await expect({action: 'delete', stageEvent: 261001, now: before, allowed: false}, 403, 0)
     await expect({stageEvent: 261001, eventId: '261001', now: before, allowed: true}, 200, 1)
+    await expect({mode: 'edit', stageEvent: 261009, eventId: '261009', ageMs: 172800000, metadataOnly: true}, 200, 1)
+    await expect({mode: 'edit', ageMs: 172800000}, 403, 0)
+    await expect({mode: 'edit', owner: 'other_test', role: 1, metadataOnly: true}, 403, 0)
+    await expect({mode: 'edit', owner: 'other_test', role: 10, ageMs: 172800000, metadataOnly: true}, 200, 1)
+    await expect({action: 'delete', ageMs: 172800000, metadataOnly: true}, 403, 0)
     console.log(`PASS ${checks} actual API handler/context regression cases`)
     for (const userId of ['_deck', '_FIELD', '_stack', '_trash', '_collected', '_excluded', '_alice']) {
         let created = false

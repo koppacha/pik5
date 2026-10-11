@@ -9,14 +9,26 @@ const metrics = [
     ["post_count", "投稿"],
     ["earned_points", "獲得P総数"],
     ["spent_points", "使用P総数"],
-    ["creator_take_count", "制作札テイク"],
+    ["generated_points_total", "発生ポイント合計"],
+    ["popular_creator_index", "人気クリエイター指数"],
 ]
+const maximumBackground = "color-mix(in srgb, var(--color-bg-base) 70%, var(--color-level-1-bg))"
+const cardMetrics = {
+    4: (card) => Number(card.field_seconds || 0),
+    5: (card) => Number(card.post_count || 0),
+    6: (card) => Number(card.paid_extension_count || 0),
+    7: (card) => card.total_reward_points == null ? null : Number(card.total_reward_points),
+    8: (card) => new Set(card.participants || []).size,
+}
 const cellStyle = {padding: 8, border: "1px solid var(--color-border-base)", whiteSpace: "nowrap"}
 
 export default function TricksAdminStats({stats, usersById = {}, onClose}) {
     const panel = useRef(null)
     const users = stats?.users || []
     const cards = (stats?.cards || []).filter((card) => Number(card.stage_id) > 0)
+    const cardMaxima = Object.fromEntries(Object.entries(cardMetrics).map(([column, value]) => [
+        column, Math.max(0, ...cards.map(value).filter((number) => number !== null && Number.isFinite(number))),
+    ]))
     const [tab, setTab] = useState("users")
     const name = (id) => usersById[id]?.name || id || "-"
     const names = (ids) => ids?.length ? ids.map(name).join(" / ") : "-"
@@ -46,7 +58,7 @@ export default function TricksAdminStats({stats, usersById = {}, onClose}) {
                     <thead><tr><th style={cellStyle}>プレイヤー</th>{metrics.map(([key, label]) => <th key={key} style={cellStyle}>{label}</th>)}</tr></thead>
                     <tbody>{users.map((user) => <tr key={user.user_id}>
                         <th style={cellStyle}>{name(user.user_id)}</th>
-                        {metrics.map(([key], index) => <td key={key} data-tricks-admin-stat={key} style={{...cellStyle, textAlign: "right", background: Number(user[key] || 0) === maxima[index] ? "color-mix(in srgb, var(--color-bg-base) 70%, var(--color-level-1-bg))" : undefined}}>{user[key] || 0}</td>)}
+                        {metrics.map(([key], index) => <td key={key} data-tricks-admin-stat={key} style={{...cellStyle, textAlign: "right", background: Number(user[key] || 0) === maxima[index] ? maximumBackground : undefined}}>{user[key] || 0}</td>)}
                     </tr>)}</tbody>
                 </table>
             </div>
@@ -54,12 +66,16 @@ export default function TricksAdminStats({stats, usersById = {}, onClose}) {
             <div role="tabpanel" id="tricks-stats-panel-cards" aria-labelledby="tricks-stats-tab-cards" hidden={tab !== "cards"}>
             <div style={{overflowX: "auto"}}>
                 <table data-tricks-card-stats style={{borderCollapse: "collapse", width: "100%"}}>
-                    <thead><tr>{["ステージID", "ステージ名（ルール名）", "難易度", "レア度", "場に出ていた時間", "投稿数", "回収時の総還元P", "参加者数", "クリエイター", "テイカー", "ホルダー"].map((label) => <th key={label} style={cellStyle}>{label}</th>)}</tr></thead>
+                    <thead><tr>{["ステージID", "ステージ名（ルール名）", "難易度", "レア度", "有効時間", "投稿数", "延長回数", "総還元P", "参加者数", "クリエイター", "テイカー", "ホルダー"].map((label) => <th key={label} style={cellStyle}>{label}</th>)}</tr></thead>
                     <tbody>{cards.map((card) => {
                         const minutes = Math.floor(Number(card.field_seconds || 0) / 60)
                         const duration = `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, "0")}`
                         return <tr key={card.event_card_id}>
-                            {[card.stage_id, `${card.title || "-"}（${card.rule_name || "-"}）`, card.difficulty ?? "-", card.rarity ?? "未開封", duration, card.post_count, card.total_reward_points ?? "未回収", new Set(card.participants || []).size, card.creator || "-", name(card.taker), names(card.holders)].map((value, index) => <td key={index} style={cellStyle}>{value}</td>)}
+                            {[card.stage_id, `${card.title || "-"}（${card.rule_name || "-"}）`, card.difficulty ?? "-", card.rarity ?? "未開封", duration, card.post_count, card.paid_extension_count ?? 0, card.total_reward_points ?? "未回収", new Set(card.participants || []).size, card.creator || "-", name(card.taker), names(card.holders)].map((value, index) => {
+                                const number = cardMetrics[index]?.(card)
+                                const isMaximum = number != null && Number.isFinite(number) && number === cardMaxima[index]
+                                return <td key={index} data-tricks-card-stat={cardMetrics[index] ? index : undefined} data-tricks-card-stat-max={isMaximum || undefined} style={{...cellStyle, background: isMaximum ? maximumBackground : undefined}}>{value}</td>
+                            })}
                         </tr>
                     })}</tbody>
                 </table>

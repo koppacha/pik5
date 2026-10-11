@@ -404,6 +404,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     </TextField>
                     <TextField
                         {...register('difficulty')}
+                        disabled={Boolean(info?.metadata_only_edit)}
                         select
                         id="console"
                         label={t.g.difficulty}
@@ -422,6 +423,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     </TextField>
                     <ToggleButton
                         value="check"
+                        disabled={Boolean(info?.metadata_only_edit)}
                         selected={regionSelected}
                         color="success"
                         className={[203, 213, 228].includes(info?.stage_id) ? "" : "hidden"}
@@ -436,6 +438,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('region-score')}
                         id="region-score"
+                        disabled={Boolean(info?.metadata_only_edit)}
                         label={t.g.originalScore}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
@@ -455,6 +458,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('pikmin')}
                         id="pikmin"
+                        disabled={Boolean(info?.metadata_only_edit)}
                         label={t.g.NumOfPikmin}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
@@ -474,6 +478,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('treasure')}
                         id="treasure"
+                        disabled={Boolean(info?.metadata_only_edit)}
                         label={t.g.value}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
@@ -512,6 +517,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                     <TextField
                         {...register('time')}
                         id="time"
+                        disabled={Boolean(info?.metadata_only_edit)}
                         label={t.g.time}
                         type="text"
                         inputProps={{inputMode: 'numeric'}}
@@ -543,7 +549,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         helperText={errors.score?.message}
                         value={score}
                         margin="normal"
-                        disabled={(isTime() || [25].includes(rule) || isRegion()) && true}
+                        disabled={Boolean(info?.metadata_only_edit) || isTime() || [25].includes(rule) || isRegion()}
                     />
                     <GetRank stage={info?.stage_id} rule={rule} score={score}/>
                     <TextField

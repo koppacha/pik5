@@ -100,7 +100,8 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
         if (!header || !onHeaderHeightChange) return undefined
         const update = () => {
             const root = header.closest("[data-tricks-root]")
-            const bottom = spectatorMode && root ? Math.ceil(header.getBoundingClientRect().bottom - root.getBoundingClientRect().top) : 174
+            const measuredBottom = root ? Math.ceil(header.getBoundingClientRect().bottom - root.getBoundingClientRect().top) : 174
+            const bottom = spectatorMode ? measuredBottom : Math.max(174, measuredBottom)
             onHeaderHeightChange(bottom)
         }
         update()

@@ -85,6 +85,13 @@ class RecordController extends Controller
         }
         $data = $record->toArray();
         $data['post_rank'] = $this->getRankArray($data, false);
+        $data['metadata_only_edit'] = $record->closedTricksMetadataEditable();
+        if ((int) $record->stage_id >= 1001 && (int) $record->stage_id <= 1999) {
+            $stage = Stage::query()->where('stage_id', $record->stage_id)->first();
+            $data['stage_name'] = $stage?->stage_name;
+            $data['eng_stage_name'] = $stage?->eng_stage_name;
+            $data['score_type'] = $stage?->display === 'time' ? 'time' : 'points';
+        }
 
         return response()->json(
             $data
@@ -286,13 +293,24 @@ class RecordController extends Controller
                 $canEdit = true;
             } else {
                 $expired = ($postDate->getTimestamp() + 86400) < $now->getTimestamp();
-                if (! $expired) {
+                if ($current->closedTricksMetadataEditable()) {
+                    $canEdit = $editorUserId === (string) $current->user_id;
+                } elseif (! $expired) {
                     $canEdit = ($editorUserId === (string) $current->user_id) || ($editorRole > 0);
                 }
             }
 
             if (! $canEdit) {
                 return response()->json(['Forbidden'], 403);
+            }
+
+            if ($current->closedTricksMetadataEditable()) {
+                if ((int) $request['stage_id'] !== (int) $current->stage_id
+                    || $score !== (int) $current->score || $rule !== (int) $current->rule
+                    || $region !== (int) $current->region || $difficulty !== (int) $current->difficulty) {
+                    return response()->json(['message' => '閉幕後はスコア・カテゴリ・ステージ・地域・難易度を変更できません'], 422);
+                }
+                $request->merge(['user_id' => $current->user_id]);
             }
 
             // 編集後レコードは編集前unique_idを引き継ぐ
@@ -369,7 +387,7 @@ class RecordController extends Controller
                     'stage_id' => $request['stage_id'],
                     'rule' => $rule,
                     'console' => $console ?: 0,
-                    'difficulty' => $difficulty ?: 2,
+                    'difficulty' => $isEdit && $current?->closedTricksMetadataEditable() ? $difficulty : ($difficulty ?: 2),
                     'region' => $region,
                     'team' => 0, // TODO: チーム対抗戦を実装する場合はここにチームIDを入れる（Next.js APIも同様）
                     'unique_id' => $targetUniqueId,
@@ -382,6 +400,9 @@ class RecordController extends Controller
                     'post_memo' => $postMemo,
                     'flg' => 0,
                 ]);
+                if ($isEdit && $current?->closedTricksMetadataEditable()) {
+                    $posts->created_at = $current->created_at;
+                }
                 $posts->save();
                 $trickRecords->saved($posts, $current, $request);
             });
@@ -502,7 +523,16 @@ class RecordController extends Controller
             ->where($where, $request['id'])
             ->where('console', $console_operation, $console)
             ->where('difficulty', $diff_operation, $diff)
-            ->whereIn('rule', $rule)
+            ->where(function ($query) use ($rule, $where) {
+                $query->whereIn('rule', $rule);
+                if ($where === 'user_id' && in_array(261009, array_map('intval', $rule), true)) {
+                    $query->orWhereExists(fn ($links) => $links->selectRaw('1')->from('trick_event_records')
+                        ->whereColumn('record_id', 'records.post_id')->where('event_id', 261009));
+                }
+            })
+            ->when($where === 'user_id' && ! in_array(261009, array_map('intval', $rule), true),
+                fn ($query) => $query->whereNotExists(fn ($links) => $links->selectRaw('1')->from('trick_event_records')
+                    ->whereColumn('record_id', 'records.post_id')->where('event_id', 261009)))
             ->where('created_at', '<', $date)
             ->where('flg', '<', 2)
             ->orderBy($orderBy[0], $orderBy[1])

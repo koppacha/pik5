@@ -118,6 +118,9 @@ class TrickHolderCatalog
         $counts = $this->historicalCounts();
         $current = TrickCardHolder::query()->join('trick_events', 'trick_events.event_id', '=', 'trick_card_holders.event_id')
             ->where('trick_events.test_mode', false)
+            ->where('trick_events.state', 'ended')
+            ->where(fn ($query) => $query->where('trick_events.event_id', '<>', 261009)
+                ->orWhereRaw('? >= ?', [\Carbon\CarbonImmutable::now()->format('Y-m-d H:i:s'), '2026-10-11 20:00:00']))
             ->where('trick_events.title', 'like', '%期間限定ランキング%')
             ->whereNotIn('trick_events.event_id', self::HISTORICAL_EVENTS)
             ->selectRaw('trick_card_holders.player_name, COUNT(*) as aggregate')
@@ -131,6 +134,8 @@ class TrickHolderCatalog
     {
         $cards = array_values(array_filter($this->historicalCards(), fn ($card) => $card['holders'][0] === $userId));
         $events = TrickEvent::query()->where('state', 'ended')->where('test_mode', false)
+            ->where(fn ($query) => $query->where('event_id', '<>', 261009)
+                ->orWhereRaw('? >= ?', [\Carbon\CarbonImmutable::now()->format('Y-m-d H:i:s'), '2026-10-11 20:00:00']))
             ->where('title', 'like', '%期間限定ランキング%')
             ->whereNotIn('event_id', self::HISTORICAL_EVENTS)->pluck('event_id');
         foreach ($events as $eventId) {
