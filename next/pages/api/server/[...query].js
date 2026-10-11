@@ -11,6 +11,9 @@ import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import {tricksIdentityHeaders, tricksTestIdentityHeaders} from "../../../lib/tricks/proxyAuth";
 import {hasStagingAccess, stagingAccessEnabled, STAGING_CLOSE_AT} from "../../../lib/tricks/stagingAccess";
 
+import {getCachedUsers} from "../../../lib/usersCache"
+import {withCreatorPopularity} from "../../../lib/tricks/adminStats"
+
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || 'http://laravel:8000/api'
 const MAX_RAW_BODY_BYTES = 1024 * 1024
 
@@ -141,7 +144,9 @@ export default async function handle(req, res){
           return
         }
 
-        res.status(upstreamRes.status).json({data})
+        const responseData = path === "tricks/collected/admin-stats"
+          ? withCreatorPopularity(data, await getCachedUsers()) : data
+        res.status(upstreamRes.status).json({data: responseData})
         return
       }
       case "POST": {
