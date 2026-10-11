@@ -124,6 +124,33 @@ class TrickRecordVisibilityTest extends TestCase
         self::assertSame(1, $state->snapshot($event->fresh(), null)['post_total']);
     }
 
+    public function test_user_event_records_use_card_titles_and_rules_instead_of_legacy_stage_names(): void
+    {
+        $now = CarbonImmutable::now()->startOfSecond();
+        $event = TrickEvent::create(['event_id' => 261009, 'title' => 'Synthetic event',
+            'state' => 'ended', 'start_at' => $now->subHour(), 'end_at' => $now->subMinute()]);
+        [, $card] = $this->fixture($now, 1314, $event);
+        $card->deck->update(['event_id' => 261009, 'eventId' => 261009,
+            'title' => '原生生物の巣窟', 'rule_name' => 'ピクミン禁止']);
+        Stage::where('stage_id', 1314)->update(['stage_name' => 'テスト2']);
+        $original = $this->record(1314, 1, $now->subMinutes(2), 123);
+        $this->link($event, $card, $original);
+        [, $clone] = $this->fixture($now, 1474, $event);
+        $clone->deck->update(['title' => '原生生物の巣窟', 'rule_name' => 'ピクミン禁止']);
+        $duplicate = $this->record(1474, 1, $now->subMinutes(2), 124);
+        $this->link($event, $clone, $duplicate);
+        $year = date('Y');
+        $records = $this->getJson("/api/record/visibility_test/1/261009/$year/1")->assertOk()->json();
+        self::assertCount(2, $records);
+        foreach ($records as $record) {
+            self::assertSame('原生生物の巣窟（ピクミン禁止）', $record['stage_name']);
+        }
+        $this->getJson("/api/record/1314/1/1/$year/1")->assertOk()->assertJsonMissingPath('0.stage_name');
+        $this->record(1314, 10, $now->subDays(2), 100);
+        $this->getJson("/api/record/visibility_test/1/10/$year/1")->assertOk()
+            ->assertJsonCount(1)->assertJsonMissingPath('0.stage_name');
+    }
+
     private function fixture(CarbonImmutable $now, int $stageId, ?TrickEvent $event = null): array
     {
         $event ??= TrickEvent::create([
