@@ -139,6 +139,16 @@ class TrickRecordVisibilityTest extends TestCase
         $clone->deck->update(['title' => '原生生物の巣窟', 'rule_name' => 'ピクミン禁止']);
         $duplicate = $this->record(1474, 1, $now->subMinutes(2), 124);
         $this->link($event, $clone, $duplicate);
+        foreach ([$original, $duplicate] as $record) {
+            $this->getJson('/api/record/id/'.$record->unique_id)->assertOk()
+                ->assertJsonPath('stage_name', '原生生物の巣窟（ピクミン禁止）')
+                ->assertJsonPath('eng_stage_name', '原生生物の巣窟（ピクミン禁止）');
+            $this->getJson('/api/record/history/'.$record->stage_id.'/1/visibility_test')->assertOk()
+                ->assertJsonPath('0.stage_name', '原生生物の巣窟（ピクミン禁止）');
+        }
+        $unlinked = $this->record(1314, 10, $now->subDays(2), 100);
+        $this->getJson('/api/record/id/'.$unlinked->unique_id)->assertOk()
+            ->assertJsonPath('stage_name', 'テスト2')->assertJsonPath('eng_stage_name', 'Test');
         $year = date('Y');
         $records = $this->getJson("/api/record/visibility_test/1/261009/$year/1")->assertOk()->json();
         self::assertCount(2, $records);
@@ -146,7 +156,6 @@ class TrickRecordVisibilityTest extends TestCase
             self::assertSame('原生生物の巣窟（ピクミン禁止）', $record['stage_name']);
         }
         $this->getJson("/api/record/1314/1/1/$year/1")->assertOk()->assertJsonMissingPath('0.stage_name');
-        $this->record(1314, 10, $now->subDays(2), 100);
         $this->getJson("/api/record/visibility_test/1/10/$year/1")->assertOk()
             ->assertJsonCount(1)->assertJsonMissingPath('0.stage_name');
     }
