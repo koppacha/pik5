@@ -160,6 +160,27 @@ class TrickRecordVisibilityTest extends TestCase
             ->assertJsonCount(1)->assertJsonMissingPath('0.stage_name');
     }
 
+    public function test_recent_records_include_original_stage_and_card_rule_only_for_linked_cards(): void
+    {
+        $now = CarbonImmutable::now()->startOfSecond();
+        [$event, $card] = $this->fixture($now, 1314);
+        $event->update(['state' => 'ended', 'end_at' => $now->subHour()]);
+        $this->fixture($now, 399, $event);
+        Stage::where('stage_id', 399)->update(['stage_name' => '元ステージ名']);
+        $card->deck->update(['origin_stage_id' => 399, 'rule_name' => 'カードルール']);
+        $limited = $this->record(1314, 261009, $now->subMinutes(2), 100);
+        $this->link($event, $card, $limited);
+        $normal = $this->record(1314, 1, $now->subMinute(), 120);
+        foreach (['/api/new?limit=200', '/api/new?after_post_id='.($limited->post_id - 1)] as $url) {
+            $rows = collect($this->getJson($url)->assertOk()->json())->keyBy('post_id');
+            self::assertSame(399, $rows[$limited->post_id]['event_origin_stage_id']);
+            self::assertSame('元ステージ名', $rows[$limited->post_id]['event_stage_name']);
+            self::assertSame('カードルール', $rows[$limited->post_id]['event_rule_name']);
+            self::assertArrayNotHasKey('event_rule_name', $rows[$normal->post_id]);
+            self::assertArrayNotHasKey('event_origin_stage_id', $rows[$normal->post_id]);
+        }
+    }
+
     private function fixture(CarbonImmutable $now, int $stageId, ?TrickEvent $event = null): array
     {
         $event ??= TrickEvent::create([

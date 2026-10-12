@@ -7,6 +7,7 @@ import {useEffect, useMemo, useState} from "react"
 import {fetcher, getUserName, useLocale} from "../../lib/pik5"
 import {TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
 import {score2str} from "../../lib/factory"
+import {getPickupVideoRuleName as getRuleName, getPickupVideoStageName as getStageName} from "../../lib/pickupVideo"
 
 const extractYouTubeId = (value) => {
     if (typeof value !== "string" || value.trim() === "") return null
@@ -58,21 +59,6 @@ const createWeightedQueue = (records) => {
     }
 
     return queue
-}
-
-const hiddenRuleIds = [10, 21, 22, 41, 42, 43]
-
-const getRuleName = (record, t) => {
-    if (hiddenRuleIds.includes(Number(record?.rule))) return ""
-
-    const stageRule = t.stage?.[record?.stage_id + "-" + record?.rule]
-    const rule = t.rule?.[record?.rule]
-
-    return stageRule || rule || ""
-}
-
-const getStageName = (record, t) => {
-    return t.stage[record?.stage_id] || record?.stage_id || ""
 }
 
 const getStageWithRuleLabel = (record, t) => {
