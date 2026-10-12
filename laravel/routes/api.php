@@ -185,6 +185,9 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
 Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get('tricks/stage-context/{stageId}', [TrickController::class, 'stageContext']);
     Route::get('tricks/record-context/{uniqueId}', [TrickController::class, 'recordContext']);
+    Route::get('tricks/replay/{eventId}', [TrickController::class, 'replayIndex'])->whereNumber('eventId');
+    Route::get('tricks/replay/{eventId}/snapshots', [TrickController::class, 'replaySnapshots'])->whereNumber('eventId');
+    Route::get('tricks/replay/{eventId}/snapshot', [TrickController::class, 'replaySnapshot'])->whereNumber('eventId');
     Route::get('tricks/tournament', [TrickController::class, 'tournament']);
     Route::get('tricks/state', [TrickController::class, 'state']);
     Route::get('tricks/players', [TrickController::class, 'players']);

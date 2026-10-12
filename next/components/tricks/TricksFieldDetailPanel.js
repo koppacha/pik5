@@ -5,6 +5,7 @@ import Record from "../record/Record"
 
 export default function TricksFieldDetailPanel({
     rankings,
+    evidenceImageBase,
     highlightedPost,
     usersById = {},
     summary,
@@ -43,8 +44,18 @@ export default function TricksFieldDetailPanel({
                 event.preventDefault()
                 event.stopPropagation()
             }}
-            style={style}
+            style={{background: "var(--color-bg-base)", border: "1px solid var(--color-border-base)", borderRadius: 14, boxShadow: "0 18px 48px rgba(0, 0, 0, 0.32)", color: "var(--color-text-base)", overflow: "hidden", ...style}}
         >
+            <style jsx global>{`
+                .tricks-field-detail-panel .record-container,
+                .tricks-field-detail-panel .record-container div,
+                .tricks-field-detail-panel .record-container span,
+                .tricks-field-detail-panel .record-container time,
+                .tricks-field-detail-panel .record-container svg,
+                .tricks-field-detail-panel .record-container a {color: var(--color-text-base)}
+                .tricks-field-detail-panel .record-container a {text-decoration-color: currentColor}
+                .tricks-field-detail-panel .record-container .compare-type {color: var(--color-compare)}
+            `}</style>
             <div ref={contentRef} style={{padding: 22, minHeight: 180, maxHeight: 390, overflowY: "auto"}}>
                 <div style={{fontSize: 12, color: "var(--color-text-sub)", marginBottom: 10}}>{summary}</div>
                 {highlightedPost && !rankings?.some((row) => row.user_id === highlightedPost.actor_name && Number(row.score) === Number(highlightedPost.score)) && (
@@ -54,7 +65,6 @@ export default function TricksFieldDetailPanel({
                     </div>
                 )}
                 {Number(takerRemainder) > 0 && <div data-tricks-taker-remainder style={{marginBottom: 10, color: "var(--color-text-base)"}}>テイカー端数還元：{usersById[taker]?.name || taker} / {takerRemainder}P（順位配分とは別枠）</div>}
-                {!rankings && <div style={{color: "var(--color-text-base)"}}>読み込み中...</div>}
                 {rankings && rankings.length === 0 && <div style={{color: "var(--color-text-base)"}}>投稿はまだありません</div>}
                 {rankings && rankings.length > 0 && (
                     <div style={{display: "grid", gap: 8}}>
@@ -63,6 +73,7 @@ export default function TricksFieldDetailPanel({
                                 data-tricks-highlighted-post={row.user_id === highlightedPost?.actor_name && Number(row.score) === Number(highlightedPost?.score) ? highlightedPost.id : undefined}>
                             <Record
                                 mini
+                                evidenceImageBase={evidenceImageBase}
                                 commentPreviewLength={6}
                                 showMiniRps
                                 swapScoreRpsLabel

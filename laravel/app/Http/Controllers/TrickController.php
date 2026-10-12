@@ -115,6 +115,33 @@ class TrickController extends Controller
         return response()->json($state->logs($events->forRequest($request, $identity)));
     }
 
+    public function replayIndex(int $eventId, \App\Services\Tricks\TrickReplayService $replay): JsonResponse
+    {
+        return response()->json($replay->index($eventId));
+    }
+
+    public function replaySnapshots(Request $request, int $eventId, \App\Services\Tricks\TrickReplayService $replay): JsonResponse
+    {
+        $input = $request->validate([
+            'mode' => ['required', 'in:frame,checkpoint'],
+            'start' => ['required', 'integer', 'min:0'],
+            'count' => ['required', 'integer', 'min:1', 'max:8'],
+        ]);
+        return response()->json($replay->snapshots($eventId, $input['mode'], (int) $input['start'], (int) $input['count']));
+    }
+
+    public function replaySnapshot(Request $request, int $eventId, \App\Services\Tricks\TrickReplayService $replay): JsonResponse
+    {
+        $input = $request->validate([
+            'frame' => ['nullable', 'integer', 'min:0'],
+            'checkpoint' => ['nullable', 'integer', 'min:0'],
+        ]);
+        abort_if(isset($input['frame'], $input['checkpoint']), 422, 'Choose one replay cursor');
+        return response()->json($replay->snapshot($eventId,
+            isset($input['frame']) ? (int) $input['frame'] : null,
+            isset($input['checkpoint']) ? (int) $input['checkpoint'] : null));
+    }
+
     public function collected(
         Request $request,
         TrickEventResolver $events,

@@ -42,7 +42,7 @@ async (page) => {
         await page.waitForTimeout(300)
         const header = await page.locator('[data-tricks-header-scroll]').boundingBox()
         const box = await results.boundingBox()
-        assert(box.y >= header.y + header.height + 20, '回収一覧が複数行ユーザー情報と重ならない')
+        assert(box.y >= header.y + header.height && box.y <= Math.max(174, Math.ceil(header.y + header.height)), '回収一覧がユーザー情報を保護した境界から表示される')
         assert(await page.locator('canvas').count() === 2, 'canvas増殖なし')
     }
     await verifyOffset()
