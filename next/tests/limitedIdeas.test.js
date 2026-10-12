@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import {test} from 'node:test'
-import {canAccessLimitedIdeas, LIMITED_IDEAS_START, LIMITED_IDEAS_END, limitedIdeasRatio, validateLimitedIdea} from '../lib/limitedIdeas'
+import {canAccessLimitedIdeas, LIMITED_IDEAS_START, LIMITED_IDEAS_END, LIMITED_IDEAS_REOPEN, limitedIdeasClosesAt, limitedIdeasRatio, validateLimitedIdea} from '../lib/limitedIdeas'
 import {createLimitedIdeasHandler, isLimitedIdeasSameOrigin} from '../lib/limitedIdeasApi'
 
 const valid = {title: 2, stageId: 201, ruleName: 'テストルール', difficulty: 3, registrationMethod: 'score', body: 'テスト本文'}
@@ -16,6 +16,66 @@ test('JST publication boundaries and administrator exception', () => {
         assert.equal(canAccessLimitedIdeas({role}, Date.parse(LIMITED_IDEAS_END)), true)
     }
     assert.equal(canAccessLimitedIdeas({role: '100'}, publicTime - 1), false)
+})
+
+test('post-event recruitment reopens without a fabricated deadline', async () => {
+    const reopen = Date.parse(LIMITED_IDEAS_REOPEN)
+    assert.equal(canAccessLimitedIdeas(null, reopen - 1), false)
+    assert.equal(canAccessLimitedIdeas(null, reopen), true)
+    assert.equal(canAccessLimitedIdeas({role: '1'}, Date.parse('2027-11-01T00:00:00+09:00')), true)
+    assert.equal(limitedIdeasClosesAt(publicTime), '2026-10-08T14:59:59.000Z')
+    assert.equal(limitedIdeasClosesAt(reopen), null)
+    let session = null
+    let created = false
+    const api = createLimitedIdeasHandler({
+        prisma: {
+            user: {findUnique: async () => ({id: 'test', name: 'テストユーザー', role: '1'})},
+            limitedIdea: {count: async () => 3, create: async ({data}) => { created = true
+                return data }},
+        },
+        getSession: async () => session, now: () => reopen, siteUrl: 'http://localhost:3005',
+    })
+    const call = async (method) => {
+        const result = {}
+        const res = {setHeader: () => {}, status: code => { result.status = code
+            return res }, json: data => { result.data = data
+            return res }}
+        await api({method, query: {}, body: valid, headers: {origin: 'http://localhost:3005', 'content-type': 'application/json'}}, res)
+        return result
+    }
+    const summary = await call('GET')
+    assert.equal(summary.status, 200)
+    assert.equal(summary.data.count, 3)
+    assert.equal(summary.data.closesAt, null)
+    assert.equal((await call('POST')).status, 401)
+    session = {user: {dbId: 'test'}}
+    assert.equal((await call('POST')).status, 201)
+    assert.equal(created, true)
+})
+
+test('API stores score, time attack and remaining time as distinct methods', async () => {
+    let saved
+    const api = createLimitedIdeasHandler({
+        prisma: {
+            user: {findUnique: async () => ({id: 'test', name: 'テストユーザー', role: '1'})},
+            limitedIdea: {create: async ({data}) => { saved = data
+                return data }},
+        },
+        getSession: async () => ({user: {dbId: 'test'}}),
+        now: () => Date.parse(LIMITED_IDEAS_REOPEN), siteUrl: 'http://localhost:3005',
+    })
+    for (const registrationMethod of ['score', 'time', 'left']) {
+        const body = {...valid, registrationMethod}
+        assert.equal(validateLimitedIdea(body), null)
+        let status
+        const res = {setHeader: () => {}, status: code => { status = code
+            return res }, json: () => res}
+        await api({method: 'POST', query: {}, body, headers: {origin: 'http://localhost:3005', 'content-type': 'application/json'}}, res)
+        assert.equal(status, 201)
+        assert.equal(saved.registrationMethod, registrationMethod)
+        assert.ok(registrationMethod.length <= 5)
+    }
+    assert.ok(validateLimitedIdea({...valid, registrationMethod: 'constructor'}))
 })
 
 test('ratio counts rules, minimum 1.00', () => {

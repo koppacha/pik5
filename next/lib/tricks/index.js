@@ -275,8 +275,8 @@ export const orderTricksField = (field = [], nowValue = Date.now()) => {
 // APIレスポンスをPhaserとHUDが扱いやすい形へ正規化する。
 export const normalizeTricksState = (state, options = {}) => {
     const nowValue = options.nowValue || Date.now()
-    const orderedHand = orderTricksHand(state?.hand || [], options.handOrder || [])
-    const activeField = (state?.field || []).filter((card) => !isTricksCardLimitExpired(card, nowValue))
+    const orderedHand = orderTricksHand(state?.hand || [], state?.read_only ? [] : options.handOrder || [])
+    const activeField = (state?.field || []).filter((card) => state?.read_only || !isTricksCardLimitExpired(card, nowValue))
 
     return {
         tournament: state?.tournament || {},

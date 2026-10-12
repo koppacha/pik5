@@ -44,6 +44,7 @@ export default function Record({
     swapScoreRpsLabel = false,
     showMiniRps = false,
     commentPreviewLength = null,
+    evidenceImageBase = "/api/file/",
     rankCellMetric = "rps",
     scoreUnit = null,
     rankPointUnit = null,
@@ -238,7 +239,7 @@ export default function Record({
                                         >
                                             <Box
                                                 component="img"
-                                                src={"/api/file/"+data.img_url}
+                                                src={evidenceImageBase + data.img_url}
                                                 alt=""
                                                 onClick={(event) => event.stopPropagation()}
                                                 style={{

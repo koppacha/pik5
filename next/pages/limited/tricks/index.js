@@ -23,6 +23,8 @@ import TricksHud from "../../../components/tricks/TricksHud"
 import TricksManualContent from "../../../components/tricks/TricksManualContent"
 import {fieldPanelPosition, fieldDetailModalWidth} from "../../../lib/tricks/fieldPanelPosition"
 
+const TricksReplayMode = dynamic(() => import("../../../components/tricks/TricksReplayMode"), {ssr: false})
+
 const TricksGame = dynamic(() => import("../../../components/tricks/TricksLayeredGame"), {
     ssr: false,
 })
@@ -64,9 +66,11 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     const {data: session, status} = useSession()
     const userId = session?.user?.userId || session?.user?.id
     const [spectatorMode, setSpectatorMode] = useState(false)
+    const [replayOpen, setReplayOpen] = useState(false)
     const [spectatorExitConfirm, setSpectatorExitConfirm] = useState(false)
     const [headerBottom, setHeaderBottom] = useState(174)
     const requestSpectatorExit = useCallback(() => setSpectatorExitConfirm(true), [])
+    const [spectatorRequestStatus, setSpectatorRequestStatus] = useState(null)
     const [message, setMessage] = useState("")
     const [busy, setBusy] = useState(false)
     const [selectedField, setSelectedField] = useState(null)
@@ -86,7 +90,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     const processedSubsidySlotRef = useRef(null)
     const subsidyRetryAtRef = useRef(0)
     const subsidyErrorMessageRef = useRef(null)
-    const {data: holderRankings} = useSWR(selectedHolder?.id ? tricksApi.scores(selectedHolder.id) : null, tricksFetcher)
+    const {data: holderRankings, error: holderRankingsError, isLoading: holderRankingsLoading} = useSWR(!replayOpen && selectedHolder?.id ? tricksApi.scores(selectedHolder.id) : null, tricksFetcher)
     const stateKey = tricksApi.state
     const selectedCardSnapshot = selectedField?.card || selectedField
     const fieldAnchor = selectedField?.anchor
@@ -97,35 +101,35 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     }, [])
     const stateRefreshInterval = useCallback((latest) =>
         latest?.tournament?.state === "ended" || fieldSorting ? 0 : 3000, [fieldSorting])
-    const {data: state, error, mutate, isLoading} = useSWR(stateKey, stateFetcher, {
+    const {data: state, error, mutate, isLoading} = useSWR(replayOpen ? null : stateKey, stateFetcher, {
         refreshInterval: stateRefreshInterval,
         revalidateOnFocus: true,
         keepPreviousData: true,
     })
     const selectedCard = state?.field?.find((card) => card.id === selectedCardSnapshot?.id) || selectedCardSnapshot
-    const spectatorPresentation = useTricksSpectator(state, spectatorMode)
+    const spectatorPresentation = useTricksSpectator(state, spectatorMode && !replayOpen)
     useEffect(() => {
         if (!spectatorPresentation) return
         setSelectedField(null)
         setSelectedHolder(null)
     }, [spectatorPresentation])
-    const {data: users = []} = useSWR("/api/users", tricksFetcher, {
+    const {data: users = [], error: usersError, isLoading: usersLoading} = useSWR("/api/users", tricksFetcher, {
         revalidateOnFocus: false,
     })
-    const {data: holderCatalog} = useSWR(tricksApi.holders(), tricksFetcher, {
+    const {data: holderCatalog, error: holderCatalogError, isLoading: holderCatalogLoading} = useSWR(replayOpen ? null : tricksApi.holders(), tricksFetcher, {
         refreshInterval: 30000,
         revalidateOnFocus: true,
     })
     const {
-        data: rankings,
+        data: rankings, error: rankingsError, isLoading: rankingsLoading,
         mutate: mutateRankings
-    } = useSWR(selectedCard?.id ? tricksApi.scores(selectedCard.id) : null, tricksFetcher, {
+    } = useSWR(!replayOpen && selectedCard?.id ? tricksApi.scores(selectedCard.id) : null, tricksFetcher, {
         refreshInterval: selectedCard?.id ? 3000 : 0,
         revalidateOnFocus: true,
     })
     const eventEnded = state?.tournament?.state === "ended"
-    const {data: collected = [], mutate: mutateCollected} = useSWR(
-        eventEnded && state?.tournament?.event_id ? tricksApi.collected(state.tournament.event_id) : null,
+    const {data: collected = [], error: collectedError, isLoading: collectedLoading, mutate: mutateCollected} = useSWR(
+        !replayOpen && eventEnded && state?.tournament?.event_id ? tricksApi.collected(state.tournament.event_id) : null,
         tricksFetcher,
         {revalidateOnFocus: false}
     )
@@ -133,8 +137,8 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     const [adminStatsOpen, setAdminStatsOpen] = useState(false)
     const closeAdminStats = useCallback(() => setAdminStatsOpen(false), [])
     useEffect(() => { setAdminStatsOpen(false) }, [isAdmin, state?.tournament?.event_id])
-    const {data: collectedAdminStats} = useSWR(
-        adminStatsOpen && isAdmin && state?.tournament?.event_id ? tricksApi.collectedAdminStats(state.tournament.event_id) : null,
+    const {data: collectedAdminStats, error: collectedAdminStatsError, isLoading: collectedAdminStatsLoading} = useSWR(
+        !replayOpen && adminStatsOpen && isAdmin && state?.tournament?.event_id ? tricksApi.collectedAdminStats(state.tournament.event_id) : null,
         tricksFetcher,
         {revalidateOnFocus: true, refreshInterval: eventEnded ? 0 : 10000}
     )
@@ -158,7 +162,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     const authenticated = status === "authenticated" && Boolean(userId)
     const canJoin = authenticated && !me && state?.tournament?.available
     const runAction = useCallback(async (action, options = {}) => {
-        if (!userId || (spectatorMode && !options.joining)) {
+        if (replayOpen || !userId || (spectatorMode && !options.joining)) {
             return false
         }
         setBusy(true)
@@ -178,7 +182,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
         } finally {
             setBusy(false)
         }
-    }, [mutate, mutateCollected, spectatorMode, userId])
+    }, [mutate, mutateCollected, spectatorMode, userId, replayOpen])
 
     const openRuling = (type) => {
         setRulingError("")
@@ -334,7 +338,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     }, [nowValue, selectedCard, state?.field])
 
     useEffect(() => {
-        if (spectatorMode || !me || !expiredFieldKey || collectingExpiredRef.current) return undefined
+        if (replayOpen || spectatorMode || !me || !expiredFieldKey || collectingExpiredRef.current) return undefined
         let cancelled = false
         collectingExpiredRef.current = true
         postTricks(tricksApi.collectExpired)
@@ -351,10 +355,10 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
         return () => {
             cancelled = true
         }
-    }, [expiredFieldKey, me, mutate, spectatorMode, tricksApi.collectExpired])
+    }, [expiredFieldKey, me, mutate, spectatorMode, tricksApi.collectExpired, replayOpen])
 
     useEffect(() => {
-        if (spectatorMode || !clockInitializedRef.current || !me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey
+        if (replayOpen || spectatorMode || !clockInitializedRef.current || !me || !operation.available || processedSubsidySlotRef.current === subsidySlotKey
             || Date.now() < subsidyRetryAtRef.current) return undefined
         let cancelled = false
         processedSubsidySlotRef.current = subsidySlotKey
@@ -381,7 +385,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
         return () => {
             cancelled = true
         }
-    }, [me, mutate, nowValue, operation.available, spectatorMode, subsidySlotKey, tricksApi.subsidy])
+    }, [me, mutate, nowValue, operation.available, spectatorMode, subsidySlotKey, tricksApi.subsidy, replayOpen])
 
     useEffect(() => {
         const serverNow = state?.server_now || state?.tournament?.server_now
@@ -400,13 +404,13 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
     }, [state?.debug_state?.frozen, state?.server_now, state?.tournament?.server_now])
 
     useEffect(() => {
-        if (eventEnded || state?.debug_state?.frozen) return undefined
+        if (replayOpen || eventEnded || state?.debug_state?.frozen) return undefined
         const timer = window.setInterval(() => {
             setNowValue((current) => current + 1000)
         }, 1000)
 
         return () => window.clearInterval(timer)
-    }, [eventEnded, state?.debug_state?.frozen])
+    }, [eventEnded, state?.debug_state?.frozen, replayOpen])
 
     const stateSignature = stateContentSignature(state)
     useEffect(() => {
@@ -434,6 +438,15 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
             delete window.__TRICKS_DEBUG_SNAPSHOT__
         }
     }, [debugObservability])
+
+    const headerMessages = [
+        (isLoading || busy || usersLoading || holderCatalogLoading || rankingsLoading || holderRankingsLoading || collectedLoading || collectedAdminStatsLoading || spectatorRequestStatus?.loading) && {key: "loading", text: "読み込み中..."},
+        ...[error, usersError, holderCatalogError, rankingsError, holderRankingsError, collectedError, collectedAdminStatsError, spectatorRequestStatus?.error].filter(Boolean).map((failure, index) => ({key: `api-error-${index}`, text: tricksErrorMessage(failure), error: true})),
+        message && {key: "message", text: message, error: true},
+        rulingError && {key: "ruling-error", text: rulingError, error: true},
+    ].filter(Boolean)
+
+    if (replayOpen) return <TricksReplayMode eventId={state?.tournament?.event_id || eventId} usersById={usersById} manualContent={manualContent} onExit={() => setReplayOpen(false)} />
 
     return (
         <>
@@ -474,7 +487,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                     busy={busy}
                     nowValue={nowValue}
                 />
-                <TricksHud onHeaderHeightChange={setHeaderBottom} onToggleAdminStats={isAdmin ? () => setAdminStatsOpen((open) => !open) : undefined} adminStatsOpen={adminStatsOpen} onShowKnowledge={() => setKnowledgeOpen(true)} spectatorMode={spectatorMode} highlightedPlayer={spectatorPresentation?.blinking ? spectatorPresentation.item.log.actor_name : ""} onToggleSpectator={() => changeSpectatorMode(!spectatorMode)}
+                <TricksHud headerMessages={headerMessages} onToggleReplay={eventEnded ? () => setReplayOpen(true) : undefined} onHeaderHeightChange={setHeaderBottom} onToggleAdminStats={isAdmin ? () => setAdminStatsOpen((open) => !open) : undefined} adminStatsOpen={adminStatsOpen} onShowKnowledge={() => setKnowledgeOpen(true)} spectatorMode={spectatorMode} highlightedPlayer={spectatorPresentation?.blinking ? spectatorPresentation.item.log.actor_name : ""} onToggleSpectator={() => changeSpectatorMode(!spectatorMode)}
                     accessAction={!eventEnded && spectatorMode && !me && status !== "loading" && (
                         authenticated
                             ? <Button variant="contained" size="large" data-tricks-info-join onClick={join} disabled={busy || !canJoin} style={{padding: "14px 28px", fontSize: 18, minWidth: 200, color: "#fff"}}>参加する</Button>
@@ -486,28 +499,11 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                 }} state={state} stagingMode={stagingMode} historicalHolderCounts={holderCatalog?.historical_counts || {}} usersById={usersById} currentUserId={userId} nowValue={nowValue} debugOpen={debugOpen} onToggleDebug={isDebugAdmin ? () => setDebugOpen((open) => !open) : undefined} />
                 {spectatorMode && spectatorPresentation && <TricksSpectatorPanel
                     key={spectatorPresentation.item.card.event_card_id}
-                    presentation={spectatorPresentation} tricksApi={tricksApi} usersById={usersById}
+                    onRequestStatus={setSpectatorRequestStatus} presentation={spectatorPresentation} tricksApi={tricksApi} usersById={usersById}
                 />}
-                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} topOffset={Math.max(216, headerBottom + 24)} />}
+                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} topOffset={headerBottom} />}
                 {isAdmin && adminStatsOpen && <TricksAdminStats stats={collectedAdminStats} usersById={usersById} onClose={closeAdminStats} />}
                 {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy || spectatorMode} onOperation={runDebugOperation} />}
-                <div
-                    style={{
-                        position: "absolute",
-                        left: 24,
-                        top: 122,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        zIndex: 2,
-                    }}
-                >
-                    {(message || error || isLoading) && (
-                        <div style={{fontSize: 13, color: error ? "#ff8a8a" : "#ffcf6e"}}>
-                            {isLoading ? "読み込み中..." : message || tricksErrorMessage(error)}
-                        </div>
-                    )}
-                </div>
                 {selectedCard && !postOpen && !spectatorPresentation && (
                     <div
                         role="presentation"
@@ -608,7 +604,6 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                                         inputProps={key === "difficulty" ? {min: 1, max: 5} : {maxLength: key === "text" ? 10000 : 255}}
                                         onChange={(event) => setRuling({...ruling, values: {...ruling.values, [key]: event.target.value}})} />
                                 ))}
-                                {rulingError && <div role="alert">{rulingError}</div>}
                             </DialogContent>
                             <DialogActions>
                                 <Button disabled={busy} onClick={() => setRuling(null)}>キャンセル</Button>
@@ -669,11 +664,6 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                                     <button type="button" data-tricks-start-spectating onClick={() => changeSpectatorMode(true)}
                                         style={{...accessActionStyle, color: "#8ef0b2"}}>観戦する</button>
                                 </div>
-                                {message && authenticated && (
-                                    <div role="alert" data-tricks-join-error style={{marginTop: 14, fontSize: 15, color: "#ff9c9c"}}>
-                                        {message}
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </>

@@ -5,7 +5,7 @@ import TricksFieldDetailPanel from "./TricksFieldDetailPanel"
 const detailPanelWidth = 560
 const detailPanelGap = 28
 
-export default function TricksCollectedResults({cards = [], usersById = {}, topOffset = 216}) {
+export default function TricksCollectedResults({cards = [], usersById = {}, topOffset = 174}) {
     const [selected, setSelected] = useState(null)
     const selectedCard = selected?.card
     const fieldDuration = (card) => {
@@ -50,8 +50,8 @@ export default function TricksCollectedResults({cards = [], usersById = {}, topO
             data-testid="tricks-collected-results"
             style={{
                 position: "absolute",
-                inset: `${topOffset}px 20px 20px`,
-                zIndex: 4,
+                inset: `${topOffset}px 0 0`,
+                zIndex: 35,
                 overflowY: "auto",
                 padding: "20px",
                 background: "var(--color-bg-base)",

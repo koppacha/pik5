@@ -1,10 +1,12 @@
+import {formatTricksLog} from "../../lib/tricks/logText"
+import {formatReplayTimestamp} from "../../lib/tricks/replay"
 import {useTheme} from "next-themes"
 import Link from "next/link"
-import {rankColor, sec2time} from "../../lib/pik5"
+import {rankColor} from "../../lib/pik5"
 import Tooltip from "@mui/material/Tooltip"
 import TricksCardBorder, {TricksCardBorderStyles} from "./TricksCardBorder"
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
-import {faHome, faCloudSun, faCloudMoon, faBookBookmark, faUsers, faChevronDown, faChevronUp, faExpand, faCompress} from "@fortawesome/free-solid-svg-icons"
+import {faClockRotateLeft, faHome, faCloudSun, faCloudMoon, faBookBookmark, faUsers, faChevronDown, faChevronUp, faExpand, faCompress} from "@fortawesome/free-solid-svg-icons"
 import {faDiscord} from "@fortawesome/free-brands-svg-icons"
 import {useEffect, useMemo, useRef, useState} from "react"
 import {
@@ -31,53 +33,6 @@ function displayName(usersById, userId, fallback = "-") {
     return usersById[userId]?.name || userId
 }
 
-function logTimestamp(value) {
-    const date = new Date(value)
-    if (!Number.isFinite(date.getTime())) return "-/- --:--"
-
-    const parts = new Intl.DateTimeFormat("ja-JP", {
-        month: "numeric",
-        day: "numeric",
-        timeZone: "Asia/Tokyo",
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-    }).formatToParts(date)
-    const part = (type) => parts.find((value) => value.type === type)?.value
-    return `${part("month")}/${part("day")} ${part("hour")}:${part("minute")}`
-}
-
-function logText(log, usersById) {
-    if (typeof log === "string") return `-/- --:-- - ${log}`
-    const user = displayName(usersById, log?.actor_name)
-    const topUser = displayName(usersById, log?.top_user_id, "ホルダーなし")
-    const title = log?.card_title || `カード#${log?.card_id || "-"}`
-    const cardTitle = log?.rule_name ? `${title}（${log.rule_name}）` : title
-    const rarity = Math.max(1, Number(log?.rarity || 1))
-    let text = log?.message || log?.text || log?.event || "イベントが発生しました。"
-
-    if (log?.event === "join") text = `${user}さんが参加しました。`
-    if (log?.event === "take") text = `${user}さんが★${rarity} ${cardTitle}をテイクしました。`
-    if (log?.event === "record_posted" || log?.event === "record_updated") {
-        const score = log?.score == null ? "-" : log.score_type === "time" ? sec2time(Number(log.score)) : `${log.score}点`
-        text = `${user}さんが${cardTitle}に投稿しました。（${score} / ${log?.rank ?? "-"}位）`
-    }
-    if (log?.event === "rule_changed") text = `${cardTitle}のルールが管理者裁定により変更されました。`
-    if (log?.event === "ranking_reset") text = `${cardTitle}のランキングがリセットされました。`
-    if (log?.event === "ranking_reset_compensation") text = `${displayName(usersById, log.affected_player_name)}さんにお詫びの5Pが配布されました。次の定期徴収は免除されます。`
-    if (log?.event === "instant_subsidy_paid") text = `${user}さんに1Pが即時支給されました。`
-    if (log?.event === "subsidy_paid") text = `${Number(log?.subsidy_recipient_count || 1)}人にドローポイントが給付されました。`
-    if (log?.event === "player_extension") text = `${user}さんが${cardTitle}を15分延長しました。`
-    if (log?.event === "empty_field_floor_grant") text = `循環再開のため合計${Number(log?.granted_points_total || 0)}Pが配布されました。`
-    if (log?.event === "collect") {
-        text = Number(log?.records_count || 0) === 0
-            ? `${cardTitle}が除外されました。`
-            : `${cardTitle}が${topUser}さんに回収され、ドローポイントが還元されました。`
-    }
-
-    return `${logTimestamp(log?.created_at)} - ${text}`
-}
-
 function LiveClock() {
     const [time, setTime] = useState("")
     useEffect(() => {
@@ -91,9 +46,20 @@ function LiveClock() {
     return <time className="tricks-live-clock" style={{fontVariantNumeric: "tabular-nums"}}>{time || "----/--/-- --:--:--"}</time>
 }
 
-export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, accessAction, spectatorMode = false, onToggleSpectator, onShowKnowledge, highlightedPlayer = "", state, stagingMode = false, historicalHolderCounts = {}, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false, onSelectHolder, onHeaderHeightChange}) {
+export default function TricksHud({headerMessages = [], replayMode = false, bottomOffset = 0, onToggleReplay, onSelectReplayUser, onToggleAdminStats, adminStatsOpen = false, accessAction, spectatorMode = false, onToggleSpectator, onShowKnowledge, highlightedPlayer = "", state, stagingMode = false, historicalHolderCounts = {}, usersById = {}, dimmed = false, currentUserId = "", nowValue = Date.now(), onToggleDebug, debugOpen = false, onSelectHolder, onHeaderHeightChange}) {
     const players = useMemo(() => state?.players || [], [state?.players])
     const playerRanks = useMemo(() => tricksPlayerRanks(players), [players])
+    const topBarRef = useRef(null)
+    const [topBarHeight, setTopBarHeight] = useState(28)
+    useEffect(() => {
+        const bar = topBarRef.current
+        if (!bar) return undefined
+        const update = () => setTopBarHeight(Math.ceil(bar.getBoundingClientRect().height))
+        update()
+        const observer = new ResizeObserver(update)
+        observer.observe(bar)
+        return () => observer.disconnect()
+    }, [])
     const headerRef = useRef(null)
     useEffect(() => {
         const header = headerRef.current
@@ -108,7 +74,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
         const observer = new ResizeObserver(update)
         observer.observe(header)
         return () => observer.disconnect()
-    }, [onHeaderHeightChange, spectatorMode])
+    }, [onHeaderHeightChange, spectatorMode, topBarHeight])
     const logs = useMemo(() => state?.logs || [], [state?.logs])
     const holderCardsByPlayer = useMemo(() => (state?.holder_cards || []).reduce((grouped, card) => {
         if (!grouped[card.player_name]) grouped[card.player_name] = []
@@ -128,11 +94,11 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
     const defaultLogHeight = Math.min(178, viewportHeight)
     const visibleLogHeight = Math.max(defaultLogHeight, Math.min(logHeight, viewportHeight))
     useEffect(() => {
-        const update = () => setViewportHeight(window.innerHeight)
+        const update = () => setViewportHeight(window.innerHeight - bottomOffset)
         update()
         window.addEventListener("resize", update)
         return () => window.removeEventListener("resize", update)
-    }, [])
+    }, [bottomOffset])
     const startLogResize = (event, edge) => {
         event.preventDefault()
         event.stopPropagation()
@@ -328,7 +294,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
         setPlayerOrder((currentOrder) => {
             const syncedOrder = syncTricksOrder(currentOrder, players, "name")
             const targetOrder = targetTricksPlayerOrder(players, syncedOrder)
-            if (syncedOrder.length === 0) return targetOrder
+            if (replayMode || syncedOrder.length === 0) return targetOrder
             if (targetOrder.every((name, index) => name === syncedOrder[index])) return syncedOrder
 
             const steps = buildTricksShakerSortSteps(syncedOrder, targetOrder)
@@ -359,7 +325,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
         })
 
         return undefined
-    }, [players])
+    }, [players, replayMode])
 
     useEffect(() => {
         return () => {
@@ -367,14 +333,20 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
         }
     }, [])
 
+    const statusItems = [
+        ...(replayMode ? [{key: "replay", content: <>リプレイモード表示中<a href="#" style={{color: "inherit", textDecoration: "underline", whiteSpace: "nowrap"}} aria-label="リプレイモードを解除" onClick={(event) => {event.preventDefault(); onToggleReplay?.()}}>（解除）</a></>}] : []),
+        ...(spectatorMode ? [{key: "spectator", content: <>観戦モードで表示中<a href="#" style={{color: "inherit", textDecoration: "underline", whiteSpace: "nowrap"}} aria-label="観戦モードを解除" onClick={(event) => {event.preventDefault(); onToggleSpectator?.()}}>（解除）</a></>}] : []),
+        ...Array.from(new Map(headerMessages.filter((item) => item?.text).map((item) => [item.text, item])).values()).map((item) => ({...item, content: item.text})),
+    ]
     return (
         <>
-            <nav className="tricks-top-bar" aria-label="イベントナビゲーション" style={{
-                position: "fixed", top: 0, left: '40px', zIndex: 40, display: "flex", alignItems: "center", gap: 12, width: "max-content", maxWidth: "calc(100vw - 40px)", boxSizing: "border-box", overflowX: "auto", whiteSpace: "nowrap", padding: "3px 18px", borderRadius: "0 0 18px 18px", background: "#3c3c3c", color: "#fff", fontSize: 13, lineHeight: "22px"
+            <nav ref={topBarRef} className="tricks-top-bar" aria-label="イベントナビゲーション" style={{
+                position: "fixed", top: 0, left: '40px', zIndex: 1600, display: "flex", alignItems: "center", gap: 12, width: "calc(100vw - 40px)", boxSizing: "border-box", whiteSpace: "nowrap", padding: "3px 18px", borderRadius: "0 0 18px 18px", background: "#3c3c3c", color: "#fff", fontSize: 13, lineHeight: "22px"
             }}>
+                <div data-tricks-header-navigation style={{display: "flex", flex: "1 1 0", minWidth: 0, overflowX: "auto", alignItems: "center", gap: 12}}>
                 <span style={{fontWeight:'bold'}}>{state?.tournament?.title || (stagingMode ? "トリックテイキング制 テスト大会" : "第19回期間限定ランキング")}</span>
                 <span style={{fontSize:'0.85em'}}>トリックテイキング制×スタンダード</span>
-                <LiveClock />
+                {replayMode ? <time className="tricks-live-clock">{nowValue ? formatReplayTimestamp(nowValue) : "----/--/-- --:--:--"}</time> : <LiveClock />}
                 <Tooltip title="ホーム" enterDelay={0} enterNextDelay={0} leaveDelay={0} arrow><Link href="/" aria-label="ホーム" style={{color: "inherit"}}><FontAwesomeIcon icon={faHome} /></Link></Tooltip>
                 <Tooltip title="Discord" enterDelay={0} enterNextDelay={0} leaveDelay={0} arrow><a href="https://discord.gg/rQEBJQa" aria-label="Discord" style={{color: "inherit"}}><FontAwesomeIcon icon={faDiscord} /></a></Tooltip>
                 <Tooltip title="テーマ変更" enterDelay={0} enterNextDelay={0} leaveDelay={0} arrow><button type="button" aria-label="テーマ変更" onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")} style={{border: 0, background: "transparent", color: "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={clockReady && resolvedTheme === "dark" ? faCloudSun : faCloudMoon} /></button></Tooltip>
@@ -382,7 +354,14 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                 <Tooltip title="観戦モード" enterDelay={0} enterNextDelay={0} leaveDelay={0} arrow><button type="button" aria-label="観戦モード" aria-pressed={spectatorMode}
                     data-tricks-spectator-toggle onClick={onToggleSpectator}
                     style={{border: 0, background: "transparent", color: spectatorMode ? "#8ef0b2" : "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={faUsers} /></button></Tooltip>
+                {onToggleReplay && <Tooltip title={replayMode ? "リプレイを終了" : "リプレイモード"} enterDelay={0} enterNextDelay={0} leaveDelay={0} arrow><button type="button" aria-label={replayMode ? "リプレイを終了" : "リプレイモード"} aria-pressed={replayMode} data-tricks-replay-toggle onClick={onToggleReplay} style={{border: 0, background: "transparent", color: replayMode ? "#2196f3" : "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={faClockRotateLeft} /></button></Tooltip>}
                 {(state?.tournament?.debug || state?.tournament?.test_mode) && <button type="button" data-tricks-debug-toggle onClick={onToggleDebug} disabled={!onToggleDebug} aria-expanded={debugOpen} style={{color: "#8ef0b2", background: "transparent", border: 0, cursor: onToggleDebug ? "pointer" : "default"}}>DEBUG</button>}
+                </div>
+                {statusItems.length > 0 && <div data-tricks-header-status aria-live="polite" style={{flex: "0 0 auto", maxWidth: "65%", textAlign: "right", whiteSpace: "normal", overflowWrap: "anywhere"}}>
+                    {statusItems.map((item, index) => <span key={item.key} data-tricks-header-status-item={item.key}>
+                        {index > 0 && " | "}<span role={item.error ? "alert" : undefined} style={{color: item.error ? "#ff9c9c" : "inherit"}}>{item.content}</span>
+                    </span>)}
+                </div>}
             </nav>
             {accessAction && <div data-tricks-info-access style={{position: "fixed", left: 20, bottom: 20, zIndex: 150}}>{accessAction}</div>}
             <div
@@ -446,7 +425,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                     )}
                     {visibleLogs.slice(0, 100).map((log, index) => (
                         <div
-                            key={log?.id || `${index}-${logText(log, usersById)}`}
+                            key={log?.id || `${index}-${formatTricksLog(log, usersById)}`}
                             data-tricks-log-entry={log?.id || index}
                             data-tricks-log-event={log?.event || "text"}
                             style={{
@@ -456,7 +435,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                                 overflowWrap: "anywhere",
                             }}
                         >
-                            {logText(log, usersById)}
+                            {formatTricksLog(log, usersById)}
                         </div>
                     ))}
                 </div>
@@ -467,7 +446,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                     position: "fixed",
                     left: 24,
                     right: 24,
-                    top: 30,
+                    top: topBarHeight + 2,
                     zIndex: 40,
                     color: "var(--color-text-base)",
                     pointerEvents: "auto",
@@ -517,6 +496,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                                     tabIndex={0}
                                     aria-expanded={playerTooltip?.name === player.name}
                                     onClick={(event) => {
+                                        onSelectReplayUser?.(player.name)
                                         const bounds = event.currentTarget.getBoundingClientRect()
                                         setPlayerTooltip((current) => current?.name === player.name ? null : {name: player.name, left: bounds.left, top: bounds.bottom + 4})
                                     }}

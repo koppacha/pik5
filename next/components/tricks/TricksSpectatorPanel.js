@@ -4,13 +4,17 @@ import {fieldPanelPosition, fieldDetailModalWidth} from "../../lib/tricks/fieldP
 import {tricksFetcher} from "../../lib/tricks"
 import TricksFieldDetailPanel from "./TricksFieldDetailPanel"
 
-export default function TricksSpectatorPanel({presentation, tricksApi, usersById}) {
+export default function TricksSpectatorPanel({presentation, tricksApi, usersById, onRequestStatus}) {
     const {item, blinking} = presentation
     const {card, log} = item
-    const {data: rankings, error, mutate} = useSWR(tricksApi.scores(card.id), tricksFetcher, {
+    const {data: rankings, error, isLoading, mutate} = useSWR(tricksApi.scores(card.id), tricksFetcher, {
         refreshInterval: 3000,
         revalidateOnFocus: true,
     })
+    useEffect(() => {
+        onRequestStatus?.({loading: isLoading, error})
+        return () => onRequestStatus?.(null)
+    }, [onRequestStatus, isLoading, error])
     useEffect(() => {
         mutate()
     }, [log.id, mutate])
@@ -48,7 +52,6 @@ export default function TricksSpectatorPanel({presentation, tricksApi, usersById
                 summary={`#${card.stage_id} ${card.title || ""}（${card.rule_name || ""}）`}
                 style={{position: "absolute", ...position.style, width: fieldDetailModalWidth, pointerEvents: "auto"}}
             >
-                {error && <span role="status">ランキングを再取得しています</span>}
             </TricksFieldDetailPanel>
         </div>
     )

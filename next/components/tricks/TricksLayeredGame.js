@@ -95,12 +95,12 @@ function fieldColumnCount(width) {
 }
 
 // 切り札領域の最大スクロール量を計算する。
-function fieldMaxScroll(width, height, count, handVisible = true, startY = FIELD_START_Y) {
+function fieldMaxScroll(width, height, count, handVisible = true, startY = FIELD_START_Y, viewportBottom) {
     if (count <= 0) return 0
     const rows = Math.ceil(count / fieldColumnCount(width))
     const contentBottom = startY + (rows - 1) * FIELD_ROW_GAP + FIELD_CARD_HEIGHT
 
-    return Math.max(0, contentBottom - fieldViewportBottom(height, handVisible) + 24)
+    return Math.max(0, contentBottom - (viewportBottom ?? fieldViewportBottom(height, handVisible)) + 24)
 }
 
 // 切り札カードの表示座標を計算する。
@@ -980,7 +980,53 @@ function DomCardsLayer({
 }
 
 // 3レイヤー構成のトリック画面本体を管理する。
+function viewHandCount(state) {
+    return state?.hand?.length || 0
+}
+
+function ReplayCardsLayer({view, size, usersById, fieldTop, fieldTopClip, fieldBottom, fieldScrollY, bottomOffset, nowValue, onSelectField}) {
+    const [selectedHandId, setSelectedHandId] = useState(null)
+    const previousRef = useRef([])
+    const [, finishExit] = useState(0)
+    const items = useMemo(() => {
+        const field = view.field.map((card, index) => ({card, type: "field", layout: {...fieldLayout(index, fieldScrollY, size.width, fieldTop), zIndex: 10 + index}}))
+            .filter((item) => item.layout.y + FIELD_CARD_HEIGHT >= fieldTopClip && item.layout.y <= fieldBottom)
+        const hand = view.hand.map((card, index, list) => ({card, type: "hand", layout: card.id === selectedHandId
+            ? selectedHandLayout(size.width, size.height - bottomOffset)
+            : {...handLayout(size.width - 120, size.height - bottomOffset, list.length, index), zIndex: 120 + index}}))
+        return [...field, ...hand]
+    }, [view.field, view.hand, fieldScrollY, size.width, size.height, fieldTop, fieldTopClip, fieldBottom, bottomOffset, selectedHandId])
+    const ids = new Set(items.map((item) => item.card.event_card_id))
+    const exits = previousRef.current.filter((item) => !ids.has(item.card.event_card_id))
+    useEffect(() => {
+        const missing = previousRef.current.some((item) => !items.some((next) => next.card.event_card_id === item.card.event_card_id))
+        previousRef.current = items
+        if (!missing) return undefined
+        const timer = window.setTimeout(() => finishExit((value) => value + 1), FIELD_SHIFT_MS)
+        return () => window.clearTimeout(timer)
+    }, [items])
+    return (
+        <div data-tricks-replay-cards style={{position: "absolute", inset: 0, pointerEvents: "none"}}>
+            {[...items, ...exits].map((item) => {
+                const exiting = !ids.has(item.card.event_card_id)
+                return <div key={item.card.event_card_id} data-tricks-replay-card={item.card.event_card_id} data-tricks-replay-card-type={item.type}
+                    style={{position: "absolute", inset: 0, pointerEvents: "none", zIndex: item.layout.zIndex || 20, opacity: exiting ? 0 : 1, transition: `opacity ${FIELD_SHIFT_MS}ms ease`, clipPath: item.type === "field" ? `inset(${fieldTopClip}px 0 ${Math.max(0, size.height - fieldBottom)}px 0)` : `inset(0 0 ${bottomOffset}px 0)`}}>
+                    <TricksDomCard card={item.card} type={item.type} layout={item.layout} usersById={usersById} nowValue={nowValue} showStackBacks={item.type === "field"}
+                        selected={item.type === "hand" && item.card.id === selectedHandId} disabled={exiting}
+                        onClick={(event) => {
+                            if (item.type === "hand") { setSelectedHandId((current) => current === item.card.id ? null : item.card.id); return }
+                            const bounds = event.currentTarget.getBoundingClientRect()
+                            onSelectField?.({card: item.card, anchor: {x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height}})
+                        }} />
+                </div>
+            })}
+        </div>
+    )
+}
+
 export default function TricksLayeredGame({
+    replayMode = false,
+    replayBottomOffset = 0,
     spectatorMode = false,
     headerBottom = HEADER_HEIGHT,
     onExitSpectator,
@@ -1007,10 +1053,10 @@ export default function TricksLayeredGame({
     const [fieldScrollY, setFieldScrollY] = useState(0)
     const [selectedHand, setSelectedHand] = useState(null)
     const [handVisible, setHandVisible] = useState(true)
-    const visibleHand = handVisible && !spectatorMode
+    const visibleHand = replayMode || (handVisible && !spectatorMode)
     const fieldTopClip = headerBottom
     const fieldTop = spectatorMode ? headerBottom + 16 : Math.max(FIELD_START_Y, headerBottom + 16)
-    const fieldBottom = fieldViewportBottom(size.height, visibleHand)
+    const fieldBottom = replayMode ? Math.max(fieldTop + 40, size.height - replayBottomOffset - (viewHandCount(state) ? 160 : 0)) : fieldViewportBottom(size.height, visibleHand)
     const [fxBurst, setFxBurst] = useState(null)
     const [drawMotion, setDrawMotion] = useState(null)
     const [takingMotion, setTakingMotion] = useState(null)
@@ -1076,9 +1122,9 @@ export default function TricksLayeredGame({
     useEffect(() => {
         setFieldScrollY((current) => Math.max(0, Math.min(
             current,
-            fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop)
+            fieldMaxScroll(size.width, size.height, replayMode ? view.field?.length || 0 : Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop, replayMode ? fieldBottom : undefined)
         )))
-    }, [size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop])
+    }, [size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop, fieldBottom, replayMode])
 
     const handleWheel = useCallback((event) => {
         if (selectedHand || selectedFieldId || takingMotion) return
@@ -1092,11 +1138,11 @@ export default function TricksLayeredGame({
         if (!rect) return
         const y = event.clientY - rect.top
         if (y < fieldTopClip || y > fieldBottom) return
-        const maxScroll = fieldMaxScroll(size.width, size.height, Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop)
+        const maxScroll = fieldMaxScroll(size.width, size.height, replayMode ? view.field?.length || 0 : Math.max(view.field?.length || 0, operation.fieldCap || 0), visibleHand, fieldTop, replayMode ? fieldBottom : undefined)
         if (maxScroll <= 0) return
         event.preventDefault()
         setFieldScrollY((current) => Math.max(0, Math.min(maxScroll, current + event.deltaY)))
-    }, [selectedFieldId, selectedHand, takingMotion, size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop, fieldTopClip, fieldBottom])
+    }, [selectedFieldId, selectedHand, takingMotion, size.height, size.width, view.field, operation.fieldCap, visibleHand, fieldTop, fieldTopClip, fieldBottom, replayMode])
 
     useEffect(() => {
         const root = rootRef.current
@@ -1246,7 +1292,7 @@ export default function TricksLayeredGame({
         >
             <PhaserBaseLayer state={state} size={size} />
             <FxLayer burst={fxBurst} />
-            <DomCardsLayer
+            {replayMode ? <ReplayCardsLayer view={view} size={size} usersById={usersById} fieldTop={fieldTop} fieldTopClip={fieldTopClip} fieldBottom={fieldBottom} fieldScrollY={fieldScrollY} bottomOffset={replayBottomOffset} nowValue={nowValue} onSelectField={onSelectField} /> : <DomCardsLayer
                 view={view}
                 size={size}
                 usersById={usersById}
@@ -1274,7 +1320,7 @@ export default function TricksLayeredGame({
                 onToggleHand={toggleHand}
                 onShowHowToPlay={onShowHowToPlay}
                 nowValue={nowValue}
-            />
+            />}
             <TricksCardBorderStyles />
             <style jsx global>{`
                 .tricks-dom-card {
