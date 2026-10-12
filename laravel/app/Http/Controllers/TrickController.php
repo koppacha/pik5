@@ -164,11 +164,20 @@ class TrickController extends Controller
                 'holders' => $cardHolders,
                 'holder_label' => implode(' / ', $cardHolders),
                 'returns_next_event' => $cardHolders === [],
-                'rankings' => is_array($finalRankings) ? $finalRankings : ($rankings[$card->id] ?? []),
+                // Keep settled ranks and points; refresh evidence edited after collection.
+                'rankings' => is_array($finalRankings) ? array_map(function (array $ranking) use ($rankings, $card) {
+                    $current = collect($rankings[$card->id] ?? [])->first(fn ($row) => $row['user_id'] === $ranking['user_id']
+                        && (int) $row['score'] === (int) $ranking['score']);
+
+                    return $current ? array_replace($ranking, array_intersect_key($current, array_flip([
+                        'post_id', 'unique_id', 'post_comment', 'img_url', 'video_url', 'console',
+                    ]))) : $ranking;
+                }, $finalRankings) : ($rankings[$card->id] ?? []),
                 'rewards' => $rewards->get($card->id, collect())->values()->all(),
                 'total_reward_points' => $rewards->get($card->id, collect())->sum('points_delta'),
             ];
-        })->values());
+        })->sort(fn ($a, $b) => ($b['total_reward_points'] <=> $a['total_reward_points'])
+            ?: ($a['stage_id'] <=> $b['stage_id']))->values());
     }
 
     public function holders(Request $request, TrickHolderCatalog $catalog, TrickStateService $state, TrickRecordService $records): JsonResponse

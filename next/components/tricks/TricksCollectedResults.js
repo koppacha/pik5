@@ -5,9 +5,8 @@ import TricksFieldDetailPanel from "./TricksFieldDetailPanel"
 const detailPanelWidth = 560
 const detailPanelGap = 28
 
-export default function TricksCollectedResults({cards = [], usersById = {}}) {
+export default function TricksCollectedResults({cards = [], usersById = {}, topOffset = 216}) {
     const [selected, setSelected] = useState(null)
-    const visibleCards = [...cards].sort((a, b) => Number(b.post_count || 0) - Number(a.post_count || 0) || Number(a.stage_id) - Number(b.stage_id))
     const selectedCard = selected?.card
     const fieldDuration = (card) => {
         const takenAt = new Date(card.taken_at).getTime()
@@ -22,6 +21,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}}) {
         (total, reward) => total + Number(reward.points_delta || 0),
         0,
     ) ?? 0)
+    const visibleCards = [...cards].sort((a, b) => totalReward(b) - totalReward(a) || Number(a.stage_id) - Number(b.stage_id))
     const panelStyle = selected && {
         position: "fixed",
         zIndex: 6,
@@ -50,7 +50,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}}) {
             data-testid="tricks-collected-results"
             style={{
                 position: "absolute",
-                inset: "216px 20px 20px",
+                inset: `${topOffset}px 20px 20px`,
                 zIndex: 4,
                 overflowY: "auto",
                 padding: "20px",
@@ -58,7 +58,7 @@ export default function TricksCollectedResults({cards = [], usersById = {}}) {
             }}
         >
             <div style={{display: "flex", alignItems: "center", gap: 12, marginBottom: 6}}>
-                <h1 style={{fontSize: 22, margin: 0}}>大会結果・回収カード</h1>
+                <h1 style={{fontSize: 22, margin: 0}}>第19回期間限定ランキング 最終リザルト</h1>
             </div>
             {visibleCards.length === 0 && <div style={{color: "var(--color-text-sub)"}}>回収カードはありません</div>}
             <div style={{display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 18}}>

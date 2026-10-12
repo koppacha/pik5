@@ -82,6 +82,12 @@ class TrickClosureTest extends TestCase
                 self::assertNotEmpty($updated->img_url);
                 \Illuminate\Support\Facades\Storage::disk('public')->assertExists('img/'.$updated->img_url);
                 self::assertSame(2, (int) $updated->console);
+                $result = $this->getJson('/api/tricks/collected?event_id=261009')->assertOk()->json();
+                $ranking = collect($result)->firstWhere('event_card_id', $card->id)['rankings'][0];
+                self::assertSame('https://example.invalid/evidence', $ranking['video_url']);
+                self::assertSame('Closure evidence', $ranking['post_comment']);
+                self::assertSame(1, $ranking['rank']);
+                self::assertSame($updated->post_id, $ranking['post_id']);
                 self::assertSame(1, TrickEventRecord::where('record_id', $updated->post_id)->count());
             }
             self::assertSame($frozen, $card->fresh()->toArray());
@@ -96,7 +102,7 @@ class TrickClosureTest extends TestCase
         }
     }
 
-    public function test_collected_order_uses_valid_record_count_instead_of_game_counter(): void
+    public function test_collected_order_uses_total_rewards_and_keeps_valid_record_counts(): void
     {
         CarbonImmutable::setTestNow('2026-10-09 20:30:00');
         try {
@@ -113,6 +119,7 @@ class TrickClosureTest extends TestCase
             $result = $this->getJson('/api/tricks/collected?event_id=261009')->assertOk()->json();
             self::assertSame([$second->deck->stage_id, $first->deck->stage_id], array_column($result, 'stage_id'));
             self::assertSame([2, 1], array_column($result, 'post_count'));
+            self::assertGreaterThan($result[1]['total_reward_points'], $result[0]['total_reward_points']);
             self::assertSame(99, $first->fresh()->post_count);
         } finally {
             CarbonImmutable::setTestNow();
