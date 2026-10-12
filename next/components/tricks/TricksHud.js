@@ -301,7 +301,7 @@ export default function TricksHud({onToggleAdminStats, adminStatsOpen = false, a
                 </div>
                 <div>
                     <div>残り</div><strong style={{fontSize: 14}}>{remaining}</strong>
-                    {countdownAlert && <div data-tricks-countdown-alert style={{fontSize: 11, lineHeight: 1.3, marginTop: 2}}>{countdownAlert.text}</div>}
+                    {countdownAlert && <div data-tricks-countdown-alert style={{fontSize: 11, lineHeight: 1.3, marginTop: 2, whiteSpace: "pre-line"}}>{countdownAlert.text}</div>}
                 </div>
             </div>
             <div data-tricks-info-metrics style={{display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 3, marginTop: 4, fontSize: 11, lineHeight: 1.15, textAlign: "center"}}>

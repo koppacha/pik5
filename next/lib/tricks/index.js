@@ -125,8 +125,9 @@ export const tricksTournamentCountdownAlert = (endAt, nowValue = Date.now()) => 
     if (!endAt) return null
     const remainingMs = new Date(endAt).getTime() - nowValue
     if (!Number.isFinite(remainingMs) || remainingMs > 3 * 60 * 60 * 1000) return null
+    if (remainingMs <= 0) return {phase: "ended", text: "大会は終了しました"}
     if (remainingMs <= 60 * 60 * 1000) {
-        return {phase: "take-closed", text: "まもなく大会終了します。テイクはできません"}
+        return {phase: "take-closed", text: "まもなく大会終了します。\nテイク・延長はできません"}
     }
     if (remainingMs <= 70 * 60 * 1000) {
         return {phase: "take-closing", text: "まもなくテイクできなくなります！"}

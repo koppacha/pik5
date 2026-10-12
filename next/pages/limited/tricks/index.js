@@ -488,7 +488,7 @@ function TricksGamePage({eventId, manualContent, stagingMode = false}) {
                     key={spectatorPresentation.item.card.event_card_id}
                     presentation={spectatorPresentation} tricksApi={tricksApi} usersById={usersById}
                 />}
-                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} />}
+                {eventEnded && <TricksCollectedResults cards={collected} usersById={usersById} topOffset={Math.max(216, headerBottom + 24)} />}
                 {isAdmin && adminStatsOpen && <TricksAdminStats stats={collectedAdminStats} usersById={usersById} onClose={closeAdminStats} />}
                 {isDebugAdmin && <TricksDebugPanel open={debugOpen} onClose={() => setDebugOpen(false)} state={state} busy={busy || spectatorMode} onOperation={runDebugOperation} />}
                 <div

@@ -63,7 +63,7 @@ export default function TricksFieldDetailPanel({
                                 data-tricks-highlighted-post={row.user_id === highlightedPost?.actor_name && Number(row.score) === Number(highlightedPost?.score) ? highlightedPost.id : undefined}>
                             <Record
                                 mini
-                                commentPreviewLength={10}
+                                commentPreviewLength={6}
                                 showMiniRps
                                 swapScoreRpsLabel
                                 scoreUnit="pts"
