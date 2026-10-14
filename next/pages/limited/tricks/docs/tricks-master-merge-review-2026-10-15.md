@@ -42,3 +42,8 @@
 - マージ直後のmasterとlimited-trickのtreeが完全一致することをgit diff --quietで確認。検証したコードと統合したコードは同じ。
 - 統合記録のドキュメントコミット後、limited-trickをmasterへfast-forwardして両ブランチを同じ統合基点へ揃える。イベント用ブランチは保持し、最後にcheckoutする。
 - 既存公開originへmaster/limited-trickをatomic pushする。本番のcheckout、コンテナ、DBは変更しない。
+
+
+## リモート反映の状態
+
+atomic pushは自動承認レビューにより拒否され、実行されていない。理由は、ユーザー指示がローカルのコミット・masterへのマージまでであり、今回の変更を公開GitHubへ送信する明示承認がないため。回避操作・強制pushはせず、master/limited-trickを既存公開koppacha/pik5へpushする許可をユーザーへ提示した。ローカル統合は完了、リモートは承認待ち。本番環境は変更なし。
