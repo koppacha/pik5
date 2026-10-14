@@ -53,3 +53,5 @@
 ユーザー方針: イベント専用ブランチを削除せず、今後も単独開発を継続する。実ブランチ名はlimited-trick。masterへの統合前に未コミット変更を保存し、通常mergeで履歴を保持する。強制push・rebase・ブランチ削除は不要。完成単位でmasterへ統合し、必要に応じmasterの変更をイベントブランチへ通常mergeする。
 
 統合前確認ではLaravel193件成功、認証7件失敗。同じ7件が隔離masterでも失敗し、旧認証factoryのusers.name列不一致6件とmiddleware戻り値型不一致1件を確認。イベント差分の回帰ではない。Next lint・Node13件（専用MySQL2件スキップ）・シミュレーター18件・隔離Next本番ビルド・canvas表示/loop sleep/破棄確認は成功。共有node_modulesのtsx/esbuildはホストmacOSで実行する。詳細 next/pages/limited/tricks/docs/tricks-master-merge-review-2026-10-15.md。
+
+2026-10-15: 未コミット187ファイルをf4a3db6dへ保存し、masterへcb875bbbで--no-ff統合（競合なし）。マージ後のtreeは検証したlimited-trickと完全一致。統合記録後は両ブランチを同じ基点へ揃え、イベントブランチを保持してそちらへcheckoutする。本番環境は変更しない。

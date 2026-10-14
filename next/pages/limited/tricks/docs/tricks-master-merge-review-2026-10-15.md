@@ -33,3 +33,12 @@
 ## 統合方針
 
 未コミット変更を先にlimited-trickへ保存してから、masterへ--no-ffで統合してマージ履歴を残す。両ブランチを既存originへpushし、最後はlimited-trickへ戻る。ブランチ削除・強制push・履歴書換え・本番checkout更新は行わない。今後master側に変更が進んだ場合はイベントブランチへ通常mergeで取り込み、イベント側の完成単位でmasterへ戻す。
+
+
+## 統合結果
+
+- 未コミット成果物187ファイルをf4a3db6dへ保存。
+- masterへ--no-ffで統合し、マージコミットcb875bbbを作成。コンフリクトなし。
+- マージ直後のmasterとlimited-trickのtreeが完全一致することをgit diff --quietで確認。検証したコードと統合したコードは同じ。
+- 統合記録のドキュメントコミット後、limited-trickをmasterへfast-forwardして両ブランチを同じ統合基点へ揃える。イベント用ブランチは保持し、最後にcheckoutする。
+- 既存公開originへmaster/limited-trickをatomic pushする。本番のcheckout、コンテナ、DBは変更しない。
