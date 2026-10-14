@@ -24,6 +24,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // 送信イベント判定
     const isSubmit = useRef(false)
 
+    const tricksEventId = info?.tricks_event_id || initialData?.tricks_event_id
     const isTricksStage = Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999
     const {data: stageMetadata} = useSWR(isTricksStage && !info?.score_type && !initialData?.score_type ? `/api/server/stage/${info.stage_id}` : null, fetcher)
     const isTricksTime = (info?.score_type || initialData?.score_type) === "time" || (isTricksStage && (info?.display === "time" || stageMetadata?.data?.display === "time" || stageMetadata?.display === "time"))
@@ -53,7 +54,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [timeValue, setTimeValue] = useState("00:00:00")
 
     const {data: countData} = useSWR(session?.user?.userId ? `/api/server/count/${session.user.userId}` : null, fetcher)
-    const {data: rankData} = useSWR(info?.stage_id && rule && score ? `/api/server/record/rank/${info.stage_id}/${rule}/${score}` : null, fetcher)
+    const {data: rankData} = useSWR(info?.stage_id && rule && score ? (tricksEventId ? `/api/server/tricks/rank/${info.stage_id}/${score}?event_id=${tricksEventId}` : `/api/server/record/rank/${info.stage_id}/${rule}/${score}`) : null, fetcher)
 
     // バリデーションルール
     const schema = createRecordValidationSchema({
@@ -551,7 +552,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         margin="normal"
                         disabled={Boolean(info?.metadata_only_edit) || isTime() || [25].includes(rule) || isRegion()}
                     />
-                    <GetRank stage={info?.stage_id} rule={rule} score={score}/>
+                    <GetRank stage={info?.stage_id} rule={rule} score={score} eventId={tricksEventId}/>
                     <TextField
                         {...register('img')}
                         id="img"

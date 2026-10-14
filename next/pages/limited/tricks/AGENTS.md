@@ -6,6 +6,7 @@
 - ルール仕様書：`next/pages/limited/tricks/docs/tricks-rules.md`
 - UI等設計書：`next/pages/limited/tricks/docs/tricks-system.md`
 - シミュレーション仕様書：`next/pages/limited/tricks/docs/tricks-simulation.md`
+- 第20回大会案：`next/pages/limited/tricks/docs/tricks-tournament-20-plan.md`
 
 ## 概要・ディレクトリ構成
 - 以下のディレクトリはプロジェクトルートから見た相対パスです。必要に応じてファイル・ディレクトリを作成してください。
@@ -30,6 +31,7 @@
 - 重要：大会では複数人による同時アクセスが想定されるため、各エンドユーザー環境のゲーム状態を同期する必要がある。
 
 ## 改修・テスト方針
+- 第19回大会終了後（2026-10-11 20:00 JST以降）のルール変更・検討は、`docs/tricks-tournament-20-plan.md`へ同じ作業で追記・メンテナンスする。採用案・未採用案・実装仮定、シミュレーター反映・本番反映を区別し、最終更新日と変更履歴を更新する。第19回の確定結果・旧ルールへ遡及適用しない。
 - プロンプトを処理するたび、`next/pages/limited/tricks/docs/tricks-codex-logs.md`へ、出力日時、ユーザー指示サマリー、どのような改修・調査をしたか、結果、今後の留意点を追記する。結果だけを記録せず、その作業がどの指示に基づくか分かる形にする。
 - ユーザー指示は意味を変えない簡潔なサマリーを必須とする。Codexが参照可能なtranscriptに原文がある場合は、`docs/codex-logs/`配下の該当transcriptへの参照、または必要な範囲の原文も残す。原文を確認できない過去指示は推測で引用せず、「結果から復元した指示サマリー」であることを明記する。
 - `docs/tricks-codex-logs.md`の各記録は、原則として`ユーザー指示サマリー`、`作業結果`、必要に応じて`留意事項`の順に記載する。改修・検討を実施する前にはこのログを参考にしてもよい。

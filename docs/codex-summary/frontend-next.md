@@ -80,3 +80,9 @@
 - 配色は `styles/styles.scss` に集約する。標準の `.MuiFormHelperText-root` は白背景用の濃いグレー（#555555）、エラーは濃い赤（#b3261e）。ページ全体のダークモードだけを見て明色へ変更しない。
 - テーマ連動の背景ではヘルパー自身またはフォーム親に `form-helper-text-themed` を付ける。通常色は `--color-text-base`、ダーク時のエラー色は #ff8a80。AuthWindowとStyledDialogContentは共通コンポーネントでclassを付与する。
 - 既存の `.form-helper-text` は認証フォームの入力・ラベル配色にも使われているため保持し、HelperTextの配色は新しいclassとCSS変数で分離する。
+
+## ピックアップ動画の期間限定カード名（2026-10-12 23:58:49 JST）
+
+- 新着APIはカードとの投稿紐づきからevent_origin_stage_id／event_stage_name／event_rule_nameを一括付与する。投稿先stage_id・ruleは変更しない。
+- PickupVideoはnext/lib/pickupVideo.jsの共通判定で、元ステージIDの翻訳名（未登録時は元ステージDB名）とカードルールを表示する。大会カテゴリーの翻訳名へ置き換えない。表示中・次動画の双方へ適用し、通常動画のルール優先順位・非表示・省略仕様を維持する。
+- 18140f5bを本番へ反映済み。関連Laravel5テスト・単体2テスト・lint・ローカル／本番Playwright成功。詳細はnext/pages/limited/tricks/docs/tricks-pickup-video-fix-2026-10-12.md。

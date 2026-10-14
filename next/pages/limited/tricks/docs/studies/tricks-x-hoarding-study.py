@@ -43,7 +43,7 @@ def hoarding_class(base):
                 and action.get("expected_point_net", 0) > 0
             ]
             if free_posts:
-                # 無料還元の期待値を所要時間で割り、残高増加効率が最大の場札を選ぶ。
+                # 無料還元の期待値を所要時間で割り、残高増加効率が最大の切り札を選ぶ。
                 return max(
                     free_posts,
                     key=lambda action: (

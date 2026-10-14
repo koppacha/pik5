@@ -1189,7 +1189,7 @@
     {
       "seed": 285012,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 11,
       "x_max_points": 13,
       "x_rank_points": 177,
@@ -1226,7 +1226,7 @@
     {
       "seed": 285012,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 38,
       "x_max_points": 38,
       "x_rank_points": 155,
@@ -1633,7 +1633,7 @@
     {
       "seed": 285018,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 3,
       "x_max_points": 14,
       "x_rank_points": 198,
@@ -1670,7 +1670,7 @@
     {
       "seed": 285018,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 56,
       "x_max_points": 56,
       "x_rank_points": 216,
@@ -2003,7 +2003,7 @@
     {
       "seed": 285023,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 14,
       "x_max_points": 14,
       "x_rank_points": 199,
@@ -2040,7 +2040,7 @@
     {
       "seed": 285023,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 49,
       "x_max_points": 49,
       "x_rank_points": 188,
@@ -2225,7 +2225,7 @@
     {
       "seed": 285026,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 16,
       "x_max_points": 16,
       "x_rank_points": 158,
@@ -2262,7 +2262,7 @@
     {
       "seed": 285026,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 42,
       "x_max_points": 42,
       "x_rank_points": 162,
@@ -3409,7 +3409,7 @@
     {
       "seed": 285042,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 13,
       "x_max_points": 13,
       "x_rank_points": 203,
@@ -3446,7 +3446,7 @@
     {
       "seed": 285042,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 51,
       "x_max_points": 51,
       "x_rank_points": 175,
@@ -3483,7 +3483,7 @@
     {
       "seed": 285043,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 18,
       "x_max_points": 18,
       "x_rank_points": 175,
@@ -3520,7 +3520,7 @@
     {
       "seed": 285043,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 50,
       "x_max_points": 50,
       "x_rank_points": 208,
@@ -5481,7 +5481,7 @@
     {
       "seed": 285070,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 4,
       "x_max_points": 11,
       "x_rank_points": 112,
@@ -5518,7 +5518,7 @@
     {
       "seed": 285070,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 47,
       "x_max_points": 47,
       "x_rank_points": 155,
@@ -6517,7 +6517,7 @@
     {
       "seed": 285084,
       "policy": "baseline",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 7,
       "x_max_points": 10,
       "x_rank_points": 114,
@@ -6554,7 +6554,7 @@
     {
       "seed": 285084,
       "policy": "x_hoarder",
-      "x_personality": "スタック派",
+      "x_personality": "トリック派",
       "x_ending_points": 48,
       "x_max_points": 48,
       "x_rank_points": 129,

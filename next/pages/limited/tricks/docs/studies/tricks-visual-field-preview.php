@@ -1,7 +1,7 @@
 <?php
 
 // Laravelコンテナで標準入力から実行。通常は検査のみ。
-// TRICKS_VISUAL_FIELD_APPLY=1 でデバッグ大会251227に表示確認用の場札4枚を配置する。
+// TRICKS_VISUAL_FIELD_APPLY=1 でデバッグ大会251227に表示確認用の切り札4枚を配置する。
 require getcwd().'/vendor/autoload.php';
 $app = require getcwd().'/bootstrap/app.php';
 $app->make(Illuminate\Contracts\Console\Kernel::class)->bootstrap();
@@ -26,7 +26,7 @@ $result = DB::transaction(function () use ($apply): array {
         return ['already_applied' => true, 'field_count' => 4];
     }
     if ($field->isNotEmpty() || Player::where('event_id', $event->event_id)->where('name', $actor)->exists()) {
-        throw new RuntimeException('既存の場札または検証用プレイヤーがあるため更新しません');
+        throw new RuntimeException('既存の切り札または検証用プレイヤーがあるため更新しません');
     }
     $cards = TrickEventCard::with('deck')->where('event_id', $event->event_id)
         ->where('state', '_deck')->whereNull('rarity')->where('draw_count', 0)

@@ -1,0 +1,16 @@
+{
+  "v19_same_players_and_economy": true,
+  "seed": 262499,
+  "opening_four_joined": {
+    "legacy": {
+      "takes": 3,
+      "wallet_sum": 12,
+      "field_cap": 3
+    },
+    "min8": {
+      "takes": 4,
+      "wallet_sum": 12,
+      "field_cap": 8
+    }
+  }
+}

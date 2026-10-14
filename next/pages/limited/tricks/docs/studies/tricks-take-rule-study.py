@@ -61,7 +61,7 @@ def make_simulation_type(simulator):
         def _with_bonus(self, card, operation):
             if not self.rarity_bonus:
                 return operation()
-            # 実際のカード枚数と必要手札を維持し、ポイント計算中のみ原資へ加算する。
+            # 実際のカード枚数と必要手札を維持し、ドローポイント計算中のみ原資へ加算する。
             bonus = bonus_for(card)
             card.stack_count += bonus
             try:

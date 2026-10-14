@@ -1,0 +1,810 @@
+{
+  "mode": "historical",
+  "baseline_source_sha256": null,
+  "seeds": [
+    261100,
+    261101,
+    261102,
+    261103,
+    261104,
+    261105,
+    261106,
+    261107,
+    261108,
+    261109
+  ],
+  "mean_absolute_relative_error": 0.1106,
+  "failures": [],
+  "comparison": {
+    "Ko": {
+      "draw": {
+        "observed": 170,
+        "mean": 170.1,
+        "median": 171.5,
+        "min": 155,
+        "max": 183,
+        "relative_error": 0.0006,
+        "tolerance": 51.0,
+        "pass_": true
+      },
+      "take": {
+        "observed": 18,
+        "mean": 19.6,
+        "median": 20.0,
+        "min": 18,
+        "max": 22,
+        "relative_error": 0.0889,
+        "tolerance": 5.3999999999999995,
+        "pass_": true
+      },
+      "initial_post": {
+        "observed": 61,
+        "mean": 56.3,
+        "median": 54.5,
+        "min": 47,
+        "max": 66,
+        "relative_error": -0.077,
+        "tolerance": 18.3,
+        "pass_": true
+      },
+      "update": {
+        "observed": 14,
+        "mean": 12,
+        "median": 12.0,
+        "min": 9,
+        "max": 15,
+        "relative_error": -0.1429,
+        "tolerance": 4.2,
+        "pass_": true
+      },
+      "paid_extension": {
+        "observed": 39,
+        "mean": 34.8,
+        "median": 36.0,
+        "min": 31,
+        "max": 37,
+        "relative_error": -0.1077,
+        "tolerance": 11.7,
+        "pass_": true
+      },
+      "opening_post": {
+        "observed": 21,
+        "mean": 24.5,
+        "median": 25.0,
+        "min": 21,
+        "max": 27,
+        "relative_error": 0.1667,
+        "tolerance": 6.3,
+        "pass_": true
+      },
+      "initial_cost": {
+        "observed": 26,
+        "mean": 29,
+        "median": 29.5,
+        "min": 25,
+        "max": 32,
+        "relative_error": 0.1154,
+        "tolerance": 7.8,
+        "pass_": true
+      },
+      "update_cost": {
+        "observed": 27,
+        "mean": 26.2,
+        "median": 26.0,
+        "min": 23,
+        "max": 31,
+        "relative_error": -0.0296,
+        "tolerance": 8.1,
+        "pass_": true
+      }
+    },
+    "A": {
+      "draw": {
+        "observed": 95,
+        "mean": 93.6,
+        "median": 96.5,
+        "min": 75,
+        "max": 108,
+        "relative_error": -0.0147,
+        "tolerance": 28.5,
+        "pass_": true
+      },
+      "take": {
+        "observed": 17,
+        "mean": 16.1,
+        "median": 15.5,
+        "min": 14,
+        "max": 19,
+        "relative_error": -0.0529,
+        "tolerance": 5.1,
+        "pass_": true
+      },
+      "initial_post": {
+        "observed": 54,
+        "mean": 49.6,
+        "median": 46.5,
+        "min": 41,
+        "max": 59,
+        "relative_error": -0.0815,
+        "tolerance": 16.2,
+        "pass_": true
+      },
+      "update": {
+        "observed": 10,
+        "mean": 8.2,
+        "median": 8.0,
+        "min": 5,
+        "max": 12,
+        "relative_error": -0.18,
+        "tolerance": 3,
+        "pass_": true
+      },
+      "paid_extension": {
+        "observed": 139,
+        "mean": 142.5,
+        "median": 143.0,
+        "min": 128,
+        "max": 157,
+        "relative_error": 0.0252,
+        "tolerance": 41.699999999999996,
+        "pass_": true
+      },
+      "opening_post": {
+        "observed": 14,
+        "mean": 14.6,
+        "median": 15.5,
+        "min": 11,
+        "max": 17,
+        "relative_error": 0.0429,
+        "tolerance": 4.2,
+        "pass_": true
+      },
+      "initial_cost": {
+        "observed": 32,
+        "mean": 29.1,
+        "median": 28.0,
+        "min": 26,
+        "max": 35,
+        "relative_error": -0.0906,
+        "tolerance": 9.6,
+        "pass_": true
+      },
+      "update_cost": {
+        "observed": 12,
+        "mean": 13.1,
+        "median": 13.0,
+        "min": 8,
+        "max": 19,
+        "relative_error": 0.0917,
+        "tolerance": 3.5999999999999996,
+        "pass_": true
+      }
+    },
+    "T": {
+      "draw": {
+        "observed": 131,
+        "mean": 121.2,
+        "median": 125.0,
+        "min": 106,
+        "max": 130,
+        "relative_error": -0.0748,
+        "tolerance": 39.3,
+        "pass_": true
+      },
+      "take": {
+        "observed": 20,
+        "mean": 19.1,
+        "median": 19.0,
+        "min": 17,
+        "max": 21,
+        "relative_error": -0.045,
+        "tolerance": 6.0,
+        "pass_": true
+      },
+      "initial_post": {
+        "observed": 42,
+        "mean": 41.7,
+        "median": 43.5,
+        "min": 34,
+        "max": 47,
+        "relative_error": -0.0071,
+        "tolerance": 12.6,
+        "pass_": true
+      },
+      "update": {
+        "observed": 18,
+        "mean": 14.1,
+        "median": 16.0,
+        "min": 7,
+        "max": 18,
+        "relative_error": -0.2167,
+        "tolerance": 5.3999999999999995,
+        "pass_": true
+      },
+      "paid_extension": {
+        "observed": 22,
+        "mean": 16.4,
+        "median": 17.5,
+        "min": 10,
+        "max": 21,
+        "relative_error": -0.2545,
+        "tolerance": 6.6,
+        "pass_": true
+      },
+      "opening_post": {
+        "observed": 16,
+        "mean": 13.9,
+        "median": 14.0,
+        "min": 8,
+        "max": 17,
+        "relative_error": -0.1312,
+        "tolerance": 4.8,
+        "pass_": true
+      },
+      "initial_cost": {
+        "observed": 21,
+        "mean": 20.3,
+        "median": 20.0,
+        "min": 17,
+        "max": 23,
+        "relative_error": -0.0333,
+        "tolerance": 6.3,
+        "pass_": true
+      },
+      "update_cost": {
+        "observed": 35,
+        "mean": 25.4,
+        "median": 26.0,
+        "min": 19,
+        "max": 31,
+        "relative_error": -0.2743,
+        "tolerance": 10.5,
+        "pass_": true
+      }
+    },
+    "Ku": {
+      "draw": {
+        "observed": 203,
+        "mean": 159.3,
+        "median": 164.5,
+        "min": 90,
+        "max": 211,
+        "relative_error": -0.2153,
+        "tolerance": 60.9,
+        "pass_": true
+      },
+      "take": {
+        "observed": 29,
+        "mean": 22.5,
+        "median": 23.5,
+        "min": 16,
+        "max": 26,
+        "relative_error": -0.2241,
+        "tolerance": 8.7,
+        "pass_": true
+      },
+      "initial_post": {
+        "observed": 35,
+        "mean": 26.6,
+        "median": 27.5,
+        "min": 20,
+        "max": 31,
+        "relative_error": -0.24,
+        "tolerance": 10.5,
+        "pass_": true
+      },
+      "update": {
+        "observed": 11,
+        "mean": 10.8,
+        "median": 10.5,
+        "min": 9,
+        "max": 13,
+        "relative_error": -0.0182,
+        "tolerance": 3.3,
+        "pass_": true
+      },
+      "paid_extension": {
+        "observed": 9,
+        "mean": 8,
+        "median": 8.0,
+        "min": 5,
+        "max": 11,
+        "relative_error": -0.1111,
+        "tolerance": 3,
+        "pass_": true
+      },
+      "opening_post": {
+        "observed": 18,
+        "mean": 19.8,
+        "median": 18.5,
+        "min": 15,
+        "max": 25,
+        "relative_error": 0.1,
+        "tolerance": 5.3999999999999995,
+        "pass_": true
+      },
+      "initial_cost": {
+        "observed": 33,
+        "mean": 26.9,
+        "median": 29.0,
+        "min": 19,
+        "max": 32,
+        "relative_error": -0.1848,
+        "tolerance": 9.9,
+        "pass_": true
+      },
+      "update_cost": {
+        "observed": 15,
+        "mean": 13.5,
+        "median": 13.0,
+        "min": 10,
+        "max": 18,
+        "relative_error": -0.1,
+        "tolerance": 4.5,
+        "pass_": true
+      }
+    }
+  },
+  "runs": [
+    {
+      "seed": 261100,
+      "collections": 163,
+      "players": {
+        "Ko": {
+          "draw": 172,
+          "take": 20,
+          "initial_post": 66,
+          "update": 14,
+          "paid_extension": 37,
+          "opening_post": 23,
+          "initial_cost": 29,
+          "update_cost": 27
+        },
+        "A": {
+          "draw": 105,
+          "take": 17,
+          "initial_post": 42,
+          "update": 6,
+          "paid_extension": 157,
+          "opening_post": 15,
+          "initial_cost": 27,
+          "update_cost": 12
+        },
+        "T": {
+          "draw": 124,
+          "take": 20,
+          "initial_post": 45,
+          "update": 16,
+          "paid_extension": 18,
+          "opening_post": 14,
+          "initial_cost": 21,
+          "update_cost": 23
+        },
+        "Ku": {
+          "draw": 180,
+          "take": 24,
+          "initial_post": 29,
+          "update": 11,
+          "paid_extension": 11,
+          "opening_post": 18,
+          "initial_cost": 32,
+          "update_cost": 13
+        }
+      }
+    },
+    {
+      "seed": 261101,
+      "collections": 162,
+      "players": {
+        "Ko": {
+          "draw": 160,
+          "take": 20,
+          "initial_post": 61,
+          "update": 13,
+          "paid_extension": 36,
+          "opening_post": 26,
+          "initial_cost": 32,
+          "update_cost": 26
+        },
+        "A": {
+          "draw": 96,
+          "take": 16,
+          "initial_post": 54,
+          "update": 9,
+          "paid_extension": 140,
+          "opening_post": 16,
+          "initial_cost": 33,
+          "update_cost": 13
+        },
+        "T": {
+          "draw": 109,
+          "take": 18,
+          "initial_post": 36,
+          "update": 11,
+          "paid_extension": 12,
+          "opening_post": 17,
+          "initial_cost": 19,
+          "update_cost": 20
+        },
+        "Ku": {
+          "draw": 161,
+          "take": 23,
+          "initial_post": 28,
+          "update": 10,
+          "paid_extension": 7,
+          "opening_post": 23,
+          "initial_cost": 30,
+          "update_cost": 16
+        }
+      }
+    },
+    {
+      "seed": 261102,
+      "collections": 158,
+      "players": {
+        "Ko": {
+          "draw": 166,
+          "take": 20,
+          "initial_post": 56,
+          "update": 12,
+          "paid_extension": 33,
+          "opening_post": 23,
+          "initial_cost": 28,
+          "update_cost": 23
+        },
+        "A": {
+          "draw": 99,
+          "take": 19,
+          "initial_post": 59,
+          "update": 12,
+          "paid_extension": 146,
+          "opening_post": 16,
+          "initial_cost": 35,
+          "update_cost": 19
+        },
+        "T": {
+          "draw": 106,
+          "take": 18,
+          "initial_post": 45,
+          "update": 17,
+          "paid_extension": 16,
+          "opening_post": 14,
+          "initial_cost": 17,
+          "update_cost": 29
+        },
+        "Ku": {
+          "draw": 147,
+          "take": 25,
+          "initial_post": 29,
+          "update": 12,
+          "paid_extension": 9,
+          "opening_post": 23,
+          "initial_cost": 28,
+          "update_cost": 16
+        }
+      }
+    },
+    {
+      "seed": 261103,
+      "collections": 154,
+      "players": {
+        "Ko": {
+          "draw": 174,
+          "take": 22,
+          "initial_post": 53,
+          "update": 11,
+          "paid_extension": 37,
+          "opening_post": 26,
+          "initial_cost": 31,
+          "update_cost": 24
+        },
+        "A": {
+          "draw": 92,
+          "take": 15,
+          "initial_post": 45,
+          "update": 8,
+          "paid_extension": 132,
+          "opening_post": 13,
+          "initial_cost": 30,
+          "update_cost": 12
+        },
+        "T": {
+          "draw": 130,
+          "take": 17,
+          "initial_post": 34,
+          "update": 7,
+          "paid_extension": 12,
+          "opening_post": 14,
+          "initial_cost": 23,
+          "update_cost": 20
+        },
+        "Ku": {
+          "draw": 90,
+          "take": 16,
+          "initial_post": 20,
+          "update": 9,
+          "paid_extension": 5,
+          "opening_post": 15,
+          "initial_cost": 19,
+          "update_cost": 11
+        }
+      }
+    },
+    {
+      "seed": 261104,
+      "collections": 159,
+      "players": {
+        "Ko": {
+          "draw": 177,
+          "take": 19,
+          "initial_post": 53,
+          "update": 12,
+          "paid_extension": 34,
+          "opening_post": 25,
+          "initial_cost": 29,
+          "update_cost": 31
+        },
+        "A": {
+          "draw": 108,
+          "take": 19,
+          "initial_post": 59,
+          "update": 10,
+          "paid_extension": 155,
+          "opening_post": 17,
+          "initial_cost": 31,
+          "update_cost": 14
+        },
+        "T": {
+          "draw": 122,
+          "take": 17,
+          "initial_post": 35,
+          "update": 9,
+          "paid_extension": 10,
+          "opening_post": 8,
+          "initial_cost": 18,
+          "update_cost": 19
+        },
+        "Ku": {
+          "draw": 211,
+          "take": 25,
+          "initial_post": 27,
+          "update": 10,
+          "paid_extension": 11,
+          "opening_post": 17,
+          "initial_cost": 31,
+          "update_cost": 12
+        }
+      }
+    },
+    {
+      "seed": 261105,
+      "collections": 160,
+      "players": {
+        "Ko": {
+          "draw": 171,
+          "take": 19,
+          "initial_post": 53,
+          "update": 11,
+          "paid_extension": 36,
+          "opening_post": 25,
+          "initial_cost": 30,
+          "update_cost": 26
+        },
+        "A": {
+          "draw": 77,
+          "take": 14,
+          "initial_post": 41,
+          "update": 5,
+          "paid_extension": 128,
+          "opening_post": 11,
+          "initial_cost": 28,
+          "update_cost": 8
+        },
+        "T": {
+          "draw": 129,
+          "take": 21,
+          "initial_post": 47,
+          "update": 16,
+          "paid_extension": 20,
+          "opening_post": 16,
+          "initial_cost": 22,
+          "update_cost": 30
+        },
+        "Ku": {
+          "draw": 134,
+          "take": 20,
+          "initial_post": 25,
+          "update": 9,
+          "paid_extension": 5,
+          "opening_post": 16,
+          "initial_cost": 20,
+          "update_cost": 10
+        }
+      }
+    },
+    {
+      "seed": 261106,
+      "collections": 164,
+      "players": {
+        "Ko": {
+          "draw": 183,
+          "take": 20,
+          "initial_post": 65,
+          "update": 15,
+          "paid_extension": 36,
+          "opening_post": 26,
+          "initial_cost": 30,
+          "update_cost": 28
+        },
+        "A": {
+          "draw": 75,
+          "take": 15,
+          "initial_post": 48,
+          "update": 8,
+          "paid_extension": 144,
+          "opening_post": 16,
+          "initial_cost": 27,
+          "update_cost": 13
+        },
+        "T": {
+          "draw": 128,
+          "take": 20,
+          "initial_post": 42,
+          "update": 16,
+          "paid_extension": 17,
+          "opening_post": 11,
+          "initial_cost": 18,
+          "update_cost": 21
+        },
+        "Ku": {
+          "draw": 181,
+          "take": 24,
+          "initial_post": 28,
+          "update": 13,
+          "paid_extension": 8,
+          "opening_post": 25,
+          "initial_cost": 31,
+          "update_cost": 14
+        }
+      }
+    },
+    {
+      "seed": 261107,
+      "collections": 159,
+      "players": {
+        "Ko": {
+          "draw": 163,
+          "take": 18,
+          "initial_post": 47,
+          "update": 10,
+          "paid_extension": 31,
+          "opening_post": 21,
+          "initial_cost": 25,
+          "update_cost": 25
+        },
+        "A": {
+          "draw": 102,
+          "take": 17,
+          "initial_post": 58,
+          "update": 9,
+          "paid_extension": 146,
+          "opening_post": 15,
+          "initial_cost": 26,
+          "update_cost": 14
+        },
+        "T": {
+          "draw": 126,
+          "take": 21,
+          "initial_post": 45,
+          "update": 16,
+          "paid_extension": 19,
+          "opening_post": 16,
+          "initial_cost": 23,
+          "update_cost": 31
+        },
+        "Ku": {
+          "draw": 146,
+          "take": 20,
+          "initial_post": 24,
+          "update": 10,
+          "paid_extension": 7,
+          "opening_post": 17,
+          "initial_cost": 23,
+          "update_cost": 13
+        }
+      }
+    },
+    {
+      "seed": 261108,
+      "collections": 155,
+      "players": {
+        "Ko": {
+          "draw": 180,
+          "take": 20,
+          "initial_post": 60,
+          "update": 13,
+          "paid_extension": 36,
+          "opening_post": 27,
+          "initial_cost": 31,
+          "update_cost": 29
+        },
+        "A": {
+          "draw": 97,
+          "take": 15,
+          "initial_post": 45,
+          "update": 8,
+          "paid_extension": 142,
+          "opening_post": 16,
+          "initial_cost": 26,
+          "update_cost": 12
+        },
+        "T": {
+          "draw": 109,
+          "take": 18,
+          "initial_post": 42,
+          "update": 15,
+          "paid_extension": 19,
+          "opening_post": 14,
+          "initial_cost": 19,
+          "update_cost": 30
+        },
+        "Ku": {
+          "draw": 175,
+          "take": 22,
+          "initial_post": 25,
+          "update": 11,
+          "paid_extension": 9,
+          "opening_post": 19,
+          "initial_cost": 23,
+          "update_cost": 12
+        }
+      }
+    },
+    {
+      "seed": 261109,
+      "collections": 161,
+      "players": {
+        "Ko": {
+          "draw": 155,
+          "take": 18,
+          "initial_post": 49,
+          "update": 9,
+          "paid_extension": 32,
+          "opening_post": 23,
+          "initial_cost": 25,
+          "update_cost": 23
+        },
+        "A": {
+          "draw": 85,
+          "take": 14,
+          "initial_post": 45,
+          "update": 7,
+          "paid_extension": 135,
+          "opening_post": 11,
+          "initial_cost": 28,
+          "update_cost": 14
+        },
+        "T": {
+          "draw": 129,
+          "take": 21,
+          "initial_post": 46,
+          "update": 18,
+          "paid_extension": 21,
+          "opening_post": 15,
+          "initial_cost": 23,
+          "update_cost": 31
+        },
+        "Ku": {
+          "draw": 168,
+          "take": 26,
+          "initial_post": 31,
+          "update": 13,
+          "paid_extension": 8,
+          "opening_post": 25,
+          "initial_cost": 32,
+          "update_cost": 18
+        }
+      }
+    }
+  ]
+}

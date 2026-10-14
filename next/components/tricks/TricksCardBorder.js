@@ -97,10 +97,10 @@ export function TricksCardBorderStyles() {
             overflow: hidden;
             z-index: 2;
             background: var(--card-border);
-            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask-composite: exclude;
             -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
             -webkit-mask-composite: xor;
+            mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            mask-composite: exclude;
         }
         .tricks-dom-draw-flipper > .tricks-card-border { backface-visibility: hidden; transform: rotateY(0deg); }
         .tricks-card-border[data-border-mini] { inset: -2px; padding: 2px; border-radius: 2px; }

@@ -4,9 +4,9 @@ async (page) => {
     const now = Date.now()
     const me = {name: "revision_test", draw_points: 8, card_count: 0, rank_points: 0}
     const field = [
-        {id: 1, title: "投稿済み・無料の場札", my_has_record: true, my_initial_post_cost: 0},
-        {id: 2, title: "未投稿・無料の場札", my_has_record: false, my_initial_post_cost: 0},
-        {id: 3, title: "未投稿・有料の場札", my_has_record: false, my_initial_post_cost: 2},
+        {id: 1, title: "投稿済み・無料の切り札", my_has_record: true, my_initial_post_cost: 0},
+        {id: 2, title: "未投稿・無料の切り札", my_has_record: false, my_initial_post_cost: 0},
+        {id: 3, title: "未投稿・有料の切り札", my_has_record: false, my_initial_post_cost: 2},
     ].map(card => ({
         ...card, state: "_field", stage_id: 399, rarity: 2, difficulty: 2, stack_count: 5,
         my_can_post: true, rule_name: "表示確認用ルール", text: "専用の合成データでマークの表示位置を検証します。",

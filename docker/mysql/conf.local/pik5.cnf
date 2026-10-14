@@ -1,0 +1,8 @@
+[mysqld]
+# Local recovery window: daily full backups retained for 2 days, binlogs for 3.
+# Take a fresh backup before destructive Codex work; production uses conf.d.
+log_bin=/var/lib/mysql/binlog
+binlog_format=ROW
+binlog_expire_logs_seconds=259200
+sync_binlog=1
+innodb_flush_log_at_trx_commit=1

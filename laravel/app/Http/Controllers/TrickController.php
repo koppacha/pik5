@@ -289,6 +289,19 @@ class TrickController extends Controller
         ));
     }
 
+    public function rank(Request $request, int $stage, int $score, TrickEventResolver $events, TrickRequestIdentity $identity, TrickRecordService $records): JsonResponse
+    {
+        $event = $events->forRequest($request, $identity);
+        $card = TrickEventCard::query()->where('event_id', $event->event_id)
+            ->whereHas('deck', fn ($query) => $query->where('stage_id', $stage))->firstOrFail();
+        $ascending = \App\Services\Tricks\TrickScoreOrder::ascending($card->deck);
+        // 大会専用ランキングの個人最良記録を使い、一般公開の除外条件を適用しない。
+        $higher = collect($records->rankings($card))->filter(fn ($row) =>
+            $ascending ? (int) $row['score'] < $score : (int) $row['score'] > $score);
+
+        return response()->json($higher->count() + 1);
+    }
+
     public function scores(Request $request, int $deckId, TrickEventResolver $events, TrickRequestIdentity $identity, TrickRecordService $records): JsonResponse
     {
         $event = $events->forRequest($request, $identity);

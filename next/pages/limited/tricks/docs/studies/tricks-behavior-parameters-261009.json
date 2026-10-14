@@ -1,0 +1,61 @@
+{
+  "Ko": {
+    "tempo_weight": 6,
+    "pipeline_threshold": 0.8,
+    "extension_padding": 40,
+    "take_difficulty_counts": {
+      "2": 10,
+      "5": 1,
+      "1": 4,
+      "3": 2,
+      "4": 1
+    },
+    "trial_time_scale": 0.6,
+    "update_learning_multiplier": 2.5,
+    "update_tempo_weight": 14.0,
+    "withhold_initial": false,
+    "observed_post_cutoff_draws": 0
+  },
+  "A": {
+    "tempo_weight": 6,
+    "pipeline_threshold": 0.8,
+    "extension_padding": 65,
+    "take_difficulty_counts": {
+      "1": 7,
+      "3": 3,
+      "5": 2,
+      "2": 3,
+      "4": 2
+    },
+    "trial_time_scale": 0.9,
+    "update_learning_multiplier": 1.5,
+    "update_tempo_weight": 10,
+    "observed_post_cutoff_draws": 0
+  },
+  "T": {
+    "tempo_weight": 6,
+    "pipeline_threshold": 0.8,
+    "extension_padding": 25,
+    "take_difficulty_counts": {
+      "3": 3,
+      "1": 11,
+      "2": 1,
+      "4": 5
+    },
+    "trial_time_scale": 1.15,
+    "observed_post_cutoff_draws": 0
+  },
+  "Ku": {
+    "tempo_weight": 6,
+    "pipeline_threshold": 0.8,
+    "extension_padding": 75,
+    "take_difficulty_counts": {
+      "1": 14,
+      "2": 13,
+      "4": 1,
+      "3": 1
+    },
+    "rate_paid_extension": 1.15,
+    "observed_post_cutoff_draws": 12
+  }
+}

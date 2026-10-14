@@ -2,6 +2,17 @@
 
 ## Protection
 
+### Local development
+
+- Base Compose enables a daily backup at 03:20 and retains generated full backups for 2 days. `DB_BACKUP_*` environment settings can override these defaults.
+- Local MySQL uses `docker/mysql/conf.local/pik5.cnf`, retaining binlogs for 3 days. Production continues to use `conf.d/pik5.cnf` (30 days) and defaults to 14 days of full backups.
+- The purpose of local backups is recovery from an accidental destructive operation during development, not a cumulative historical archive. Before Codex performs destructive DB work, create and verify a fresh full backup with binlog coordinates. Preserve its subsequent binlogs until the work is verified.
+- Daily backups cover the configured application database. Before purging shared binlogs, separately back up any auxiliary databases that must be preserved.
+- A full backup alone restores its snapshot time. To restore immediately before a later accidental deletion, replay the binlogs after that snapshot. A missing daily backup or an idle local environment lasting beyond the retention window requires a fresh backup before DB work.
+- Generated backup cleanup only targets `<database>-YYYYMMDD-HHMMSS.sql.gz`. Migration exports, manual archives, and recovery evidence are excluded.
+
+### Production
+
 - Production Laravel blocks `db:wipe`, `migrate:fresh`, `migrate:refresh`, and `migrate:reset`, even with `--force`. `docker-compose.prod.yml` forces this protection independently of `APP_ENV`.
 - MySQL stores ROW-format binary logs for 30 days with durable transaction settings.
 - Binary logs are stored in `/var/lib/mysql`. They do not protect against loss of the MySQL volume or host.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""同じ乱数シードで初期山札枚数別の同時枯渇を比較する。"""
+"""同じ乱数シードで初期デッキ枚数別の同時枯渇を比較する。"""
 
 from __future__ import annotations
 

@@ -197,6 +197,7 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get('tricks/collected', [TrickController::class, 'collected']);
     Route::get('tricks/holders', [TrickController::class, 'holders']);
     Route::get('tricks/collected/admin-stats', [TrickController::class, 'collectedAdminStats']);
+    Route::get('tricks/rank/{stage}/{score}', [TrickController::class, 'rank']);
     Route::get('tricks/cards/{deckId}/scores', [TrickController::class, 'scores']);
     Route::post('tricks/join', [TrickController::class, 'join']);
     Route::post('tricks/draw', [TrickController::class, 'draw']);

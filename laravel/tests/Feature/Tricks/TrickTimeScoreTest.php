@@ -98,6 +98,34 @@ class TrickTimeScoreTest extends TestCase
         self::assertSame('time', $collected['card']['score_type']);
     }
 
+    /** @dataProvider provisionalRankCases */
+    public function test_provisional_rank_uses_event_personal_bests_and_score_order(string $type, int $origin, int $candidate, int $expected): void
+    {
+        [$event, $card] = $this->fixture($type, $origin);
+        foreach ([['fast', 83], ['slow', 120], ['fast', 95], ['tie', 120]] as [$name, $score]) {
+            $this->postSeconds($card, $name, $score)->assertOk();
+        }
+        // 一般公開APIは開催中の記録を非表示にするが、投稿フォームの大会順位には含める。
+        self::assertSame(1, $this->getJson('/api/record/rank/'.$card->deck->stage_id.'/1/'.$candidate)->assertOk()->json());
+        $url = '/api/tricks/rank/'.$card->deck->stage_id.'/'.$candidate.'?event_id='.$event->event_id;
+        self::assertSame($expected, $this->getJson($url)->assertOk()->json());
+        $this->getJson('/api/tricks/rank/999/100?event_id='.$event->event_id)->assertNotFound();
+        $this->getJson('/api/tricks/rank/'.$card->deck->stage_id.'/100?event_id=2147483647')->assertNotFound();
+    }
+
+    public static function provisionalRankCases(): array
+    {
+        return [
+            'points lower' => ['points', 399, 90, 4],
+            'points tie' => ['points', 399, 120, 1],
+            'points middle' => ['points', 399, 100, 3],
+            'elapsed middle' => ['time', 399, 100, 2],
+            'elapsed tie' => ['time', 399, 120, 2],
+            'remaining middle' => ['time', 419, 100, 3],
+            'remaining tie' => ['time', 419, 120, 1],
+        ];
+    }
+
     public static function remainingTimeOrigins(): array
     {
         return [...array_map(fn ($id) => [$id], range(419, 428)), [401, 1356]];

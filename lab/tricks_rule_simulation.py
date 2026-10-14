@@ -26,7 +26,7 @@ from typing import Any
 
 JST = timezone(timedelta(hours=9))
 EVENT_HOURS = 48
-PLAYER_COUNT = 13
+PLAYER_COUNT = 15
 DECK_SIZE = 160
 INITIAL_POINTS = 5
 FIELD_LIMIT = 16
@@ -54,13 +54,6 @@ RATIONAL_STACK_SURPLUS_CAP = 4
 PARTICIPANT_CREATOR_CARD_RATE = 0.25
 MIN_PLAY_MINUTES = 10
 MAX_INITIAL_PLAY_MINUTES = 60
-HARDCORE_COUNT = 7
-CASUAL_COUNT = 6
-HARDCORE_PEAK_MINUTES_MIN = 7 * 60 * 12 // 10
-HARDCORE_TOTAL_MINUTES_MAX = 28 * 60
-CASUAL_MINUTES_MIN = 2 * 60
-CASUAL_MINUTES_MAX = 6 * 60
-OFFPEAK_HARDCORE_COUNT = 2
 FAVORITE_CARD_COUNT = 24
 WAIT_RECHECK_MINUTES = 5
 MAX_ZERO_TIME_ACTIONS = 512
@@ -72,13 +65,9 @@ RETURN_SUBSIDY_FLAG_THRESHOLD = 4
 PLAYER_EXTENSION_COST = 1
 PLAYER_EXTENSION_MINUTES = 15
 PLAYER_EXTENSION_CUTOFF = timedelta(hours=1)
-FORECAST_POST_PARTICIPATION = {
-    "正統派": 0.68,
-    "投稿優先派": 0.92,
-    "スタック派": 0.28,
-    "ネガティブ派": 0.52,
-    "ホルダー優先派": 0.78,
-}
+CALIBRATION_PATH = Path(__file__).resolve().parents[1] / "next/pages/limited/tricks/docs/studies/tricks-personality-calibration-261009.json"
+EMPIRICAL_CALIBRATION = json.loads(CALIBRATION_PATH.read_text(encoding="utf-8"))
+EMPIRICAL_PROFILES = EMPIRICAL_CALIBRATION["profiles"]
 
 RARITY_DISTRIBUTION = [
     (1, 87.0),
@@ -87,26 +76,11 @@ RARITY_DISTRIBUTION = [
     (4, 0.9),
     (5, 0.1),
 ]
+V20_RARITY_DISTRIBUTION = [(1,83.0),(2,12.0),(3,4.0),(4,0.9),(5,0.1)]
 FINAL_THREE_HOUR_RARITY_DISTRIBUTION = [(1, 0.0), (2, 87.0), (3, 8.0), (4, 4.0), (5, 1.0)]
 
-DIFFICULTY_DISTRIBUTION = [
-    (1, 54.0),
-    (2, 30.0),
-    (3, 10.0),
-    (4, 5.0),
-    (5, 1.0),
-]
-
-PERSONALITY_BASE_COUNTS = {
-    "スタック派": 2,
-    "ホルダー優先派": 2,
-    "ネガティブ派": 2,
-    "投稿優先派": 3,
-    "正統派": 4,
-}
-
-SKILL_TIER_ORDER = {"other": 0, "Y": 1, "X": 2}
-POINT_RETURN_SENSITIVE_PERSONALITIES = {"正統派", "投稿優先派"}
+PERSONALITY_BASE_COUNTS = EMPIRICAL_CALIBRATION["counts"]
+POINT_RETURN_SENSITIVE_PERSONALITIES = {"Ko", "T", "中位プレイヤー", "下位プレイヤー"}
 POST_COST_POLICIES = {
     "second_third_free",
     "first_second_free",
@@ -117,33 +91,23 @@ PAID_UPDATE_POLICIES = {"legacy", "rank_point_roi"}
 MIN_PAID_UPDATE_RANK_POINTS_PER_POINT = 0.5
 REWARD_FORMULAS = {"current", "balanced", "proposal"}
 BEHAVIOR_POLICIES = {"legacy", "commitment_aware"}
-ACTIVITY_POLICIES = {"legacy", "peak_engagement"}
+ACTIVITY_POLICIES = {"empirical"}
 SCORE_POLICIES = {"tier_deterministic", "stochastic_card_skill"}
 REMAINDER_POLICIES = {"taker", "last_poster"}
-SCORE_TIER_BASE = {"X": 110.0, "Y": 100.0, "other": 89.0}
-SCORE_SKILL_EFFICIENCY = {"X": 1.35, "Y": 1.1, "other": 0.9}
+# Relative game scores use the fitted log-odds, not an absolute X/Y hierarchy.
 SCORE_TRIAL_NOISE = 18.0
 SCORE_SKILL_POINT_PER_MINUTE = 0.18
 MAX_FIELD_SCORE_TRIALS = 6
-PERSONALITY_CONTINUOUS_HOURS = {
-    "投稿優先派": 5,
-    "スタック派": 3,
-    "ホルダー優先派": 4,
-    "正統派": 4,
-    "ネガティブ派": 2,
-}
-TAKE_DESIRE_THRESHOLDS = {
-    "投稿優先派": 1.70,
-    "スタック派": 1.85,
-    "ホルダー優先派": 1.35,
-    "正統派": 1.55,
-    "ネガティブ派": 1.45,
-}
+PERSONALITY_CONTINUOUS_HOURS = {"Ko": 4, "A": 5, "T": 5, "Ku": 5, "G": 4, "中位プレイヤー": 4, "下位プレイヤー": 2}
+TAKE_DESIRE_THRESHOLDS = dict.fromkeys(PERSONALITY_BASE_COUNTS, 1.55)
 
 
 @dataclass
 class Card:
     id: int
+    series: int = 2
+    stage_key: int = 0
+    take_bonus_escrow: int = 0
     state: str = "_deck"
     rarity: int | None = None
     difficulty: int | None = None
@@ -188,7 +152,18 @@ class Player:
     active_sessions: list[tuple[datetime, datetime]]
     skill_multiplier: float
     motivation_multiplier: float
-    skill_tier: str = "other"
+    strength_profile: str = "中位プレイヤー"
+    display_name: str = ""
+    series_strength: dict[int, float] = field(default_factory=dict)
+    series_preference: dict[int, float] = field(default_factory=dict)
+    spend_shares: dict[str, float] = field(default_factory=dict)
+    profile_source: str | None = None
+    active_budget_minutes: int = 0
+    active_hours_bounds: tuple[float, float] = (0, 48)
+    participation_base: float = 0.3
+    update_propensity: float = 0.15
+    opening_propensity: float = 0.2
+    behavior_variation: float = 1.0
     max_continuous_hours: int = 3
     favorite_card_ids: set[int] = field(default_factory=set)
     has_offpeak_activity: bool = False
@@ -228,6 +203,7 @@ class Player:
 
 class EventQueue:
     PRIORITY = {
+        "replenish": -1,
         "subsidy": 0,
         "half_hour_snapshot": 0,
         "collect": 1,
@@ -275,15 +251,22 @@ class Simulation:
         empty_field_floor_grant: bool = True,
         reward_formula: str = "proposal",
         behavior_policy: str = "commitment_aware",
-        activity_policy: str = "peak_engagement",
+        activity_policy: str = "empirical",
         score_policy: str = "stochastic_card_skill",
-        remainder_policy: str = "last_poster",
+        remainder_policy: str = "taker",
         player_extension_enabled: bool = True,
         paid_update_policy: str = "rank_point_roi",
         allow_post_debt: bool = True,
         dynamic_wealth_tax_pot: bool = True,
         dynamic_hand_limit: bool = True,
         deck_size: int = DECK_SIZE,
+        subsidy_policy: str = "low_resources",
+        historical_tournament: bool = False,
+        behavior_tuning: dict[str, Any] | None = None,
+        rule_version: str = "v20",
+        uniform_update_cost: int = 1,
+        difficulty_take_fee_scale: int = 0,
+        field_cap_policy: str = "min8",
     ) -> None:
         if take_cooldown_policy not in TAKE_COOLDOWN_POLICIES:
             raise ValueError(f"unknown take cooldown policy: {take_cooldown_policy}")
@@ -307,6 +290,27 @@ class Simulation:
             raise ValueError(f"unknown paid update policy: {paid_update_policy}")
         if not FAVORITE_CARD_COUNT <= deck_size <= DECK_SIZE:
             raise ValueError(f"deck size must be between {FAVORITE_CARD_COUNT} and {DECK_SIZE}")
+        if subsidy_policy not in {"legacy", "low_resources"}:
+            raise ValueError(f"unknown subsidy policy: {subsidy_policy}")
+        if rule_version not in {"v19","v20"} or uniform_update_cost < 1 or difficulty_take_fee_scale < 0 or field_cap_policy not in {"legacy","min8"}:
+            raise ValueError("invalid v20 rule options")
+        self.rule_version = rule_version
+        self.uniform_update_cost = uniform_update_cost
+        self.difficulty_take_fee_scale = difficulty_take_fee_scale if rule_version == "v20" else 0
+        self.field_cap_policy = field_cap_policy if rule_version == "v20" else "legacy"
+        self.actual_extension_minutes = 0
+        self.stage_extension_counts = {}
+        self.take_bonus_fees = 0
+        self.take_bonus_paid = 0
+        self.take_bonus_refunded = 0
+        self.reward_floor_topups = 0
+        self.historical_tournament = historical_tournament
+        tuning_path = CALIBRATION_PATH.with_name("tricks-behavior-parameters-261009.json")
+        self.behavior_tuning = behavior_tuning if behavior_tuning is not None else (json.loads(tuning_path.read_text()) if tuning_path.exists() else {})
+        self.subsidy_policy = subsidy_policy
+        self.instant_subsidy_payments = 0
+        self.instant_take_payments = 0
+        self.instant_post_payments = 0
         self.rng = random.Random(seed)
         self.skill_rng = random.Random(seed ^ 0x5A17)
         self.score_rng = random.Random(seed ^ 0x51C0A3)
@@ -331,16 +335,19 @@ class Simulation:
         self.allow_post_debt = allow_post_debt
         self.dynamic_wealth_tax_pot = dynamic_wealth_tax_pot
         self.dynamic_hand_limit = dynamic_hand_limit
-        self.start_at = datetime(2026, 1, 1, 0, 0, tzinfo=JST)
-        self.end_at = self.start_at + timedelta(hours=EVENT_HOURS)
+        self.start_at = datetime(2026, 10, 9, 20, 0, tzinfo=JST)
+        self.end_at = self.start_at + timedelta(hours=EVENT_HOURS) - (timedelta(minutes=1) if historical_tournament else timedelta())
         self.now = self.start_at
         self.output_dir = output_dir
         self.output_dir.mkdir(parents=True, exist_ok=True)
         stamp = datetime.now(JST).strftime("%Y%m%d_%H%M%S_%f")
         self.jsonl_path = self.output_dir / f"tricks_simulation_{stamp}.jsonl"
         self.summary_path = self.output_dir / f"tricks_simulation_{stamp}_summary.json"
+        stage_path = CALIBRATION_PATH.with_name("tricks-stage-keys-261009.json")
+        self.stage_keys = json.loads(stage_path.read_text()) if stage_path.exists() else list(range(1,161))
+        template = EMPIRICAL_CALIBRATION["deck_template"]
         self.cards = {
-            i: Card(id=i, difficulty=self._weighted_choice(DIFFICULTY_DISTRIBUTION))
+            i: Card(id=i, difficulty=template[i - 1]["difficulty"], series=template[i - 1]["series"], stage_key=self.stage_keys[i-1])
             for i in range(1, self.deck_size + 1)
         }
         self.deck = list(self.cards.keys())
@@ -384,10 +391,10 @@ class Simulation:
         self.endgame_cooldown_blocked_cycles: set[tuple[str, str]] = set()
         self.cooldown_stall_snapshot_count = 0
         self.all_field_posted_cooldown_waits = 0
-        self.x_other_score_fields = 0
-        self.x_other_upset_fields = 0
-        self.x_other_score_pairs = 0
-        self.x_other_upset_pairs = 0
+        self.ko_cohort_score_fields = 0
+        self.ko_cohort_upset_fields = 0
+        self.ko_cohort_score_pairs = 0
+        self.ko_cohort_upset_pairs = 0
         self.invariant_errors: list[str] = []
         self.half_hour_snapshots: list[dict[str, Any]] = []
         self.pending_initial_posts: dict[int, set[str]] = {}
@@ -395,224 +402,103 @@ class Simulation:
         self._setup_players()
         self._setup_events()
         preference_rng = random.Random(seed ^ 0xA991)
-        self.card_appeal = {cid: preference_rng.random() for cid in self.cards}
-        self.player_tastes = {p.name: {cid: preference_rng.random() for cid in self.cards} for p in self.players.values()}
+        preference_ids = range(1,321) if historical_tournament else self.cards
+        self.card_appeal = {cid: preference_rng.random() for cid in preference_ids}
+        self.player_tastes = {p.name: {cid: preference_rng.random() for cid in preference_ids} for p in self.players.values()}
         creator_rng = random.Random(seed ^ 0xC8EA)
         player_names = sorted(self.players)
         for card in self.cards.values():
             if creator_rng.random() < PARTICIPANT_CREATOR_CARD_RATE:
                 card.creator_name = creator_rng.choice(player_names)
-        self.contrarians = {p.name for p in self.players.values() if p.personality == "ネガティブ派" and preference_rng.random() < 0.5}
-        self.trap_targets = {}
-        self.trap_returns = set()
-
 
     def _setup_players(self) -> None:
-        early_offsets = sorted(self.rng.uniform(0, 60) for _ in range(HARDCORE_COUNT))
-        if self.activity_policy == "peak_engagement":
-            late_offsets = sorted([
-                *(self.rng.uniform(19 * 60, 22 * 60) for _ in range(3)),
-                *(self.rng.uniform(43 * 60, 46 * 60) for _ in range(3)),
-            ])
-        else:
-            late_offsets = sorted(self.rng.uniform(60, EVENT_HOURS * 60 - CASUAL_MINUTES_MIN) for _ in range(CASUAL_COUNT))
-        offsets = early_offsets + late_offsets
-        if len(offsets) != PLAYER_COUNT:
-            raise ValueError("join schedule does not match player count")
-        personalities = build_personality_roster(self.rng)
-        self.rng.shuffle(personalities)
-        offpeak_hardcore_indexes = set(self.rng.sample(range(HARDCORE_COUNT), OFFPEAK_HARDCORE_COUNT))
-        for idx, offset_minutes in enumerate(offsets, start=1):
-            join_at = self.start_at + timedelta(minutes=offset_minutes)
-            name = f"player_{idx:02d}"
-            personality = personalities[idx - 1]
-            engagement = "ガチ勢" if idx <= HARDCORE_COUNT else "エンジョイ勢"
-            has_offpeak_activity = idx - 1 in offpeak_hardcore_indexes
-            skill_multiplier = round(self.skill_rng.uniform(0.55, 1.45), 3)
-            motivation_multiplier = round(self.skill_rng.uniform(0.8, 1.2), 3)
-            max_continuous_hours = personality_continuous_hours(personality, motivation_multiplier)
-            if self.activity_policy == "peak_engagement":
-                sessions = self._make_peak_engagement_sessions(
-                    join_at,
-                    engagement,
-                    has_offpeak_activity,
-                    max_continuous_hours,
-                )
-            elif engagement == "ガチ勢":
-                sessions = self._make_hardcore_sessions(join_at, has_offpeak_activity)
+        roster = build_personality_roster(self.rng)
+        donor_orders = {}
+        for kind in ("中位プレイヤー", "下位プレイヤー"):
+            donor_orders[kind] = EMPIRICAL_PROFILES[kind]["donors"][:]
+            self.rng.shuffle(donor_orders[kind])
+        for idx, kind in enumerate(roster, 1):
+            if self.historical_tournament and idx==5:
+                kind = "中位プレイヤー"
+                donor = EMPIRICAL_CALIBRATION["observed_players"]["P04"]
             else:
-                sessions = self._make_casual_sessions(join_at)
-            favorite_card_ids = (
-                set(self.rng.sample(range(1, self.deck_size + 1), FAVORITE_CARD_COUNT))
-                if personality == "ホルダー優先派"
-                else set()
-            )
-            skill_tier = "X" if idx == 1 else "Y" if idx <= 4 else "other"
-            self.players[name] = Player(
-                name=name,
-                personality=personality,
-                engagement=engagement,
-                join_at=join_at,
-                active_sessions=sessions,
-                skill_multiplier=skill_multiplier,
-                motivation_multiplier=motivation_multiplier,
-                skill_tier=skill_tier,
-                max_continuous_hours=max_continuous_hours,
-                favorite_card_ids=favorite_card_ids,
-                has_offpeak_activity=has_offpeak_activity,
+                profile = EMPIRICAL_PROFILES[kind]
+                donor = donor_orders[kind].pop() if kind in donor_orders else profile
+            offset = donor.get("join_offset_minutes", self.rng.uniform(0, 60))
+            join_at = self.start_at + timedelta(minutes=math.floor(offset))
+            if kind in donor_orders:
+                proxy = donor["active_hours_proxy"]
+                bounds = (proxy * 0.8, min(proxy * 1.2, (self.end_at - join_at).total_seconds() / 3600))
+            else:
+                bounds = tuple(profile["active_hours_range"])
+            capacity = self._empirical_capacity(join_at,PERSONALITY_CONTINUOUS_HOURS[kind])
+            bounds = (min(bounds[0],capacity/60),min(bounds[1],capacity/60))
+            target_minutes = self.rng.randint(math.ceil(bounds[0] * 60), math.floor(bounds[1] * 60))
+            sessions = self._make_empirical_sessions(join_at, target_minutes, donor["hourly_action_counts"], PERSONALITY_CONTINUOUS_HOURS[kind])
+            prefs = {int(key): value for key, value in donor["series_preference"].items()}
+            if kind in {"Ko", "A", "T"}:
+                prefs[3] = 0.005
+            elif kind == "Ku":
+                supported = prefs[3]+prefs[4]
+                prefs = {1:0.0,2:0.0,3:prefs[3]/supported,4:prefs[4]/supported}
+            self.players[f"player_{idx:02d}"] = Player(
+                name=f"player_{idx:02d}", display_name="実測P04" if self.historical_tournament and idx==5 else kind if idx <= 5 else f"{kind}{idx - (5 if idx <= 10 else 10)}",
+                personality=kind, engagement="実測モデル", join_at=join_at, active_sessions=sessions,
+                skill_multiplier=1.0, motivation_multiplier=round(self.skill_rng.uniform(0.9, 1.1), 3),
+                strength_profile=kind, series_strength={int(key): value for key, value in donor["strength"].items()},
+                series_preference=prefs, spend_shares=donor["spend_shares"], profile_source=donor.get("source"),
+                active_budget_minutes=target_minutes, active_hours_bounds=bounds,
+                behavior_variation=self.skill_rng.uniform(0.9,1.1), participation_base=donor["participation_base"], update_propensity=donor["update_ratio"], opening_propensity=donor["opening_ratio"],
+                max_continuous_hours=PERSONALITY_CONTINUOUS_HOURS[kind], has_offpeak_activity=True,
             )
         self._check_player_setup()
 
-    def _make_peak_engagement_sessions(
-        self,
-        join_at: datetime,
-        engagement: str,
-        include_offpeak: bool,
-        max_continuous_hours: int,
-    ) -> list[tuple[datetime, datetime]]:
-        peak_windows = [
-            (self.start_at, self.start_at + timedelta(hours=1)),
-            (self.start_at + timedelta(hours=20), self.start_at + timedelta(hours=25)),
-            (self.start_at + timedelta(hours=44), self.end_at),
-        ]
-        available_peaks = [
-            (max(join_at, start), end)
-            for start, end in peak_windows
-            if end > max(join_at, start)
-        ]
-        if engagement == "エンジョイ勢" and available_peaks:
-            first = available_peaks[0]
-            available_peaks = [first, *[
-                window for window in available_peaks[1:] if self.rng.random() < 0.55
-            ]]
+    def _empirical_windows(self, join_at: datetime, continuous_hours: int):
+        windows = []
+        cap = continuous_hours*60
+        for i in range(8):
+            start = max(join_at,self.start_at+timedelta(hours=6*i))
+            end = min(self.end_at,self.start_at+timedelta(hours=6*(i+1)))
+            available = max(0,int((end-start).total_seconds()//60)-30)
+            capacity = available
+            while capacity and capacity+30*max(0,math.ceil(capacity/cap)-1)>available:
+                capacity -= 1
+            windows.append((start,end,capacity,available))
+        return windows
 
-        sessions: list[tuple[datetime, datetime]] = []
-        for start, end in available_peaks:
-            capacity = int((end - start).total_seconds() // 60)
-            maximum = min(capacity, max_continuous_hours * 60)
-            if maximum < 30:
+    def _empirical_capacity(self, join_at: datetime, continuous_hours: int) -> int:
+        return sum(w[2] for w in self._empirical_windows(join_at,continuous_hours))
+
+    def _make_empirical_sessions(self, join_at: datetime, target: int, hourly: list[int], continuous_hours: int) -> list[tuple[datetime, datetime]]:
+        # Six-hour windows keep a trailing 30-minute rest. Split long allocations
+        # within each window and account for every rest before assigning minutes.
+        windows = self._empirical_windows(join_at,continuous_hours)
+        allocation = [0]*8
+        remaining = target
+        while remaining:
+            candidates = [i for i,w in enumerate(windows) if allocation[i]<w[2]]
+            if not candidates:
+                raise ValueError("activity budget does not fit event")
+            weights = [(1+sum(hourly[6*i:6*(i+1)]))/(1+allocation[i]/60) for i in candidates]
+            chosen = self.rng.choices(candidates,weights=weights)[0]
+            amount = min(30,remaining,windows[chosen][2]-allocation[chosen])
+            allocation[chosen] += amount
+            remaining -= amount
+        sessions = []
+        cap = continuous_hours*60
+        for (start,_end,_capacity,available),minutes in zip(windows,allocation):
+            if not minutes:
                 continue
-            if engagement == "ガチ勢":
-                minimum = min(maximum, max(60, int(capacity * 0.65)))
-            else:
-                minimum = min(maximum, 60)
-                maximum = min(maximum, 3 * 60)
-            duration = self.rng.randint(minimum, maximum)
-            latest_delay = min(30, max(0, capacity - duration))
-            session_start = start + timedelta(minutes=self.rng.randint(0, latest_delay))
-            sessions.append((session_start, session_start + timedelta(minutes=duration)))
-
-        # ピークとピークアウトの中間帯には中程度の確率で短い活動を置く。
-        shoulder_windows = [
-            (self.start_at + timedelta(hours=1), self.start_at + timedelta(hours=4)),
-            (self.start_at + timedelta(hours=14), self.start_at + timedelta(hours=20)),
-            (self.start_at + timedelta(hours=25), self.start_at + timedelta(hours=28)),
-            (self.start_at + timedelta(hours=38), self.start_at + timedelta(hours=44)),
-        ]
-        shoulder_probability = 0.45 if engagement == "ガチ勢" else 0.25
-        for window_start, window_end in shoulder_windows:
-            start = max(join_at, window_start)
-            if window_end <= start or self.rng.random() >= shoulder_probability:
-                continue
-            capacity = int((window_end - start).total_seconds() // 60)
-            maximum = min(capacity, 120, max_continuous_hours * 60)
-            if maximum >= 30:
-                sessions.append(self._place_session((start, window_end), self.rng.randint(30, maximum)))
-
-        # 04:00〜14:00は原則休憩。従来と同じ少数のガチ勢だけ短時間アクセスしうる。
-        if engagement == "ガチ勢" and include_offpeak:
-            offpeak_windows = [
-                (self.start_at + timedelta(hours=4), self.start_at + timedelta(hours=14)),
-                (self.start_at + timedelta(hours=28), self.start_at + timedelta(hours=38)),
-            ]
-            candidates = [
-                (max(join_at, start), end)
-                for start, end in offpeak_windows
-                if end > max(join_at, start)
-            ]
-            if candidates:
-                window = self.rng.choice(candidates)
-                duration = self.rng.randint(30, min(60, max_continuous_hours * 60))
-                sessions.append(self._place_session(window, duration))
-        return cap_continuous_sessions(sessions, max_continuous_hours)
-
-    def _make_hardcore_sessions(
-        self,
-        join_at: datetime,
-        include_offpeak: bool,
-    ) -> list[tuple[datetime, datetime]]:
-        peak_windows = [
-            (max(join_at, self.start_at), self.start_at + timedelta(hours=6)),
-            (max(join_at, self.start_at + timedelta(hours=24)), self.start_at + timedelta(hours=30)),
-        ]
-        capacities = [max(0, int((end - start).total_seconds() // 60)) for start, end in peak_windows]
-        peak_target = self.rng.randint(
-            HARDCORE_PEAK_MINUTES_MIN,
-            min(12 * 60, sum(capacities)),
-        )
-        first_min = max(0, peak_target - capacities[1])
-        first_max = min(capacities[0], peak_target)
-        first_duration = self.rng.randint(first_min, first_max)
-        peak_durations = [first_duration, peak_target - first_duration]
-        sessions = [
-            self._place_session(window, duration)
-            for window, duration in zip(peak_windows, peak_durations)
-            if duration > 0
-        ]
-        if include_offpeak:
-            extra_max = min(16 * 60, HARDCORE_TOTAL_MINUTES_MAX - peak_target)
-            extra_target = self.rng.randint(2 * 60, extra_max)
-            offpeak_windows = [
-                (max(join_at, self.start_at + timedelta(hours=6)), self.start_at + timedelta(hours=24)),
-                (max(join_at, self.start_at + timedelta(hours=30)), self.end_at - TAKE_CLOSE_BEFORE_END),
-            ]
-            capacities = [max(0, int((end - start).total_seconds() // 60)) for start, end in offpeak_windows]
-            first_min = max(0, extra_target - capacities[1])
-            first_max = min(capacities[0], extra_target)
-            first_duration = self.rng.randint(first_min, first_max)
-            extra_durations = [first_duration, extra_target - first_duration]
-            for window, duration in zip(offpeak_windows, extra_durations):
-                sessions.extend(self._place_fragmented_sessions(window, duration))
-        return merge_sessions(sessions)
-
-    def _place_fragmented_sessions(
-        self,
-        window: tuple[datetime, datetime],
-        total_minutes: int,
-    ) -> list[tuple[datetime, datetime]]:
-        if total_minutes <= 0:
-            return []
-        # ピーク外活動は長大な連続稼働にせず、概ね30〜120分の断続的な活動へ分割する。
-        session_count = max(1, math.ceil(total_minutes / 120))
-        while session_count > 1 and total_minutes < session_count * 30:
-            session_count -= 1
-        base_duration, remainder = divmod(total_minutes, session_count)
-        durations = [base_duration + (1 if index < remainder else 0) for index in range(session_count)]
-        self.rng.shuffle(durations)
-        start_bound, end_bound = window
-        available = max(1, int((end_bound - start_bound).total_seconds() // 60))
-        span = max(1, available // session_count)
-        sessions: list[tuple[datetime, datetime]] = []
-        for index, duration in enumerate(durations):
-            segment_start = start_bound + timedelta(minutes=index * span)
-            segment_end = end_bound if index == session_count - 1 else start_bound + timedelta(minutes=(index + 1) * span)
-            sessions.append(self._place_session((segment_start, segment_end), duration))
+            count = math.ceil(minutes/cap)
+            duration, extra = divmod(minutes,count)
+            spare = available-minutes-30*(count-1)
+            cursor = start+timedelta(minutes=self.rng.randint(0,spare))
+            for i in range(count):
+                length = duration+(i<extra)
+                sessions.append((cursor,cursor+timedelta(minutes=length)))
+                cursor += timedelta(minutes=length+30)
+        assert minutes_total(sessions)==target
         return sessions
-
-    def _make_casual_sessions(self, join_at: datetime) -> list[tuple[datetime, datetime]]:
-        available = int((self.end_at - join_at).total_seconds() // 60)
-        total = self.rng.randint(CASUAL_MINUTES_MIN, min(CASUAL_MINUTES_MAX, available))
-        session_count = self.rng.randint(1, 3)
-        base_duration, remainder = divmod(total, session_count)
-        durations = [base_duration + (1 if index < remainder else 0) for index in range(session_count)]
-        self.rng.shuffle(durations)
-        span = max(1, available // session_count)
-        sessions: list[tuple[datetime, datetime]] = []
-        for index, duration in enumerate(durations):
-            window_start = join_at + timedelta(minutes=index * span)
-            window_end = self.end_at if index == session_count - 1 else join_at + timedelta(minutes=(index + 1) * span)
-            sessions.append(self._place_session((window_start, window_end), duration))
-        return merge_sessions(sessions)
 
     def _place_session(
         self,
@@ -625,33 +511,27 @@ class Simulation:
         return start, min(start + timedelta(minutes=duration_minutes), end_bound)
 
     def _check_player_setup(self) -> None:
-        hardcore = [player for player in self.players.values() if player.engagement == "ガチ勢"]
-        casual = [player for player in self.players.values() if player.engagement == "エンジョイ勢"]
         if len(self.players) != PLAYER_COUNT:
             self.invariant_errors.append("player_setup: total count mismatch")
-        if len(hardcore) != HARDCORE_COUNT or len(casual) != CASUAL_COUNT:
-            self.invariant_errors.append("player_setup: engagement counts mismatch")
-        if sum(player.has_offpeak_activity for player in hardcore) != OFFPEAK_HARDCORE_COUNT:
-            self.invariant_errors.append("player_setup: offpeak hardcore count mismatch")
-        if self.activity_policy == "legacy":
-            for player in hardcore:
-                if not HARDCORE_PEAK_MINUTES_MIN <= peak_active_minutes(player, self.start_at) <= 12 * 60:
-                    self.invariant_errors.append(f"player_setup: {player.name} peak minutes out of range")
-                if player.total_active_minutes() > HARDCORE_TOTAL_MINUTES_MAX:
-                    self.invariant_errors.append(f"player_setup: {player.name} exceeds 28 hours")
-            for player in casual:
-                if not CASUAL_MINUTES_MIN <= player.total_active_minutes() <= CASUAL_MINUTES_MAX:
-                    self.invariant_errors.append(f"player_setup: {player.name} casual minutes out of range")
-        else:
-            for player in self.players.values():
-                if not 1 <= player.max_continuous_hours <= 5:
-                    self.invariant_errors.append(f"player_setup: {player.name} invalid continuous hours")
-        counts = {name: sum(player.personality == name for player in self.players.values()) for name in PERSONALITY_BASE_COUNTS}
-        for name, base in PERSONALITY_BASE_COUNTS.items():
-            if abs(counts[name] - base) > 1:
-                self.invariant_errors.append(f"player_setup: {name} count {counts[name]} outside ±1")
+        counts = {kind: sum(p.personality == kind for p in self.players.values()) for kind in PERSONALITY_BASE_COUNTS}
+        expected_counts = dict(PERSONALITY_BASE_COUNTS)
+        if self.historical_tournament:
+            expected_counts["G"] = 0
+            expected_counts["中位プレイヤー"] = 6
+        if counts != expected_counts:
+            self.invariant_errors.append("player_setup: empirical roster mismatch")
+        for player in self.players.values():
+            hours = player.total_active_minutes()/60
+            if not player.active_hours_bounds[0] <= hours <= player.active_hours_bounds[1]:
+                self.invariant_errors.append(f"player_setup: {player.display_name} hours out of range")
+            if any(b <= a or a < player.join_at or b > self.end_at for a,b in player.active_sessions):
+                self.invariant_errors.append(f"player_setup: {player.display_name} invalid session")
+            if any((b-a).total_seconds() > player.max_continuous_hours*3600 for a,b in player.active_sessions):
+                self.invariant_errors.append(f"player_setup: {player.display_name} continuous cap exceeded")
 
     def _setup_events(self) -> None:
+        if self.historical_tournament:
+            self.queue.push(self.start_at+timedelta(hours=19),"replenish",{})
         for player in self.players.values():
             self.queue.push(player.join_at, "join", {"player": player.name})
             for start, _end in player.active_sessions:
@@ -674,7 +554,9 @@ class Simulation:
                 if at > self.end_at:
                     continue
                 self.now = at
-                if kind == "join":
+                if kind == "replenish":
+                    self._replenish_historical_cards()
+                elif kind == "join":
                     self._handle_join(data["player"])
                 elif kind == "subsidy":
                     self._handle_subsidy()
@@ -709,6 +591,28 @@ class Simulation:
             self.summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
         return summary
 
+    def _replenish_historical_cards(self) -> None:
+        for i,source in enumerate(EMPIRICAL_CALIBRATION["deck_template"],161):
+            self.cards[i] = Card(id=i,series=source["series"],difficulty=source["difficulty"],stage_key=self.stage_keys[(i-1)%160])
+            self.deck.append(i)
+        self._record("replenish",None,{"added":160,"boundary_is_estimated":True})
+
+    def _behavior_need(self, player: Player, action: str) -> float:
+        if player.personality not in {"Ko","A","T","Ku"}:
+            return 0.0
+        profile = EMPIRICAL_PROFILES[player.personality]
+        keys = {"initial_post":"record_posted","update":"record_updated","paid_extension":"player_extension","draw":"draw","take":"take","opening_post":"opening_post"}
+        count = profile["points_spent"][{"initial_cost":"taker_initial","update_cost":"update"}[action]] if action in {"initial_cost","update_cost"} else profile["action_counts"][keys[action]]
+        if self.rule_version == "v20" and action == "initial_cost":
+            return 0.0
+        if self.rule_version == "v20" and action == "update_cost":
+            count = profile["action_counts"]["record_updated"]*self.uniform_update_cost
+        hours = sum(profile["active_hours_range"])/2
+        elapsed = sum(max(0,(min(self.now,b)-a).total_seconds()) for a,b in player.active_sessions if self.now>a)/3600
+        factor = self.behavior_tuning.get(player.personality,{}).get("rate_"+action,1.0)
+        desired = count/hours*(elapsed+0.5)*factor*player.behavior_variation
+        return max(-3.0,min(4.0,(desired-player.actions.get(action,0))/max(2.0,math.sqrt(desired))))
+
     def _handle_join(self, player_name: str) -> None:
         player = self.players[player_name]
         if player.joined:
@@ -727,8 +631,10 @@ class Simulation:
         for player in self.players.values():
             if not player.joined:
                 continue
-            flag_due = player.subsidy_flag_slot_at is not None and player.subsidy_flag_slot_at <= self.now
-            empty_field_due = empty_field_subsidy_eligible(player.points, len(player.hand), field_empty)
+            flag_due = self.subsidy_policy == "legacy" and player.subsidy_flag_slot_at is not None and player.subsidy_flag_slot_at <= self.now
+            empty_field_due = (self._recurring_eligible(player)
+                               if self.subsidy_policy == "low_resources" else
+                               empty_field_subsidy_eligible(player.points, len(player.hand), field_empty))
             if not empty_field_due and not flag_due:
                 continue
             if player.last_subsidy_paid_slot_at == self.now:
@@ -810,11 +716,9 @@ class Simulation:
         if not player.is_active(self.now) or self.now >= self.end_at:
             return
         if player.busy_until is not None and self.now < player.busy_until:
-            if self.activity_policy == "legacy":
-                self.invariant_errors.append(f"decision_while_busy: {player.name} at {self._iso(self.now)}")
             return
         # UI操作は0分とし、同一時刻内で状態が変わる限り次の意思決定へ進む。
-        # 時間が進むのはミニゲームのプレイと手札練習だけとする。
+        # 時間が進むのは期間限定チャレンジのプレイと手札練習だけとする。
         for _step in range(MAX_ZERO_TIME_ACTIONS):
             due = self._collect_due_cards()
             for card_id in due:
@@ -896,156 +800,97 @@ class Simulation:
         self._schedule_next_decision(player, WAIT_RECHECK_MINUTES)
 
     def _choose_action(self, player: Player) -> dict[str, Any]:
-        trap = self._contrarian_action(player)
-        if trap is not None:
-            return trap
         options = self._legal_actions(player)
-        target = self.trap_targets.get(player.name)
-        if player.name in self.trap_returns and target in self.field and self.cards[target].taker != player.name:
-            traps = [a for a in options if a.get("card_id") == target and a["type"] in {"initial_post", "update"}]
-            if traps:
-                player.actions["trap_attempt"] = player.actions.get("trap_attempt", 0) + 1
-                return min(traps, key=lambda a: a["duration"])
         if not options:
             return {"type": "wait", "reason": "no_legal_action"}
-        attachment_action = self._attachment_action(player, options)
-        if attachment_action is not None:
-            return attachment_action
-        coverage_action = self._last_chance_initial_post(player, options)
-        if coverage_action is not None:
-            return coverage_action
-        consensus_action = self._consensus_stall_action(player, options)
-        if consensus_action is not None:
-            return consensus_action
-        commitment_action = self._commitment_preserving_action(player, options)
-        if commitment_action is not None:
-            return commitment_action
-        rank_point_action = self._rank_point_efficiency_action(player, options)
-        if rank_point_action is not None:
-            return rank_point_action
-        return_action = self._return_to_reduce_stack(player, options)
-        if return_action is not None:
-            return return_action
-        hand_pressure_take = self._take_to_avoid_large_hand(player, options)
-        if hand_pressure_take is not None:
-            return hand_pressure_take
-        if player.personality == "投稿優先派":
-            return self._choose_post_priority_action(player, options)
-        if player.personality == "スタック派":
-            return self._choose_stack_action(player, options)
-        if player.personality == "ホルダー優先派":
-            return self._choose_holder_priority_action(player, options)
-        if player.personality == "正統派":
-            return self._choose_orthodox_action(player, options)
-        return self._choose_negative_action(player, options)
-
-    def _attachment_action(
-        self,
-        player: Player,
-        options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        for card_id in self.field:
-            card = self.cards[card_id]
-            reasons = player.attachment_reasons.setdefault(card_id, set())
-            if card_id in player.favorite_card_ids or self.player_tastes[player.name][card_id] >= 0.9:
-                reasons.add("favorite")
-            if "hierarchy_upset" in reasons and not self._is_below_normal_hierarchy(player, card):
-                reasons.discard("hierarchy_upset")
-            if not reasons:
-                player.attachment_reasons.pop(card_id, None)
-        attached = [
-            action for action in options
-            if action["type"] in {"initial_post", "update", "extend"}
-            and player.attachment_reasons.get(action.get("card_id"))
-        ]
-        if not attached:
-            return None
-        if self.paid_update_policy == "legacy":
-            player.actions["attachment_action"] = player.actions.get("attachment_action", 0) + 1
-            return max(
-                attached,
-                key=lambda action: (
-                    action["type"] == "extend",
-                    action["type"] == "update",
-                    self._forecast_action_value(player, action),
-                    -action.get("duration", 0),
-                ),
-            )
-        best = max(
-            attached,
-            key=lambda action: (
-                self._forecast_action_value(player, action),
-                action["type"] == "extend",
-                -action.get("duration", 0),
-            ),
-        )
-        if self._forecast_action_value(player, best) <= 0:
-            return None
-        player.actions["attachment_action"] = player.actions.get("attachment_action", 0) + 1
+        # Observed action rates are preferences, not forced counts. Only legal
+        # candidates can fill a shortfall; no synthetic points or action outputs.
+        if player.personality in {"Ko","A","T","Ku"}:
+            pipeline = [a for a in options if a["type"] in {"draw","take"}]
+            take_need = self._behavior_need(player,"take")
+            if pipeline and take_need > self.behavior_tuning.get(player.personality,{}).get("pipeline_threshold",0.8):
+                takes = [a for a in pipeline if a["type"]=="take"]
+                if takes:
+                    return max(takes,key=lambda a:self._take_value(player,a["card_id"]))
+                return next(a for a in pipeline if a["type"]=="draw")
+        if self.now >= self.end_at-TAKE_CLOSE_BEFORE_END:
+            late_draws = [a for a in options if a["type"]=="draw"]
+            if late_draws and self._behavior_need(player,"draw")>0:
+                return late_draws[0]
+        consensus = self._consensus_stall_action(player, options)
+        if consensus is not None:
+            return consensus
+        extensions = [a for a in options if a["type"] == "extend"]
+        if extensions and ((player.personality in {"A", "Ku"} and self._behavior_need(player,"paid_extension") > -0.2) or (player.personality=="Ko" and self._behavior_need(player,"paid_extension")>1.0)):
+            return max(extensions, key=lambda a: a["rank_point_value"])
+        posts = [a for a in options if a["type"] == "initial_post"]
+        if player.personality == "Ko":
+            openers = [a for a in posts if not self.cards[a["card_id"]].posted_players]
+            if openers and self._behavior_need(player,"opening_post") > 0 and self._behavior_need(player,"update") < self._behavior_need(player,"opening_post")+0.5:
+                return max(openers, key=lambda a: self._forecast_post_rank_points(player,self.cards[a["card_id"]],a["duration"])/max(1,a["duration"]))
+        takes = [a for a in options if a["type"] == "take"]
+        draws = [a for a in options if a["type"] == "draw"]
+        target = self._forecast_orthodox_stack_target(player)
+        if draws and len(player.hand) < target and player.personality in {"Ko", "Ku", "G"} and (player.personality=="G" or self._behavior_need(player,"draw")>0):
+            return draws[0]
+        if takes and (len(player.hand) >= target or not draws) and (player.personality not in {"Ko","A","T","Ku"} or self._behavior_need(player,"take")>0):
+            return max(takes, key=lambda a: self._take_value(player,a["card_id"]))
+        scored = [(self._empirical_action_value(player,a),a) for a in options]
+        value, best = max(scored, key=lambda pair: pair[0])
+        if value <= 0:
+            return {"type": "wait", "reason": "empirical_no_valuable_action"}
         return best
 
-    def _last_chance_initial_post(
-        self,
-        player: Player,
-        options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        urgent: list[dict[str, Any]] = []
-        for action in options:
-            if action["type"] != "initial_post":
-                continue
-            card = self.cards[action["card_id"]]
-            remaining = ((card.limit_at or self.now) - self.now).total_seconds() / 60.0
-            retry_floor = {1: 10, 2: 16, 3: 24, 4: 34, 5: 45}[min(5, max(1, card.difficulty or 1))]
-            if remaining <= action["duration"] + retry_floor + WAIT_RECHECK_MINUTES:
-                urgent.append(action)
-        if not urgent:
-            return None
-        return min(urgent, key=lambda action: self.cards[action["card_id"]].limit_at or self.end_at)
+    def _empirical_action_value(self, player: Player, action: dict[str, Any]) -> float:
+        kind = action["type"]
+        value = self._forecast_action_value(player,action)
+        metric = "paid_extension" if kind=="extend" else kind
+        if metric in {"draw","take","initial_post","update","paid_extension"}:
+            tuning = self.behavior_tuning.get(player.personality,{})
+            weight = tuning.get("update_tempo_weight",tuning.get("tempo_weight",6.0)) if metric=="update" else tuning.get("tempo_weight",6.0)
+            value += weight*self._behavior_need(player,metric)
+        if kind == "draw":
+            return value + player.spend_shares.get("draw",0)*2
+        if kind == "return_to_deck":
+            return value + player.spend_shares.get("return",0)*2
+        card = self.cards.get(action.get("card_id"))
+        if card is None:
+            return value
+        pref = player.series_preference.get(card.series,0)
+        if kind == "initial_post":
+            value += pref*3
+            if not card.posted_players:
+                value += 6*self._behavior_need(player,"opening_post")
+            if card.taker==player.name:
+                value += 4*self._initial_post_cost(card,player)*self._behavior_need(player,"initial_cost")
+            if player.personality == "Ko" and not card.posted_players:
+                value += 4
+            if player.personality in {"A","G"}:
+                value += 4/(1+self._predicted_rank_after_play(player,card,action["duration"]))
+        if kind == "update":
+            value += min(2,player.update_propensity*4)
+            value += self._update_post_cost(card)*self._behavior_need(player,"update_cost")
+            if self._holder_challenge(player,card):
+                value += 5
+        if kind == "extend":
+            value += player.spend_shares.get("extension",0)*8
+        return value
 
-    def _rank_point_efficiency_action(
-        self,
-        player: Player,
-        options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        if not self._is_point_return_sensitive(player):
-            return None
-        candidates = [action for action in options if action["type"] in {"initial_post", "update"}]
-        if not candidates:
-            return None
+    def _series_allowed(self, player: Player, card: Card) -> bool:
+        return player.personality != "Ku" or card.series in {3,4}
 
-        def efficiency(action: dict[str, Any]) -> float:
-            card = self.cards[action["card_id"]]
-            participants = self._forecast_field_participants(card, player.name)
-            predicted_rank = self._forecast_rank_after_future_posts(
-                player,
-                card,
-                action["duration"],
-                participants,
-            )
-            future = self._rank_points_for(predicted_rank, participants, card.stack_count)
-            if action["type"] == "update" and self.paid_update_policy == "legacy":
-                current = self._rank_points_for(
-                    self._current_rank(player, card),
-                    participants,
-                    card.stack_count,
-                )
-                gain = max(0, future - current)
-            elif action["type"] == "update":
-                gain = action.get("expected_rank_point_gain", 0)
-            else:
-                gain = max(0, future)
-            cost = self._initial_post_cost(card, player) if action["type"] == "initial_post" else self._update_post_cost(card)
-            return gain / max(1.0, action["duration"] + cost * 10.0)
+    def _holder_challenge(self, player: Player, card: Card) -> bool:
+        return player.name in card.posted_players and self._current_rank(player,card) >= 2 and (
+            player.personality == "A" or (player.personality == "Ku" and card.series in {3,4})
+        )
 
-        best = max(candidates, key=efficiency)
-        return best if efficiency(best) > 0 else None
 
     def _consensus_stall_action(
         self,
         player: Player,
         options: list[dict[str, Any]],
     ) -> dict[str, Any] | None:
-        # 場札が無い場合は、今すぐテイクできる活動中プレイヤーのうち
+        # 切り札が無い場合は、今すぐテイクできる活動中プレイヤーのうち
         # 最大手札の1人だけが戦略より循環再開を優先する。
         if not self.field:
             candidates = [
@@ -1072,25 +917,16 @@ class Simulation:
         return None
 
     def _take_desire(self, player: Player, card_id: int) -> float:
-        """本人にしか見えない、カードをテイクしたい複合的な強さ。"""
         card = self.cards[card_id]
-        taste = self.player_tastes[player.name][card_id]
-        public_appeal = self.card_appeal[card_id]
-        difficulty = card.difficulty or 1
-        if player.skill_tier == "X":
-            confidence = 0.75
-        elif player.skill_tier == "Y":
-            confidence = 0.55
-        else:
-            confidence = max(0.08, 0.34 - (difficulty - 1) * 0.055 + (player.skill_multiplier - 1.0) * 0.12)
-        creator_bonus = 1.35 if card.creator_name == player.name else 0.0
-        favorite_bonus = (
-            0.95 if player.personality == "ホルダー優先派" else 0.45
-        ) if card_id in player.favorite_card_ids else 0.0
-        individuality = max(0.0, taste - public_appeal) * (
-            0.55 if player.personality == "ネガティブ派" else 0.25
-        )
-        return taste * 0.75 + public_appeal * 0.45 + confidence + creator_bonus + favorite_bonus + individuality
+        confidence = 0.4 + 0.15*player.series_strength.get(card.series,0)
+        preference = player.series_preference.get(card.series,0)
+        creator_bonus = 0.6 if card.creator_name == player.name else 0.0
+        counts = self.behavior_tuning.get(player.personality,{}).get("take_difficulty_counts",{})
+        template = EMPIRICAL_CALIBRATION["deck_template"]
+        observed = (counts.get(str(card.difficulty),0)+1)/(sum(counts.values())+5) if counts else 0.2
+        available = sum(c["difficulty"]==card.difficulty for c in template)/len(template)
+        difficulty_bias = 0.35*math.log(observed/max(0.01,available)) if counts else 0.0
+        return self.player_tastes[player.name][card_id]*0.5 + self.card_appeal[card_id]*0.3 + confidence + preference*2 + creator_bonus + difficulty_bias
 
     def _committed_hand_card(self, player: Player) -> int | None:
         if self.behavior_policy != "commitment_aware" or not player.hand:
@@ -1115,51 +951,19 @@ class Simulation:
             penalty *= 0.2
         return min(3.0, penalty)
 
-    def _commitment_preserving_action(
-        self,
-        player: Player,
-        options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        committed = self._committed_hand_card(player)
-        if committed is None:
-            return None
-        if len(player.hand) < self._required_take_hand(player):
-            return None
-        commitment_metadata = {"committed_card_id": committed}
-        if any(action["type"] == "draw" for action in options):
-            commitment_metadata["draw_deferred"] = True
-        takes = [
-            action for action in options
-            if action["type"] == "take" and action.get("card_id") == committed
-        ]
-        if takes:
-            return {**takes[0], **commitment_metadata}
-        alternatives = [
-            action for action in options
-            if action["type"] not in {"draw", "return_to_deck", "take"}
-        ]
-        if alternatives:
-            best = max(alternatives, key=lambda action: (
-                action.get("card_id") == committed and action["type"] == "practice",
-                self._forecast_action_value(player, action),
-            ))
-            return {**best, **commitment_metadata}
-        return {
-            "type": "wait",
-            "reason": "protect_desired_card_until_take",
-            **commitment_metadata,
-        }
 
     def _legal_actions(self, player: Player) -> list[dict[str, Any]]:
         actions: list[dict[str, Any]] = []
         selected_take_card_id: int | None = None
         can_still_take = self.now < self.end_at - TAKE_CLOSE_BEFORE_END
         future_take_count = self._forecast_take_opportunities(player)
+        observed_late_draw = self.behavior_tuning.get(player.personality,{}).get("observed_post_cutoff_draws",0)>0
+        late_draw = not can_still_take and observed_late_draw and self._behavior_need(player,"draw")>0
         # テイク締切後は、新たに引いたカードや手札練習の成果を場に出せない。
-        # 残り時間は場札への投稿・更新に使う方が合理的なので候補から除外する。
+        # 残り時間は切り札への投稿・更新に使う方が合理的なので候補から除外する。
         if (
-            can_still_take
-            and future_take_count > 0
+            (can_still_take or late_draw)
+            and (future_take_count > 0 or late_draw)
             and player.points >= 1
             and self.deck_or_trash_available()
             and (not self.dynamic_hand_limit or len(player.hand) < self._hand_limit(player))
@@ -1172,6 +976,10 @@ class Simulation:
                 actions.append({"type": "take", "card_id": card_id})
         for card_id in self.field:
             card = self.cards[card_id]
+            if not self._series_allowed(player,card):
+                continue
+            if player.series_preference.get(card.series,0) <= 0.005 and self.rng.random() >= 0.005:
+                continue
             if player.name not in card.paid_players:
                 max_duration = self._max_initial_play_minutes(player, card)
                 if max_duration >= difficulty_minimum_minutes(card.difficulty):
@@ -1200,7 +1008,7 @@ class Simulation:
                         **assessment,
                         **plan,
                     }
-                    if self._paid_update_is_acceptable(update_action, include_time=True):
+                    if self._paid_update_is_acceptable(update_action, include_time=True) or self._holder_challenge(player,card) or self._behavior_need(player,"update")>0:
                         actions.append(update_action)
                     else:
                         player.actions["update_plan_rejected_rank_value"] = (
@@ -1214,8 +1022,8 @@ class Simulation:
                     **extension_plan,
                 })
         if can_still_take and future_take_count > 0 and player.hand:
-            favorite_hand = [card_id for card_id in player.hand if card_id in player.favorite_card_ids]
-            practice_card_id = self.rng.choice(favorite_hand or player.hand)
+            practice_pool = [cid for cid in player.hand if self._series_allowed(player,self.cards[cid])]
+            practice_card_id = max(practice_pool or player.hand,key=lambda cid: player.series_preference.get(self.cards[cid].series,0))
             duration = self._practice_duration(player, self.cards[practice_card_id])
             take_close_at = self.end_at - TAKE_CLOSE_BEFORE_END - timedelta(microseconds=1)
             if self._can_finish_timed_action(player, duration, take_close_at):
@@ -1226,6 +1034,7 @@ class Simulation:
                 })
         if (
             self.return_to_deck_enabled
+            and (player.personality not in {"Ko","A","T","Ku"} or player.spend_shares.get("return",0)>0)
             and player.points >= RETURN_TO_DECK_COST
             and len(player.hand) > self._required_take_hand(player)
             and self._can_take(player)
@@ -1248,21 +1057,6 @@ class Simulation:
                 })
         return actions
 
-    def _return_to_reduce_stack(
-        self,
-        player: Player,
-        options: list[dict[str, Any]],
-    ) -> dict[str, Any] | None:
-        """非スタック派がテイク可能な余剰手札を最小枚数まで戻す積極利用シナリオ。"""
-        if player.personality == "スタック派":
-            return None
-        returns = [action for action in options if action["type"] == "return_to_deck"]
-        takes = [action for action in options if action["type"] == "take"]
-        if returns and takes:
-            cid = returns[0]["card_id"]
-            if self.player_tastes[player.name][cid] < 0.25 and player.points >= 3:
-                return returns[0]
-        return None
 
     def _can_finish_timed_action(
         self,
@@ -1284,66 +1078,38 @@ class Simulation:
         return min(60, max(lower, round((lower + upper) / 2 * player.motivation_multiplier)))
 
     def _extension_plan(self, player: Player, card: Card) -> dict[str, Any] | None:
-        if (
-            not self.player_extension_enabled
-            or not self._is_point_return_sensitive(player)
-            or player.points < PLAYER_EXTENSION_COST
-            or card.limit_at is None
-            or self.now >= self.end_at - PLAYER_EXTENSION_CUTOFF
-            or card.limit_at >= self.end_at
-        ):
+        if (not self.player_extension_enabled or player.points < PLAYER_EXTENSION_COST
+            or card.limit_at is None or self.now >= card.limit_at
+            or self.now >= self.end_at-PLAYER_EXTENSION_CUTOFF or card.limit_at >= self.end_at
+            or not self._series_allowed(player,card)):
             return None
-        reasons = player.attachment_reasons.setdefault(card.id, set())
-        if card.id in player.favorite_card_ids or self.player_tastes[player.name][card.id] >= 0.9:
-            reasons.add("favorite")
-        if not reasons:
-            player.attachment_reasons.pop(card.id, None)
+        challenge = self._holder_challenge(player,card)
+        preparing = player.name not in card.posted_players and (player.personality=="A" or (player.personality=="Ku" and card.series==4))
+        if player.personality in {"A","Ku"} and not (challenge or preparing):
             return None
-        if card.trial_count.get(player.name, 0) >= MAX_FIELD_SCORE_TRIALS:
+        if player.personality == "Ku" and card.series not in {3,4}:
             return None
-        trial_minutes = self._expected_score_trial_minutes(player, card)
-        remaining_minutes = max(0.0, (card.limit_at - self.now).total_seconds() / 60.0)
-        if remaining_minutes > trial_minutes:
+        if not challenge and player.spend_shares.get("extension",0) <= 0:
             return None
-        required_extensions = max(
-            1,
-            math.ceil((trial_minutes - remaining_minutes + 0.001) / PLAYER_EXTENSION_MINUTES),
-        )
-        extended_limit = min(
-            self.end_at,
-            card.limit_at + timedelta(minutes=PLAYER_EXTENSION_MINUTES * required_extensions),
-        )
-        if (extended_limit - self.now).total_seconds() / 60.0 <= trial_minutes:
+        if card.trial_count.get(player.name,0) >= MAX_FIELD_SCORE_TRIALS:
             return None
-        if player.points < required_extensions:
+        trial = self._expected_score_trial_minutes(player,card)
+        remaining = (card.limit_at-self.now).total_seconds()/60
+        padding = self.behavior_tuning.get(player.personality,{}).get("extension_padding",45 if challenge or preparing else 15)
+        if self._behavior_need(player,"paid_extension") < -0.5:
             return None
-        participants = max(1, self._forecast_field_participants(card, player.name))
-        if player.name in card.posted_players:
-            current_rank = self._current_rank(player, card)
-            current_rank_points = self._rank_points_for(current_rank, participants, card.stack_count)
-        else:
-            current_rank = participants
-            current_rank_points = 0
-        predicted_rank = self._forecast_rank_after_future_posts(
-            player,
-            card,
-            trial_minutes,
-            participants,
-        )
-        predicted_rank_points = self._rank_points_for(predicted_rank, participants, card.stack_count)
-        improvement_value = max(0, predicted_rank_points - current_rank_points)
-        defense_value = 0.0
-        if current_rank == 1 and reasons.intersection({"favorite", "upward_score"}):
-            defense_value = max(1.0, current_rank_points * 0.5)
-        rank_point_value = max(float(improvement_value), defense_value)
-        if rank_point_value < required_extensions:
+        if remaining > trial + padding:
             return None
-        return {
-            "required_extensions": required_extensions,
-            "rank_point_value": round(rank_point_value, 3),
-            "trial_minutes": trial_minutes,
-            "attachment_reasons": sorted(reasons),
-        }
+        extensions = 1
+        added = self._extension_minutes(player,card)
+        while added < trial-remaining+1:
+            added += self._extension_minutes(player,card,extensions)
+            extensions += 1
+        limit = min(self.end_at,card.limit_at+timedelta(minutes=added))
+        if player.points < extensions or not self._can_finish_timed_action(player,trial,limit):
+            return None
+        return {"required_extensions":extensions,"rank_point_value":max(3.0,extensions+1.0) if challenge or preparing else 2.0,
+                "trial_minutes":trial,"attachment_reasons":["preparing_first_post" if preparing else "holder_challenge" if challenge else "empirical_extension"]}
 
     def _buy_card_extension(self, player: Player, card_id: int, planned_extensions: int) -> None:
         if card_id not in self.field:
@@ -1355,6 +1121,9 @@ class Simulation:
             self._record("wait", player.name, {"reason": "extension_no_longer_rational", "card_id": card_id})
             return
         previous_limit = card.limit_at
+        extension_minutes = self._extension_minutes(player,card)
+        key = (player.name,card.stage_key or card.id)
+        self.stage_extension_counts[key] = self.stage_extension_counts.get(key,0)+1
         player.points -= PLAYER_EXTENSION_COST
         card.paid_points_total += PLAYER_EXTENSION_COST
         card.paid_extension_points_total += PLAYER_EXTENSION_COST
@@ -1365,15 +1134,18 @@ class Simulation:
         card.extension_players.add(player.name)
         card.limit_at = min(
             self.end_at,
-            card.limit_at + timedelta(minutes=PLAYER_EXTENSION_MINUTES),
+            card.limit_at + timedelta(minutes=extension_minutes),
         )
+        self.actual_extension_minutes += (card.limit_at-previous_limit).total_seconds()/60
         self.queue.push(card.limit_at, "collect", {"card_id": card.id, "limit_at": card.limit_at.isoformat()})
         self._extend_activity_for_card(card)
         player.actions["paid_extension"] = player.actions.get("paid_extension", 0) + 1
         self._record("paid_extension", player.name, {
             "card_id": card.id,
             "cost": PLAYER_EXTENSION_COST,
-            "minutes": PLAYER_EXTENSION_MINUTES,
+            "minutes": extension_minutes,
+            "stage_key": card.stage_key,
+            "stage_extension_number": self.stage_extension_counts[key],
             "previous_limit_at": self._iso(previous_limit),
             "limit_at": self._iso(card.limit_at),
             "planned_extensions": planned_extensions,
@@ -1382,133 +1154,6 @@ class Simulation:
             "attachment_reasons": plan["attachment_reasons"],
         })
 
-    def _choose_post_priority_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
-        # 投稿優先派：未投稿の場札数を最優先し、全件投稿後は正統派へ戻る。
-        initial_posts = [
-            a for a in options
-            if a["type"] == "initial_post" and a.get("participation_probability", 0.0) >= 0.15
-        ]
-        if initial_posts:
-            return min(initial_posts, key=lambda a: (
-                a["duration"],
-                -self._forecast_post_rank_points(player, self.cards[a["card_id"]], a["duration"]),
-            ))
-        return self._choose_orthodox_action(player, options)
-
-    def _choose_stack_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
-        # スタック派：締切までにテイクできる範囲で巨大スタック化を予測する。
-        draws = [a for a in options if a["type"] == "draw"]
-        takes = [a for a in options if a["type"] == "take"]
-        initial_posts = [
-            a for a in options
-            if a["type"] == "initial_post"
-            and a.get("participation_probability", 0.0) >= (0.1 if self.now >= self.end_at - TAKE_CLOSE_BEFORE_END else 0.45)
-        ]
-        updates = [a for a in options if a["type"] == "update"]
-        take_opportunities = self._forecast_take_opportunities(player)
-        required_hand = self._required_take_hand(player)
-        reachable_target = (
-            min(max(STACK_TARGET_HAND, required_hand), len(player.hand) + max(0, player.points))
-            if self.behavior_policy == "legacy"
-            else self._forecast_orthodox_stack_target(player)
-        )
-        if self.dynamic_hand_limit:
-            reachable_target = min(reachable_target, self._hand_limit(player))
-        must_take_now = bool(takes) and take_opportunities <= 1
-        cannot_reach_take = len(player.hand) + max(0, player.points) < required_hand
-        if initial_posts and cannot_reach_take:
-            return min(initial_posts, key=lambda a: a["duration"])
-        if draws and len(player.hand) < reachable_target and not must_take_now:
-            return draws[0]
-        if takes and (len(player.hand) >= reachable_target or not draws or must_take_now):
-            return max(takes, key=lambda a: self._take_value(player, a["card_id"]))
-        if self.now >= self.end_at - TAKE_CLOSE_BEFORE_END:
-            endgame_posts = [*initial_posts, *updates]
-            if endgame_posts:
-                return min(endgame_posts, key=lambda a: a["duration"])
-        if initial_posts and self.rng.random() < 0.25:
-            return self.rng.choice(initial_posts)
-        return {"type": "wait", "reason": "stack_building"}
-
-    def _choose_orthodox_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
-        # 正統派：残り活動時間と後続行動を含む予測ランクPを最大化する。
-        ranked_actions = sorted(
-            options,
-            key=lambda action: self._forecast_action_value(player, action),
-            reverse=True,
-        )
-        best = ranked_actions[0]
-        best_value = self._forecast_action_value(player, best)
-        if best_value > 0:
-            return best
-        takes = [a for a in options if a["type"] == "take"]
-        if takes and len(player.hand) >= 5:
-            return max(takes, key=lambda a: self._take_value(player, a["card_id"]))
-        draws = [a for a in options if a["type"] == "draw"]
-        if draws and len(player.hand) < max(6, self._required_take_hand(player)):
-            return draws[0]
-        return {"type": "wait", "reason": "orthodox_no_rank_point_gain"}
-
-    def _choose_negative_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
-        # ネガティブ派：練習成果を締切前に場へ出せる見込みがある場合に練習を優先する。
-        draws = [a for a in options if a["type"] == "draw"]
-        if draws and len(player.hand) < self._required_take_hand(player):
-            return draws[0]
-        practices = [a for a in options if a["type"] == "practice"]
-        if practices and self._forecast_take_opportunities(player) >= 1:
-            best_practice = max(practices, key=lambda a: self._forecast_action_value(player, a) + a["duration"] / 25.0)
-            alternatives = [a for a in options if a["type"] != "practice"]
-            alternative_value = max((self._forecast_action_value(player, a) for a in alternatives), default=0.0)
-            practice_value = self._forecast_action_value(player, best_practice) + best_practice["duration"] / 25.0
-            if practice_value >= alternative_value * 0.65:
-                return best_practice
-        return self._choose_orthodox_action(player, options)
-
-    def _choose_holder_priority_action(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any]:
-        favorite_actions = [
-            action for action in options
-            if action.get("card_id") in player.favorite_card_ids
-        ]
-        if not favorite_actions:
-            return self._choose_orthodox_action(player, options)
-
-        def holder_value(action: dict[str, Any]) -> float:
-            if self.paid_update_policy == "legacy":
-                card = self.cards[action["card_id"]]
-                if action["type"] == "update":
-                    return 100.0 - self._predicted_rank_after_play(player, card, action["duration"]) * 10.0
-                if action["type"] == "initial_post":
-                    return 90.0 - self._predicted_rank_after_play(player, card, action["duration"]) * 10.0
-                if action["type"] == "practice":
-                    return 60.0 + action["duration"] / 10.0
-                if action["type"] == "take":
-                    return 70.0 + self._take_value(player, action["card_id"])
-            if action["type"] == "update":
-                return self._forecast_action_value(player, action) + 0.5
-            if action["type"] == "initial_post":
-                return self._forecast_action_value(player, action) + 0.75
-            if action["type"] == "practice":
-                return self._forecast_action_value(player, action) + 0.5
-            if action["type"] == "take":
-                return self._forecast_action_value(player, action) + 0.75
-            return self._forecast_action_value(player, action)
-
-        return max(favorite_actions, key=holder_value)
-
-    def _take_to_avoid_large_hand(self, player: Player, options: list[dict[str, Any]]) -> dict[str, Any] | None:
-        pressure_threshold = max(8, self._required_take_hand(player))
-        if player.personality == "スタック派" or len(player.hand) < pressure_threshold:
-            return None
-        takes = [a for a in options if a["type"] == "take"]
-        if takes:
-            return max(takes, key=lambda a: self._take_value(player, a["card_id"]))
-        # 現在の必要手札枚数以上では、テイクできない限りドローを候補から実質排除する。
-        if len(player.hand) >= pressure_threshold:
-            non_draws = [a for a in options if a["type"] != "draw"]
-            if non_draws:
-                return max(non_draws, key=lambda a: self._generic_action_value(player, a))
-            return {"type": "wait", "reason": "avoid_hand_9_plus"}
-        return None
 
     def _forecast_action_value(self, player: Player, action: dict[str, Any]) -> float:
         remaining_active = self._remaining_active_minutes(player)
@@ -1536,7 +1181,7 @@ class Simulation:
                 return gain - self._update_post_cost(card) - play_time_cost(action["duration"])
             gain = float(action.get("expected_rank_point_gain", 0))
             cost = float(action.get("cost", 0))
-            # ポイントは勝利得点ではない。将来行動を狭める流動性費用だけを
+            # ドローポイントは勝利得点ではない。将来行動を狭める流動性費用だけを
             # 小さく差し引き、ランクP増分と時間効率を主目的にする。
             return gain - action["duration"] / 60.0 - cost * 0.1
         if action["type"] == "extend":
@@ -1546,7 +1191,7 @@ class Simulation:
             expected_participants = self._forecast_new_field_participants(player, self.cards[action["card_id"]])
             if expected_participants <= 0:
                 return -1000.0
-            expected_rank = self._forecast_rank_from_skill(player, expected_participants)
+            expected_rank = self._forecast_rank_from_skill(player, expected_participants, self.cards[action["card_id"]])
             rank_points = self._rank_points_for(expected_rank, expected_participants, stack_count)
             pipeline_value = min(3.0, player.points * 0.08) + stack_count * 0.2
             return rank_points + pipeline_value + self._take_value(player, action["card_id"]) * 0.15
@@ -1566,7 +1211,7 @@ class Simulation:
                 self._draw_commitment_penalty(player),
             )
         if action["type"] == "return_to_deck":
-            # 直後のテイクで余剰1枚をスタックから救う価値。料金1Pを差し引く。
+            # 直後のテイクで余剰1枚をトリックから救う価値。料金1Pを差し引く。
             return 0.35 + point_shadow - RETURN_TO_DECK_COST
         if action["type"] == "practice":
             card = self.cards[action["card_id"]]
@@ -1574,10 +1219,10 @@ class Simulation:
             participants = max(1, self._forecast_new_field_participants(player, card))
             normal_play = self._expected_play_minutes(player)
             practiced = player.private_practice.get(card.id, 0)
-            before_score = self._score_for_minutes(player, normal_play, practiced)
-            after_score = self._score_for_minutes(player, normal_play, practiced + action["duration"])
-            before_rank = self._forecast_rank_from_score(before_score, participants)
-            after_rank = self._forecast_rank_from_score(after_score, participants)
+            before_score = self._score_for_minutes(player, normal_play, practiced,card.series)
+            after_score = self._score_for_minutes(player, normal_play, practiced + action["duration"],card.series)
+            before_rank = self._forecast_rank_from_score(before_score, participants, card)
+            after_rank = self._forecast_rank_from_score(after_score, participants, card)
             discrete_gain = self._rank_points_for(after_rank, participants, stack_count)
             discrete_gain -= self._rank_points_for(before_rank, participants, stack_count)
             fractional_gain = min(2.5, (after_score - before_score) / 55.0)
@@ -1655,8 +1300,6 @@ class Simulation:
         if self.behavior_policy == "legacy":
             surplus_target = required_hand + min(7, max(0, player.points - 5) // 8)
             return max(required_hand, min(affordable, surplus_target))
-        if self._committed_hand_card(player) is not None:
-            return min(affordable, required_hand)
         surplus = rational_stack_surplus(player.personality, affordable, required_hand)
         surplus_target = required_hand + surplus
         return max(required_hand, min(affordable, surplus_target))
@@ -1683,20 +1326,28 @@ class Simulation:
         held_minutes = 0.0
         if card.drawn_at is not None:
             held_minutes = max(0.0, (card.taken_at - card.drawn_at).total_seconds() / 60.0)
-        practice_propensity = 0.7 if taker.personality == "ネガティブ派" else 0.2
+        practice_propensity = 0.2
         expected_hidden_practice = held_minutes * practice_propensity
         return min(4.0, self._effective_practice_minutes(int(expected_hidden_practice)) / 25.0)
 
     def _estimated_future_post_probability(self, player: Player, card: Card) -> float:
+        if not self._series_allowed(player,card):
+            return 0.0
         duration = self._expected_play_minutes(player)
         predicted_rank = self._predicted_rank_after_play(player, card, duration)
         participant_count = max(1, len(card.posted_players) + 1)
         rank_points = self._rank_points_for(predicted_rank, participant_count, card.stack_count)
         expected_reward = self._field_reward_potential(card.id) / participant_count
+        if self.rule_version == "v20":
+            slots = v20_rank_distribution(self._field_reward_potential(card.id),participant_count)
+            expected_reward = slots[min(participant_count-1,max(0,predicted_rank-1))]
         fee = self._initial_post_cost(card, player)
         time_cost = play_time_cost(duration)
         utility = rank_points + expected_reward * 0.25 - fee - time_cost - self._practice_risk_penalty(card)
-        base = FORECAST_POST_PARTICIPATION[player.personality]
+        base = player.participation_base
+        base *= min(1.0,player.series_preference.get(card.series,0)*4)
+        if base <= 0:
+            return 0.0
         logit = math.log(base / (1.0 - base)) + utility / 3.0
         return min(0.98, max(0.02, 1.0 / (1.0 + math.exp(-logit))))
 
@@ -1706,18 +1357,22 @@ class Simulation:
         rank_points = self._rank_points_for(predicted_rank, participant_count, card.stack_count)
         expected_reward = self._field_reward_potential(card.id) / max(1, participant_count)
         rank_reward_weight = max(0.2, (participant_count - predicted_rank + 1) / participant_count)
+        if self.rule_version == "v20":
+            slots = v20_rank_distribution(self._field_reward_potential(card.id),participant_count)
+            expected_reward = slots[min(participant_count-1,max(0,predicted_rank-1))]
+            rank_reward_weight = 1.0
         fee = self._initial_post_cost(card, player)
         time_cost = play_time_cost(duration)
         return (
             rank_points
-            + expected_reward * rank_reward_weight * 0.35
+            + expected_reward * rank_reward_weight * 0.35 + self._expected_opening_bonus(card,player)*0.35
             - fee
             - time_cost
             - self._practice_risk_penalty(card)
         )
 
     def _is_point_return_sensitive(self, player: Player) -> bool:
-        return player.skill_tier == "Y" or player.personality in POINT_RETURN_SENSITIVE_PERSONALITIES
+        return player.personality in POINT_RETURN_SENSITIVE_PERSONALITIES
 
     def _paid_post_is_acceptable(self, player: Player, card: Card, expected_point_net: int) -> bool:
         cost = self._initial_post_cost(card, player)
@@ -1738,7 +1393,11 @@ class Simulation:
             participant_count,
             self.reward_formula,
         )
+        if self.rule_version == "v20":
+            total_reward = max(participant_count,total_reward)
         expected_reward = (
+            v20_rank_distribution(total_reward,participant_count)[predicted_rank-1]
+            if self.rule_version == "v20" and 0 < predicted_rank <= participant_count else
             proposed_rank_distribution(total_reward, participant_count)[predicted_rank - 1]
             if self.reward_formula == "proposal" and 0 < predicted_rank <= participant_count
             else predicted_rank_reward(
@@ -1749,11 +1408,14 @@ class Simulation:
                 self.remainder_policy,
             )
         )
-        return expected_reward - cost
+        return expected_reward - cost + self._expected_opening_bonus(card,player)
 
     def _post_participation_probability(self, player: Player, card: Card, duration: int) -> float:
         utility = self._post_expected_utility(player, card, duration)
-        base = FORECAST_POST_PARTICIPATION[player.personality]
+        base = player.participation_base
+        base *= min(1.0,player.series_preference.get(card.series,0)*4)
+        if base <= 0:
+            return 0.0
         logit = math.log(base / (1.0 - base)) + utility / 3.0
         return min(0.98, max(0.02, 1.0 / (1.0 + math.exp(-logit))))
 
@@ -1764,7 +1426,7 @@ class Simulation:
         )
         expected = 0.0
         for other in self.players.values():
-            if not other.joined:
+            if not other.joined or (card is not None and not self._series_allowed(other,card)):
                 continue
             duration = max(
                 difficulty_minimum_minutes(card.difficulty if card else 1),
@@ -1772,7 +1434,7 @@ class Simulation:
             )
             if not self._can_schedule_play_before(other, duration, deadline):
                 continue
-            expected += FORECAST_POST_PARTICIPATION[other.personality]
+            expected += other.participation_base * (min(1.0,other.series_preference.get(card.series,0)*4) if card else 1)
         return max(0, min(self.participant_count(), int(round(expected))))
 
     def _can_schedule_play_before(self, player: Player, duration: int, deadline: datetime) -> bool:
@@ -1792,6 +1454,8 @@ class Simulation:
             1
             for other in self.players.values()
             if other.joined
+            and self._series_allowed(other,card)
+            and other.series_preference.get(card.series,0) > 0.005
             and self._can_schedule_play_before(
                 other,
                 difficulty_minimum_minutes(card.difficulty),
@@ -1814,6 +1478,7 @@ class Simulation:
                 player,
                 predicted_time,
                 player.private_practice.get(card.id, 0),
+                card.series,
             )
         return self._forecast_score_rank_after_future_posts(
             player,
@@ -1836,7 +1501,7 @@ class Simulation:
         )
         known_participants = len(card.posted_players | {player.name})
         future_competitors = max(0, participant_count - known_participants)
-        expected_rank = self._forecast_rank_from_skill(player, participant_count)
+        expected_rank = self._forecast_rank_from_skill(player, participant_count, card)
         return min(participant_count, max(known_rank, min(known_rank + future_competitors, expected_rank)))
 
     def _paid_update_assessment(
@@ -1857,6 +1522,7 @@ class Simulation:
                 player,
                 card.play_time.get(player.name, 0) + duration,
                 player.private_practice.get(card.id, 0),
+                card.series,
             )
         before_rank = self._forecast_score_rank_after_future_posts(
             player,
@@ -1904,24 +1570,20 @@ class Simulation:
     def _expected_play_minutes(self, player: Player) -> int:
         return 18
 
-    def _forecast_rank_from_skill(self, player: Player, participant_count: int) -> int:
-        player_strength = (SKILL_TIER_ORDER[player.skill_tier], player.skill_multiplier)
-        stronger = sum(
-            1
-            for other in self.players.values()
-            if other.joined
-            and other.name != player.name
-            and (SKILL_TIER_ORDER[other.skill_tier], other.skill_multiplier) > player_strength
-        )
-        joined_others = max(1, self.participant_count() - 1)
-        return min(participant_count, 1 + round(stronger * max(0, participant_count - 1) / joined_others))
+    def _forecast_rank_from_skill(self, player: Player, participant_count: int, card: Card | None = None) -> int:
+        series = card.series if card else max(player.series_preference,key=player.series_preference.get)
+        strength = player.series_strength.get(series,0)
+        opponents = [p for p in self.players.values() if p.joined and p.name != player.name and (card is None or self._series_allowed(p,card))]
+        stronger = sum(p.series_strength.get(series,0)>strength for p in opponents)
+        return min(participant_count,1+round(stronger*max(0,participant_count-1)/max(1,len(opponents))))
 
-    def _forecast_rank_from_score(self, score: float, participant_count: int) -> int:
+    def _forecast_rank_from_score(self, score: float, participant_count: int, card: Card | None = None) -> int:
         joined = [other for other in self.players.values() if other.joined]
         if not joined:
             return 1
         expected_scores = sorted(
-            (self._score_for_minutes(other, self._expected_play_minutes(other), 0) for other in joined),
+            ((self._expected_card_score(other,card,self._expected_play_minutes(other)) if card else self._score_for_minutes(other,self._expected_play_minutes(other),0))
+             for other in joined if card is None or self._series_allowed(other,card)),
             reverse=True,
         )
         stronger = sum(1 for expected_score in expected_scores[:participant_count] if expected_score > score)
@@ -1953,7 +1615,7 @@ class Simulation:
             self._take_desire(player, card_id) * 2.0
             + stack * 0.25
             + practice / 20.0
-            + difficulty * 0.15
+            + difficulty * 0.15 - self._take_bonus_cost(card)
         )
 
     def _rank_points_for(self, rank: int, participant_count: int, stack_count: int) -> int:
@@ -1976,6 +1638,8 @@ class Simulation:
         return player.rank_points + current_live.get(player.name, 0)
 
     def _initial_post_cost(self, card: Card, player: Player | None = None) -> int:
+        if self.rule_version == "v20":
+            return 0
         if self.post_cost_policy == "taker_initial_and_retries_paid":
             return calculate_attempt_post_cost(
                 card.difficulty or 1,
@@ -1990,6 +1654,8 @@ class Simulation:
         return calculate_initial_post_cost(amount, len(card.posted_players), self.post_cost_policy)
 
     def _update_post_cost(self, card: Card) -> int:
+        if self.rule_version == "v20":
+            return self.uniform_update_cost
         return calculate_attempt_post_cost(card.difficulty or 1, False, 2) if self.post_cost_policy == "taker_initial_and_retries_paid" else 0
 
     def _current_rank(self, player: Player, card: Card) -> int:
@@ -2007,6 +1673,7 @@ class Simulation:
                 player,
                 predicted_time,
                 player.private_practice.get(card.id, 0),
+                card.series,
             )
         competing = {
             name: score
@@ -2021,7 +1688,7 @@ class Simulation:
         for session_start, session_end in player.active_sessions:
             if session_start <= self.now < session_end:
                 available_seconds = (min(session_end, deadline) - self.now).total_seconds()
-                # 場札期限と同時刻の完了は無効なので1マイクロ秒分を差し引く。
+                # 切り札期限と同時刻の完了は無効なので1マイクロ秒分を差し引く。
                 return min(MAX_INITIAL_PLAY_MINUTES, max(0, int((available_seconds - 0.000001) // 60)))
         return 0
 
@@ -2032,13 +1699,12 @@ class Simulation:
         upper = min(MAX_INITIAL_PLAY_MINUTES, max_duration)
         baseline = round(self.rng.randint(difficulty_floor, upper) * player.motivation_multiplier)
         baseline = min(upper, max(difficulty_floor, baseline))
-        if player.personality == "スタック派":
-            return baseline
 
         practice = self._effective_practice_minutes(player.private_practice.get(card.id, 0))
         candidates = {difficulty_floor, baseline, upper}
         for target_score in card.scores.values():
-            needed = math.ceil((target_score + 0.001) / player.skill_multiplier - practice)
+            baseline_score = 100.0+SCORE_TRIAL_NOISE*player.series_strength.get(card.series,0)
+            needed = math.ceil((target_score+0.001-baseline_score)/SCORE_SKILL_POINT_PER_MINUTE-practice)
             if difficulty_floor <= needed <= upper:
                 candidates.add(needed)
         participant_count = max(1, len(card.posted_players) + 1)
@@ -2063,7 +1729,7 @@ class Simulation:
             attached = bool(player.attachment_reasons.get(card.id))
             if trial_count >= MAX_FIELD_SCORE_TRIALS:
                 return None
-            if not attached and current_score >= max(card.scores.values(), default=current_score):
+            if not attached and current_score >= max(card.scores.values(), default=current_score) and self._behavior_need(player,"update")<=0:
                 return None
             duration = self._score_trial_duration(player, card, MAX_INITIAL_PLAY_MINUTES)
             return {
@@ -2078,7 +1744,8 @@ class Simulation:
         target_score = higher_scores[0] + 0.001
         practice = self._effective_practice_minutes(player.private_practice.get(card.id, 0))
         current_play = card.play_time.get(player.name, 0)
-        raw_gap = required_play_gap(target_score, player.skill_multiplier, practice, current_play)
+        baseline_score = 100.0+SCORE_TRIAL_NOISE*player.series_strength.get(card.series,0)
+        raw_gap = max(0,math.ceil((target_score-baseline_score)/SCORE_SKILL_POINT_PER_MINUTE-practice-current_play))
         next_update = card.update_count.get(player.name, 0) + 1
         previous = card.last_update_duration.get(player.name, 0)
         return {
@@ -2097,8 +1764,9 @@ class Simulation:
         difficulty = min(5, max(1, card.difficulty or 1))
         lower_by_difficulty = {1: 10, 2: 16, 3: 24, 4: 34, 5: 45}
         upper_by_difficulty = {1: 24, 2: 34, 3: 44, 4: 54, 5: 60}
-        lower = min(max_duration, lower_by_difficulty[difficulty])
-        upper = min(max_duration, upper_by_difficulty[difficulty])
+        scale = self.behavior_tuning.get(player.personality,{}).get("trial_time_scale",1.0)
+        lower = min(max_duration,max(difficulty_minimum_minutes(difficulty),round(lower_by_difficulty[difficulty]*scale)))
+        upper = min(max_duration,max(lower,round(upper_by_difficulty[difficulty]*scale)))
         if upper <= lower:
             return max(1, upper)
         duration = round(self.score_rng.randint(lower, upper) * player.motivation_multiplier)
@@ -2107,28 +1775,14 @@ class Simulation:
     def _effective_practice_minutes(self, raw_minutes: int) -> float:
         return effective_practice_minutes(raw_minutes)
 
-    def _score_for_minutes(self, player: Player, play_minutes: int, practice_minutes: int) -> float:
-        if self.score_policy == "stochastic_card_skill":
-            effective_minutes = play_minutes + self._effective_practice_minutes(practice_minutes)
-            learned = effective_minutes * SCORE_SKILL_EFFICIENCY[player.skill_tier]
-            return (
-                SCORE_TIER_BASE[player.skill_tier]
-                + (player.skill_multiplier - 1.0) * 8.0
-                + learned * SCORE_SKILL_POINT_PER_MINUTE
-            )
-        effective_time = play_minutes + self._effective_practice_minutes(practice_minutes)
-        epsilon = int(player.name.split("_")[-1]) / 1000.0
-        tier_base = SKILL_TIER_ORDER[player.skill_tier] * 1_000_000.0
-        return tier_base + effective_time * player.skill_multiplier + epsilon
+    def _score_for_minutes(self, player: Player, play_minutes: int, practice_minutes: int, series: int = 2) -> float:
+        effective = play_minutes+self._effective_practice_minutes(practice_minutes)
+        return 100.0+SCORE_TRIAL_NOISE*player.series_strength.get(series,0)+effective*SCORE_SKILL_POINT_PER_MINUTE
 
     def _expected_card_score(self, player: Player, card: Card, additional_minutes: int = 0) -> float:
-        learned = player.card_skill_minutes.get(card.id, 0.0)
-        learned += additional_minutes * SCORE_SKILL_EFFICIENCY[player.skill_tier]
-        return (
-            SCORE_TIER_BASE[player.skill_tier]
-            + (player.skill_multiplier - 1.0) * 8.0
-            + learned * SCORE_SKILL_POINT_PER_MINUTE
-        )
+        learning = self.behavior_tuning.get(player.personality,{}).get("update_learning_multiplier",1.0) if player.name in card.posted_players else 1.0
+        learned = player.card_skill_minutes.get(card.id,0)+additional_minutes*learning
+        return 100.0+SCORE_TRIAL_NOISE*player.series_strength.get(card.series,0)+learned*SCORE_SKILL_POINT_PER_MINUTE
 
     def _schedule_next_decision(self, player: Player, after_minutes: int) -> None:
         next_at = self.now + timedelta(minutes=after_minutes)
@@ -2143,50 +1797,7 @@ class Simulation:
         self.queue.push(at, "decision", {"player": player_name})
 
     def _extend_activity_for_card(self, card: Card) -> None:
-        if self.activity_policy != "peak_engagement" or card.limit_at is None:
-            return
-        involved = {card.taker, *card.posted_players, *card.extension_players}
-        for player_name in involved:
-            if player_name is None:
-                continue
-            player = self.players[player_name]
-            indexes = [
-                index for index, (start, end) in enumerate(player.active_sessions)
-                if start <= self.now <= end
-            ]
-            if not indexes:
-                continue
-            index = max(indexes, key=lambda item: player.active_sessions[item][0])
-            start, old_end = player.active_sessions[index]
-            continuous_cap = start + timedelta(hours=player.max_continuous_hours)
-            target_end = min(card.limit_at, continuous_cap, self.end_at)
-            if target_end <= old_end:
-                continue
-            player.active_sessions[index] = (start, target_end)
-            previous_starts = {session_start for session_start, _end in player.active_sessions}
-            player.active_sessions = cap_continuous_sessions(
-                player.active_sessions,
-                player.max_continuous_hours,
-            )
-            for session_start, _session_end in player.active_sessions:
-                if session_start >= self.now and session_start not in previous_starts:
-                    self._queue_decision(player.name, session_start)
-            added = int((target_end - old_end).total_seconds() // 60)
-            self.activity_extension_events += 1
-            self.activity_extension_minutes += added
-            resume_at = max(
-                self.now + timedelta(microseconds=1),
-                old_end + timedelta(microseconds=1),
-            )
-            if resume_at < target_end and (player.busy_until is None or player.busy_until <= resume_at):
-                self._queue_decision(player.name, resume_at)
-            self._record("activity_extended", player.name, {
-                "card_id": card.id,
-                "old_end": self._iso(old_end),
-                "new_end": self._iso(target_end),
-                "added_minutes": added,
-                "continuous_cap_hours": player.max_continuous_hours,
-            })
+        return
 
     def deck_or_trash_available(self) -> bool:
         return bool(self.deck or self.trash)
@@ -2198,13 +1809,11 @@ class Simulation:
             self._record("wait", player.name, {"reason": "draw_not_allowed"})
             return
         if not self.deck:
-            self.deck = self.trash[:]
-            self.trash = []
-            self.rng.shuffle(self.deck)
-        difficulty = self._draw_available_difficulty()
-        candidates = [card_id for card_id in self.deck if self.cards[card_id].difficulty == difficulty]
-        card_id = self.rng.choice(candidates)
+            self._recycle_trash()
+        card_id = self.rng.choice(self.deck)
         self.deck.remove(card_id)
+        if not self.deck:
+            self._recycle_trash()
         card = self.cards[card_id]
         if card.pending_returned_by is not None:
             self.returned_card_redraw_count += 1
@@ -2213,7 +1822,7 @@ class Simulation:
             card.pending_returned_by = None
         card.state = player.name
         card.drawn_at = self.now
-        rarity_distribution = rarity_distribution_for_remaining_minutes((self.end_at - self.now).total_seconds() / 60)
+        rarity_distribution = V20_RARITY_DISTRIBUTION if self.rule_version == "v20" else rarity_distribution_for_remaining_minutes((self.end_at - self.now).total_seconds() / 60)
         rarity_assigned_now = card.rarity is None
         if rarity_assigned_now:
             card.rarity = self._weighted_choice(rarity_distribution)
@@ -2226,6 +1835,8 @@ class Simulation:
             "card_id": card_id,
             "self_created": card.creator_name == player.name,
             "rarity": card.rarity,
+            "stage_key": card.stage_key,
+            "take_bonus_escrow": card.take_bonus_escrow,
             "difficulty": card.difficulty,
             "cost": 1,
             "rarity_assigned_now": rarity_assigned_now,
@@ -2252,7 +1863,8 @@ class Simulation:
             self.pot_return_inflow += RETURN_TO_DECK_COST
         self.practiced_return_count += int(practiced)
         subsidy_flagged = (
-            self.return_subsidy_enabled
+            self.subsidy_policy == "legacy"
+            and self.return_subsidy_enabled
             and should_flag_return_subsidy(player.points)
         )
         if subsidy_flagged:
@@ -2267,14 +1879,20 @@ class Simulation:
             "public": False,
         })
 
-    def _draw_available_difficulty(self) -> int:
-        available = {self.cards[card_id].difficulty for card_id in self.deck}
-        weights = dict(DIFFICULTY_DISTRIBUTION)
-        missing_weight = sum(weight for difficulty, weight in weights.items() if difficulty not in available)
-        weights = {difficulty: weight for difficulty, weight in weights.items() if difficulty in available}
-        lowest = min(weights)
-        weights[lowest] += missing_weight
-        return self._weighted_choice(list(weights.items()))
+    def _recycle_trash(self) -> None:
+        self.deck = self.trash[:]
+        self.trash = []
+        for cid in self.deck:
+            self.cards[cid].rarity = None
+            self.cards[cid].state = "_deck"
+
+    def _grant_instant_subsidy(self, player: Player, reason: str) -> None:
+        player.points += 1
+        self.instant_subsidy_payments += 1
+        self.instant_take_payments += int(reason == "take")
+        self.instant_post_payments += int(reason == "free_post")
+        player.subsidy_flag_slot_at = None
+        self._record("instant_subsidy", player.name, {"reason": reason, "points": 1})
 
     def _cooldown_until(self, player: Player) -> datetime | None:
         if player.last_take_at is None:
@@ -2317,6 +1935,7 @@ class Simulation:
         return (
             len(player.hand) >= self._required_take_hand(player)
             and self.now < self.end_at - TAKE_CLOSE_BEFORE_END
+            and any((self._take_bonus_cost(self.cards[cid]) == 0 or player.points >= self._take_bonus_cost(self.cards[cid])) for cid in player.hand)
             and len(self.field) < self._field_cap()
         )
 
@@ -2366,6 +1985,8 @@ class Simulation:
             return "take_closed"
         if len(self.field) >= self._field_cap():
             return "field_cap"
+        if self.difficulty_take_fee_scale and not any(self._take_bonus_cost(self.cards[cid]) == 0 or player.points >= self._take_bonus_cost(self.cards[cid]) for cid in player.hand):
+            return "take_bonus_fee_unaffordable"
         if not self._cooldown_ready(player, self.now):
             return "take_cooldown"
         return None
@@ -2384,22 +2005,44 @@ class Simulation:
         return player_hand_limit(sqrt_take_level(len(player.take_times)))
 
     def _field_cap(self) -> int:
+        if self.field_cap_policy == "min8":
+            return max(self.participant_count()-1,8)
         return field_cap(self.participant_count())
 
+    def _recurring_eligible(self,player):
+        threshold = self._required_take_hand(player) if self.rule_version == "v20" else 3
+        return player.points+len(player.hand) < threshold
+
+    def _extension_minutes(self,player,card,offset=0):
+        if self.rule_version == "v19":
+            return PLAYER_EXTENSION_MINUTES
+        count = self.stage_extension_counts.get((player.name,card.stage_key or card.id),0)+offset
+        return (15,10,5)[min(2,count)]
+
+    def _take_bonus_cost(self,card):
+        return max(0,(card.difficulty or 1)-1)*self.difficulty_take_fee_scale
+
+    def _expected_opening_bonus(self,card,player):
+        if card.posted_players or not card.take_bonus_escrow:
+            return 0
+        pending = len(self.pending_initial_posts.get(card.id,set())-{player.name})
+        return card.take_bonus_escrow/(pending+1)
+
     def _select_take_card(self, player: Player) -> int | None:
-        if not player.hand:
+        selection_hand = [cid for cid in player.hand if (self._take_bonus_cost(self.cards[cid]) == 0 or player.points >= self._take_bonus_cost(self.cards[cid]))]
+        if not selection_hand:
             return None
         if self.behavior_policy == "commitment_aware":
             return max(
-                player.hand,
+                selection_hand,
                 key=lambda cid: (
                     self._take_desire(player, cid),
                     self._effective_practice_minutes(player.private_practice.get(cid, 0)),
                     self._sharing_appeal(player, cid),
                 ),
             )
-        preferred_hand = [cid for cid in player.hand if cid in player.favorite_card_ids]
-        selection_pool = preferred_hand or player.hand
+        preferred_hand = [cid for cid in selection_hand if cid in player.favorite_card_ids]
+        selection_pool = preferred_hand or selection_hand
         max_practice = max(player.private_practice.get(cid, 0) for cid in selection_pool)
         candidates = [cid for cid in selection_pool if player.private_practice.get(cid, 0) == max_practice]
         return max(candidates, key=lambda cid: self._sharing_appeal(player, cid))
@@ -2408,26 +2051,6 @@ class Simulation:
         # Stable, private preferences; no privileged access to other players' hands.
         return self.player_tastes[player.name][cid] + self.card_appeal[cid] * 0.6
 
-    def _contrarian_action(self, player: Player) -> dict[str, Any] | None:
-        if player.name not in self.contrarians or player.name in self.trap_returns:
-            return None
-        if not self.field or self.now >= self.end_at - timedelta(hours=3):
-            return None
-        cid = self.trap_targets.get(player.name)
-        if cid is None and player.hand and player.points >= 2:
-            cid = max(player.hand, key=lambda c: self.player_tastes[player.name][c])
-            self.trap_targets[player.name] = cid
-        if cid not in player.hand:
-            return None
-        practiced = player.private_practice.get(cid, 0)
-        if practiced >= 30 and player.points >= 1 and self.return_to_deck_enabled:
-            self.trap_returns.add(player.name)
-            player.actions["trap_return"] = player.actions.get("trap_return", 0) + 1
-            return {"type": "return_to_deck", "card_id": cid}
-        duration = max(difficulty_minimum_minutes(self.cards[cid].difficulty), 30 - practiced)
-        if practiced < 30 and self._can_finish_timed_action(player, duration, self.end_at - TAKE_CLOSE_BEFORE_END):
-            return {"type": "practice", "card_id": cid, "duration": duration}
-        return None
 
     def _take(self, player: Player, card_id: int, trigger: str = "decision") -> None:
         take_level = self._take_level(player)
@@ -2439,6 +2062,11 @@ class Simulation:
                 "next_take_at": self._iso(self._cooldown_until(player)),
             })
             return
+        fee = self._take_bonus_cost(self.cards[card_id])
+        if fee > 0 and player.points < fee:
+            self._record("wait",player.name,{"reason":"take_bonus_fee_unaffordable","card_id":card_id,"cost":fee})
+            return
+        instant_eligible = instant_subsidy_eligible(player.points, len(player.hand))
         previous_take_at = player.last_take_at
         stack_cards = player.hand[:]
         committed_card = self._committed_hand_card(player)
@@ -2462,6 +2090,9 @@ class Simulation:
         card.pot_bonus_points = 0
         card.late_first_extension = False
         card.paid_points_total = 0
+        card.take_bonus_escrow = fee
+        player.points -= fee
+        self.take_bonus_fees += fee
         card.paid_points_by_player.clear()
         card.paid_extension_points_total = 0
         card.extension_counts_by_player.clear()
@@ -2490,7 +2121,10 @@ class Simulation:
             self.cards[stack_id].state = "_stack"
         self.field.append(card_id)
         self._extend_activity_for_card(card)
-        if player.points < self.participant_count():
+        if self.subsidy_policy == "low_resources":
+            if instant_eligible:
+                self._grant_instant_subsidy(player, "take")
+        elif player.points < self.participant_count():
             self._set_subsidy_flag(player)
         player.actions["take"] = player.actions.get("take", 0) + 1
         if committed_card == card_id:
@@ -2504,6 +2138,7 @@ class Simulation:
             "stack_count": card.stack_count,
             "required_hand": required_hand,
             "take_level": take_level,
+            "take_bonus_cost": fee,
             "trigger": trigger,
             "stack_ids": card.stack_ids,
             "cooldown_until": self._iso(self._cooldown_until(player)),
@@ -2555,6 +2190,8 @@ class Simulation:
             card.paid_players.add(player.name)
             card.paid_points_total += cost
             card.paid_points_by_player[player.name] = card.paid_points_by_player.get(player.name, 0) + cost
+        if self.subsidy_policy == "low_resources" and paid_now and cost == 0 and instant_subsidy_eligible(player.points, len(player.hand)):
+            self._grant_instant_subsidy(player, "free_post")
         score_result = self._submit_score_trial(player, card, duration, outcome, is_update=False)
         self._refresh_attachment(player, card, outcome)
         cooldown_credit = self._apply_post_cooldown_credit(player) if paid_now else 0
@@ -2567,12 +2204,14 @@ class Simulation:
         elif paid_now:
             participant_order = existing_participants + 1
             remaining_minutes = (card.limit_at - self.now).total_seconds() / 60
-            if participant_order == 1 and remaining_minutes < LATE_FIRST_POST_THRESHOLD_MINUTES:
+            if self.rule_version == "v19" and participant_order == 1 and remaining_minutes < LATE_FIRST_POST_THRESHOLD_MINUTES:
                 card.late_first_extension = True
-            extension_minutes = initial_post_extension_minutes(participant_order, remaining_minutes)
+            extension_minutes = 15 if self.rule_version == "v20" else initial_post_extension_minutes(participant_order, remaining_minutes)
             card.limit_at += timedelta(minutes=extension_minutes)
             self.queue.push(card.limit_at, "collect", {"card_id": card.id, "limit_at": card.limit_at.isoformat()})
         self._extend_activity_for_card(card)
+        player.actions["opening_post"] = player.actions.get("opening_post",0)+int(existing_participants==0)
+        player.actions["initial_cost"] = player.actions.get("initial_cost",0)+(cost if paid_now else 0)
         player.actions["initial_post"] = player.actions.get("initial_post", 0) + 1
         self._record("initial_post", player.name, {
             "card_id": card_id,
@@ -2645,7 +2284,7 @@ class Simulation:
             "duration": duration,
             **assessment,
         }
-        if not self._paid_update_is_acceptable(completed_action, include_time=False):
+        if not self._paid_update_is_acceptable(completed_action, include_time=False) and not self._holder_challenge(player,card) and self._behavior_need(player,"update")<=0:
             player.actions["update_score_withheld_rank_value"] = (
                 player.actions.get("update_score_withheld_rank_value", 0) + 1
             )
@@ -2684,6 +2323,7 @@ class Simulation:
         )
         score_result = self._submit_score_trial(player, card, duration, outcome, is_update=True)
         self._refresh_attachment(player, card, outcome)
+        player.actions["update_cost"] = player.actions.get("update_cost",0)+update_cost
         player.actions["update"] = player.actions.get("update", 0) + 1
         self._record("update", player.name, {
             "card_id": card_id,
@@ -2712,7 +2352,7 @@ class Simulation:
         player.private_practice[card_id] = player.private_practice.get(card_id, 0) + duration
         if self.score_policy == "stochastic_card_skill":
             player.card_skill_minutes[card_id] = player.card_skill_minutes.get(card_id, 0.0) + (
-                duration * SCORE_SKILL_EFFICIENCY[player.skill_tier]
+                duration * 1.0
             )
         player.actions["practice"] = player.actions.get("practice", 0) + 1
         self._record("practice", player.name, {
@@ -2735,16 +2375,19 @@ class Simulation:
         card.play_time[player.name] = total_time
         card.trial_count[player.name] = card.trial_count.get(player.name, 0) + 1
         if self.score_policy == "stochastic_card_skill":
-            player.card_skill_minutes[card.id] = player.card_skill_minutes.get(card.id, 0.0) + (
-                duration * SCORE_SKILL_EFFICIENCY[player.skill_tier]
-            )
+            learning = self.behavior_tuning.get(player.personality,{}).get("update_learning_multiplier",1.0) if player.name in card.posted_players else 1.0
+            player.card_skill_minutes[card.id] = player.card_skill_minutes.get(card.id, 0.0) + duration*learning
             expected_score = self._expected_card_score(player, card)
-            candidate_score = self.score_rng.gauss(expected_score, SCORE_TRIAL_NOISE)
+            # Equal-scale independent Gumbel trials produce Bradley-Terry pair odds.
+            u = min(1-1e-12,max(1e-12,self.score_rng.random()))
+            centered_gumbel = -math.log(-math.log(u))-0.5772156649015329
+            candidate_score = expected_score+SCORE_TRIAL_NOISE*centered_gumbel
         else:
             expected_score = self._score_for_minutes(
                 player,
                 total_time,
                 player.private_practice.get(card.id, 0),
+                card.series,
             )
             candidate_score = expected_score
         return {
@@ -2780,7 +2423,7 @@ class Simulation:
         card: Card,
         outcome: dict[str, float],
     ) -> bool:
-        if self.score_policy != "stochastic_card_skill":
+        if self.score_policy != "stochastic_card_skill" or not self.behavior_tuning.get(player.personality,{}).get("withhold_initial",True):
             return False
         if card.trial_count.get(player.name, 0) >= 3:
             return False
@@ -2794,13 +2437,8 @@ class Simulation:
         player_score = card.scores.get(player.name)
         if player_score is None:
             return False
-        player_tier = SKILL_TIER_ORDER[player.skill_tier]
-        return any(
-            SKILL_TIER_ORDER[self.players[other_name].skill_tier] < player_tier
-            and other_score > player_score
-            for other_name, other_score in card.scores.items()
-            if other_name != player.name
-        )
+        return any(self.players[n].series_strength.get(card.series,0) < player.series_strength.get(card.series,0) and score > player_score
+                   for n,score in card.scores.items() if n != player.name)
 
     def _refresh_attachment(
         self,
@@ -2853,16 +2491,16 @@ class Simulation:
             self.pot_distributed_points += self.pot_points
             self.pot_distribution_events += 1
             self.pot_points = 0
-        x_score = card.scores.get("player_01")
-        other_scores = [
+        ko_score = card.scores.get("player_01")
+        cohort_scores = [
             score for name, score in card.scores.items()
-            if self.players[name].skill_tier == "other"
+            if self.players[name].personality in {"中位プレイヤー", "下位プレイヤー"}
         ]
-        if x_score is not None and other_scores:
-            self.x_other_score_fields += 1
-            self.x_other_upset_fields += int(max(other_scores) > x_score)
-            self.x_other_score_pairs += len(other_scores)
-            self.x_other_upset_pairs += sum(score > x_score for score in other_scores)
+        if ko_score is not None and cohort_scores:
+            self.ko_cohort_score_fields += 1
+            self.ko_cohort_upset_fields += int(max(cohort_scores) > ko_score)
+            self.ko_cohort_score_pairs += len(cohort_scores)
+            self.ko_cohort_upset_pairs += sum(score > ko_score for score in cohort_scores)
         rank_points = self._apply_rank_points(card, ranking)
         rewards = self._apply_collection_rewards(card, ranking)
         for player in self.players.values():
@@ -2873,7 +2511,7 @@ class Simulation:
             self.collection_participant_counts.get(participant_count, 0) + 1
         )
         subsidy_flagged_holders: list[str] = []
-        if self.now < self.end_at:
+        if self.subsidy_policy == "legacy" and self.now < self.end_at:
             for player_name in card.holder_names:
                 player = self.players[player_name]
                 if player.points < self.participant_count():
@@ -2939,8 +2577,12 @@ class Simulation:
             card.reward_log.append({"player": only, "points": amount, "type": "single_poster"})
             return {"total_reward": amount, "rank_distribution": {only: amount}, "taker_remainder": 0}
         total_reward = self._total_reward_points(card)
+        self.reward_floor_topups += max(0,total_reward-self._unfloored_reward_points(card)) if self.rule_version == "v20" else 0
         eligible_groups = self._eligible_reward_groups(ranking)
-        if self.reward_formula == "proposal":
+        if self.rule_version == "v20":
+            rank_distribution, taker_remainder = v20_position_distribution(ranking,total_reward)
+            eligible_groups = [group["players"][:] for group in ranking]
+        elif self.reward_formula == "proposal":
             rank_distribution, taker_remainder = proposed_position_distribution(ranking, total_reward)
             eligible_groups = [group["players"][:] for group in ranking]
         else:
@@ -2984,7 +2626,11 @@ class Simulation:
             return [group["players"][:] for group in ranking[:-1]]
         return [group["players"][:] for group in ranking]
 
-    def _total_reward_points(self, card: Card) -> int:
+    def _total_reward_points(self,card):
+        raw = self._unfloored_reward_points(card)
+        return max(len(card.posted_players),raw) if self.rule_version == "v20" and card.posted_players else raw
+
+    def _unfloored_reward_points(self, card: Card) -> int:
         base = card.stack_count + rarity_stack_bonus(card.rarity, card.stack_count) + card.paid_points_total
         return calculate_total_reward(
             base,
@@ -3039,6 +2685,23 @@ class Simulation:
         return distribution[-1][0]
 
     def _record(self, event_type: str, actor: str | None, details: dict[str, Any]) -> None:
+        if event_type in {"initial_post","collect"} and details.get("card_id") in self.cards:
+            card = self.cards[details["card_id"]]
+            if card.take_bonus_escrow:
+                if event_type == "initial_post" and details.get("participant_order") == 1:
+                    amount = card.take_bonus_escrow
+                    self.players[actor].points += amount
+                    self.take_bonus_paid += amount
+                    card.take_bonus_escrow = 0
+                    details = {**details,"take_bonus_received":amount}
+                elif event_type == "collect" and not card.posted_players:
+                    amount = card.take_bonus_escrow
+                    self.players[card.taker].points += amount
+                    self.take_bonus_refunded += amount
+                    card.take_bonus_escrow = 0
+                    details = {**details,"unposted_take_bonus_refund":amount}
+        if details.get("card_id") in self.cards:
+            details = {**details,"series":self.cards[details["card_id"]].series}
         available = len(self.deck) + len(self.trash)
         self.minimum_available_cards = min(self.minimum_available_cards, available)
         if available == 0 and self.depletion_started_at is None:
@@ -3110,6 +2773,7 @@ class Simulation:
             "creator": card.creator_name,
             "rarity": card.rarity,
             "difficulty": card.difficulty,
+            "series": card.series,
             "taker": card.taker,
             "stack_count": card.stack_count,
             "paid_points_total": card.paid_points_total,
@@ -3134,6 +2798,7 @@ class Simulation:
             status = "inactive"
         return {
             "name": player.name,
+            "display_name": player.display_name,
             "personality": player.personality,
             "status": status,
             "points": player.points,
@@ -3146,6 +2811,7 @@ class Simulation:
                 card_id for card_id in player.hand
                 if self.cards[card_id].return_history
             ],
+            "subsidy_flag": self.now < self.end_at and (self._recurring_eligible(player) if self.subsidy_policy == "low_resources" else player.subsidy_flag_slot_at is not None or empty_field_subsidy_eligible(player.points, len(player.hand), not self.field)),
             "subsidy_flag_slot_at": self._iso(player.subsidy_flag_slot_at),
             "last_take_at": self._iso(player.last_take_at),
             "next_take_at": self._iso(self._cooldown_until(player)),
@@ -3153,7 +2819,7 @@ class Simulation:
 
     def _check_invariants(self, context: str) -> None:
         field_count = len(self.field)
-        if field_count > FIELD_LIMIT:
+        if self.field_cap_policy == "legacy" and field_count > FIELD_LIMIT:
             self.invariant_errors.append(f"{context}: field_count exceeded {field_count}")
         if field_count > self._field_cap():
             self.invariant_errors.append(
@@ -3199,6 +2865,11 @@ class Simulation:
             (
                 {
                     "name": p.name,
+                    "display_name": p.display_name,
+                    "series_strength": p.series_strength,
+                    "series_preference": p.series_preference,
+                    "profile_source": p.profile_source,
+                    "active_budget_minutes": p.active_budget_minutes,
                     "personality": p.personality,
                     "engagement": p.engagement,
                     "has_offpeak_activity": p.has_offpeak_activity,
@@ -3216,7 +2887,7 @@ class Simulation:
                         1 for card in self.cards.values() if card.creator_name == p.name and card.taker == p.name
                     ),
                     "skill_multiplier": p.skill_multiplier,
-                    "skill_tier": p.skill_tier,
+                    "strength_profile": p.strength_profile,
                     "points": p.points,
                     "max_points": p.max_points,
                     "rank_points": p.rank_points,
@@ -3303,6 +2974,7 @@ class Simulation:
             "events_written": self.events_written,
             "collections": self.collections,
             "subsidy_payments": self.subsidy_payments,
+            "instant_subsidy_payments": self.instant_subsidy_payments,
             "empty_field_floor_grant": {
                 "events": self.empty_field_floor_grant_events,
                 "points": self.empty_field_floor_grant_points,
@@ -3312,10 +2984,17 @@ class Simulation:
                 "minutes": self.activity_extension_minutes,
             },
             "policy": {
-                "rarity_growth": "final_three_hours",
-                "rarity_weights_percent": dict(RARITY_DISTRIBUTION),
-                "rarity_final_three_hours_weights_percent": dict(FINAL_THREE_HOUR_RARITY_DISTRIBUTION),
-                "decision_model": "multi_step_forecast_v3_skill_aware",
+                "rule_version": self.rule_version,
+                "uniform_update_cost": self.uniform_update_cost if self.rule_version == "v20" else None,
+                "difficulty_take_fee_scale": self.difficulty_take_fee_scale,
+                "field_cap_policy": self.field_cap_policy,
+                "rarity_growth": "fixed_83_12" if self.rule_version == "v20" else "final_three_hours",
+                "rarity_weights_percent": dict(V20_RARITY_DISTRIBUTION if self.rule_version == "v20" else RARITY_DISTRIBUTION),
+                "rarity_final_three_hours_weights_percent": dict(V20_RARITY_DISTRIBUTION if self.rule_version == "v20" else FINAL_THREE_HOUR_RARITY_DISTRIBUTION),
+                "decision_model": "empirical_behavior_rates_v2",
+                "historical_tournament": self.historical_tournament,
+                "behavior_tuning": self.behavior_tuning,
+                "observed_rate_basis": "successful log actions / specified active-hour midpoint; soft utility only",
                 "paid_update_policy": self.paid_update_policy,
                 "allow_post_debt": self.allow_post_debt,
                 "dynamic_wealth_tax_pot": self.dynamic_wealth_tax_pot,
@@ -3331,9 +3010,8 @@ class Simulation:
                 "paid_extension_cutoff": "event end minus 1 hour",
                 "behavior_policy": self.behavior_policy,
                 "activity_policy": self.activity_policy,
-                "peak_hours_jst": "20:00-01:00",
-                "offpeak_hours_jst": "04:00-14:00",
-                "engagement_extension": self.activity_policy == "peak_engagement",
+                "activity_hours_jst": "all hours weighted by empirical actions",
+                "engagement_extension": False,
                 "take_desire_factors": "confidence + private taste + public appeal + creator + personality interest",
                 "participant_creator_card_rate": PARTICIPANT_CREATOR_CARD_RATE,
                 "draw_cost_in_action_value": self.behavior_policy == "commitment_aware",
@@ -3345,21 +3023,20 @@ class Simulation:
                 ),
                 "initial_play_minutes": [MIN_PLAY_MINUTES, MAX_INITIAL_PLAY_MINUTES],
                 "difficulty_minimum_minutes": [difficulty_minimum_minutes(level) for level in range(1, 6)],
-                "motivation_multiplier": [0.8, 1.2],
-                "engagement_groups": {"ガチ勢": HARDCORE_COUNT, "エンジョイ勢": CASUAL_COUNT},
-                "hardcore_peak_minutes": [HARDCORE_PEAK_MINUTES_MIN, 12 * 60],
-                "hardcore_total_minutes_max": HARDCORE_TOTAL_MINUTES_MAX,
-                "casual_total_minutes": [CASUAL_MINUTES_MIN, CASUAL_MINUTES_MAX],
-                "offpeak_hardcore_count": OFFPEAK_HARDCORE_COUNT,
+                "motivation_multiplier": [0.9, 1.1],
+                "activity_budget_basis": "user-specified hours for named players; observed action-bin proxy for cohorts",
+                "calibration_version": EMPIRICAL_CALIBRATION["version"],
+                "calibration_source_sha256": EMPIRICAL_CALIBRATION["source_sha256"],
+                "calibration_method": EMPIRICAL_CALIBRATION["fitting"],
                 "personality_base_counts": PERSONALITY_BASE_COUNTS,
-                "holder_priority_favorite_card_count": FAVORITE_CARD_COUNT,
+                "holder_priority_favorite_card_count": 0,
                 "take_audience_horizon_minutes_by_difficulty": [
                     initial_countdown_minutes(level) for level in range(1, 6)
                 ],
                 "first_post_extension_minutes": FIRST_POST_EXTENSION_MINUTES,
                 "late_first_post_threshold_minutes": LATE_FIRST_POST_THRESHOLD_MINUTES,
-                "late_first_post_extension_minutes": LATE_FIRST_POST_EXTENSION_MINUTES,
-                "subsequent_post_extension_minutes": SUBSEQUENT_POST_EXTENSION_MINUTES,
+                "late_first_post_extension_minutes": 15 if self.rule_version == "v20" else LATE_FIRST_POST_EXTENSION_MINUTES,
+                "subsequent_post_extension_minutes": 15 if self.rule_version == "v20" else SUBSEQUENT_POST_EXTENSION_MINUTES,
                 "take_cooldown_minutes": int(TAKE_COOLDOWN.total_seconds() // 60),
                 "take_cooldown_policy": self.take_cooldown_policy,
                 "take_cooldown_basis": "successful_take_at",
@@ -3376,7 +3053,8 @@ class Simulation:
                 "initial_limit_minutes_by_difficulty": [
                     initial_countdown_minutes(level) for level in range(1, 6)
                 ],
-                "initial_post_extension": "first: 15 or 30 minutes; later: 10 minutes",
+                "initial_post_extension": "all initial posts: 15 minutes" if self.rule_version == "v20" else "first: 15 or 30 minutes; later: 10 minutes",
+                "paid_extension_schedule": "15,10,5,5 per player/origin stage across retakes" if self.rule_version == "v20" else "15 minutes",
                 "stack_time_bonus": False,
                 "take_cost_mode": self.take_cost_mode,
                 "take_level_up_every": self.take_level_up_every if self.take_cost_mode == "level_linear" else None,
@@ -3387,16 +3065,12 @@ class Simulation:
                     if self.take_cost_mode == "level_linear"
                     else "level L = floor(sqrt(successful_takes)); required stack = L + 2"
                 ),
-                "skill_tier_order": (
-                    "expected X > Y > other with stochastic upsets"
-                    if self.score_policy == "stochastic_card_skill"
-                    else "X > Y > other; multiplier breaks ties within a tier"
-                ),
+                "skill_model": "series-aware fitted Bradley-Terry strengths with independent Gumbel trials; no fixed tiers",
                 "paid_post_loss_avoidance": sorted(POINT_RETURN_SENSITIVE_PERSONALITIES),
-                "paid_post_loss_avoidance_also_applies_to_tier": "Y",
                 "free_first_second_posts_ignore_expected_point_loss": self.post_cost_policy != "taker_initial_and_retries_paid",
-                "field_cap": "min(max(1, cumulative_participants - 1), 16)",
+                "field_cap": "max(cumulative_participants - 1,8)" if self.field_cap_policy == "min8" else "min(max(1, cumulative_participants - 1), 16)",
                 "entry_cost": (
+                    "all initial posts free; successful updates uniform" if self.rule_version == "v20" else
                     "non-taker initial free; taker initial and every submitted update cost difficulty"
                     if self.post_cost_policy == "taker_initial_and_retries_paid"
                     else "free for 1st and 2nd; difficulty for 3rd+"
@@ -3410,15 +3084,16 @@ class Simulation:
                 "rank_point_first_bonus": 1,
                 "rank_point_basis": "participant_count",
                 "rank_point_display": "confirmed + live field provisional",
-                "subsidy_threshold": "empty: points + hand < 8; take/winner: points < cumulative participants",
-                "subsidy_action_flags": "take and natural-collection winner; one slot; no payout-time recheck",
-                "subsidy_empty_field": "recurs while field is empty and points + hand < 8",
+                "subsidy_policy": self.subsidy_policy,
+                "subsidy_threshold": "points + hand < individual take cost" if self.rule_version == "v20" else "points + hand < 3" if self.subsidy_policy == "low_resources" else "empty: points + hand < 8; take/winner: points < cumulative participants",
+                "subsidy_action_flags": "none; take/free initial post at pre-action points + hand < 5 grants 1P immediately" if self.subsidy_policy == "low_resources" else "take and natural-collection winner; one slot; no payout-time recheck",
+                "subsidy_empty_field": "field-independent" if self.subsidy_policy == "low_resources" else "recurs while field is empty and points + hand < 8",
                 "difficulty_assignment": "intrinsic_card_value",
-                "missing_difficulty_weight": "lowest_available_difficulty",
+                "draw_selection": "uniform over all cards currently in deck",
                 "return_to_deck_enabled": self.return_to_deck_enabled,
                 "return_to_deck_cost": RETURN_TO_DECK_COST,
                 "return_subsidy_flag_threshold_after_payment": RETURN_SUBSIDY_FLAG_THRESHOLD,
-                "return_subsidy_enabled": self.return_subsidy_enabled,
+                "return_subsidy_enabled": self.subsidy_policy == "legacy" and self.return_subsidy_enabled,
                 "returned_card_rarity": "preserve first draw rarity",
                 "return_event_visibility": "private",
                 "return_history_icon": "visible in hand after redraw",
@@ -3440,17 +3115,17 @@ class Simulation:
                     for player in self.players.values()
                 ),
                 "attachment_actions": sum(player.actions.get("attachment_action", 0) for player in self.players.values()),
-                "x_vs_other_fields": self.x_other_score_fields,
-                "x_upset_fields": self.x_other_upset_fields,
-                "x_upset_rate": round(self.x_other_upset_fields / self.x_other_score_fields, 6) if self.x_other_score_fields else None,
-                "x_vs_other_pairs": self.x_other_score_pairs,
-                "x_upset_pairs": self.x_other_upset_pairs,
-                "x_pairwise_upset_rate": round(self.x_other_upset_pairs / self.x_other_score_pairs, 6) if self.x_other_score_pairs else None,
+                "ko_vs_cohort_fields": self.ko_cohort_score_fields,
+                "ko_upset_fields": self.ko_cohort_upset_fields,
+                "ko_upset_rate": round(self.ko_cohort_upset_fields / self.ko_cohort_score_fields, 6) if self.ko_cohort_score_fields else None,
+                "ko_vs_cohort_pairs": self.ko_cohort_score_pairs,
+                "ko_upset_pairs": self.ko_cohort_upset_pairs,
+                "ko_pairwise_upset_rate": round(self.ko_cohort_upset_pairs / self.ko_cohort_score_pairs, 6) if self.ko_cohort_score_pairs else None,
             },
             "paid_extensions": {
                 "count": paid_extensions,
                 "points_spent": paid_extensions,
-                "minutes_added": paid_extensions * PLAYER_EXTENSION_MINUTES,
+                "minutes_added": self.actual_extension_minutes if self.rule_version == "v20" else paid_extensions * PLAYER_EXTENSION_MINUTES,
             },
             "players": players,
             "deck_count": len(self.deck),
@@ -3492,6 +3167,8 @@ class Simulation:
                 "ending_points": sum(player.points for player in self.players.values()),
                 "tournament_max_player_points": tournament_max_points,
                 "tournament_max_point_players": tournament_max_point_players,
+                "take_bonus": {"collected":self.take_bonus_fees,"paid_to_first":self.take_bonus_paid,"refunded_unposted":self.take_bonus_refunded,"escrow":sum(c.take_bonus_escrow for c in self.cards.values())},
+                "reward_floor_topups": self.reward_floor_topups,
                 "draw_costs": sum(player.actions.get("draw", 0) for player in self.players.values()),
                 "post_fees": post_fees,
                 "extension_costs": paid_extensions,
@@ -3509,6 +3186,9 @@ class Simulation:
                 "wealth_tax_events": self.wealth_tax_events,
                 "hand_limit_blocked_draws": self.hand_limit_blocked_draws,
                 "subsidy_payments": self.subsidy_payments,
+                "instant_subsidy_payments": self.instant_subsidy_payments,
+                "instant_take_payments": self.instant_take_payments,
+                "instant_post_payments": self.instant_post_payments,
                 "empty_field_floor_grant_points": self.empty_field_floor_grant_points,
                 "confirmed_rank_points": sum(player.rank_points for player in self.players.values()),
             },
@@ -3521,6 +3201,7 @@ class Simulation:
         if not minimal:
             summary["half_hour_snapshots"] = self.half_hour_snapshots
         if not minimal:
+            summary["fixed_v20_tests"] = fixed_v20_tests()
             summary["fixed_reward_tests"] = fixed_reward_tests()
             summary["fixed_rarity_tests"] = fixed_rarity_tests()
             summary["fixed_difficulty_tests"] = fixed_difficulty_tests()
@@ -3613,6 +3294,14 @@ def should_flag_return_subsidy(points_after_payment: int) -> bool:
     return points_after_payment <= RETURN_SUBSIDY_FLAG_THRESHOLD
 
 
+def recurring_subsidy_eligible(points: int, hand_count: int) -> bool:
+    return points + hand_count < 3
+
+
+def instant_subsidy_eligible(points: int, hand_count: int) -> bool:
+    return points + hand_count < 5
+
+
 def empty_field_subsidy_eligible(points: int, hand_count: int, field_empty: bool) -> bool:
     return field_empty and points + hand_count < 8
 
@@ -3661,13 +3350,7 @@ def commitment_aware_draw_value(
 
 
 def rational_stack_surplus(personality: str, affordable: int, required_hand: int) -> int:
-    surplus_caps = {
-        "投稿優先派": 1,
-        "スタック派": RATIONAL_STACK_SURPLUS_CAP,
-        "ホルダー優先派": 1,
-        "正統派": 2,
-        "ネガティブ派": 0,
-    }
+    surplus_caps = {"Ko":4,"Ku":4,"G":4,"A":1,"T":2,"中位プレイヤー":2,"下位プレイヤー":1}
     # ドロー中に残高だけが減って目標も縮むことを避け、手札+Pの総資源を基準にする。
     # ただし次の投稿・ドロー余力として3P分を残す。
     surplus_budget = max(0, affordable - required_hand - 3)
@@ -3693,20 +3376,11 @@ def difficulty_minimum_minutes(difficulty: int | None) -> int:
 
 
 def build_personality_roster(rng: random.Random) -> list[str]:
-    names = list(PERSONALITY_BASE_COUNTS)
-    deltas = {name: 0 for name in names}
-    change_count = rng.choice((1, 2))
-    shuffled = names[:]
-    rng.shuffle(shuffled)
-    for name in shuffled[:change_count]:
-        deltas[name] += 1
-    for name in shuffled[change_count:change_count * 2]:
-        deltas[name] -= 1
-    return [
-        name
-        for name, base in PERSONALITY_BASE_COUNTS.items()
-        for _ in range(base + deltas[name])
-    ]
+    return ["Ko","A","T","Ku","G", *["中位プレイヤー"]*5, *["下位プレイヤー"]*5]
+
+
+def minutes_total(sessions: list[tuple[datetime,datetime]]) -> int:
+    return int(sum((b-a).total_seconds()/60 for a,b in merge_sessions(sessions)))
 
 
 def personality_continuous_hours(personality: str, motivation_multiplier: float) -> int:
@@ -3918,6 +3592,46 @@ def proposed_position_distribution(
         cursor += len(names)
     return distribution, remainder
 
+
+
+def v20_rank_distribution(total,participants):
+    if participants <= 0:
+        return []
+    total = max(total,participants)
+    if participants == 1:
+        return [total]
+    weights = [2*(participants-1)-i for i in range(participants)]
+    denominator = sum(weights)
+    numerators = [(total-participants)*w for w in weights]
+    out = [1+n//denominator for n in numerators]
+    order = sorted(range(participants),key=lambda i:(-(numerators[i]%denominator),i))
+    for i in order[:total-sum(out)]:
+        out[i] += 1
+    return out
+
+
+def v20_position_distribution(ranking,total):
+    n = sum(len(g["players"]) for g in ranking)
+    slots = v20_rank_distribution(total,n)
+    out = {}
+    remainder = cursor = 0
+    for group in ranking:
+        pool = sum(slots[cursor:cursor+len(group["players"])])
+        share,extra = divmod(pool,len(group["players"]))
+        out.update({name:share for name in group["players"]})
+        remainder += extra
+        cursor += len(group["players"])
+    return out,remainder
+
+
+def fixed_v20_tests():
+    checks = []
+    for n in range(1,16):
+        for q in range(0,80):
+            out = v20_rank_distribution(q,n)
+            checks.append(sum(out)==max(q,n) and min(out)>=1 and all(a>=b for a,b in zip(out,out[1:])))
+    return [{"name":"v20_integer_positive_monotonic_conservation","ok":all(checks)},
+            {"name":"v20_rarity_weights","ok":sum(w for _,w in V20_RARITY_DISTRIBUTION)==100 and dict(V20_RARITY_DISTRIBUTION)[2]==12}]
 
 def initial_countdown_minutes(difficulty: int | None) -> int:
     level = min(5, max(1, difficulty or 1))
@@ -4171,22 +3885,12 @@ def fixed_rarity_tests() -> list[dict[str, Any]]:
 
 
 def fixed_difficulty_tests() -> list[dict[str, Any]]:
-    base = dict(DIFFICULTY_DISTRIBUTION)
-    available = {1, 2, 4}
-    missing_weight = sum(weight for difficulty, weight in base.items() if difficulty not in available)
-    adjusted = {difficulty: weight for difficulty, weight in base.items() if difficulty in available}
-    adjusted[min(adjusted)] += missing_weight
+    template = EMPIRICAL_CALIBRATION["deck_template"]
+    counts = {difficulty:sum(c["difficulty"]==difficulty for c in template) for difficulty in range(1,6)}
+    series = {value:sum(c["series"]==value for c in template) for value in range(1,5)}
     return [
-        {
-            "name": "difficulty_distribution_total",
-            "ok": math.isclose(sum(base.values()), 100.0),
-            "distribution": base,
-        },
-        {
-            "name": "missing_difficulty_moves_to_lowest_available",
-            "ok": adjusted == {1: 65.0, 2: 30.0, 4: 5.0},
-            "distribution": adjusted,
-        },
+        {"name":"empirical_deck_difficulty_counts","ok":counts=={1:68,2:51,3:21,4:12,5:8},"counts":counts},
+        {"name":"empirical_deck_series_counts","ok":series=={1:6,2:95,3:19,4:40},"counts":series},
     ]
 
 
@@ -4232,8 +3936,8 @@ def fixed_prediction_tests() -> list[dict[str, Any]]:
             "shadow": terminal_point_shadow(0, 30, 1),
         },
         {
-            "name": "skill_tier_order_is_x_then_y_then_other",
-            "ok": SKILL_TIER_ORDER["X"] > SKILL_TIER_ORDER["Y"] > SKILL_TIER_ORDER["other"],
+            "name": "empirical_roster_has_fifteen_players",
+            "ok": sum(PERSONALITY_BASE_COUNTS.values()) == 15,
         },
         {
             "name": "predicted_reward_uses_rank_distribution",
@@ -4246,10 +3950,10 @@ def fixed_prediction_tests() -> list[dict[str, Any]]:
         },
         {
             "name": "rational_stack_surplus_preserves_personality_order",
-            "ok": rational_stack_surplus("スタック派", 12, 3) == 4
-            and rational_stack_surplus("正統派", 12, 3) == 2
-            and rational_stack_surplus("投稿優先派", 12, 3) == 1
-            and rational_stack_surplus("ネガティブ派", 12, 3) == 0,
+            "ok": rational_stack_surplus("Ko", 12, 3) == 4
+            and rational_stack_surplus("T", 12, 3) == 2
+            and rational_stack_surplus("A", 12, 3) == 1
+            and rational_stack_surplus("下位プレイヤー", 12, 3) == 1,
         },
         {
             "name": "paid_update_rejects_no_rank_point_gain",
@@ -4390,9 +4094,8 @@ def fixed_time_model_tests() -> list[dict[str, Any]]:
             "thirty_minute_cost": play_time_cost(30),
         },
         {
-            "name": "stochastic_score_expected_order_and_learning_efficiency",
-            "ok": SCORE_TIER_BASE["X"] > SCORE_TIER_BASE["Y"] > SCORE_TIER_BASE["other"]
-            and SCORE_SKILL_EFFICIENCY["X"] > SCORE_SKILL_EFFICIENCY["Y"] > SCORE_SKILL_EFFICIENCY["other"],
+            "name": "series_specialist_and_unobserved_elite_prior",
+            "ok": EMPIRICAL_PROFILES["G"]["strength"]["3"] > EMPIRICAL_PROFILES["Ku"]["strength"]["3"] > EMPIRICAL_PROFILES["Ko"]["strength"]["2"],
         },
         {
             "name": "player_extension_cost_duration_and_cutoff",
@@ -4410,8 +4113,8 @@ def fixed_time_model_tests() -> list[dict[str, Any]]:
         },
         {
             "name": "personality_continuous_hours_are_bounded",
-            "ok": personality_continuous_hours("投稿優先派", 1.2) == 5
-            and personality_continuous_hours("ネガティブ派", 0.8) == 1
+            "ok": personality_continuous_hours("A", 1.2) == 5
+            and personality_continuous_hours("下位プレイヤー", 0.8) == 1
             and all(
                 1 <= personality_continuous_hours(name, motivation) <= 5
                 for name in PERSONALITY_CONTINUOUS_HOURS
@@ -4639,6 +4342,12 @@ def fixed_return_to_deck_tests() -> list[dict[str, Any]]:
 
 def fixed_subsidy_tests() -> list[dict[str, Any]]:
     return [
+        {"name": "recurring_resources_two_is_eligible", "ok": recurring_subsidy_eligible(1, 1)},
+        {"name": "recurring_resources_three_is_not_eligible", "ok": not recurring_subsidy_eligible(1, 2)},
+        {"name": "negative_resources_include_hand", "ok": recurring_subsidy_eligible(-2, 4) and not recurring_subsidy_eligible(-2, 5)},
+        {"name": "instant_resources_four_is_eligible", "ok": instant_subsidy_eligible(2, 2)},
+        {"name": "instant_resources_five_is_not_eligible", "ok": not instant_subsidy_eligible(2, 3)},
+        {"name": "grant_two_to_three_removes_recurring_eligibility", "ok": recurring_subsidy_eligible(2, 0) and not recurring_subsidy_eligible(3, 0)},
         {
             "name": "empty_field_uses_combined_resources_below_eight",
             "ok": empty_field_subsidy_eligible(4, 3, True),
@@ -4764,7 +4473,7 @@ def percentile(values: list[float], ratio: float) -> float:
 def compare_cooldown_rules(start_seed: int, runs: int, output_dir: Path) -> dict[str, Any]:
     policies = {
         "baseline": "比較用・60分固定",
-        "all_field_first": "旧案A・全場札1位で解除",
+        "all_field_first": "旧案A・全切り札1位で解除",
         "endgame_free": "現行・60分と終盤免除",
         "all_field_first_endgame_free": "旧案A+B・条件解除と終盤免除",
         "post_credit": "旧案C・初投稿ごとに15分免除",
@@ -4846,8 +4555,14 @@ def compare_cooldown_rules(start_seed: int, runs: int, output_dir: Path) -> dict
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="トリックテイキング制ルール検証シミュレーション")
+    parser.add_argument("--rule-version",choices=["v19","v20"],default="v20")
+    parser.add_argument("--uniform-update-cost",type=int,default=1)
+    parser.add_argument("--difficulty-take-fee-scale",type=int,default=0)
+    parser.add_argument("--field-cap-policy",choices=["legacy","min8"],default="min8")
+    parser.add_argument("--subsidy-policy", choices=["legacy", "low_resources"], default="low_resources", help="給付ルール（legacyは旧条件比較用）")
+    parser.add_argument("--historical-tournament",action="store_true",help="261009比較用: Gを実測P04へ置換し、推定時刻の160枚補充と実終了時刻を使用")
     parser.add_argument("--seed", type=int, default=260704, help="乱数シード")
-    parser.add_argument("--deck-size", type=int, default=DECK_SIZE, help="初期山札枚数（単独試行の比較実験用）")
+    parser.add_argument("--deck-size", type=int, default=DECK_SIZE, help="初期デッキ枚数（単独試行の比較実験用）")
     parser.add_argument(
         "--output-dir",
         type=Path,
@@ -4858,7 +4573,7 @@ def parse_args() -> argparse.Namespace:
         "--return-to-deck",
         action="store_true",
         default=True,
-        help="1Pで手札を山札へ戻す追加ルールを有効にする",
+        help="1Pで手札をデッキへ戻す追加ルールを有効にする",
     )
     parser.add_argument(
         "--summary-only",
@@ -4887,7 +4602,7 @@ def parse_args() -> argparse.Namespace:
         "--take-cost-mode",
         choices=["field", "level_linear", "level_sqrt"],
         default="level_sqrt",
-        help="テイク必要スタックを平方根レベル式、旧場札数式、または旧線形レベル式で算出する",
+        help="テイク必要トリックを平方根レベル式、旧切り札数式、または旧線形レベル式で算出する",
     )
     parser.add_argument(
         "--take-level-up-every",
@@ -4912,7 +4627,7 @@ def parse_args() -> argparse.Namespace:
         "--reward-formula",
         choices=sorted(REWARD_FORMULAS),
         default="proposal",
-        help="回収時の総還元ポイント式を選択する",
+        help="回収時の総還元ドローポイント式を選択する",
     )
     parser.add_argument(
         "--behavior-policy",
@@ -4923,19 +4638,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--activity-policy",
         choices=sorted(ACTIVITY_POLICIES),
-        default="peak_engagement",
-        help="旧固定セッションまたはピーク集中・関与場札待機型の活動時間を選択する",
+        default="empirical",
+        help="実測時間帯と指定総活動時間に基づく活動モデル",
     )
     parser.add_argument(
         "--score-policy",
         choices=sorted(SCORE_POLICIES),
         default="stochastic_card_skill",
-        help="固定序列またはカード別スキル蓄積を伴う確率的スコア試行を選択する",
+        help="実測シリーズ別実力の確率的試行またはノイズなし比較",
     )
     parser.add_argument(
         "--remainder-policy",
         choices=sorted(REMAINDER_POLICIES),
-        default="last_poster",
+        default="taker",
         help="順位配分後の余剰Pをテイカーまたは最下位投稿者へ還元する",
     )
     parser.add_argument(
@@ -4946,12 +4661,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--recycle-unposted",
         action="store_true",
-        help="比較用の旧案：投稿者0人で回収された場札本体を捨て札へ戻す",
+        help="比較用の旧案：投稿者0人で回収された切り札本体を捨て札へ戻す",
     )
     parser.add_argument(
         "--no-empty-field-floor-grant",
         action="store_true",
-        help="空場時に全参加者のポイント+手札を3へ補充する施策を無効にする",
+        help="空場時に全参加者のドローポイント+手札を3へ補充する施策を無効にする",
     )
     parser.add_argument(
         "--compare-cooldown-runs",
@@ -4981,6 +4696,12 @@ def main() -> None:
         return
     sim = Simulation(
         seed=args.seed,
+        historical_tournament=args.historical_tournament,
+        rule_version=args.rule_version,
+        uniform_update_cost=args.uniform_update_cost,
+        difficulty_take_fee_scale=args.difficulty_take_fee_scale,
+        field_cap_policy=args.field_cap_policy,
+        subsidy_policy=args.subsidy_policy,
         output_dir=args.output_dir,
         deck_size=args.deck_size,
         return_to_deck_enabled=args.return_to_deck,

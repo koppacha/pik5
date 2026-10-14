@@ -1,0 +1,29 @@
+{
+  "date": "2026-10-13",
+  "unit_tests": {
+    "v20": 8,
+    "personalities": 10
+  },
+  "comparisons": {
+    "normal_seeds": 20,
+    "historical_seeds": 10,
+    "cases": 7,
+    "tournaments": 210,
+    "money_book_errors": 0
+  },
+  "default_matches_evaluated_cap8": true,
+  "historical_source_sha256": "312ecf589ff28425a7231110ba1e677e53f0ea605a7bf6424fc16bc69066675b",
+  "browser": {
+    "player_rows": 15,
+    "svg": 2,
+    "canvas": 0,
+    "animations": 0,
+    "idle_dom_mutations_in_1500ms": 0,
+    "viewport_width": 390,
+    "horizontal_overflow": false,
+    "new_rule_text": true,
+    "fixed_test_count": 63,
+    "deck_toggle": true,
+    "console_errors": 0
+  }
+}

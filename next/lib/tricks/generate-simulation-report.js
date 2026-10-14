@@ -1,8 +1,8 @@
 const fs = require('fs')
 const path = require('path')
 
-const outputsDir = path.resolve(__dirname, '../../../lab/outputs')
-const reportPath = path.resolve(__dirname, '../../pages/limited/tricks/simulation-report.html')
+const outputsDir = process.argv[2] || path.resolve(__dirname, '../../../lab/outputs')
+const reportPath = process.argv[3] || path.resolve(__dirname, '../../pages/limited/tricks/simulation-report.html')
 const intervalMinutes = 30
 
 const readJson = filePath => JSON.parse(fs.readFileSync(filePath, 'utf8'))
@@ -111,12 +111,14 @@ const summarizeFinalPlayers = players => [...players]
     || String(left.name).localeCompare(String(right.name))
   ))
   .map(player => ({
-    name: player.name,
+    name: player.display_name || player.name,
     points: Number(player.points || 0),
     rankPoints: Number(player.rank_points || 0),
     draws: Number(player.actions?.draw || 0),
     takes: Number(player.actions?.take || 0),
-    scorePosts: Number(player.actions?.initial_post || 0) + Number(player.actions?.update || 0)
+    scorePosts: Number(player.actions?.initial_post || 0) + Number(player.actions?.update || 0),
+    activeHours: Number(player.total_active_hours || 0),
+    extensions: Number(player.actions?.paid_extension || 0)
   }))
 
 const summarizeCollectedCards = entries => {
@@ -190,11 +192,12 @@ const logs = files.map(summaryFile => {
     eventsWritten: summary.events_written,
     collections: summary.collections,
     subsidyPayments: summary.subsidy_payments,
+    instantSubsidyPayments: summary.instant_subsidy_payments || 0,
     policy: summary.policy || null,
     drawTax: summary.draw_tax || null,
     rarityDrawCounts: summary.rarity_draw_counts || null,
     invariantErrors: summary.invariant_errors || [],
-    fixedRewardTests: summary.fixed_reward_tests || [],
+    fixedRewardTests: [...(summary.fixed_reward_tests || []), ...(summary.fixed_v20_tests || [])],
     fixedRarityTests: summary.fixed_rarity_tests || [],
     fixedRankPointTests: summary.fixed_rank_point_tests || [],
     fixedPredictionTests: summary.fixed_prediction_tests || [],
@@ -215,7 +218,7 @@ const logs = files.map(summaryFile => {
     leaders: [...players]
       .sort((left, right) => Number(right.rank_points || 0) - Number(left.rank_points || 0))
       .slice(0, 3)
-      .map(player => ({ name: player.name, rankPoints: player.rank_points, points: player.points })),
+      .map(player => ({ name: player.display_name || player.name, rankPoints: player.rank_points, points: player.points })),
     finalPlayers,
     collectedCards: summarizeCollectedCards(entries),
     personalities: summarizePersonalities(players),
@@ -340,7 +343,7 @@ const html = `<!doctype html>
     const colors = ['#53d6b5', '#68a8ff', '#ffbe55', '#ff758a', '#c88cff']
     const eventLabels = {
       join: '参加', draw: 'ドロー', take: 'テイク', initial_post: '初投稿',
-      update: '更新', practice: '練習', subsidy: '給付', collect: '回収', wait: '待機',
+      update: '更新', practice: '練習', subsidy: '定期給付', instant_subsidy: '即時支給', collect: '回収', wait: '待機',
       take_close_attempt: '締切前テイク試行', final: '終了'
     }
 
@@ -375,7 +378,7 @@ const html = `<!doctype html>
 
     const chartMarkup = (id, title, copy, series) => {
       const action = id === 'cards-chart'
-        ? '<button class="series-toggle" id="deck-toggle" type="button" aria-pressed="false">山札を隠す</button>'
+        ? '<button class="series-toggle" id="deck-toggle" type="button" aria-pressed="false">デッキを隠す</button>'
         : ''
       return \`
         <article class="panel">
@@ -435,19 +438,21 @@ const html = `<!doctype html>
       const fixedTestsOk = rewardTestsOk && rarityTestsOk && rankPointTestsOk && predictionTestsOk && timeModelTestsOk && entryRuleTestsOk && countdownTestsOk && holderTestsOk && takeCooldownTestsOk
       const fixedTestCount = log.fixedRewardTests.length + log.fixedRarityTests.length + log.fixedRankPointTests.length + log.fixedPredictionTests.length + log.fixedTimeModelTests.length + log.fixedEntryRuleTests.length + log.fixedCountdownTests.length + log.fixedHolderTests.length + log.fixedTakeCooldownTests.length
       const taxMetric = log.drawTax
-        ? metric('給付 / ドロー税', log.subsidyPayments + ' / ' + log.drawTax.paid + ' P', 'スタック還流 ' + log.drawTax.stacked + ' / 未還流 ' + log.drawTax.pending)
-        : metric('給付', log.subsidyPayments + ' P', log.eventsWritten + 'イベント')
+        ? metric('給付 / ドロー税', log.subsidyPayments + ' / ' + log.drawTax.paid + ' P', 'トリック還流 ' + log.drawTax.stacked + ' / 未還流 ' + log.drawTax.pending)
+        : metric('定期給付 / 即時支給', log.subsidyPayments + ' / ' + log.instantSubsidyPayments + ' P', log.eventsWritten + 'イベント')
       const taxPolicyNote = log.policy && Number.isFinite(Number(log.policy.draw_tax_threshold))
         ? log.policy.draw_tax_threshold + 'P超過分の' + log.policy.draw_tax_band + 'Pごとに1P課税、'
         : ''
-      const rarityPolicyNote = log.policy?.rarity_growth === 'exponential'
+      const rarityPolicyNote = log.policy?.rarity_growth === 'fixed_83_12'
+        ? '第20回案: レア度1〜5を全期間83/12/4/0.9/0.1%で抽選。更新は一律' + log.policy.uniform_update_cost + 'P、初投稿は全員無料。'
+        : log.policy?.rarity_growth === 'exponential'
         ? '★2以上を開始' + log.policy.rarity_initial_rate + '%から' + log.policy.rarity_boost_peak_hour + '時間で' + log.policy.rarity_peak_rate + '%へ指数増加。'
         : log.policy?.rarity_growth === 'final_three_hours'
           ? '通常はレア度1〜5を87/8/4/0.9/0.1%、終了3時間前から0/87/8/4/1%で抽選。'
         : log.policy?.rarity_growth === 'fixed'
           ? 'レア度1〜5を毎回87/8/4/0.9/0.1%で抽選。'
           : log.policy
-          ? log.policy.rarity_boost_interval_minutes + '分ごとにレア率を' + Number(log.policy.rarity_boost_per_step).toFixed(4) + 'ポイント加算。'
+          ? log.policy.rarity_boost_interval_minutes + '分ごとにレア率を' + Number(log.policy.rarity_boost_per_step).toFixed(4) + 'パーセントポイント加算。'
           : ''
       const policyNote = log.policy ? '施策: ' + taxPolicyNote + rarityPolicyNote : ''
       const top = log.leaders[0]
@@ -456,7 +461,7 @@ const html = `<!doctype html>
         .map(([event, count]) => \`<span class="event-chip">${'${escapeHtml(eventLabels[event] || event)}'} <b>${'${count}'}</b></span>\`)
         .join('')
       const finalRows = log.finalPlayers.map((player, playerIndex) => \`
-        <tr><td><span class="rank-cell">#${'${playerIndex + 1}'}</span> <strong>${'${escapeHtml(player.name)}'}</strong></td><td>${'${player.points}'} P</td><td>${'${player.rankPoints}'} R</td><td>${'${player.draws}'}</td><td>${'${player.takes}'}</td><td>${'${player.scorePosts}'}</td></tr>\`)
+        <tr><td><span class="rank-cell">#${'${playerIndex + 1}'}</span> <strong>${'${escapeHtml(player.name)}'}</strong></td><td>${'${player.points}'} P</td><td>${'${player.rankPoints}'} R</td><td>${'${player.draws}'}</td><td>${'${player.takes}'}</td><td>${'${player.scorePosts}'}</td><td>${'${player.activeHours}'}h</td><td>${'${player.extensions}'}</td></tr>\`)
         .join('')
       const collectedRows = log.collectedCards.map(card => \`
         <tr><td><strong>#${'${card.cardId}'}</strong></td><td>${'${durationLabel(card.fieldMinutes)}'}</td><td>${'${card.scorePosts}'}</td><td>${'${card.participants}'}</td><td><span class="stars">${'${starsLabel(card.rarity)}'}</span></td><td><span class="stars">${'${starsLabel(card.difficulty)}'}</span></td><td>${'${card.stackCount}'}</td><td>${'${card.totalRewardPoints}'} P</td></tr>\`)
@@ -465,26 +470,33 @@ const html = `<!doctype html>
         <div class="personality-row"><strong>${'${escapeHtml(group.name)}'}</strong><span>${'${group.players}'}人</span><span class="subtle">平均 ${'${group.averagePoints}'} P</span><span class="subtle">平均 ${'${group.averageRankPoints}'} R</span></div>\`)
         .join('')
 
+      const scenarioLabel = log.policy?.historical_tournament === true
+        ? '実大会比較（Gなし・補充あり）'
+        : log.policy?.historical_tournament === false
+          ? '通常モデル（G参加）'
+          : '過去モデル'
+
       report.innerHTML = \`
         <div class="meta">
           <span>生成: ${'${generatedLabel(log.generatedAt)}'}</span><span>期間: ${'${dateLabel(log.startAt)}'} 〜 ${'${dateLabel(log.endAt)}'}</span><span>seed: ${'${log.seed}'}</span>
+          <span>条件: ${'${scenarioLabel}'}</span>
           <span>入力: ${'${escapeHtml(log.source.summary)}'} / ${'${escapeHtml(log.source.timeline)}'}</span>
         </div>
         <div class="grid">
           ${'${metric(\'参加者\', `${log.final.participants}人`, top ? `首位 ${top.name}` : \'首位なし\')}' }
-          ${'${metric(\'総ポイント\', `${log.final.points} P`, \'最終保有量\')}' }
+          ${'${metric(\'総ドローポイント\', `${log.final.points} P`, \'最終保有量\')}' }
           ${'${metric(\'総ランクポイント\', `${log.final.rankPoints} R`, \'最終獲得量\')}' }
           ${'${metric(\'回収\', `${log.collections}件`, `場 ${log.final.fields} / 回収済 ${log.final.collected}`)}' }
           ${'${taxMetric}' }
           ${'${metric(\'整合性\', invariantOk && fixedTestsOk ? \'OK\' : \'要確認\', invariantOk && fixedTestsOk ? `不変条件0件・固定テスト${fixedTestCount}件成功` : `不変条件${log.invariantErrors.length}件`, invariantOk && fixedTestsOk ? \'status-ok\' : \'status-error\')}' }
         </div>
-        ${'${chartMarkup(\'economy-chart\', \'プレイヤー経済の推移\', \'全参加者の保有ポイント・累計ランクポイント・場札の総還元ポイント。\', [{ key: \'points\', label: \'総ポイント\' }, { key: \'rankPoints\', label: \'総ランクポイント\' }, { key: \'totalRewards\', label: \'総還元ポイント\' }])}' }
-        ${'${chartMarkup(\'cards-chart\', \'カード循環の推移\', \'山札・捨て札・場札・回収済みカードの枚数。\', [{ key: \'deck\', label: \'山札\' }, { key: \'trash\', label: \'捨て札\' }, { key: \'fields\', label: \'場札\' }, { key: \'collected\', label: \'回収済み\' }, { key: \'hands\', label: \'手札\' }])}' }
+        ${'${chartMarkup(\'economy-chart\', \'プレイヤー経済の推移\', \'全参加者の保有ドローポイント・累計ランクポイント・切り札の総還元ドローポイント。\', [{ key: \'points\', label: \'総ドローポイント\' }, { key: \'rankPoints\', label: \'総ランクポイント\' }, { key: \'totalRewards\', label: \'総還元ドローポイント\' }])}' }
+        ${'${chartMarkup(\'cards-chart\', \'カード循環の推移\', \'デッキ・捨て札・切り札・回収済みカードの枚数。\', [{ key: \'deck\', label: \'デッキ\' }, { key: \'trash\', label: \'捨て札\' }, { key: \'fields\', label: \'切り札\' }, { key: \'collected\', label: \'回収済み\' }, { key: \'hands\', label: \'手札\' }])}' }
         <article class="panel"><h2>最終結果</h2><p class="panel-copy">ランクポイント降順。スコア投稿回数は初投稿と更新投稿の合計です。</p>
-          <div class="table-wrap"><table class="data-table"><thead><tr><th>順位 / プレイヤー</th><th>終了時所持P</th><th>ランクP</th><th>ドロー数</th><th>テイク数</th><th>スコア投稿回数</th></tr></thead><tbody>${'${finalRows}'}</tbody></table></div>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>順位 / プレイヤー</th><th>終了時所持P</th><th>ランクP</th><th>ドロー数</th><th>テイク数</th><th>スコア投稿回数</th><th>活動時間</th><th>延長回数</th></tr></thead><tbody>${'${finalRows}'}</tbody></table></div>
         </article>
-        <article class="panel"><h2>回収カードの概要</h2><p class="panel-copy">回収時刻順。場札時間はテイクから回収までの経過時間です。</p>
-          <div class="table-wrap"><table class="data-table"><thead><tr><th>カード</th><th>場札総時間</th><th>投稿総数</th><th>参加者数</th><th>レア度</th><th>難易度</th><th>スタック数</th><th>総還元P</th></tr></thead><tbody>${'${collectedRows || \"<tr><td colspan=\\\"8\\\" class=\\\"empty\\\">回収カードなし</td></tr>\"}'}</tbody></table></div>
+        <article class="panel"><h2>回収カードの概要</h2><p class="panel-copy">回収時刻順。切り札時間はテイクから回収までの経過時間です。</p>
+          <div class="table-wrap"><table class="data-table"><thead><tr><th>カード</th><th>切り札総時間</th><th>投稿総数</th><th>参加者数</th><th>レア度</th><th>難易度</th><th>トリック数</th><th>総還元P</th></tr></thead><tbody>${'${collectedRows || \"<tr><td colspan=\\\"8\\\" class=\\\"empty\\\">回収カードなし</td></tr>\"}'}</tbody></table></div>
         </article>
         <article class="panel"><h2>プレイ傾向別（概要）</h2><p class="panel-copy">人数と最終値の平均のみを表示します。</p><div class="personality-list">${'${personalities}'}</div></article>
         <article class="panel"><h2>イベント構成</h2><p class="panel-copy">行動件数の偏りを確認するための集計です。</p><div class="events">${'${eventChips}'}</div>
@@ -493,12 +505,12 @@ const html = `<!doctype html>
       \`
 
       drawChart(document.getElementById('economy-chart'), log.timeline, [
-        { key: 'points', label: '総ポイント' }, { key: 'rankPoints', label: '総ランクポイント' },
-        { key: 'totalRewards', label: '総還元ポイント' }
+        { key: 'points', label: '総ドローポイント' }, { key: 'rankPoints', label: '総ランクポイント' },
+        { key: 'totalRewards', label: '総還元ドローポイント' }
       ])
       const cardSeries = [
-        { key: 'deck', label: '山札', colorIndex: 0 }, { key: 'trash', label: '捨て札', colorIndex: 1 },
-        { key: 'fields', label: '場札', colorIndex: 2 }, { key: 'collected', label: '回収済み', colorIndex: 3 },
+        { key: 'deck', label: 'デッキ', colorIndex: 0 }, { key: 'trash', label: '捨て札', colorIndex: 1 },
+        { key: 'fields', label: '切り札', colorIndex: 2 }, { key: 'collected', label: '回収済み', colorIndex: 3 },
         { key: 'hands', label: '手札', colorIndex: 4 }
       ]
       let deckHidden = false
@@ -511,7 +523,7 @@ const html = `<!doctype html>
       deckToggle.addEventListener('click', () => {
         deckHidden = !deckHidden
         deckToggle.setAttribute('aria-pressed', String(deckHidden))
-        deckToggle.textContent = deckHidden ? '山札を表示' : '山札を隠す'
+        deckToggle.textContent = deckHidden ? 'デッキを表示' : 'デッキを隠す'
         drawCardsChart()
       })
       drawCardsChart()

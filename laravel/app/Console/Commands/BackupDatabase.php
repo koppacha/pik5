@@ -96,10 +96,11 @@ class BackupDatabase extends Command
     private function pruneBackups(string $path, string $database, int $keepDays): void
     {
         $prefix = preg_replace('/[^A-Za-z0-9_-]/', '_', $database).'-';
+        $pattern = '/^'.preg_quote($prefix, '/').'[0-9]{8}-[0-9]{6}\\.sql\\.gz$/';
         $threshold = now()->subDays($keepDays)->getTimestamp();
 
         foreach (File::files($path) as $file) {
-            if (str_starts_with($file->getFilename(), $prefix) && $file->getMTime() < $threshold) {
+            if (preg_match($pattern, $file->getFilename()) === 1 && $file->getMTime() < $threshold) {
                 File::delete($file->getPathname());
             }
         }

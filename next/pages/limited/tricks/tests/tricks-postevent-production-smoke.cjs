@@ -1,0 +1,36 @@
+async (page) => {
+    const assert = (value, message) => { if (!value) throw new Error(message) }
+    await page.unrouteAll()
+    await page.goto('https://pik5.net/limited/tricks')
+    await page.getByRole('heading', {name: '第19回期間限定ランキング 最終リザルト'}).waitFor()
+    const cards = await page.evaluate(async () => {
+        const response = await fetch('/api/server/tricks/collected?event_id=261009')
+        if (!response.ok) throw new Error(`collected status=${response.status}`)
+        const body = await response.json()
+        return body.data ?? body
+    })
+    const sorted = cards.every((card, i) => i === 0 || cards[i - 1].total_reward_points >= card.total_reward_points)
+    assert(sorted, '総還元P降順')
+    assert(await page.locator('[data-tricks-countdown-alert]').textContent() === '大会は終了しました', '終了文言')
+    const spectator = page.getByRole('button', {name: '観戦モード', exact: true})
+    if (await spectator.getAttribute('aria-pressed') !== 'true') await spectator.click()
+    await page.waitForTimeout(400)
+    const header = await page.locator('[data-tricks-header-scroll]').boundingBox()
+    const results = await page.getByTestId('tricks-collected-results').boundingBox()
+    assert(results.y >= header.y + header.height + 20, '観戦時オフセット')
+    const card = cards.find(card => card.rankings.some(row => row.video_url))
+    assert(card, '実データに証拠動画が存在')
+    await page.locator(`[data-tricks-card-id="${card.id}"]`).click()
+    const icons = await page.locator('.tricks-collected-detail-panel svg[data-icon="youtube"]').count()
+    assert(icons > 0, '証拠動画アイコン')
+    await page.getByRole('button', {name: '閉じる', exact: true}).click()
+    await page.setViewportSize({width: 1024, height: 1000})
+    await page.waitForTimeout(400)
+    const resizedHeader = await page.locator('[data-tricks-header-scroll]').boundingBox()
+    const resizedResults = await page.getByTestId('tricks-collected-results').boundingBox()
+    assert(resizedResults.y >= resizedHeader.y + resizedHeader.height + 20, '1024px観戦時オフセット')
+    await page.setViewportSize({width: 1440, height: 1000})
+    await page.waitForTimeout(400)
+    await page.screenshot({path: 'next/pages/limited/tricks/output/playwright/tricks-postevent-production-20261012.png'})
+    return {cards: cards.length, sorted, videoIcons: icons, headerBottom: header.y + header.height, resultsTop: results.y, canvas: await page.locator('canvas').count()}
+}
