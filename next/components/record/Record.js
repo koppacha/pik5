@@ -288,16 +288,20 @@ export default function Record({
                                                         w: "達成",
                                                         p: "未達成",
                                                         e: "参加",
-                                                        m: "MVP"
+                                                        m: "MVP",
+                                                        h: "トップホルダー",
+                                                        b: "MVP・トップホルダー"
                                                     }[item.result] ?? item.result)
                                                     : ({
                                                         w: "優勝",
                                                         p: "参加",
                                                         e: "参加",
-                                                        m: "MVP"
+                                                        m: "MVP",
+                                                        h: "トップホルダー",
+                                                        b: "MVP・トップホルダー"
                                                     }[item.result] ?? item.result)
                                                 const rank =
-                                                    item.result === "m" ? 1 :
+                                                    ["m", "h", "b"].includes(item.result) ? 1 :
                                                         item.result === "w" && !isInstant && Number(item.team) === 0 ? 2 :
                                                             item.result === "w" ? 3 : 10
                                                 const title =
