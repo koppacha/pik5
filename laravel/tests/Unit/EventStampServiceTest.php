@@ -67,6 +67,18 @@ class EventStampServiceTest extends TestCase
         $this->assertSame(15, $this->service->stamp($this->stampRow('m', 'その他', 20, 20, 1)));
     }
 
+    public function test_top_holder_receives_the_mvp_formula_and_both_awards_double_it(): void
+    {
+        foreach ([1, 2, 8] as $rank) {
+            $single = $this->service->stamp($this->stampRow('m', '期間限定ランキング', 15, $rank));
+            $this->assertSame($single, $this->service->stamp($this->stampRow('h', '期間限定ランキング', 15, $rank)));
+            $this->assertSame(2 * $single, $this->service->stamp($this->stampRow('b', '期間限定ランキング', 15, $rank)));
+        }
+        $this->assertSame(14, $this->service->stamp($this->stampRow('m', '期間限定ランキング', 15, 1)));
+        $this->assertSame(13, $this->service->stamp($this->stampRow('h', '期間限定ランキング', 15, 2)));
+        $this->assertSame(28, $this->service->stamp($this->stampRow('b', '期間限定ランキング', 15, 1)));
+    }
+
     /**
      * @dataProvider winPointProvider
      */

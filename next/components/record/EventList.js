@@ -41,7 +41,7 @@ export default function EventList({currentId = 0, events = []}){
             <Grid container style={{minWidth: events.length > 12 ? "1200px" : "100%"}} columns={{xs: 6, md: 9, lg: 12}}>
                 {events.map((event) => (
                     <Grid style={{whiteSpace:"pre-line"}} key={event.event_id} item xs={1.5}>
-                        <Link href={`/limited/${event.event_id}`}>
+                        <Link href={Number(event.event_id) === 261009 ? "/limited/tricks?261009" : `/limited/${event.event_id}`}>
                             <Box className={`stage-list-box ${Number(currentId) === Number(event.event_id) ? "active" : ""}`}>
                                 {eventDate(event.event_id)}<br/>{label(event)}
                             </Box>
