@@ -5,7 +5,7 @@ import useSWR from 'swr'
 import {Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, TextField, Typography} from '@mui/material'
 import {TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from '../../styles/pik5.css'
 import {useLocale} from '../../lib/pik5'
-import {canAccessLimitedIdeas, formatLimitedIdeasDate, limitedIdeasRatio, validateLimitedIdea} from '../../lib/limitedIdeas'
+import {LIMITED_IDEAS_STAGE_RANGES, LIMITED_IDEAS_REGISTRATION_METHODS, canAccessLimitedIdeas, formatLimitedIdeasDate, limitedIdeasRatio, validateLimitedIdea} from '../../lib/limitedIdeas'
 import {faTicketSimple} from "@fortawesome/free-solid-svg-icons";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 
@@ -66,7 +66,7 @@ export default function LimitedIdeas() {
         setPage(0)
     }, [identity])
 
-    const visible = Boolean(summary && !summaryError && (summary.admin || periodOpen))
+    const visible = Boolean(summary && !summaryError && periodOpen)
     const draft = drafts[draftKey] || blank()
     const change = (field, value) => setDrafts(current => ({...current, [draftKey]: {...draft, [field]: value}}))
     const closeForm = () => { if (!busy) setFormOpen(false) }
@@ -119,7 +119,8 @@ export default function LimitedIdeas() {
     }
     if (!visible) return null
 
-    const stages = Array.from({length: draft.title === 2 ? 30 : 28}, (_, index) => (draft.title === 2 ? 201 : 401) + index)
+    const [start, end] = LIMITED_IDEAS_STAGE_RANGES[draft.title]
+    const stages = Array.from({length: end - start + 1}, (_, index) => start + index)
     const fieldProps = {fullWidth: true, margin: 'normal', variant: 'standard', disabled: busy}
     const disabled = !identity || status !== 'authenticated'
     const buttonStyle = {...(disabled && {color: 'var(--color-muted-text)', borderColor: 'var(--color-divider-muted)'})}
@@ -129,7 +130,7 @@ export default function LimitedIdeas() {
                 <TopBoxHeader className="top-box-header"><span><FontAwesomeIcon icon={faTicketSimple} /> 期間限定チャレンジルール応募</span></TopBoxHeader>
                 <TopBoxContent className="top-box-content">
                     <Typography style={{fontSize: '0.9em'}}>
-                        期間限定チャレンジルールを募集中です。<br/>現在の応募総数：{summary.count} / 推定採用倍率：{limitedIdeasRatio(summary.count)}倍 / 募集終了日時：{formatLimitedIdeasDate(summary.closesAt)}
+                        期間限定チャレンジルールを常時募集中です。<br/>現在の応募総数：{summary.count} / 推定採用倍率：{limitedIdeasRatio(summary.count)}倍 / 募集終了日時：{summary.closesAt ? formatLimitedIdeasDate(summary.closesAt) : '未定'}
                     </Typography>
                     <Box style={{display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 8, marginTop: 12}}>
                         <Button variant="contained" style={buttonStyle} disabled={disabled} onClick={() => openForm(null)}>期間限定チャレンジを作成する</Button>
@@ -201,9 +202,9 @@ export default function LimitedIdeas() {
                         <TextField {...fieldProps} label="ユーザー名" value={draft.creatorName ?? session?.user?.name ?? ''} disabled />
                         <TextField {...fieldProps} select label="タイトル" value={draft.title} onChange={event => {
                             const title = Number(event.target.value)
-                            setDrafts(current => ({...current, [draftKey]: {...draft, title, stageId: title === 2 ? 201 : 401}}))
+                            setDrafts(current => ({...current, [draftKey]: {...draft, title, stageId: LIMITED_IDEAS_STAGE_RANGES[title][0]}}))
                         }}>
-                            {[2, 4].map(title => <MenuItem key={title} value={title}>{t.title[title]}</MenuItem>)}
+                            {Object.keys(LIMITED_IDEAS_STAGE_RANGES).map(Number).map(title => <MenuItem key={title} value={title}>{t.title[title]}</MenuItem>)}
                         </TextField>
                         <TextField {...fieldProps} select label="ステージ" value={draft.stageId} onChange={event => change('stageId', Number(event.target.value))}>
                             {stages.map(stage => <MenuItem key={stage} value={stage}>{t.stage[stage]}</MenuItem>)}
@@ -212,8 +213,8 @@ export default function LimitedIdeas() {
                         <TextField {...fieldProps} select label="難易度" value={draft.difficulty} onChange={event => change('difficulty', Number(event.target.value))} helperText="基準は過去ルール一覧を参考にしてください。難易度が高いほど採用されにくくなります。">
                             {[1, 2, 3, 4, 5].map(value => <MenuItem key={value} value={value}>{value}</MenuItem>)}
                         </TextField>
-                        <TextField {...fieldProps} select label="登録方法" value={draft.registrationMethod} onChange={event => change('registrationMethod', event.target.value)}>
-                            <MenuItem value="score">スコア</MenuItem><MenuItem value="time">タイム</MenuItem>
+                        <TextField {...fieldProps} select label="登録方法" value={draft.registrationMethod} onChange={event => change('registrationMethod', event.target.value)} helperText={LIMITED_IDEAS_REGISTRATION_METHODS[draft.registrationMethod]?.description}>
+                            {Object.entries(LIMITED_IDEAS_REGISTRATION_METHODS).map(([value, method]) => <MenuItem key={value} value={value}>{method.label}</MenuItem>)}
                         </TextField>
                         <TextField {...fieldProps} required multiline minRows={4} label="本文" value={draft.body} onChange={event => change('body', event.target.value)} helperText={`${[...draft.body].length} / 256文字`} error={[...draft.body].length > 256} />
                     </DialogContent>

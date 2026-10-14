@@ -245,7 +245,7 @@ class UserTotalController extends Controller
         $userId = (string)$request['id'];
         $latest = $this->getLatestRecordSummary($userId);
         $recommend = Cache::remember(
-            'user:dashboard-summary:recommend:v3:' . $userId,
+            'user:dashboard-summary:recommend:v4:' . Record::publicVisibilityCacheKey() . ':' . $userId,
             3600,
             fn () => $this->getRecommendedStageSummary($userId)
         );
@@ -267,7 +267,7 @@ class UserTotalController extends Controller
 
     private function getLatestRecord(string $userId): ?Record
     {
-        return Record::where('user_id', $userId)
+        return Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', '<', 100)
             ->where('stage_id', '<', 1000)
             ->where('flg', '<', 2)
@@ -278,7 +278,7 @@ class UserTotalController extends Controller
 
     private function getRecommendedStageSummary(string $userId): ?array
     {
-        $hasRecords = Record::where('user_id', $userId)
+        $hasRecords = Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', '<', 100)
             ->where('flg', '<', 2)
             ->exists();
@@ -300,7 +300,7 @@ class UserTotalController extends Controller
             return $latestRuleRecommendation;
         }
 
-        $postedRules = Record::where('user_id', $userId)
+        $postedRules = Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', '<', 100)
             ->where('flg', '<', 2)
             ->whereIn('rule', self::RECOMMEND_RULES)
@@ -371,7 +371,7 @@ class UserTotalController extends Controller
             return null;
         }
 
-        $records = Record::where('user_id', $userId)
+        $records = Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', $rule)
             ->whereIn('stage_id', $stages)
             ->where('flg', '<', 2)
@@ -410,7 +410,7 @@ class UserTotalController extends Controller
         }
 
         $orderBy = Func::orderByRule(0, $rule);
-        $records = Record::where('user_id', $userId)
+        $records = Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', $rule)
             ->whereIn('stage_id', $stages)
             ->where('flg', '<', 2)
@@ -436,7 +436,7 @@ class UserTotalController extends Controller
                 continue;
             }
 
-            $postedStages = Record::where('user_id', $userId)
+            $postedStages = Record::publiclyVisible()->where('user_id', $userId)
                 ->where('rule', $rule)
                 ->whereIn('stage_id', $stages)
                 ->where('flg', '<', 2)
@@ -485,7 +485,7 @@ class UserTotalController extends Controller
     {
         $orderBy = Func::orderByRule($stageId, $rule);
 
-        return Record::where('user_id', $userId)
+        return Record::publiclyVisible()->where('user_id', $userId)
             ->where('stage_id', $stageId)
             ->where('rule', $rule)
             ->where('flg', '<', 2)
@@ -622,7 +622,7 @@ class UserTotalController extends Controller
 
     private function consoleIdsForRule(int $rule): array
     {
-        return Record::whereIn('stage_id', TotalController::stage_list($rule))
+        return Record::publiclyVisible()->whereIn('stage_id', TotalController::stage_list($rule))
             ->whereIn('rule', $this->rulesForCategory($rule))
             ->where('console', '>', 0)
             ->where('flg', '<', 2)

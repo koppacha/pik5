@@ -6,6 +6,7 @@ use App\Library\Func;
 use App\Models\Record;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 
 class NewRecordController extends Controller
 {
@@ -21,13 +22,14 @@ class NewRecordController extends Controller
         $limit = min($limit, 200);
 
         // 記録をリクエスト
-        $query = Record::query()
+        $query = Record::publiclyVisible()
             ->leftJoin('users', 'records.user_id', '=', 'users.user_id')
+            ->leftJoin('stages', 'records.stage_id', '=', 'stages.stage_id')
             ->select(array_merge(
                 array_map(static fn ($column) => 'records.' . $column, config('const.selected')),
-                ['users.user_name as user_name']
+                ['users.user_name as user_name', 'stages.stage_name as stage_name']
             ))
-            ->where('records.stage_id', "<", 1000)
+            ->where('records.stage_id', "<", 10000)
             ->where('records.flg','<', 2)
             ->when($afterPostId > 0, static function ($builder) use ($afterPostId) {
                 return $builder->where('records.post_id', '>', $afterPostId);
@@ -47,12 +49,29 @@ class NewRecordController extends Controller
                 ->toArray();
         }
 
+        // Event card names belong to the linked card, rather than the event category rule.
+        $eventCards = DB::table('trick_event_records as links')
+            ->join('decks', 'decks.id', '=', 'links.deck_id')
+            ->leftJoin('stages as origins', 'origins.stage_id', '=', 'decks.origin_stage_id')
+            ->whereIn('links.record_id', array_column($dataset, 'post_id'))
+            ->get(['links.record_id', 'decks.origin_stage_id', 'decks.rule_name', 'origins.stage_name'])
+            ->keyBy('record_id');
+        foreach ($dataset as &$row) {
+            $card = $eventCards->get($row['post_id']);
+            if ($card !== null) {
+                $row['event_origin_stage_id'] = $card->origin_stage_id;
+                $row['event_stage_name'] = $card->stage_name;
+                $row['event_rule_name'] = $card->rule_name;
+            }
+        }
+        unset($row);
+
         // 最大参加者数を取得
         $max = $StageController->maxMember();
 
         // 参加者数を一括取得
         $stageIds = array_column($dataset, 'stage_id');
-        $membersByStage = Record::whereIn('stage_id', $stageIds)
+        $membersByStage = Record::publiclyVisible()->whereIn('stage_id', $stageIds)
             ->where('flg','<',2)
             ->selectRaw('stage_id, COUNT(DISTINCT user_id) AS member')
             ->groupBy('stage_id')

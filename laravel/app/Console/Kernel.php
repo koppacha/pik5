@@ -10,11 +10,13 @@ class Kernel extends ConsoleKernel
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('tricks:maintenance')->everyMinute()->withoutOverlapping();
+        $schedule->command('telescope:prune --hours=8')->hourly()->withoutOverlapping();
+
         $schedule->command('user:fetch-totals')
             ->monthlyOn(1, '00:10')
             ->withoutOverlapping();

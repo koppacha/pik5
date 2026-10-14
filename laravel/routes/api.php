@@ -16,6 +16,8 @@ use App\Http\Controllers\ScoreController;
 use App\Http\Controllers\StageController;
 use App\Http\Controllers\TotalController;
 use App\Http\Controllers\TournamentController;
+use App\Http\Controllers\TrickController;
+use App\Http\Controllers\TrickFixtureController;
 use App\Http\Controllers\SwissTournamentController;
 use App\Http\Controllers\UserNameController;
 use App\Http\Controllers\UserTotalController;
@@ -177,4 +179,42 @@ Route::group ([ 'middleware' => [ 'api' ]], static function () {
     Route::post('cards/{id}/scores', [ScoreController::class, 'store']);
 
     Route::get('tournament', [TournamentController::class, 'info']);
+});
+
+// 第19回期間限定ランキング（トリックテイキング制）
+Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
+    Route::get('tricks/stage-context/{stageId}', [TrickController::class, 'stageContext']);
+    Route::get('tricks/record-context/{uniqueId}', [TrickController::class, 'recordContext']);
+    Route::get('tricks/replay/{eventId}', [TrickController::class, 'replayIndex'])->whereNumber('eventId');
+    Route::get('tricks/replay/{eventId}/snapshots', [TrickController::class, 'replaySnapshots'])->whereNumber('eventId');
+    Route::get('tricks/replay/{eventId}/snapshot', [TrickController::class, 'replaySnapshot'])->whereNumber('eventId');
+    Route::get('tricks/tournament', [TrickController::class, 'tournament']);
+    Route::get('tricks/state', [TrickController::class, 'state']);
+    Route::get('tricks/players', [TrickController::class, 'players']);
+    Route::get('tricks/hand', [TrickController::class, 'hand']);
+    Route::get('tricks/field', [TrickController::class, 'field']);
+    Route::get('tricks/logs', [TrickController::class, 'logs']);
+    Route::get('tricks/collected', [TrickController::class, 'collected']);
+    Route::get('tricks/holders', [TrickController::class, 'holders']);
+    Route::get('tricks/collected/admin-stats', [TrickController::class, 'collectedAdminStats']);
+    Route::get('tricks/rank/{stage}/{score}', [TrickController::class, 'rank']);
+    Route::get('tricks/cards/{deckId}/scores', [TrickController::class, 'scores']);
+    Route::post('tricks/join', [TrickController::class, 'join']);
+    Route::post('tricks/draw', [TrickController::class, 'draw']);
+    Route::post('tricks/cards/{deckId}/take', [TrickController::class, 'take']);
+    Route::post('tricks/cards/{deckId}/return-to-deck', [TrickController::class, 'returnToDeck']);
+    Route::post('tricks/cards/{deckId}/extend', [TrickController::class, 'extend']);
+    Route::post('tricks/cards/{deckId}/rule', [TrickController::class, 'changeRule']);
+    Route::post('tricks/cards/{deckId}/reset', [TrickController::class, 'resetRanking']);
+    Route::post('tricks/cards/{deckId}/collect', [TrickController::class, 'collect']);
+    Route::post('tricks/cards/{deckId}/debug-collect', [TrickController::class, 'debugCollect']);
+    Route::post('tricks/maintenance/collect-expired', [TrickController::class, 'collectExpired']);
+    Route::post('tricks/maintenance/subsidy', [TrickController::class, 'subsidy']);
+    Route::post('tricks/maintenance/finalize', [TrickController::class, 'finalize']);
+    Route::post('tricks/debug/time/freeze', [TrickController::class, 'debugTimeFreeze']);
+    Route::post('tricks/debug/time/set', [TrickController::class, 'debugTimeSet']);
+    Route::post('tricks/debug/time/advance', [TrickController::class, 'debugTimeAdvance']);
+    Route::post('tricks/debug/time/reset', [TrickController::class, 'debugTimeReset']);
+    Route::post('tricks/debug/fixtures', [TrickFixtureController::class, 'create']);
+    Route::post('tricks/debug/fixtures/{eventId}/teardown', [TrickFixtureController::class, 'teardown']);
 });

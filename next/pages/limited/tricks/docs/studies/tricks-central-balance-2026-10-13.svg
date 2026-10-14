@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg
+  PUBLIC '-//W3C//DTD SVG 1.0//EN'
+  'http://www.w3.org/TR/2001/REC-SVG-20010904/DTD/svg10.dtd'>
+<svg width="960" height="540" preserveAspectRatio="xMinYMin meet" viewBox="0 0 960 540" xmlns="http://www.w3.org/2000/svg" version="1.0" fill-rule="evenodd" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<title>Central treasury balances, twenty seeded tournaments</title>
+	<desc>Hourly mean Central balances comparing average-based tax borders and deficit feedback. Initial reserve is zero points.</desc>
+	<clipPath id="clip">
+		<rect x="0" y="0" width="960" height="540"/>
+	</clipPath>
+	<g id="group" transform="scale(1,-1) translate(0,-540)" style="clip-path: url(#clip)">
+		<g transform="">
+			<rect x="0" y="0" width="960" height="540" style="stroke: none; stroke-linecap: butt; stroke-width: 1; fill: rgb(100%,100%,100%); fill-rule: evenodd;"/>
+			<text x="70" y="505" style="font-family: Helvetica-Bold; font-size: 19px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,1010) scale(1,-1)">Central balance over the 48-hour tournament</text>
+			<text x="70" y="479" style="font-family: Times-Roman; font-size: 12px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,958) scale(1,-1)">20 independent seeds; lines are hourly means; initial balance 0P</text>
+			<g transform="">
+				<g transform="">
+					<g transform="">
+						<path d="M 78,120 L 908,120 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+					</g>
+					<g transform="">
+						<path d="M 78,120 L 78,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 181.75,120 L 181.75,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 285.5,120 L 285.5,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 389.25,120 L 389.25,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 493,120 L 493,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 596.75,120 L 596.75,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 700.5,120 L 700.5,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 804.25,120 L 804.25,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 908,120 L 908,115 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+					</g>
+					<g transform="">
+						<g transform=" matrix(1,0,0,1,78,115)">
+							<text x="-2.75" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">0</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,181.75,115)">
+							<text x="-2.75" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">6</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,285.5,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">12</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,389.25,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">18</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,493,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">24</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,596.75,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">30</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,700.5,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">36</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,804.25,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">42</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,908,115)">
+							<text x="-5.5" y="-11.0" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-22) scale(1,-1)">48</text>
+						</g>
+					</g>
+				</g>
+				<g transform="">
+					<g transform="">
+						<path d="M 78,120 L 78,450 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+					</g>
+					<g transform="">
+						<path d="M 78,120 L 73,120 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 78,186 L 73,186 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 78,252 L 73,252 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 78,318 L 73,318 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 78,384 L 73,384 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+						<path d="M 78,450 L 73,450 Z" style="stroke: rgb(0%,0%,0%); stroke-linecap: butt; stroke-width: 1;"/>
+					</g>
+					<g transform="">
+						<g transform=" matrix(1,0,0,1,73,120)">
+							<text x="-20.163" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">-200</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,73,186)">
+							<text x="-20.163" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">-150</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,73,252)">
+							<text x="-20.163" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">-100</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,73,318)">
+							<text x="-14.663" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">-50</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,73,384)">
+							<text x="-5.5" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">0</text>
+						</g>
+						<g transform=" matrix(1,0,0,1,73,450)">
+							<text x="-11.0" y="-4.4" style="font-family: Times-Roman; font-size: 11px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,-8) scale(1,-1)">50</text>
+						</g>
+					</g>
+				</g>
+				<path d="M 78,186 L 908,186 Z" style="stroke: rgb(88%,90%,91%); stroke-linecap: butt; stroke-width: 0.25;"/>
+				<path d="M 78,252 L 908,252 Z" style="stroke: rgb(88%,90%,91%); stroke-linecap: butt; stroke-width: 0.25;"/>
+				<path d="M 78,318 L 908,318 Z" style="stroke: rgb(88%,90%,91%); stroke-linecap: butt; stroke-width: 0.25;"/>
+				<path d="M 78,384 L 908,384 Z" style="stroke: rgb(88%,90%,91%); stroke-linecap: butt; stroke-width: 0.25;"/>
+				<path d="M 78,450 L 908,450 Z" style="stroke: rgb(88%,90%,91%); stroke-linecap: butt; stroke-width: 0.25;"/>
+				<g transform="">
+					<polyline points="78 384, 95.29167 383.604, 112.5833 380.37, 129.875 377.136, 147.1667 370.404, 164.4583 364.134, 181.75 360.504, 199.0417 357.93, 216.3333 353.904, 233.625 348.888, 250.9167 343.476, 268.2083 339.78, 285.5 338.922, 302.7917 337.734, 320.0833 335.424, 337.375 332.718, 354.6667 328.23, 371.9583 325.524, 389.25 326.382, 406.5417 325.26, 423.8333 322.884, 441.125 318.858, 458.4167 314.04, 475.7083 310.542, 493 310.74, 510.2917 311.202, 527.5833 308.298, 544.875 304.998, 562.1667 301.434, 579.4583 297.804, 596.75 298.53, 614.0417 298.332, 631.3333 296.682, 648.625 294.438, 665.9167 292.92, 683.2083 292.326, 700.5 293.052, 717.7917 292.59, 735.0833 290.412, 752.375 286.122, 769.6667 283.086, 786.9583 281.37, 804.25 282.954, 821.5417 281.964, 838.8333 276.684, 856.125 271.14, 873.4167 264.408, 890.7083 256.95, 908 256.29" style="stroke: rgb(45%,45%,45%); stroke-linecap: round; stroke-width: 2.4; fill: None; fill-rule: evenodd; stroke-dasharray: 7, 4;"/>
+					<polyline points="78 384, 95.29167 386.574, 112.5833 388.488, 129.875 390.204, 147.1667 386.508, 164.4583 387.168, 181.75 386.904, 199.0417 389.082, 216.3333 391.458, 233.625 391.062, 250.9167 389.676, 268.2083 389.94, 285.5 393.372, 302.7917 396.474, 320.0833 396.408, 337.375 395.418, 354.6667 394.626, 371.9583 393.636, 389.25 398.322, 406.5417 402.48, 423.8333 404.526, 441.125 401.82, 458.4167 397.794, 475.7083 399.51, 493 403.8, 510.2917 406.836, 527.5833 405.714, 544.875 400.83, 562.1667 395.022, 579.4583 393.306, 596.75 395.088, 614.0417 397.068, 631.3333 397.332, 648.625 395.286, 665.9167 393.438, 683.2083 392.25, 700.5 395.55, 717.7917 396.804, 735.0833 393.57, 752.375 388.092, 769.6667 383.736, 786.9583 381.888, 804.25 390.006, 821.5417 393.636, 838.8333 390.798, 856.125 385.782, 873.4167 381.096, 890.7083 374.628, 908 374.034" style="stroke: rgb(8%,44%,32%); stroke-linecap: round; stroke-width: 2.4; fill: None; fill-rule: evenodd;"/>
+					<polyline points="78 384, 95.29167 384.264, 112.5833 383.34, 129.875 384.792, 147.1667 381.756, 164.4583 381.228, 181.75 378.522, 199.0417 379.512, 216.3333 380.634, 233.625 380.766, 250.9167 380.7, 268.2083 379.116, 285.5 381.558, 302.7917 383.076, 320.0833 381.624, 337.375 380.238, 354.6667 380.238, 371.9583 377.862, 389.25 379.71, 406.5417 382.284, 423.8333 385.056, 441.125 383.604, 458.4167 382.284, 475.7083 383.076, 493 385.122, 510.2917 387.168, 527.5833 386.706, 544.875 383.604, 562.1667 379.182, 579.4583 375.948, 596.75 377.532, 614.0417 381.426, 631.3333 384.264, 648.625 384.726, 665.9167 383.274, 683.2083 383.142, 700.5 387.696, 717.7917 387.498, 735.0833 383.34, 752.375 379.71, 769.6667 374.694, 786.9583 373.11, 804.25 379.248, 821.5417 380.502, 838.8333 377.4, 856.125 373.638, 873.4167 368.424, 890.7083 361.428, 908 360.702" style="stroke: rgb(0%,49%,61%); stroke-linecap: round; stroke-width: 2.4; fill: None; fill-rule: evenodd;"/>
+					<polyline points="78 384, 95.29167 383.604, 112.5833 380.766, 129.875 379.974, 147.1667 375.552, 164.4583 373.242, 181.75 370.14, 199.0417 368.292, 216.3333 366.378, 233.625 364.002, 250.9167 361.758, 268.2083 358.194, 285.5 357.93, 302.7917 358.392, 320.0833 357.336, 337.375 353.838, 354.6667 352.188, 371.9583 348.888, 389.25 349.548, 406.5417 349.416, 423.8333 349.35, 441.125 351.594, 458.4167 350.34, 475.7083 349.944, 493 351.858, 510.2917 355.62, 527.5833 355.224, 544.875 352.65, 562.1667 351.99, 579.4583 349.482, 596.75 350.472, 614.0417 354.036, 631.3333 355.752, 648.625 352.914, 665.9167 350.076, 683.2083 349.68, 700.5 354.564, 717.7917 356.94, 735.0833 355.092, 752.375 350.67, 769.6667 346.71, 786.9583 344.796, 804.25 348.756, 821.5417 348.954, 838.8333 344.07, 856.125 338.724, 873.4167 332.586, 890.7083 324.27, 908 322.752" style="stroke: rgb(63%,36%,7%); stroke-linecap: round; stroke-width: 2.4; fill: None; fill-rule: evenodd;"/>
+					<polyline points="78 384, 95.29167 383.472, 112.5833 378.786, 129.875 372.186, 147.1667 363.342, 164.4583 355.62, 181.75 349.35, 199.0417 344.334, 216.3333 337.998, 233.625 330.144, 250.9167 321.234, 268.2083 314.106, 285.5 312.126, 302.7917 308.892, 320.0833 302.622, 337.375 295.428, 354.6667 287.508, 371.9583 282.888, 389.25 280.908, 406.5417 278.862, 423.8333 274.308, 441.125 267.444, 458.4167 260.778, 475.7083 255.564, 493 253.452, 510.2917 249.36, 527.5833 243.222, 544.875 237.018, 562.1667 230.55, 579.4583 223.884, 596.75 220.716, 614.0417 217.086, 631.3333 212.004, 648.625 205.932, 665.9167 201.048, 683.2083 195.57, 700.5 193.986, 717.7917 190.29, 735.0833 183.426, 752.375 175.902, 769.6667 169.896, 786.9583 164.418, 804.25 163.824, 821.5417 160.128, 838.8333 153.528, 856.125 147.192, 873.4167 141.648, 890.7083 135.51, 908 132.606" style="stroke: rgb(70%,20%,21%); stroke-linecap: round; stroke-width: 2.4; fill: None; fill-rule: evenodd;"/>
+					<polyline points="78 384, 908 384" style="stroke: rgb(46%,46%,46%); stroke-linecap: round; stroke-width: 0.8; fill: None; fill-rule: evenodd;"/>
+				</g>
+			</g>
+			<text x="351.13" y="88" style="font-family: Times-Roman; font-size: 12px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,176) scale(1,-1)">Elapsed hours (48 = final collection at 47h59m)</text>
+			<text x="20" y="455" style="font-family: Times-Roman; font-size: 13px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,910) scale(1,-1)">P</text>
+			<path d="M 78,66 L 106,66 Z" style="stroke: rgb(45%,45%,45%); stroke-linecap: butt; stroke-width: 2.4;"/>
+			<text x="112" y="62" style="font-family: Times-Roman; font-size: 10.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,124) scale(1,-1)">2x mean / fixed levy 1P</text>
+			<path d="M 358,66 L 386,66 Z" style="stroke: rgb(8%,44%,32%); stroke-linecap: butt; stroke-width: 2.4;"/>
+			<text x="392" y="62" style="font-family: Times-Roman; font-size: 10.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,124) scale(1,-1)">1.5x mean / deficit feedback</text>
+			<path d="M 638,66 L 666,66 Z" style="stroke: rgb(0%,49%,61%); stroke-linecap: butt; stroke-width: 2.4;"/>
+			<text x="672" y="62" style="font-family: Times-Roman; font-size: 10.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,124) scale(1,-1)">1.75x mean / deficit feedback</text>
+			<path d="M 78,42 L 106,42 Z" style="stroke: rgb(63%,36%,7%); stroke-linecap: butt; stroke-width: 2.4;"/>
+			<text x="112" y="38" style="font-family: Times-Roman; font-size: 10.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,76) scale(1,-1)">2x mean / deficit feedback</text>
+			<path d="M 358,42 L 386,42 Z" style="stroke: rgb(70%,20%,21%); stroke-linecap: butt; stroke-width: 2.4;"/>
+			<text x="392" y="38" style="font-family: Times-Roman; font-size: 10.5px;fill: rgb(0%,0%,0%); stroke:none;" transform="translate(0,76) scale(1,-1)">3x mean / deficit feedback</text>
+		</g>
+	</g>
+</svg>

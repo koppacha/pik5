@@ -11,6 +11,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class TotalController extends Controller
@@ -87,7 +88,20 @@ class TotalController extends Controller
         if(!isset($request) || !$request){
             return [];
         }
-        return $stage_list[$request];
+        if (isset($stage_list[$request])) {
+            return $stage_list[$request];
+        }
+        if ((int) $request === 260704) {
+            return DB::table('stages')
+                ->where('parent', 260704)
+                ->whereBetween('stage_id', [1001, 1999])
+                ->orderBy('stage_id')
+                ->pluck('stage_id')
+                ->map(static fn ($stageId) => (int) $stageId)
+                ->all();
+        }
+
+        return [];
     }
 
     public function stages(Request $request, string $series): JsonResponse
@@ -232,7 +246,7 @@ class TotalController extends Controller
                 $mode = "stage";
             }
             // 有効データのみ抽出するクエリ
-            $records = Record::whereIn('stage_id', self::stage_list($rule))
+            $records = Record::publiclyVisible()->whereIn('stage_id', self::stage_list($rule))
                 ->where('console', $console_operation, $req["console"])
                 ->where('rule', $rule)
                 ->where('created_at', '<', $date)

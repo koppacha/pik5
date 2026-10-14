@@ -23,6 +23,7 @@ import RecordNotificationCenter from "../components/notifications/RecordNotifica
 import {googleFontVariables} from "../lib/googleFonts"
 
 const clientSideEmotionCache = createEmotionCache()
+const analyticsEnabled = process.env.NODE_ENV === "production" && Boolean(ga)
 
 export default function App(props) {
     const {Component, emotionCache = clientSideEmotionCache, pageProps: {session, ...pageProps}} = props
@@ -131,34 +132,46 @@ export default function App(props) {
         )
     }
 
+    const pageContent = (
+        <>
+            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
+            {pageLoading && <Loading/>}
+            <DevSupport ComponentPreviews={ComponentPreviews}
+                        useInitialHook={useInitial}
+            >
+                <Component {...pageProps} />
+            </DevSupport>
+        </>
+    )
+
     return (
         <div className={googleFontVariables} style={{fontFamily: "var(--font-m-plus-1-code), sans-serif"}}>
             <SeoHead />
-            <Script strategy="afterInteractive"
-                    src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
-            <Script id="gtag-init" strategy="afterInteractive"
-                    dangerouslySetInnerHTML={{
-                        __html: `
-                      window.dataLayer = window.dataLayer || [];
-                      function gtag(){dataLayer.push(arguments);}
-                      gtag('js', new Date());
-                      gtag('config', '${ga}');
-                      `,
-                    }}
-            />
+            {analyticsEnabled && (
+                <>
+                    <Script strategy="afterInteractive"
+                            src={`https://www.googletagmanager.com/gtag/js?id=${ga}`}/>
+                    <Script id="gtag-init" strategy="afterInteractive"
+                            dangerouslySetInnerHTML={{
+                                __html: `
+                              window.dataLayer = window.dataLayer || [];
+                              function gtag(){dataLayer.push(arguments);}
+                              gtag('js', new Date());
+                              gtag('config', '${ga}');
+                              `,
+                            }}
+                    />
+                </>
+            )}
             <GlobalStyle/>
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
-                        <Layout hideFooter={Component.hideFooter}>
-                            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
-                            {pageLoading && <Loading/>}
-                            <DevSupport ComponentPreviews={ComponentPreviews}
-                                        useInitialHook={useInitial}
-                            >
-                                <Component {...pageProps} />
-                            </DevSupport>
-                        </Layout>
+                        {Component.disableLayout ? pageContent : (
+                            <Layout hideFooter={Component.hideFooter}>
+                                {pageContent}
+                            </Layout>
+                        )}
                     </ThemeProvider>
                 </SessionProvider>
             </CacheProvider>

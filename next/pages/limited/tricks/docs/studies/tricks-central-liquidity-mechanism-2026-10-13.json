@@ -1,0 +1,52 @@
+{
+  "seed": 262199,
+  "tax": "mean2x; 1P always, independent of treasury balance",
+  "all_game_activity_and_player_balances_identical": true,
+  "metrics": {
+    "zero": {
+      "draws": 728,
+      "takes": 151,
+      "posts": 450,
+      "updates": 50,
+      "payment_points": 1328,
+      "redistribution_points": 249,
+      "gross_flow_points": 2649,
+      "resource_gini_time": 0.33189230865774255,
+      "tax_points": 130,
+      "periodic_paid": 249,
+      "central_end": -136,
+      "minted_points": 0,
+      "opening_reserve": 0
+    },
+    "opening960": {
+      "draws": 728,
+      "takes": 151,
+      "posts": 450,
+      "updates": 50,
+      "payment_points": 1328,
+      "redistribution_points": 249,
+      "gross_flow_points": 2649,
+      "resource_gini_time": 0.33189230865774255,
+      "tax_points": 130,
+      "periodic_paid": 249,
+      "central_end": 824,
+      "minted_points": 0,
+      "opening_reserve": 960
+    },
+    "issue10": {
+      "draws": 728,
+      "takes": 151,
+      "posts": 450,
+      "updates": 50,
+      "payment_points": 1328,
+      "redistribution_points": 249,
+      "gross_flow_points": 2649,
+      "resource_gini_time": 0.33189230865774255,
+      "tax_points": 130,
+      "periodic_paid": 249,
+      "central_end": 824,
+      "minted_points": 960,
+      "opening_reserve": 0
+    }
+  }
+}

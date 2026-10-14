@@ -1,5 +1,5 @@
 import {randomUUID} from 'node:crypto'
-import {canAccessLimitedIdeas, isLimitedIdeasAdmin, LIMITED_IDEAS_END, validateLimitedIdea} from './limitedIdeas'
+import {canAccessLimitedIdeas, isLimitedIdeasAdmin, limitedIdeasClosesAt, validateLimitedIdea} from './limitedIdeas'
 
 const currentVisible = {currentKey: {not: null}, hidden: false}
 const publicFields = {
@@ -39,7 +39,7 @@ export function createLimitedIdeasHandler({prisma, getSession, now = Date.now, s
 
             if (req.method === 'GET' && req.query.view !== 'mine') {
                 const count = await prisma.limitedIdea.count({where: currentVisible})
-                return res.status(200).json({count, admin, closesAt: new Date(Date.parse(LIMITED_IDEAS_END) - 1000).toISOString()})
+                return res.status(200).json({count, admin, closesAt: limitedIdeasClosesAt(now())})
             }
             if (!user) throw fail(401, 'ログインが必要です。')
             if (req.method === 'GET') {

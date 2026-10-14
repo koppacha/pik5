@@ -11,6 +11,14 @@
 
 ## 開発起動
 
+### ローカルDBの復旧・容量管理（2026-10-13）
+
+- ローカルDBのバックアップはCodex作業中の誤削除からの復旧が目的で、日時別の累積アーカイブは不要。破壊的DB操作の直前にbinlog位置付きフルバックアップを作成・検証し、その後のbinlogを作業検証完了まで保持する。
+- ローカルComposeの既定値は日次03:20バックアップ有効・フルバックアップ2日保持。MySQLは `docker/mysql/conf.local/pik5.cnf` でbinlog3日保持。本番overrideは従来の `conf.d/pik5.cnf`（30日）とフルバックアップ14日を維持する。
+- バックアップ単体は取得時点へ戻すもの。誤削除直前への復旧には取得後のbinlogも必要。定期バックアップ失敗・長期停止時はDB作業前に新規取得が必須。
+- 自動削除は `db:backup` 生成形式の `<database>-YYYYMMDD-HHMMSS.sql.gz` のみに限定する。手動退避・移行JSON・復旧証拠は別途用途確認する。日次取得対象は設定されたアプリDBのみで、共有binlog整理前には必要な別DBも退避する。
+- 2026-10-13に全ローカルDBの整合性確認済み退避を `backups/mysql/local-all-20261013-before-binlog-prune.sql.gz` へ保存。`binlog.002240` より前をPURGEし、mysql容量は32.53→約3.31GiB。ローカル稼働MySQLへ3日保持をSET PERSIST済み、schedulerへ新設定反映・バックアップ成功確認済み。本番操作なし。
+
 - 初回は `cp sample.env .env` で Docker 用 `.env` を作成する。
 - フルスタック起動は `docker compose up -d`。
 - Next は `docker compose exec next bash` 後に `yarn dev`。ホスト公開は通常 `http://localhost:3005`、コンテナ内は `http://localhost:3000`。
@@ -38,3 +46,10 @@
 
 - 既存履歴は `ver.X.XX <short description>` 形式が多い。
 - PR にはユーザーに見える変更点、UI変更のスクリーンショット、DB migration/seeder 実行有無を書く。
+
+
+## イベントブランチの継続開発とmaster統合（2026-10-15）
+
+ユーザー方針: イベント専用ブランチを削除せず、今後も単独開発を継続する。実ブランチ名はlimited-trick。masterへの統合前に未コミット変更を保存し、通常mergeで履歴を保持する。強制push・rebase・ブランチ削除は不要。完成単位でmasterへ統合し、必要に応じmasterの変更をイベントブランチへ通常mergeする。
+
+統合前確認ではLaravel193件成功、認証7件失敗。同じ7件が隔離masterでも失敗し、旧認証factoryのusers.name列不一致6件とmiddleware戻り値型不一致1件を確認。イベント差分の回帰ではない。Next lint・Node13件（専用MySQL2件スキップ）・シミュレーター18件・隔離Next本番ビルド・canvas表示/loop sleep/破棄確認は成功。共有node_modulesのtsx/esbuildはホストmacOSで実行する。詳細 next/pages/limited/tricks/docs/tricks-master-merge-review-2026-10-15.md。

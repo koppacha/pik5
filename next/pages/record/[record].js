@@ -19,7 +19,7 @@ export async function getServerSideProps(ctx) {
     const { params, res } = ctx
 
     // キャッシュ設定
-    res.setHeader('Cache-Control', 'public, s-maxage=86400, stale-while-revalidate=3600')
+    res.setHeader('Cache-Control', 'private, no-store')
 
     const record = Number(params?.record)
 
@@ -65,6 +65,7 @@ export default function RecordPage({users, data, history}){
     const {t, r} = useLocale()
     const {data: session } = useSession()
     const router = useRouter()
+    const stageName = (router.locale === "en" ? data.eng_stage_name : data.stage_name) || t.stage[data.stage_id] || `#${data.stage_id}`
     const [editOpen, setEditOpen] = React.useState(false)
     let role = 0
 
@@ -72,7 +73,7 @@ export default function RecordPage({users, data, history}){
         // セッションユーザーの情報を取り出す
         role = Number(users.find(function (e) {
             return e.userId === session.user.userId
-        }).role)
+        })?.role || 0)
     }
     // 投稿の経過時間を計算
     const postDate = new Date(data.created_at)
@@ -96,13 +97,16 @@ export default function RecordPage({users, data, history}){
     async function handleOpen() {
         const confirm = window.confirm("本当に削除してよろしいですか？")
         if (confirm) {
-            const res = await fetch(`/api/server/delete/${data.unique_id}/${users.userId}`)
+            const res = await fetch(`/api/server/delete/${data.unique_id}`, {method: "DELETE"})
             if(res.status < 300) {
                 await router.push("/stage/" + data.stage_id)
                 return null
             }
         }
     }
+    const editFlag = data.metadata_only_edit
+        ? role === 10 || String(session?.user.userId || session?.user.id || '') === String(data.user_id)
+        : delFlag()
     const handleEditOpen = () => setEditOpen(true)
     const handleEditClose = () => setEditOpen(false)
     if(!data){
@@ -114,7 +118,7 @@ export default function RecordPage({users, data, history}){
     return (
         <>
             <SeoHead
-                title={data.user_name+"/"+t.stage[data.stage_id]+" - "+t.title[0]}
+                title={data.user_name+"/"+stageName+" - "+t.title[0]}
                 noindex={true}
             />
             {
@@ -133,8 +137,8 @@ export default function RecordPage({users, data, history}){
                             <Link href={"/user/"+data.user_id}>{data.user_name}</Link>
                             <StairIcon icon={faStairs}/>
                             記録個別ページ<br/>
-                            <Typography variant="" className="title">{ t.stage[data.stage_id] }</Typography><br/>
-                            <Typography variant="" className="subtitle">{r.stage[data.stage_id]}</Typography><br/><br/>
+                            <Typography variant="" className="title">{stageName}</Typography><br/>
+                            <Typography variant="" className="subtitle">{data.eng_stage_name || r.stage[data.stage_id]}</Typography><br/><br/>
                         </PageHeader>
                         <Record key={data.unique_id} data={data}/>
 
@@ -151,12 +155,12 @@ export default function RecordPage({users, data, history}){
                                 className={"rule-box active"}
                                 component={Link}
                                 href={`/stage/${data.stage_id}`}>
-                                <span>{t.stage[data.stage_id]}</span>
+                                <span>{stageName}</span>
                             </Button>
                             {
-                                (delFlag()) &&
+                                (editFlag) &&
                                     <Button
-                                        sx={{marginLeft:"auto", marginRight: "0.5em"}}
+                                        style={{marginLeft:"auto", marginRight: "0.5em"}}
                                         variant="contained"
                                         color="primary"
                                         className={"rule-box"}
@@ -177,7 +181,7 @@ export default function RecordPage({users, data, history}){
                             }
                         </Box>
                         <RecordForm
-                            info={{stage_id: data.stage_id}}
+                            info={{stage_id: data.stage_id, stage_name: data.stage_name, eng_stage_name: data.eng_stage_name, score_type: data.score_type, metadata_only_edit: data.metadata_only_edit}}
                             rule={data.rule}
                             mode="edit"
                             open={editOpen}

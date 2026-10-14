@@ -49,3 +49,10 @@
 - `next/pages/battle/index.js` では、ランダムID、レート計算、同点処理、payload の取り違えに注意。
 - 同点時リワードは「該当順位の合算を等分」し、順位も再計算する。
 - ボーダー計算では `rank=0` を排除し、`rank >= 1` を使う。
+
+
+## 第19回ユーザー別記録の名称（2026-10-11）
+
+- RecordController::showはユーザー別一覧に限り、返却post_idをtrick_event_records（event_id=261009）からdecksへ一括照合し、stage_nameをtitle（rule_name）にする。Record.jsの動的ID優先表示によりステージID#元のステージ名（ルール名）となる。旧翻訳名の上書きやDB更新は不要。通常記録・他大会・単独記録APIは対象外。9afce47cを本番反映、SQLite回帰４件・本番359件・ブラウザ確認済み。PHPのみ更新で再起動・停止なし。
+
+- 続く6619df4cで上記名称付与をwithEventCardNamesへ共通化し、getRecord・getRecordHistoryにも適用して本番反映。個別ページ・履歴の旧名を解消。カードに英訳定義がないためeng_stage_nameも同一正式名とし、英語表示の旧名も避ける。非イベント記録は従来名を維持。回帰４件・本番個別/履歴３件・ユーザー別359件・Playwright確認済み、停止なし。

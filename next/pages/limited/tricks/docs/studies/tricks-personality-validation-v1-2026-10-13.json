@@ -1,0 +1,1487 @@
+[
+  {
+    "seed": 261009,
+    "collections": 114,
+    "extensions": 199,
+    "players": [
+      {
+        "display_name": "G",
+        "rank_points": 304,
+        "total_active_hours": 17.53,
+        "draw_count": 123,
+        "actions": {
+          "draw": 123,
+          "take": 16,
+          "committed_take": 16,
+          "initial_score_withheld": 4,
+          "initial_post": 44,
+          "update_plan_rejected_rank_value": 102,
+          "wait": 21,
+          "paid_extension": 5,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "A",
+        "rank_points": 289,
+        "total_active_hours": 25.17,
+        "draw_count": 20,
+        "actions": {
+          "initial_post": 52,
+          "update_plan_rejected_rank_value": 85,
+          "initial_score_withheld": 16,
+          "paid_extension": 102,
+          "draw": 20,
+          "wait": 13,
+          "update_points_spent": 11,
+          "update_forecast_rank_point_gain": 8,
+          "update": 7,
+          "take": 4,
+          "committed_take": 4,
+          "update_score_withheld": 6,
+          "update_paid_without_rank_point_gain": 3,
+          "update_paid_below_point_roi": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "T",
+        "rank_points": 260,
+        "total_active_hours": 35.25,
+        "draw_count": 31,
+        "actions": {
+          "initial_post": 71,
+          "update_plan_rejected_rank_value": 299,
+          "initial_score_withheld": 14,
+          "update_points_spent": 10,
+          "update_forecast_rank_point_gain": 13,
+          "update": 7,
+          "draw": 31,
+          "wait": 32,
+          "consensus_resolution": 3,
+          "take": 7,
+          "committed_take": 7,
+          "practice": 2,
+          "paid_extension": 10,
+          "update_score_withheld_rank_value": 2,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ko",
+        "rank_points": 237,
+        "total_active_hours": 22.97,
+        "draw_count": 78,
+        "actions": {
+          "initial_post": 52,
+          "draw": 78,
+          "take": 10,
+          "committed_take": 10,
+          "initial_score_withheld": 13,
+          "update_plan_rejected_rank_value": 128,
+          "wait": 13,
+          "paid_extension": 1,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 8,
+          "update": 2,
+          "practice": 1,
+          "update_score_withheld": 2,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー3",
+        "rank_points": 140,
+        "total_active_hours": 21.1,
+        "draw_count": 41,
+        "actions": {
+          "initial_post": 38,
+          "update_plan_rejected_rank_value": 132,
+          "initial_score_withheld": 10,
+          "draw": 41,
+          "wait": 23,
+          "take": 9,
+          "committed_take": 9,
+          "practice": 7,
+          "paid_extension": 9,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 1,
+          "update": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー1",
+        "rank_points": 139,
+        "total_active_hours": 19.2,
+        "draw_count": 45,
+        "actions": {
+          "initial_post": 46,
+          "update_plan_rejected_rank_value": 185,
+          "draw": 45,
+          "take": 11,
+          "committed_take": 11,
+          "practice": 1,
+          "wait": 16,
+          "initial_score_withheld": 8,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 15,
+          "update": 3,
+          "paid_extension": 4,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー4",
+        "rank_points": 127,
+        "total_active_hours": 26.38,
+        "draw_count": 46,
+        "actions": {
+          "draw": 46,
+          "consensus_resolution": 1,
+          "take": 12,
+          "committed_take": 8,
+          "initial_post": 48,
+          "update_plan_rejected_rank_value": 363,
+          "practice": 5,
+          "paid_extension": 65,
+          "wait": 36,
+          "initial_score_withheld": 8,
+          "update_score_withheld": 2,
+          "update_points_spent": 6,
+          "update_forecast_rank_point_gain": 17,
+          "update": 5,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー2",
+        "rank_points": 113,
+        "total_active_hours": 15.58,
+        "draw_count": 26,
+        "actions": {
+          "initial_post": 38,
+          "update_plan_rejected_rank_value": 83,
+          "initial_score_withheld": 8,
+          "draw": 26,
+          "take": 7,
+          "committed_take": 7,
+          "wait": 13,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 8,
+          "update": 2,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー5",
+        "rank_points": 89,
+        "total_active_hours": 12.05,
+        "draw_count": 33,
+        "actions": {
+          "initial_post": 24,
+          "draw": 33,
+          "wait": 17,
+          "take": 8,
+          "committed_take": 8,
+          "update_plan_rejected_rank_value": 40,
+          "initial_score_withheld": 2,
+          "update_points_spent": 6,
+          "update_forecast_rank_point_gain": 21,
+          "update": 4,
+          "practice": 2,
+          "update_score_withheld": 3,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ku",
+        "rank_points": 87,
+        "total_active_hours": 26.08,
+        "draw_count": 92,
+        "actions": {
+          "draw": 92,
+          "take": 15,
+          "committed_take": 12,
+          "initial_post": 20,
+          "update_plan_rejected_rank_value": 52,
+          "practice": 24,
+          "wait": 24,
+          "initial_score_withheld": 6,
+          "update_score_withheld": 3,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 7,
+          "update": 3,
+          "update_score_withheld_rank_value": 1,
+          "return_to_deck": 8,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー4",
+        "rank_points": 70,
+        "total_active_hours": 10.4,
+        "draw_count": 26,
+        "actions": {
+          "initial_post": 27,
+          "draw": 26,
+          "wait": 11,
+          "take": 7,
+          "committed_take": 6,
+          "update_plan_rejected_rank_value": 61,
+          "paid_extension": 2,
+          "initial_score_withheld": 7,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー2",
+        "rank_points": 52,
+        "total_active_hours": 4.35,
+        "draw_count": 7,
+        "actions": {
+          "draw": 7,
+          "take": 2,
+          "committed_take": 1,
+          "wait": 7,
+          "initial_post": 7,
+          "initial_score_withheld": 3,
+          "update_plan_rejected_rank_value": 10,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 6,
+          "update": 2
+        }
+      },
+      {
+        "display_name": "下位プレイヤー3",
+        "rank_points": 28,
+        "total_active_hours": 3.87,
+        "draw_count": 12,
+        "actions": {
+          "initial_score_withheld": 3,
+          "initial_post": 11,
+          "update_plan_rejected_rank_value": 11,
+          "paid_extension": 1,
+          "draw": 12,
+          "take": 3,
+          "wait": 5,
+          "committed_take": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー5",
+        "rank_points": 16,
+        "total_active_hours": 1.27,
+        "draw_count": 11,
+        "actions": {
+          "initial_post": 5,
+          "draw": 11,
+          "take": 3,
+          "wait": 3,
+          "update_plan_rejected_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー1",
+        "rank_points": 3,
+        "total_active_hours": 0.4,
+        "draw_count": 0,
+        "actions": {
+          "initial_post": 1,
+          "wait": 2,
+          "take_close_attempt": 1
+        }
+      }
+    ]
+  },
+  {
+    "seed": 261010,
+    "collections": 115,
+    "extensions": 192,
+    "players": [
+      {
+        "display_name": "G",
+        "rank_points": 318,
+        "total_active_hours": 18.65,
+        "draw_count": 106,
+        "actions": {
+          "draw": 106,
+          "take": 14,
+          "committed_take": 14,
+          "initial_post": 47,
+          "update_plan_rejected_rank_value": 106,
+          "wait": 14,
+          "initial_score_withheld": 9,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 2,
+          "update": 1,
+          "paid_extension": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "A",
+        "rank_points": 294,
+        "total_active_hours": 26.33,
+        "draw_count": 27,
+        "actions": {
+          "initial_post": 51,
+          "update_plan_rejected_rank_value": 36,
+          "initial_score_withheld": 8,
+          "paid_extension": 77,
+          "draw": 27,
+          "wait": 9,
+          "take": 7,
+          "committed_take": 7,
+          "update_points_spent": 12,
+          "update_forecast_rank_point_gain": 16,
+          "update": 8,
+          "update_score_withheld": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "T",
+        "rank_points": 291,
+        "total_active_hours": 34.77,
+        "draw_count": 24,
+        "actions": {
+          "initial_post": 73,
+          "update_plan_rejected_rank_value": 229,
+          "update_score_withheld_rank_value": 3,
+          "update_points_spent": 9,
+          "update_forecast_rank_point_gain": 17,
+          "update": 8,
+          "draw": 24,
+          "wait": 13,
+          "take": 5,
+          "committed_take": 5,
+          "initial_score_withheld": 16,
+          "update_score_withheld": 1,
+          "paid_extension": 16,
+          "practice": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ko",
+        "rank_points": 199,
+        "total_active_hours": 21.12,
+        "draw_count": 75,
+        "actions": {
+          "draw": 75,
+          "take": 11,
+          "committed_take": 11,
+          "initial_score_withheld": 16,
+          "initial_post": 38,
+          "update_plan_rejected_rank_value": 84,
+          "wait": 16,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー5",
+        "rank_points": 162,
+        "total_active_hours": 21.85,
+        "draw_count": 42,
+        "actions": {
+          "initial_post": 48,
+          "update_plan_rejected_rank_value": 233,
+          "draw": 42,
+          "take": 8,
+          "committed_take": 8,
+          "practice": 6,
+          "wait": 16,
+          "initial_score_withheld": 11,
+          "paid_extension": 7,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 13,
+          "update": 3,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー2",
+        "rank_points": 121,
+        "total_active_hours": 12.57,
+        "draw_count": 33,
+        "actions": {
+          "initial_post": 32,
+          "initial_score_withheld": 6,
+          "update_plan_rejected_rank_value": 62,
+          "draw": 33,
+          "wait": 11,
+          "take": 8,
+          "committed_take": 8,
+          "practice": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー4",
+        "rank_points": 120,
+        "total_active_hours": 17.03,
+        "draw_count": 55,
+        "actions": {
+          "initial_post": 44,
+          "update_plan_rejected_rank_value": 109,
+          "draw": 55,
+          "take": 13,
+          "committed_take": 12,
+          "wait": 15,
+          "initial_score_withheld": 6,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 1,
+          "update": 1,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー3",
+        "rank_points": 116,
+        "total_active_hours": 28.75,
+        "draw_count": 47,
+        "actions": {
+          "draw": 47,
+          "consensus_resolution": 1,
+          "take": 10,
+          "committed_take": 4,
+          "practice": 3,
+          "initial_post": 65,
+          "update_plan_rejected_rank_value": 393,
+          "paid_extension": 82,
+          "initial_score_withheld": 18,
+          "wait": 17,
+          "update_score_withheld_rank_value": 1,
+          "update_points_spent": 5,
+          "update_forecast_rank_point_gain": 5,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ku",
+        "rank_points": 109,
+        "total_active_hours": 24.85,
+        "draw_count": 98,
+        "actions": {
+          "draw": 98,
+          "practice": 15,
+          "take": 16,
+          "committed_take": 12,
+          "initial_post": 25,
+          "wait": 40,
+          "initial_score_withheld": 8,
+          "update_plan_rejected_rank_value": 71,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 7,
+          "update": 4,
+          "paid_extension": 2,
+          "update_score_withheld": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー1",
+        "rank_points": 101,
+        "total_active_hours": 11.85,
+        "draw_count": 33,
+        "actions": {
+          "initial_score_withheld": 8,
+          "initial_post": 29,
+          "draw": 33,
+          "take": 9,
+          "committed_take": 9,
+          "update_plan_rejected_rank_value": 97,
+          "wait": 9,
+          "take_close_attempt": 1,
+          "update_score_withheld_rank_value": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー2",
+        "rank_points": 75,
+        "total_active_hours": 10.42,
+        "draw_count": 29,
+        "actions": {
+          "initial_post": 30,
+          "update_plan_rejected_rank_value": 48,
+          "draw": 29,
+          "take": 8,
+          "committed_take": 8,
+          "wait": 16,
+          "initial_score_withheld": 3,
+          "paid_extension": 3,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー4",
+        "rank_points": 67,
+        "total_active_hours": 4.05,
+        "draw_count": 5,
+        "actions": {
+          "draw": 5,
+          "take": 2,
+          "committed_take": 1,
+          "wait": 4,
+          "initial_post": 10,
+          "update_plan_rejected_rank_value": 5,
+          "paid_extension": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー1",
+        "rank_points": 31,
+        "total_active_hours": 3.4,
+        "draw_count": 8,
+        "actions": {
+          "initial_post": 9,
+          "update_plan_rejected_rank_value": 6,
+          "draw": 8,
+          "take": 2,
+          "wait": 6,
+          "initial_score_withheld": 1,
+          "paid_extension": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー3",
+        "rank_points": 16,
+        "total_active_hours": 1.6,
+        "draw_count": 5,
+        "actions": {
+          "initial_post": 5,
+          "update_plan_rejected_rank_value": 1,
+          "draw": 5,
+          "take": 2,
+          "wait": 4,
+          "initial_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー5",
+        "rank_points": 2,
+        "total_active_hours": 0.47,
+        "draw_count": 0,
+        "actions": {
+          "initial_post": 1,
+          "wait": 2,
+          "take_close_attempt": 1
+        }
+      }
+    ]
+  },
+  {
+    "seed": 261011,
+    "collections": 116,
+    "extensions": 271,
+    "players": [
+      {
+        "display_name": "A",
+        "rank_points": 301,
+        "total_active_hours": 29.68,
+        "draw_count": 31,
+        "actions": {
+          "initial_post": 54,
+          "draw": 31,
+          "take": 7,
+          "committed_take": 7,
+          "initial_score_withheld": 9,
+          "paid_extension": 124,
+          "update_plan_rejected_rank_value": 46,
+          "update_paid_without_rank_point_gain": 5,
+          "update_paid_below_point_roi": 6,
+          "update_points_spent": 18,
+          "update_forecast_rank_point_gain": 18,
+          "update": 12,
+          "update_score_withheld": 7,
+          "wait": 9,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "G",
+        "rank_points": 298,
+        "total_active_hours": 21.03,
+        "draw_count": 121,
+        "actions": {
+          "draw": 121,
+          "take": 16,
+          "committed_take": 16,
+          "initial_post": 42,
+          "update_plan_rejected_rank_value": 65,
+          "initial_score_withheld": 11,
+          "update_score_withheld": 1,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 1,
+          "update": 1,
+          "wait": 13,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "T",
+        "rank_points": 238,
+        "total_active_hours": 36.77,
+        "draw_count": 53,
+        "actions": {
+          "initial_score_withheld": 17,
+          "initial_post": 68,
+          "update_plan_rejected_rank_value": 328,
+          "draw": 53,
+          "take": 13,
+          "committed_take": 13,
+          "paid_extension": 17,
+          "update_points_spent": 7,
+          "update_forecast_rank_point_gain": 7,
+          "update": 5,
+          "update_score_withheld_rank_value": 2,
+          "wait": 19,
+          "practice": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ko",
+        "rank_points": 191,
+        "total_active_hours": 22.37,
+        "draw_count": 93,
+        "actions": {
+          "initial_post": 46,
+          "update_plan_rejected_rank_value": 148,
+          "initial_score_withheld": 13,
+          "draw": 93,
+          "take": 12,
+          "committed_take": 12,
+          "wait": 11,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー2",
+        "rank_points": 126,
+        "total_active_hours": 14.57,
+        "draw_count": 23,
+        "actions": {
+          "initial_score_withheld": 7,
+          "initial_post": 34,
+          "update_plan_rejected_rank_value": 60,
+          "update_score_withheld": 1,
+          "draw": 23,
+          "take": 7,
+          "wait": 13,
+          "committed_take": 6,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー3",
+        "rank_points": 121,
+        "total_active_hours": 28.28,
+        "draw_count": 29,
+        "actions": {
+          "draw": 29,
+          "consensus_resolution": 1,
+          "take": 8,
+          "initial_post": 58,
+          "practice": 4,
+          "update_plan_rejected_rank_value": 448,
+          "initial_score_withheld": 12,
+          "paid_extension": 91,
+          "wait": 22,
+          "update_points_spent": 8,
+          "update_forecast_rank_point_gain": 12,
+          "update": 4,
+          "committed_take": 3,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー1",
+        "rank_points": 112,
+        "total_active_hours": 17.53,
+        "draw_count": 18,
+        "actions": {
+          "initial_post": 35,
+          "update_plan_rejected_rank_value": 146,
+          "initial_score_withheld": 9,
+          "paid_extension": 20,
+          "draw": 18,
+          "wait": 13,
+          "update_score_withheld": 1,
+          "take": 4,
+          "committed_take": 4,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 6,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ku",
+        "rank_points": 93,
+        "total_active_hours": 27.32,
+        "draw_count": 112,
+        "actions": {
+          "draw": 112,
+          "take": 17,
+          "initial_post": 26,
+          "committed_take": 16,
+          "wait": 33,
+          "initial_score_withheld": 8,
+          "update_plan_rejected_rank_value": 81,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 9,
+          "update": 4,
+          "practice": 18,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー5",
+        "rank_points": 90,
+        "total_active_hours": 10.68,
+        "draw_count": 31,
+        "actions": {
+          "initial_post": 25,
+          "draw": 31,
+          "take": 8,
+          "wait": 15,
+          "committed_take": 6,
+          "update_plan_rejected_rank_value": 100,
+          "initial_score_withheld": 3,
+          "update_score_withheld": 1,
+          "update_score_withheld_rank_value": 1,
+          "practice": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー4",
+        "rank_points": 89,
+        "total_active_hours": 13.88,
+        "draw_count": 19,
+        "actions": {
+          "initial_post": 30,
+          "update_plan_rejected_rank_value": 93,
+          "initial_score_withheld": 5,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 5,
+          "update": 1,
+          "draw": 19,
+          "wait": 11,
+          "take": 6,
+          "committed_take": 6,
+          "paid_extension": 6,
+          "update_score_withheld_rank_value": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー1",
+        "rank_points": 60,
+        "total_active_hours": 10.45,
+        "draw_count": 29,
+        "actions": {
+          "initial_score_withheld": 5,
+          "initial_post": 26,
+          "draw": 29,
+          "update_plan_rejected_rank_value": 35,
+          "wait": 13,
+          "take": 7,
+          "committed_take": 6,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー5",
+        "rank_points": 59,
+        "total_active_hours": 4.48,
+        "draw_count": 5,
+        "actions": {
+          "draw": 5,
+          "take": 2,
+          "committed_take": 2,
+          "wait": 7,
+          "initial_post": 8,
+          "update_plan_rejected_rank_value": 58,
+          "paid_extension": 13,
+          "update_score_withheld_rank_value": 4,
+          "take_close_attempt": 1,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 1,
+          "update": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー4",
+        "rank_points": 29,
+        "total_active_hours": 3.33,
+        "draw_count": 21,
+        "actions": {
+          "initial_post": 9,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 3,
+          "update": 1,
+          "draw": 21,
+          "take": 5,
+          "committed_take": 4,
+          "wait": 3,
+          "update_plan_rejected_rank_value": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー2",
+        "rank_points": 12,
+        "total_active_hours": 1.63,
+        "draw_count": 10,
+        "actions": {
+          "initial_post": 4,
+          "update_plan_rejected_rank_value": 2,
+          "initial_score_withheld": 1,
+          "draw": 10,
+          "take": 3,
+          "wait": 5,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー3",
+        "rank_points": 2,
+        "total_active_hours": 0.48,
+        "draw_count": 3,
+        "actions": {
+          "draw": 3,
+          "take": 1,
+          "initial_post": 1,
+          "wait": 1,
+          "take_close_attempt": 1
+        }
+      }
+    ]
+  },
+  {
+    "seed": 261012,
+    "collections": 122,
+    "extensions": 153,
+    "players": [
+      {
+        "display_name": "G",
+        "rank_points": 256,
+        "total_active_hours": 15.75,
+        "draw_count": 112,
+        "actions": {
+          "draw": 112,
+          "take": 16,
+          "committed_take": 16,
+          "initial_post": 39,
+          "update_plan_rejected_rank_value": 85,
+          "wait": 12,
+          "initial_score_withheld": 9,
+          "consensus_resolution": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "A",
+        "rank_points": 245,
+        "total_active_hours": 24.27,
+        "draw_count": 40,
+        "actions": {
+          "initial_post": 43,
+          "draw": 40,
+          "take": 7,
+          "committed_take": 7,
+          "update_plan_rejected_rank_value": 41,
+          "practice": 2,
+          "initial_score_withheld": 6,
+          "paid_extension": 56,
+          "wait": 13,
+          "update_points_spent": 11,
+          "update_forecast_rank_point_gain": 11,
+          "update": 7,
+          "update_score_withheld": 7,
+          "update_paid_without_rank_point_gain": 2,
+          "update_paid_below_point_roi": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "T",
+        "rank_points": 204,
+        "total_active_hours": 35.6,
+        "draw_count": 53,
+        "actions": {
+          "initial_post": 56,
+          "update_plan_rejected_rank_value": 304,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 7,
+          "update": 4,
+          "initial_score_withheld": 23,
+          "draw": 53,
+          "take": 13,
+          "committed_take": 13,
+          "wait": 41,
+          "paid_extension": 38,
+          "practice": 6,
+          "consensus_resolution": 1,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ko",
+        "rank_points": 166,
+        "total_active_hours": 21.28,
+        "draw_count": 60,
+        "actions": {
+          "initial_score_withheld": 10,
+          "draw": 60,
+          "take": 10,
+          "committed_take": 10,
+          "initial_post": 40,
+          "update_plan_rejected_rank_value": 119,
+          "wait": 22,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 6,
+          "update": 2,
+          "update_score_withheld": 1,
+          "paid_extension": 5,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー3",
+        "rank_points": 124,
+        "total_active_hours": 18.3,
+        "draw_count": 38,
+        "actions": {
+          "initial_post": 39,
+          "update_plan_rejected_rank_value": 128,
+          "draw": 38,
+          "take": 10,
+          "committed_take": 9,
+          "wait": 17,
+          "initial_score_withheld": 8,
+          "update_points_spent": 5,
+          "update_forecast_rank_point_gain": 8,
+          "update": 4,
+          "consensus_resolution": 1,
+          "practice": 1,
+          "paid_extension": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー5",
+        "rank_points": 109,
+        "total_active_hours": 18.72,
+        "draw_count": 26,
+        "actions": {
+          "initial_post": 39,
+          "update_plan_rejected_rank_value": 110,
+          "initial_score_withheld": 11,
+          "draw": 26,
+          "take": 7,
+          "committed_take": 7,
+          "wait": 16,
+          "paid_extension": 2,
+          "practice": 2,
+          "update_points_spent": 5,
+          "update_forecast_rank_point_gain": 7,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー4",
+        "rank_points": 88,
+        "total_active_hours": 15.07,
+        "draw_count": 29,
+        "actions": {
+          "initial_post": 34,
+          "update_plan_rejected_rank_value": 38,
+          "initial_score_withheld": 7,
+          "draw": 29,
+          "wait": 14,
+          "take": 8,
+          "committed_take": 7,
+          "update_score_withheld": 1,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 8,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー1",
+        "rank_points": 82,
+        "total_active_hours": 23.68,
+        "draw_count": 45,
+        "actions": {
+          "draw": 45,
+          "consensus_resolution": 1,
+          "take": 11,
+          "practice": 12,
+          "initial_post": 40,
+          "update_plan_rejected_rank_value": 205,
+          "wait": 23,
+          "paid_extension": 41,
+          "initial_score_withheld": 11,
+          "committed_take": 5,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ku",
+        "rank_points": 77,
+        "total_active_hours": 28.92,
+        "draw_count": 109,
+        "actions": {
+          "draw": 109,
+          "take": 17,
+          "committed_take": 16,
+          "initial_post": 24,
+          "update_plan_rejected_rank_value": 67,
+          "initial_score_withheld": 6,
+          "wait": 28,
+          "practice": 20,
+          "update_score_withheld": 5,
+          "update_score_withheld_rank_value": 2,
+          "update_points_spent": 9,
+          "update_forecast_rank_point_gain": 8,
+          "update": 7,
+          "paid_extension": 4,
+          "update_paid_without_rank_point_gain": 3,
+          "update_paid_below_point_roi": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー5",
+        "rank_points": 66,
+        "total_active_hours": 10.08,
+        "draw_count": 30,
+        "actions": {
+          "initial_post": 26,
+          "draw": 30,
+          "take": 8,
+          "wait": 12,
+          "committed_take": 7,
+          "initial_score_withheld": 9,
+          "update_plan_rejected_rank_value": 42,
+          "paid_extension": 2,
+          "update_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー2",
+        "rank_points": 62,
+        "total_active_hours": 10.02,
+        "draw_count": 27,
+        "actions": {
+          "initial_post": 20,
+          "update_plan_rejected_rank_value": 74,
+          "draw": 27,
+          "take": 6,
+          "committed_take": 6,
+          "wait": 24,
+          "initial_score_withheld": 3,
+          "update_score_withheld": 1,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 4,
+          "update": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー3",
+        "rank_points": 34,
+        "total_active_hours": 3.65,
+        "draw_count": 3,
+        "actions": {
+          "draw": 3,
+          "take": 1,
+          "committed_take": 1,
+          "wait": 12,
+          "initial_post": 4,
+          "update_plan_rejected_rank_value": 30,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 3,
+          "update": 2,
+          "practice": 1,
+          "paid_extension": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー1",
+        "rank_points": 29,
+        "total_active_hours": 3.27,
+        "draw_count": 6,
+        "actions": {
+          "initial_post": 10,
+          "update_plan_rejected_rank_value": 11,
+          "initial_score_withheld": 2,
+          "draw": 6,
+          "take": 2,
+          "wait": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー2",
+        "rank_points": 8,
+        "total_active_hours": 1.22,
+        "draw_count": 10,
+        "actions": {
+          "initial_post": 3,
+          "draw": 10,
+          "take": 3,
+          "wait": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー4",
+        "rank_points": 4,
+        "total_active_hours": 0.6,
+        "draw_count": 9,
+        "actions": {
+          "draw": 9,
+          "take": 3,
+          "wait": 4,
+          "initial_post": 2,
+          "update_plan_rejected_rank_value": 1,
+          "take_close_attempt": 1,
+          "committed_take": 1
+        }
+      }
+    ]
+  },
+  {
+    "seed": 261013,
+    "collections": 114,
+    "extensions": 217,
+    "players": [
+      {
+        "display_name": "A",
+        "rank_points": 260,
+        "total_active_hours": 26.27,
+        "draw_count": 50,
+        "actions": {
+          "initial_score_withheld": 12,
+          "initial_post": 51,
+          "paid_extension": 82,
+          "update_score_withheld": 10,
+          "draw": 50,
+          "take": 9,
+          "wait": 11,
+          "update_plan_rejected_rank_value": 61,
+          "committed_take": 8,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 2,
+          "update": 3,
+          "update_paid_without_rank_point_gain": 1,
+          "update_paid_below_point_roi": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "G",
+        "rank_points": 240,
+        "total_active_hours": 16.77,
+        "draw_count": 101,
+        "actions": {
+          "draw": 101,
+          "take": 13,
+          "committed_take": 13,
+          "initial_post": 37,
+          "update_plan_rejected_rank_value": 78,
+          "initial_score_withheld": 6,
+          "wait": 10,
+          "paid_extension": 11,
+          "practice": 6,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "T",
+        "rank_points": 240,
+        "total_active_hours": 35.52,
+        "draw_count": 52,
+        "actions": {
+          "initial_post": 70,
+          "draw": 52,
+          "take": 12,
+          "committed_take": 12,
+          "update_plan_rejected_rank_value": 302,
+          "practice": 8,
+          "update_score_withheld_rank_value": 2,
+          "initial_score_withheld": 12,
+          "wait": 20,
+          "paid_extension": 8,
+          "update_points_spent": 10,
+          "update_forecast_rank_point_gain": 17,
+          "update": 8,
+          "update_score_withheld": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ko",
+        "rank_points": 162,
+        "total_active_hours": 21.07,
+        "draw_count": 95,
+        "actions": {
+          "draw": 95,
+          "consensus_resolution": 2,
+          "take": 13,
+          "initial_post": 38,
+          "practice": 2,
+          "committed_take": 12,
+          "update_plan_rejected_rank_value": 101,
+          "wait": 10,
+          "initial_score_withheld": 14,
+          "paid_extension": 7,
+          "update_points_spent": 2,
+          "update_forecast_rank_point_gain": 5,
+          "update": 1,
+          "return_to_deck": 8,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー2",
+        "rank_points": 124,
+        "total_active_hours": 20.62,
+        "draw_count": 34,
+        "actions": {
+          "initial_post": 40,
+          "update_plan_rejected_rank_value": 200,
+          "initial_score_withheld": 6,
+          "draw": 34,
+          "take": 8,
+          "committed_take": 8,
+          "paid_extension": 17,
+          "practice": 5,
+          "wait": 17,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 2,
+          "update": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "Ku",
+        "rank_points": 113,
+        "total_active_hours": 29.3,
+        "draw_count": 97,
+        "actions": {
+          "draw": 97,
+          "take": 17,
+          "initial_post": 28,
+          "update_plan_rejected_rank_value": 120,
+          "committed_take": 15,
+          "wait": 43,
+          "practice": 19,
+          "initial_score_withheld": 4,
+          "update_score_withheld_rank_value": 1,
+          "update_points_spent": 7,
+          "update_forecast_rank_point_gain": 15,
+          "update": 7,
+          "paid_extension": 3,
+          "update_score_withheld": 6,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー5",
+        "rank_points": 98,
+        "total_active_hours": 22.62,
+        "draw_count": 32,
+        "actions": {
+          "initial_score_withheld": 8,
+          "initial_post": 46,
+          "update_plan_rejected_rank_value": 262,
+          "paid_extension": 73,
+          "draw": 32,
+          "take": 9,
+          "update_score_withheld_rank_value": 2,
+          "committed_take": 3,
+          "wait": 22,
+          "practice": 6,
+          "update_points_spent": 3,
+          "update_forecast_rank_point_gain": 8,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー4",
+        "rank_points": 97,
+        "total_active_hours": 14.53,
+        "draw_count": 37,
+        "actions": {
+          "initial_score_withheld": 10,
+          "initial_post": 34,
+          "update_plan_rejected_rank_value": 89,
+          "draw": 37,
+          "wait": 15,
+          "take": 9,
+          "committed_take": 8,
+          "paid_extension": 5,
+          "practice": 3,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 3,
+          "update": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー1",
+        "rank_points": 86,
+        "total_active_hours": 12.95,
+        "draw_count": 31,
+        "actions": {
+          "draw": 31,
+          "take": 7,
+          "initial_post": 30,
+          "update_plan_rejected_rank_value": 47,
+          "practice": 1,
+          "committed_take": 6,
+          "wait": 14,
+          "initial_score_withheld": 10,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー2",
+        "rank_points": 47,
+        "total_active_hours": 8.33,
+        "draw_count": 22,
+        "actions": {
+          "initial_post": 25,
+          "update_plan_rejected_rank_value": 50,
+          "draw": 22,
+          "wait": 15,
+          "take": 6,
+          "committed_take": 6,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 4,
+          "update": 1,
+          "initial_score_withheld": 2,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "中位プレイヤー3",
+        "rank_points": 46,
+        "total_active_hours": 11.25,
+        "draw_count": 15,
+        "actions": {
+          "initial_post": 13,
+          "update_plan_rejected_rank_value": 32,
+          "initial_score_withheld": 6,
+          "draw": 15,
+          "take": 5,
+          "wait": 14,
+          "committed_take": 4,
+          "update_score_withheld": 4,
+          "update_points_spent": 4,
+          "update_forecast_rank_point_gain": 14,
+          "update": 3,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー3",
+        "rank_points": 32,
+        "total_active_hours": 4.27,
+        "draw_count": 0,
+        "actions": {
+          "wait": 26,
+          "initial_score_withheld": 1,
+          "initial_post": 4,
+          "update_plan_rejected_rank_value": 90,
+          "paid_extension": 10,
+          "update_score_withheld": 1,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 2,
+          "update": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー5",
+        "rank_points": 28,
+        "total_active_hours": 4.1,
+        "draw_count": 9,
+        "actions": {
+          "initial_post": 9,
+          "update_points_spent": 1,
+          "update_forecast_rank_point_gain": 1,
+          "update": 1,
+          "initial_score_withheld": 5,
+          "draw": 9,
+          "take": 3,
+          "wait": 7,
+          "update_plan_rejected_rank_value": 5,
+          "paid_extension": 1,
+          "return_to_deck": 1,
+          "committed_take": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー1",
+        "rank_points": 9,
+        "total_active_hours": 0.5,
+        "draw_count": 0,
+        "actions": {
+          "initial_post": 2,
+          "wait": 1,
+          "take_close_attempt": 1
+        }
+      },
+      {
+        "display_name": "下位プレイヤー4",
+        "rank_points": 9,
+        "total_active_hours": 1.37,
+        "draw_count": 14,
+        "actions": {
+          "initial_post": 4,
+          "draw": 14,
+          "take": 3,
+          "wait": 4,
+          "update_plan_rejected_rank_value": 1,
+          "initial_score_withheld": 1,
+          "take_close_attempt": 1
+        }
+      }
+    ]
+  }
+]

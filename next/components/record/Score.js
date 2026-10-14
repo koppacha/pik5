@@ -1,9 +1,13 @@
 import {ScoreTail, ScoreType} from "../../styles/pik5.css";
-import {range, sec2time} from "../../lib/pik5";
+import useSWR from "swr"
+import {fetcher, range, sec2time} from "../../lib/pik5";
 import {timeStageList} from "../../lib/const";
 
-export default function Score({rule, score, stage, category, unit = "pts", showZero = false}){
+export default function Score({rule, score, stage, category, unit = "pts", showZero = false, scoreType = null}){
 
+    const eventStage = Number(stage) >= 1001 && Number(stage) <= 1999
+    const {data: stageMetadata} = useSWR(eventStage && !scoreType ? `/api/server/stage/${stage}` : null, fetcher)
+    const isEventTime = scoreType === "time" || (eventStage && (stageMetadata?.data?.display === "time" || stageMetadata?.display === "time"))
     if(!score && !showZero){
         return (
             <></>
@@ -16,6 +20,9 @@ export default function Score({rule, score, stage, category, unit = "pts", showZ
         return stageTimes.time - (score - stageTimes.score)
     }
 
+    if (isEventTime) {
+        return <ScoreType className="score-type" as="span">{sec2time(Number(score))}</ScoreType>
+    }
     if( category === "battle"){
         // バトルモードの場合
         return (

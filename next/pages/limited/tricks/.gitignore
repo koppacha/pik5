@@ -1,0 +1,5 @@
+/test-results/
+/playwright-report/
+/docs/tricks-codex-logs.md
+/.playwright-cli/
+/output/

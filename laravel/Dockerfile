@@ -47,4 +47,4 @@ COPY ./laravel/php/php.ini /usr/local/etc/php/php.ini
 WORKDIR /var/www/laravel/
 
 ENTRYPOINT ["tini", "--", "docker-php-entrypoint"]
-CMD ["php","artisan","serve","--host","0.0.0.0"]
+CMD ["php","artisan","serve","--host","0.0.0.0","--no-reload"]

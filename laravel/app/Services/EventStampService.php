@@ -63,8 +63,11 @@ class EventStampService
         $team = (int) $row['team'];
         $basePoint = $this->basePoint($members, $rank, $team);
 
-        if ($result === 'm') {
-            return $basePoint + 7 + (int) ceil($members / 8);
+        if (in_array($result, ['m', 'h', 'b'], true)) {
+            // b records both awards; each grants the complete MVP stamp amount.
+            $awardPoint = $basePoint + 7 + (int) ceil($members / 8);
+
+            return $result === 'b' ? 2 * $awardPoint : $awardPoint;
         }
 
         if ($result === 'e') {

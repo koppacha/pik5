@@ -23,9 +23,6 @@ import {
     RecordContainer, RecordGridWrapper, ScoreType,
     UserType
 } from "../../styles/pik5.css";
-import Lightbox from "yet-another-react-lightbox";
-import LightBoxImage from "../modal/LightBoxImage";
-import "yet-another-react-lightbox/styles.css";
 import {displayDifficulty, hideRuleNames, normalStageCounts, rule2array, stageCounts} from "../../lib/const";
 import {useSession} from "next-auth/react";
 import { useSpring, animated } from 'react-spring';
@@ -45,6 +42,9 @@ export default function Record({
     prevUser,
     history,
     swapScoreRpsLabel = false,
+    showMiniRps = false,
+    commentPreviewLength = null,
+    evidenceImageBase = "/api/file/",
     rankCellMetric = "rps",
     scoreUnit = null,
     rankPointUnit = null,
@@ -57,6 +57,10 @@ export default function Record({
     const {data: session } = useSession()
     const date = new Date(data?.created_at ?? "2006-09-01 00:00:00")
 
+    const [commentOpen, setCommentOpen] = useState(false)
+    const commentCharacters = Array.from(data.post_comment || "")
+    const commentPreview = commentCharacters.slice(0, commentPreviewLength).join("") + (commentCharacters.length > commentPreviewLength ? "…" : "")
+
     const [imgOpen, setImgOpen] = useState(
         false)
     const [editOpen, setEditOpen] = useState(false)
@@ -64,6 +68,16 @@ export default function Record({
     const [isClient, setIsClient] = useState(false)
 
     useEffect(() => setIsClient(true), [])
+    useEffect(() => {
+        if (!imgOpen) return
+
+        const handleKeyDown = (event) => {
+            if (event.key === "Escape") setImgOpen(false)
+        }
+
+        window.addEventListener("keydown", handleKeyDown)
+        return () => window.removeEventListener("keydown", handleKeyDown)
+    }, [imgOpen])
 
     const imgHandleClose = () => setImgOpen(false)
     const imgHandleOpen = () => setImgOpen(true)
@@ -127,6 +141,9 @@ export default function Record({
                              data?.post_rank === 3 ? "rank3" :
                              data?.post_rank <  11 ? "rank4" :
                              data?.post_rank <  21 ? "rank11": "rank21"
+    const rankPointLabel = swapScoreRpsLabel && data?.provisional_reward_points !== undefined
+        ? `${data?.rps ?? "?"}r/${data.provisional_reward_points ?? "?"}p`
+        : `${data?.rps ?? "?"} ${rankPointUnit ?? (history ? "players" : (swapScoreRpsLabel ? "pts" : "rps"))}`
 
     // 順位セル用のカラー生成関数
     const rankCellColor = (rank) => {
@@ -147,7 +164,7 @@ export default function Record({
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {mini || <RankPointType className="rank-point-type">[{data?.rps ?? "?"} {rankPointUnit ?? (history ? "players" : (swapScoreRpsLabel ? "pts" : "rps"))}]</RankPointType>}
+                        {(!mini || showMiniRps) && <RankPointType className="rank-point-type">[{rankPointLabel}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>
@@ -155,7 +172,7 @@ export default function Record({
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
+                    <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
@@ -174,9 +191,9 @@ export default function Record({
                         <Grid item xs={12} sm={3}>
                             <time dateTime={date.toISOString()}>{isClient ? dateFormat(date) : ''}</time>
                         </Grid>
-                        {mini || <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
+                        {!mini && <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                             {data.stage_id &&
-                                <Link href={stageLink}>{data.stage_id + '#' + t.stage[data.stage_id]}
+                                <Link href={stageLink}>{data.stage_id + '#' + ((Number(data.stage_id) >= 1000 && data.stage_name) || t.stage[data.stage_id] || data.stage_name || `#${data.stage_id}`)}
                                     {(!hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
                                 </Link>
                             }
@@ -204,10 +221,35 @@ export default function Record({
                             {data.img_url &&
                                 <>
                                     <FontAwesomeIcon icon={faImage} style={{marginRight:"0.25em",fontSize:"1.25em"}} onClick={imgHandleOpen} />
-                                    <Lightbox open={imgOpen} close={() => setImgOpen(false)}
-                                              slides={[{src:"/api/file/"+data.img_url}]}
-                                              render={{ slide: LightBoxImage, buttonPrev: undefined, buttonNext: undefined}}
-                                              controller={{ closeOnPullDown: true, closeOnBackdropClick: true }}/>
+                                    {imgOpen &&
+                                        <Box
+                                            role="dialog"
+                                            aria-modal="true"
+                                            onClick={imgHandleClose}
+                                            style={{
+                                                position: "fixed",
+                                                inset: 0,
+                                                zIndex: 1500,
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                                background: "rgba(0, 0, 0, 0.84)",
+                                                padding: "24px"
+                                            }}
+                                        >
+                                            <Box
+                                                component="img"
+                                                src={evidenceImageBase + data.img_url}
+                                                alt=""
+                                                onClick={(event) => event.stopPropagation()}
+                                                style={{
+                                                    maxWidth: "min(100%, 1200px)",
+                                                    maxHeight: "calc(100vh - 48px)",
+                                                    objectFit: "contain"
+                                                }}
+                                            />
+                                        </Box>
+                                    }
                                 </>}
                             {data.video_url &&
                                 <>
@@ -224,7 +266,12 @@ export default function Record({
                             {(data.console && !displayDifficulty.includes(Number(data.rule))) && <span className="tags">{t.cnsl[data.console]}</span>}
                             {(data.difficulty && displayDifficulty.includes(Number(data.rule))) && <span className={`tags level-${data.difficulty}`}>{t.difficulty[data.difficulty]}</span>}
                             {data.post_comment &&
-                                mini ?
+                                commentPreviewLength !== null ?
+                                <span data-tricks-comment>
+                                    <button type="button" aria-label="コメント全文を表示" aria-expanded={commentOpen} onClick={() => setCommentOpen((open) => !open)} style={{border: 0, padding: "0 4px", background: "transparent", color: "inherit", cursor: "pointer"}}><FontAwesomeIcon icon={faComment} /></button>
+                                    <span style={{whiteSpace: "pre-wrap", overflowWrap: "anywhere"}}>{commentOpen ? data.post_comment : commentPreview}</span>
+                                </span>
+                                : mini ?
                                 <Tooltip title={data.post_comment} arrow><FontAwesomeIcon icon={faComment} /></Tooltip>
                                 :
                                 <>
@@ -241,16 +288,20 @@ export default function Record({
                                                         w: "達成",
                                                         p: "未達成",
                                                         e: "参加",
-                                                        m: "MVP"
+                                                        m: "MVP",
+                                                        h: "トップホルダー",
+                                                        b: "MVP・トップホルダー"
                                                     }[item.result] ?? item.result)
                                                     : ({
                                                         w: "優勝",
                                                         p: "参加",
                                                         e: "参加",
-                                                        m: "MVP"
+                                                        m: "MVP",
+                                                        h: "トップホルダー",
+                                                        b: "MVP・トップホルダー"
                                                     }[item.result] ?? item.result)
                                                 const rank =
-                                                    item.result === "m" ? 1 :
+                                                    ["m", "h", "b"].includes(item.result) ? 1 :
                                                         item.result === "w" && !isInstant && Number(item.team) === 0 ? 2 :
                                                             item.result === "w" ? 3 : 10
                                                 const title =

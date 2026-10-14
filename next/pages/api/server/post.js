@@ -8,7 +8,12 @@ import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
 import prisma from "../../../lib/prisma";
+import {tricksIdentityHeaders} from "../../../lib/tricks/proxyAuth";
 import {createRecordValidationSchema} from "../../../lib/recordValidation";
+import {findRecordForMutation, findTricksStageEvent, ensureRecordStagingAccess} from "../../../lib/tricks/recordContext"
+
+const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 export const config = {
     api: {
@@ -22,7 +27,19 @@ function getFieldValue(value) {
 }
 
 async function parseForm(req) {
-    const form = formidable({})
+    const form = formidable({
+        maxFields: 32,
+        maxFieldsSize: 64 * 1024,
+        maxFiles: 1,
+        maxFileSize: MAX_UPLOAD_BYTES,
+        maxTotalFileSize: MAX_UPLOAD_BYTES,
+        filter: ({mimetype}) => !mimetype || [
+            "image/jpeg",
+            "image/png",
+            "image/gif",
+            "image/webp",
+        ].includes(mimetype),
+    })
     return new Promise((resolve, reject) => {
         form.parse(req, (error, fields, files) => {
             if (error) {
@@ -44,7 +61,7 @@ async function parseUpstreamResponse(upstreamRes) {
 }
 
 async function fetchLaravelJson(path) {
-    const upstreamRes = await fetch(`http://laravel:8000/api/${path}`)
+    const upstreamRes = await fetch(`${LARAVEL_API_BASE}/${path}`)
     const data = await parseUpstreamResponse(upstreamRes)
     if (!upstreamRes.ok) {
         const error = new Error('upstream validation dependency failed')
@@ -62,8 +79,9 @@ function getForwardedFor(req) {
     return req.socket?.remoteAddress || ''
 }
 
-function canEditRecord(sessionUserId, role, createdAt, ownerUserId) {
+function canEditRecord(sessionUserId, role, createdAt, ownerUserId, metadataOnly = false) {
     if (Number(role) === 10) return true
+    if (metadataOnly) return sessionUserId === ownerUserId
 
     const postDate = new Date(createdAt)
     if (Number.isNaN(postDate.getTime())) return false
@@ -99,6 +117,11 @@ export default async function handler(req, res){
 
     try {
         const {fields, files} = await parseForm(req)
+        const tricksEventId = getFieldValue(fields.tricks_event_id)
+        if (tricksEventId && (!/^\d+$/.test(String(tricksEventId)) || Number(tricksEventId) < 1 || Number(tricksEventId) > 2147483647)) {
+            res.status(400).json({error: true, message: 'invalid tricks_event_id'})
+            return
+        }
         const mode = String(getFieldValue(fields.mode) || 'create')
         const editUniqueId = String(getFieldValue(fields.edit_unique_id) || '')
         const isEdit = mode === 'edit'
@@ -124,21 +147,22 @@ export default async function handler(req, res){
         }
 
         if (isEdit) {
-            const currentRecordRes = await fetch(`http://laravel:8000/api/record/id/${editUniqueId}`)
-            if (!currentRecordRes.ok) {
+            if (!/^\d+$/.test(editUniqueId)) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
             }
-            const currentRecord = await currentRecordRes.json()
+            const currentRecord = await findRecordForMutation(editUniqueId, currentUserId, editorRole)
             if (!currentRecord?.unique_id || Number(currentRecord?.flg) > 1) {
                 res.status(404).json({error: true, message: 'record not found'})
                 return
             }
+            if (!ensureRecordStagingAccess(req, res, currentRecord.tricks_event_id)) return
             const editable = canEditRecord(
                 currentUserId,
                 editorRole,
                 currentRecord.created_at,
-                String(currentRecord.user_id || '')
+                String(currentRecord.user_id || ''),
+                currentRecord.metadata_only_edit
             )
             if (!editable) {
                 res.status(403).json({error: true, message: 'forbidden'})
@@ -147,6 +171,8 @@ export default async function handler(req, res){
         }
 
         const stageId = String(getFieldValue(fields.stage_id))
+        const stageEventId = await findTricksStageEvent(stageId, tricksEventId, currentUserId, editorRole)
+        if (!ensureRecordStagingAccess(req, res, stageEventId)) return
         const payloadRule = String(getFieldValue(fields.rule))
         const payloadScore = String(getFieldValue(fields.score))
         const payloadConsole = String(getFieldValue(fields.console))
@@ -161,6 +187,7 @@ export default async function handler(req, res){
                 fetchLaravelJson(`record/rank/${encodeURIComponent(stageId)}/${encodeURIComponent(payloadRule)}/${encodeURIComponent(payloadScore)}`),
             ])
             const schema = createRecordValidationSchema({
+                isTricks: stageEventId !== null,
                 rule: payloadRule,
                 stageId,
                 rank,
@@ -192,6 +219,7 @@ export default async function handler(req, res){
 
         const formData = new FormData()
         formData.append('stage_id', stageId)
+        if (tricksEventId) formData.append('tricks_event_id', String(tricksEventId))
         formData.append('rule', payloadRule)
         formData.append('region', String(getFieldValue(fields.region)))
         formData.append('score', payloadScore)
@@ -221,9 +249,10 @@ export default async function handler(req, res){
             'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
             'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
             'x-forwarded-host': String(req.headers.host || ''),
+            ...tricksIdentityHeaders(currentUserId, editorRole),
         }
 
-        const response = await fetch("http://laravel:8000/api/record", {
+        const response = await fetch(`${LARAVEL_API_BASE}/record`, {
             method: "POST",
             headers: proxyHeaders,
             body: formData,
@@ -239,7 +268,15 @@ export default async function handler(req, res){
         res.status(response.status).json(data)
         return
     } catch (error) {
-        await prismaLogging(session.user.userId, "postProxyError", String(error))
+        if (Number(error?.httpCode) === 413 || Number(error?.code) === 1009) {
+            res.status(413).json({error: true, message: "upload too large"})
+            return
+        }
+        if (Number(error?.status) >= 400 && Number(error?.status) < 500) {
+            res.status(Number(error.status)).json({error: true, message: "record context access denied"})
+            return
+        }
+        await prismaLogging(session.user.userId, "postProxyError", {name: error?.name, code: error?.code})
         res.status(502).json({error: true, message: "proxy error"})
         return
     }

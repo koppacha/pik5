@@ -33,6 +33,9 @@ async function handlePOST(res, req) {
     if(userId.length > 32 || !/^[\w-]+$/.test(userId)){
         return res.status(400).json({error: "ユーザーIDの形式が正しくありません。"})
     }
+    if (["_deck", "_field", "_stack", "_trash", "_collected", "_excluded", "_held", "_eligible", "_in_event"].includes(userId.toLowerCase())) {
+        return res.status(400).json({error: "このユーザーIDは予約されています。"})
+    }
     if(!isValidPassword(password)){
         return res.status(400).json({error: "パスワードは8文字以上72文字以下の安全な半角英数記号で入力してください。"})
     }

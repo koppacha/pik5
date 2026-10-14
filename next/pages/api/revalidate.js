@@ -21,7 +21,10 @@ export default async function handler(req, res) {
                     clearSpeedrunCacheForUsername(user?.srcUserId)
                 }
                 const targets = [`/${page}/${id}`]
-                await Promise.all(targets.map((target) => res.revalidate(target)))
+                // SSR pages reload fresh data without an ISR cache to invalidate.
+                if (!['stage', 'user', 'total'].includes(page)) {
+                    await Promise.all(targets.map((target) => res.revalidate(target)))
+                }
             }
             return res.json({ revalidated: true });
         } catch (err) {
