@@ -218,5 +218,11 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::post('tricks/debug/fixtures', [TrickFixtureController::class, 'create']);
     Route::post('tricks/debug/fixtures/{eventId}/teardown', [TrickFixtureController::class, 'teardown']);
 });
+
+Route::middleware(['api'])->group(function () {
+    Route::get('dandori', [\App\Http\Controllers\DandoriController::class, 'index']);
+    Route::match(['get', 'post'], 'dandori/manage', [\App\Http\Controllers\DandoriController::class, 'manage']);
+});
+
 Route::middleware(['api'])->match(['get', 'post'], 'security/events', [\App\Http\Controllers\SecurityEventController::class, 'handle']);
 

@@ -24,6 +24,9 @@ class TotalController extends Controller
     }
     public static function stage_list(Request|string $request): array
     {
+        if ((int) $request === 48) {
+            return \App\Services\DandoriCatalog::ids();
+        }
         // 総合ランキングの集計対象ステージ一覧
         $stage_list = [
             1 => array_merge(range(101, 105), range(201, 230), range(231, 254), range(301, 362), range(401, 428), range(429, 444)), // 全総合
@@ -89,7 +92,9 @@ class TotalController extends Controller
             return [];
         }
         if (isset($stage_list[$request])) {
-            return $stage_list[$request];
+            return in_array((int) $request, [1, 2, 40], true)
+                ? array_values(array_unique(array_merge($stage_list[$request], \App\Services\DandoriCatalog::ids())))
+                : $stage_list[$request];
         }
         if ((int) $request === 260704) {
             return DB::table('stages')
@@ -107,6 +112,8 @@ class TotalController extends Controller
     public function stages(Request $request, string $series): JsonResponse
     {
         $stages = self::stage_list($series);
+        $codes = DB::table('stages')->whereIn('stage_id', $stages)->get()->keyBy('stage_id');
+        $stages = array_map(fn ($id) => $codes->get($id)?->stage_code ?: $id, $stages);
 
         if (!$request->boolean('include_special')) {
             return response()->json($stages);
@@ -192,10 +199,10 @@ class TotalController extends Controller
 
         // 全総合ランキング
         if ($req["rule"] === 1) {
-            $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47];
+            $rules = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 48];
         // 通常総合ランキング
         } elseif ($req["rule"] === 2) {
-            $rules = [10, 20, 21, 22, 31, 32, 33, 36, 41, 42, 43];
+            $rules = [10, 20, 21, 22, 31, 32, 33, 36, 41, 42, 43, 48];
         // 特殊総合ランキング（2Pランキング、TAS、実機無差別、その他は対象外）
         } elseif($req["rule"] === 3){
             $rules = [11, 23, 24, 25, 29, 35, 44, 45, 46, 47];
@@ -210,7 +217,7 @@ class TotalController extends Controller
             $rules = [30, 31, 32, 33, 36];
         // ピクミン４総合
         } elseif ($req["rule"] === 40) {
-            $rules = [40, 41, 42, 43];
+            $rules = [40, 41, 42, 43, 48];
         // それ以外
         } else {
             $rules = [$req["rule"]];
@@ -246,7 +253,7 @@ class TotalController extends Controller
                 $mode = "stage";
             }
             // 有効データのみ抽出するクエリ
-            $records = Record::publiclyVisible()->whereIn('stage_id', self::stage_list($rule))
+            $records = Record::publiclyVisible()->whereIn('stage_id', $rule === 48 ? \App\Services\DandoriCatalog::ids($date) : self::stage_list($rule))
                 ->where('console', $console_operation, $req["console"])
                 ->where('rule', $rule)
                 ->where('created_at', '<', $date)
@@ -254,6 +261,13 @@ class TotalController extends Controller
                 ->orderBy('score', $orderBy) // スコア順に並べた後
                 ->orderBy('created_at')   // 作成日時順に並べ
                 ->get()
+                ->sort(function ($a, $b) {
+                    if ((int) $a->rule !== 48 || (int) $b->rule !== 48) return 0;
+                    $stageOrder = $a->stage_id <=> $b->stage_id;
+                    if ($stageOrder) return $stageOrder;
+                    $direction = Func::orderByRule($a->stage_id, 48)[1] === 'ASC' ? 1 : -1;
+                    return (($a->score <=> $b->score) * $direction) ?: ($a->created_at <=> $b->created_at);
+                })
                 ->unique(function ($item) { // 重複削除
                     return $item['user_id'] . '-' . $item['stage_id'] . '-' . $item['rule'];
                 })
@@ -268,7 +282,7 @@ class TotalController extends Controller
                 ->toArray();
 
             foreach($dataset[$rule] as $stage => $stageRecords) {
-                $ranking[$rule][$stage] = Func::rank_calc($mode, $stageRecords, [$req["console"], [$rule], $date]);
+                $ranking[$rule][$stage] = Func::rank_calc($rule === 48 && Func::orderByRule($stage, 48)[1] === 'ASC' ? 'reverse' : $mode, $stageRecords, [$req["console"], [$rule], $date]);
             }
         }
         // ステージごとのデータをループ（ルールごとにネスト）
@@ -278,7 +292,7 @@ class TotalController extends Controller
                     $user_id = $record['user_id'];
 
                     // スコア計算（ルールIDがSpeedrun系の場合の特別処理を含む）
-                    $score = self::scoreForTotal((int)$rule_id, (int)$record['score']);
+                    $score = self::scoreForTotal((int)$rule_id, (int)$record['score'], (int)$stage_id);
 
                     // 初期化
                     if (!isset($users[$user_id])) {
@@ -341,8 +355,12 @@ class TotalController extends Controller
         return Func::rank_calc("total", $users, [$req["console"], $rules, $date]);
     }
 
-    public static function scoreForTotal(int $rule, int $score): int
+    public static function scoreForTotal(int $rule, int $score, ?int $stageId = null): int
     {
+        if ($rule === 48 && $stageId !== null) {
+            $settings = \App\Services\DandoriCatalog::settings($stageId);
+            if ($settings?->score_order === 'ASC') return max(0, $settings->total_base - $score);
+        }
         return in_array($rule, [29, 35, 47], true)
             ? max(0, 600 - $score)
             : $score;

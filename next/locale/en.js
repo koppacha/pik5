@@ -154,9 +154,11 @@ export const en = {
         45: "Ultra-Spicy Battle",
         46: "The Ultra-Spicy Hermit's Challenge",
         47: "Night expedition",
+        48: "だれでもダンドリ検定",
         91: "Other"
     },
     stage: {
+        48: "だれでもダンドリ検定",
         user: "User Ranking",
         1: "the Pikmin Challenge Leaderboards Overall Ranking",
         2: "Normal Rules Overall Ranking",
@@ -777,11 +779,13 @@ export const en = {
         45: "Ultra-Spicy Battle",
         46: "The Ultra-Spicy Hermit's Challenge",
         47: "Night expedition",
+        48: "だれでもダンドリ検定",
         91: "Other",
         99: "Test",
         231216: "第19回期間限定ランキング",
     },
     ru: {
+        48: "だれでもダンドリ検定",
         261009: "第19回限定",
         0: "通常ルール",
         1: "全総合",

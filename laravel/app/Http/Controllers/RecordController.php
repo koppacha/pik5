@@ -40,6 +40,9 @@ class RecordController extends Controller
     // スコア比較時の条件分岐（RecordForm.jsと共通）
     public function isTime($rule, $stage): bool
     {
+        if ((int) $rule === 48) {
+            return \App\Services\DandoriCatalog::settings((int) $stage)?->score_order === 'ASC';
+        }
         if ((int) $stage >= 1001 && (int) $stage <= 1999 &&
             \App\Models\Stage::query()->where('stage_id', (int) $stage)->value('display') === 'time') {
             return true;
@@ -228,6 +231,19 @@ class RecordController extends Controller
      */
     public function create(Request $request, TrickRecordService $trickRecords): JsonResponse
     {
+        $dandoriOnly = Stage::where('stage_id', $request->input('stage_id'))->where('parent', 48)->exists();
+        abort_if($dandoriOnly && (int) $request->input('rule') !== 48, 422, 'このステージはルール48専用です');
+        if ((int) $request->input('rule') === 48) {
+            $id = (int) $request->input('stage_id');
+            abort_unless(in_array($id, \App\Services\DandoriCatalog::ids(), true), 422, '公開済みの対象ステージではありません');
+            $settings = \App\Services\DandoriCatalog::settings($id);
+            abort_unless(in_array((int) $request->input('console'), json_decode($settings->consoles, true), true), 422, '対応していない操作方法です');
+            abort_if($settings->require_video && ! $request->filled('video_url'), 422, '動画が必要です');
+            $existingImage = $request->input('mode') === 'edit'
+                && Record::where('unique_id', $request->input('edit_unique_id'))->where('stage_id', $id)->where('rule', 48)->where('img_url', '!=', '')->exists();
+            abort_if($settings->require_image && ! $request->hasFile('file') && ! $existingImage, 422, '画像が必要です');
+            $request->validate(['difficulty' => ['required', 'integer', 'between:0,3']]);
+        }
         $maxScore = \App\Models\Deck::query()->where('stage_id', (int) $request->input('stage_id'))->exists() ? 999999 : 99999;
         $request->validate([
             'score' => ['required', 'integer', 'min:1', 'max:'.$maxScore],
@@ -477,11 +493,11 @@ class RecordController extends Controller
             $rule = [1, (int) $stage?->parent];
         } elseif ($rule === '1') {
             // 全総合（2P、TAS、無差別級を除く）
-            $rule = [1, 10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
+            $rule = [1, 10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47, 48];
 
         } elseif ($rule === '2') {
             // 通常総合
-            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
+            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43, 48];
 
         } elseif ($rule === '3') {
             // 特殊総合（期間限定を除く）
@@ -497,7 +513,7 @@ class RecordController extends Controller
 
         } elseif ($rule === '40') {
             // ピクミン4総合
-            $rule = [40, 41, 42, 43];
+            $rule = [40, 41, 42, 43, 48];
 
         } elseif (! $rule && $where === 'stage_id') {
             // TODO: 一部のページ読み込み時にparentが存在しないエラーを吐いている
@@ -505,7 +521,7 @@ class RecordController extends Controller
 
         } elseif (! $rule && $where === 'user_id') {
             // ユーザー別ページでルール未定義の場合は通常ランキング全部を対象にする
-            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
+            $rule = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43, 48];
 
         } else {
             // 上記すべてに当てはまらない場合
@@ -544,8 +560,9 @@ class RecordController extends Controller
             ->get()
             ->toArray();
 
-        $new_data = Func::duplicates_cleaner($new_data, $group);
-        $new_data = Func::sortRecordsByRule($new_data, $request['id'], $request['rule']);
+        $new_data = $where === 'stage_id'
+            ? \App\Services\StageRecordRanking::best($new_data, (int) $request['id'], (int) $request['rule'])
+            : Func::sortRecordsByRule(Func::duplicates_cleaner($new_data, $group), $request['id'], $request['rule']);
 
         if ($where === 'stage_id') {
             // ステージごとのセットなら順位とランクポイントをセット単位で計算する

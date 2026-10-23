@@ -1,3 +1,4 @@
+import useDandoriCatalog from '../../hooks/useDandoriCatalog'
 import React, {useState} from "react";
 import useSWR from "swr";
 import {currentYear, fetcher, id2name, rankColor, useLocale} from "../../lib/pik5";
@@ -16,6 +17,9 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
 
     const {t, locale} = useLocale()
     const [open, setOpen] = useState(false)
+
+    const dandoriCount = useDandoriCatalog()?.stages?.length || 0
+    const categoryStageCount = series => Number(series) === 48 ? dandoriCount : rule2array(series).length + (Number(series) === 40 ? dandoriCount : 0)
 
     const {data} = useSWR(`/api/server/user/total/${user?.id}`, fetcher)
     const {data:totalRanking} = useSWR(`/api/server/user/rank/0`, fetcher)
@@ -53,7 +57,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
     const totalRps = Number.isFinite(normalizedRps) ? normalizedRps : 0
 
     // 最新のステージ数を取得
-    const stageCnt = stageCounts[currentYear()]
+    const stageCnt = stageCounts[currentYear()] + dandoriCount
 
     const cls = basePoints.findLastIndex(base => totalRps > stageCnt * base)
     const clas = (rps) => basePoints.findLastIndex(base => rps >= stageCnt * base)
@@ -158,7 +162,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
     )
     const categoryMeta = (series) => {
         const marks = data.data.marks?.[series] ?? 0
-        const stageCount = rule2array(series).length
+        const stageCount = categoryStageCount(series)
         const categoryRank = data.data.categoryRanks?.[series]
         return renderCategoryMeta({
             marks,
@@ -171,7 +175,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
         .sort((a, b) => Number(a.console) - Number(b.console))
     const renderCategoryCell = (series, detail = false) => {
         const marks = data.data.marks?.[series] ?? 0
-        const stageCount = rule2array(series).length
+        const stageCount = categoryStageCount(series)
         return (
             <Link href={`/total/${series}`} style={categoryLinkStyle}>
                 <CellBox className="cell-box" style={categoryCellBoxStyle}>
@@ -197,7 +201,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
                 <span className="cell-box-caption">
                     {renderCategoryMeta({
                         marks: row.mark,
-                        stageCount: rule2array(series).length,
+                        stageCount: categoryStageCount(series),
                         rank: row.rank,
                         participants: row.participants
                     })}
@@ -224,6 +228,7 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
         if (!record?.stage_id) {
             return "/"
         }
+        if (Number(record.rule) === 48) return `/stage/${record.stage_id}/0/48`
         if ((record.rule ?? 0) < 100) {
             return `/stage/${record.stage_id}`
         }
@@ -233,9 +238,9 @@ export default function DashBoard({user, users, simple = false, speedrunRecords 
         <Link href={stageHref(record)} style={categoryLinkStyle}>
             <CellBox className="cell-box" style={categoryCellBoxStyle}>
                 <GradientLine baseColor={record?.stage_id ? SeriesTheme(Math.floor(Number(record.stage_id) / 100)) : "#ccc"} />
-                <span className="cell-box-caption">{record?.stage_id ? t.stage?.[record.stage_id] ?? `#${record.stage_id}` : "-"}</span><br/>
+                <span className="cell-box-caption">{record?.stage_id ? record.stage_name || t.stage?.[record.stage_id] || `#${record.stage_id}` : "-"}</span><br/>
                 {record?.score !== null && record?.score !== undefined
-                    ? score2str(record.score, record.rule, record.stage_id)
+                    ? score2str(record.score, record.rule, record.stage_id, record.score_type)
                     : "未投稿"
                 }<br/>
                 <span className="cell-box-caption">{caption}</span>

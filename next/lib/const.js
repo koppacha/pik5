@@ -5,13 +5,13 @@
 import {range} from "./pik5";
 
 // 有効な操作方法ID、ステージID、ルールID
-export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 91]
+export const available = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 48, 91]
 
 // ユーザーページ等で選択可能なルールID
-export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 91]
+export const selectable = [10, 11, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 48, 91]
 
 // 全総合ランキング集計対象のルールID
-export const totalRankingRules = [10, 11, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47]
+export const totalRankingRules = [10, 11, 20, 21, 22, 23, 24, 25, 29, 30, 31, 32, 33, 35, 36, 40, 41, 42, 43, 44, 45, 46, 47, 48]
 
 export const eventCategoriesWithStageList = [151, 161, 191, 211]
 
@@ -19,7 +19,7 @@ export const seriesNavigationRules = {
     1: [10, 11],
     2: [21, 22, 24, 25, 29],
     3: [31, 32, 33, 35, 36],
-    4: [41, 42, 43, 47],
+    4: [41, 42, 43, 47, 48],
 }
 
 export function stageRules(info){
@@ -39,6 +39,7 @@ export function stageRules(info){
     if(parent === 42) rules.push(45)
     if(parent === 43) rules.push(46)
 
+    if (info?.dandori_available) rules.push(48)
     return [...new Set(rules)]
 }
 
@@ -63,7 +64,7 @@ export function rule2array(rule){
 export const hideRuleNames = [10, 20, 21, 22, 25, 29, 30, 35, 40, 33, 36, 41, 42, 43, 91]
 
 // 難易度を表示するルールID
-export const displayDifficulty = [41, 42, 43, 44, 45, 46, 47]
+export const displayDifficulty = [41, 42, 43, 44, 45, 46, 47, 48]
 
 // 新規登録者の証拠動画・画像提出要件
 // video / image の値は 0: 不要, q: 全順位で必要, 自然数: その順位以上で必要

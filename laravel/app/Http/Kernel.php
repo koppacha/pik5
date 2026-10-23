@@ -45,6 +45,7 @@ class Kernel extends HttpKernel
             \App\Http\Middleware\VerifiedClientIp::class,
             \App\Http\Middleware\ForeignTrafficLimit::class,
             'throttle:1800,1',
+            \App\Http\Middleware\StageCodeBoundary::class,
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
     ];

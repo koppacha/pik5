@@ -1,3 +1,5 @@
+import useDandoriCatalog from '../../hooks/useDandoriCatalog'
+import {dandoriStagesForYear} from '../../lib/dandori'
 import {Box, Grid, Tooltip, Typography} from "@mui/material";
 import Link from "next/link";
 import {
@@ -86,6 +88,8 @@ export default function Record({
     const videoHandleClose = () => setVideoOpen(false)
     const videoHandleOpen = () => setVideoOpen(true)
 
+    const dandoriCount = dandoriStagesForYear(useDandoriCatalog(), year || currentYear()).length
+
     // ユーザーページへのリンク
     const userPageUrl = (data.category === "speedrun") ? "https://www.speedrun.com/user/"+data.user_name : "/user/"+data.user_id
 
@@ -103,7 +107,7 @@ export default function Record({
     const totalStageId = Number(series)
     const stageCountSeries = Number(String(series ?? "").slice(0, 1))
     const stageCount = (data?.ranks)
-        ? String(totalStageId > 9 && totalStageId < 100 ? rule2array(totalStageId).length : (stageCountArray[stageCountSeries]?.[Number(year)] ?? stages.length))
+        ? String(totalStageId > 9 && totalStageId < 100 ? (totalStageId === 48 ? dandoriCount : rule2array(totalStageId).length + (totalStageId === 40 ? dandoriCount : 0)) : ((stageCountArray[stageCountSeries]?.[Number(year)] ?? stages.length) + ([1, 2].includes(totalStageId) ? dandoriCount : 0)))
         : "0"
 
     // 比較値を整形する
@@ -329,7 +333,7 @@ export default function Record({
                                                 const title =
                                                     <>
                                                         <div style={{fontWeight:'bold'}}>
-                                                            {t.stage[r.stage] + " " + (!hideRuleNames.includes(r.rule) ? `（${t.rule[r.rule]})` : "")}
+                                                            {(t.stage[r.stage] || r.stage_name || `#${r.stage}`) + " " + (!hideRuleNames.includes(r.rule) ? `（${t.rule[r.rule]})` : "")}
                                                         </div>
                                                         <div>
                                                             {(!r.post_rank ? "未投稿" : `${r.post_rank} 位 / ${Number(rankCellMetric === "score" ? r.score : r.rps).toLocaleString()} ${rankCellMetric === "score" ? "pts" : "RPS"}`)}

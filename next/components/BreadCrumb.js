@@ -48,7 +48,7 @@ export default function BreadCrumb({info, rule, eventMode = false, eventCategory
 
     const superParent = () => {
         // 通常ランキング
-        if([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43].includes(Number(rule))){
+        if([0, 10, 20, 21, 22, 30, 31, 32, 33, 36, 40, 41, 42, 43, 48].includes(Number(rule))){
             return 2
         }
         // 特殊ランキング

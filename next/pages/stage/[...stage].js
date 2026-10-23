@@ -38,15 +38,14 @@ export async function getServerSideProps({params, res: response}){
     const { getCachedUsers } = await import("../../lib/usersCache")
 
     const query      = params.stage
-    const stage      = query[0]
+    const stage      = query[0].toUpperCase()
     const consoles   = query[1] || 0
     let   rule       = query[2] || 0
     const year       = query[3] || currentYear()
     const difficulty = query[4] || 0
 
     if(
-        stage < 100 ||
-        stage > 9999 ||
+        !(/^[1-9][0-9]{2,3}$/.test(stage) || /^4[A-Z][0-9A-Z]$/.test(stage)) ||
         !available.includes(Number(rule)) ||
         !available.includes(Number(consoles)) ||
         year < 2014 ||
@@ -71,7 +70,7 @@ export async function getServerSideProps({params, res: response}){
     let info = null, parent = null, stages = [], specialStages = [], ruleId = null, eventCategory = null
 
     // ステージ情報をリクエスト
-    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}`)
+    const stage_res = await fetch(`http://laravel:8000/api/stage/${stage}?rule=${rule}`)
     if(stage_res.status < 300) {
         info = await stage_res.json()
 

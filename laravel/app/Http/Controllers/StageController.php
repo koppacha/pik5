@@ -37,7 +37,7 @@ class StageController extends Controller
     public function index(): JsonResponse
     {
         // 検索用にすべてのステージ情報を返す
-        return response()->json(Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'parent', 'type')->get());
+        return response()->json(Stage::select('stage_id', 'stage_name', 'eng_stage_name', 'parent', 'type')->where(function ($q) { $q->where('parent', '!=', 48)->orWhereIn('stage_id', \App\Services\DandoriCatalog::ids()); })->get());
     }
 
     /**
@@ -56,7 +56,7 @@ class StageController extends Controller
     // すべてのステージの参加者数を取得
     public function allStageMember(): array
     {
-        $records = Record::publiclyVisible()->select('stage_id', 'user_id')->where('stage_id', '<', 10000)->where('flg', '<', 2)->get();
+        $records = Record::publiclyVisible()->select('stage_id', 'user_id')->where(fn ($q) => $q->where('stage_id', '<', 10000)->orWhere('rule', 48))->where('flg', '<', 2)->get();
         return $records->groupBy('stage_id')->map(function($group){
             return count($group->pluck('user_id')->unique());
         })->all();
@@ -64,7 +64,7 @@ class StageController extends Controller
     public function maxMember(): int
     {
         return Cache::remember('maxMember:'.Record::publicVisibilityCacheKey(), 300, static function () {
-            return (int)(Record::publiclyVisible()->where('stage_id', '<', 10000)
+            return (int)(Record::publiclyVisible()->where(fn ($q) => $q->where('stage_id', '<', 10000)->orWhere('rule', 48))
                 ->where('flg', '<', 2)
                 ->selectRaw('COUNT(DISTINCT user_id) AS members')
                 ->groupBy('stage_id')
@@ -81,11 +81,15 @@ class StageController extends Controller
      */
     public function show($id): JsonResponse
     {
+        if ((int) $id === 48) {
+            return response()->json(['stage_id' => 48, 'stage_name' => 'だれでもダンドリ検定', 'eng_stage_name' => 'だれでもダンドリ検定', 'series' => 4, 'parent' => 4, 'type' => 'total', 'display' => 'int']);
+        }
         if($id < 100000) {
 
             // ５桁以下ならステージ情報データベースから取得
             $data = Stage::where('stage_id', $id)->first();
 
+            if (! $data) return response()->json(['message' => 'Stage Not Found'], 404);
             $collect = Record::publiclyVisible()->where('stage_id', $id)->where('flg', '<', 2);
 
             // 総投稿数

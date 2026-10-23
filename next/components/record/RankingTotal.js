@@ -1,3 +1,5 @@
+import useDandoriCatalog from '../../hooks/useDandoriCatalog'
+import {dandoriStagesForYear} from '../../lib/dandori'
 import {Box} from "@mui/material"
 import {addName2posts, useLocale} from "../../lib/pik5"
 import {basePoints, stageCounts} from "../../lib/const"
@@ -7,6 +9,7 @@ import * as React from "react"
 
 export default function RankingTotal({posts, series, console:consoles, rule, year, users, stages, rankingMetric = null}){
     const {t} = useLocale()
+    const dandoriCount = dandoriStagesForYear(useDandoriCatalog(), year).length
 
     if(!posts){
         return <NowLoading/>
@@ -16,7 +19,7 @@ export default function RankingTotal({posts, series, console:consoles, rule, yea
     const data = addName2posts(posts, users)
 
     const showClassBorders = Number(series) === 1 && rankingMetric !== "score"
-    const stageCount = stageCounts[Number(year)] ?? Object.values(stageCounts)[0]
+    const stageCount = (stageCounts[Number(year)] ?? Object.values(stageCounts)[0]) + dandoriCount
     const classBorders = Array.from({length: 14}, (_, idx) => {
         const cls = idx + 1
         return {

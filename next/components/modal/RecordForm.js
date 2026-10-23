@@ -27,8 +27,12 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const tricksEventId = info?.tricks_event_id || initialData?.tricks_event_id
     const isTricksStage = Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999
     const {data: stageMetadata} = useSWR(isTricksStage && !info?.score_type && !initialData?.score_type ? `/api/server/stage/${info.stage_id}` : null, fetcher)
+    const isDandoriTime = Number(rule) === 48 && info?.score_type === 'time'
     const isTricksTime = (info?.score_type || initialData?.score_type) === "time" || (isTricksStage && (info?.display === "time" || stageMetadata?.data?.display === "time" || stageMetadata?.display === "time"))
-    const consoleList = useMemo(() => rule2consoles(rule), [rule])
+    const consoleList = useMemo(() => {
+        const allowed = info?.dandori_consoles
+        return rule2consoles(rule).filter(item => !allowed || allowed.includes(Number(item)))
+    }, [rule, info?.dandori_consoles])
 
     const {t, locale} = useLocale()
     const {data: session} = useSession()
@@ -59,7 +63,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // バリデーションルール
     const schema = createRecordValidationSchema({
         isTime: isTime(),
-        isTricksTime,
+        isTricksTime: isTricksTime || isDandoriTime,
         isTricks: Boolean(info?.tricks_event_id) || (Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999),
         time2score,
         rule,
@@ -94,7 +98,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         const defaultVideoUrl = isEditMode ? (initialData.video_url || "") : ""
         const defaultComment = isEditMode ? (initialData.post_comment || "") : ""
         const defaultRegion = Number(isEditMode ? initialData.region : 0) || 0
-        const defaultTime = isTricksTime && defaultScore > 0 ? sec2time(defaultScore) : "00:00:00"
+        const defaultTime = (isTricksTime || isDandoriTime) && defaultScore > 0 ? sec2time(defaultScore) : "00:00:00"
 
         reset({
             time: defaultTime,
@@ -117,7 +121,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         setRegion(defaultRegion)
         setRegionSelected(defaultRegion > 0)
         setTimeValue(defaultTime)
-    }, [consoleList, initialData, isTricksTime, mode, reset, rule])
+    }, [consoleList, initialData, isTricksTime, isDandoriTime, mode, reset, rule])
 
     // データをバックエンドに送信する
     const onSubmit = async () => {
@@ -263,12 +267,12 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
 
     // タイム表示判定（RecordController.phpと共通）
     function isTime() {
-        return isTricksTime || [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id)
+        return (Number(rule) === 48 ? info?.score_type === 'time' : isTricksTime || [11, 29, 33, 35, 43, 46, 47, 91].includes(Number(rule)) || [338, 341, 343, 345, 346, 347, 348, 349, 350].includes(info?.stage_id))
     }
 
     // 難易度追加判定
     const isPik4 = () => {
-        return [41, 42, 43, 44, 45, 46, 47].includes(Number(rule))
+        return [41, 42, 43, 44, 45, 46, 47, 48].includes(Number(rule))
     }
 
     // リージョン違い判定
@@ -279,7 +283,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     // タイムからスコアに変換
     function time2score(time) {
         const sec = convertToSeconds(time)
-        if (isTricksTime) return sec
+        if (isTricksTime || Number(rule) === 48) return sec
         const lestTime = timeStageList.find(({stage: s}) => s === info.stage_id)
         if (lestTime) {
             // 経過時間が表示されるタイプ（ピクミン３）→残り時間に変換して登録

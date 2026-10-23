@@ -18,8 +18,8 @@ use Illuminate\Support\Facades\Log;
 class UserTotalController extends Controller
 {
     private const CONSOLE_CATEGORY_RULES = [10, 20, 30];
-    private const RECOMMEND_RULES = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47];
-    private const NORMAL_RECOMMEND_RULES = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43];
+    private const RECOMMEND_RULES = [10, 11, 21, 22, 23, 24, 25, 29, 31, 32, 33, 35, 36, 41, 42, 43, 44, 45, 46, 47, 48];
+    private const NORMAL_RECOMMEND_RULES = [10, 21, 22, 31, 32, 33, 36, 41, 42, 43, 48];
     /**
      * Display a listing of the resource.
      *
@@ -91,7 +91,7 @@ class UserTotalController extends Controller
                     }
                     $records["marks"]["30"]++;
                 }
-                if($value["rule"] === 41 || $value["rule"] === 42 || $value["rule"] === 43){
+                if($value["rule"] === 41 || $value["rule"] === 42 || $value["rule"] === 43 || $value["rule"] === 48){
                     if(!isset($records["marks"]["40"])){
                         $records["marks"]["40"] = 0;
                     }
@@ -269,7 +269,7 @@ class UserTotalController extends Controller
     {
         return Record::publiclyVisible()->where('user_id', $userId)
             ->where('rule', '<', 100)
-            ->where('stage_id', '<', 1000)
+            ->where(fn ($query) => $query->where('stage_id', '<', 1000)->orWhere('rule', 48))
             ->where('flg', '<', 2)
             ->orderByDesc('created_at')
             ->orderByDesc('post_id')
@@ -639,7 +639,7 @@ class UserTotalController extends Controller
         return match ($rule) {
             20 => [20, 21, 22],
             30 => [30, 31, 32, 33, 36],
-            40 => [40, 41, 42, 43],
+            40 => [40, 41, 42, 43, 48],
             default => [$rule],
         };
     }
@@ -881,7 +881,7 @@ class UserTotalController extends Controller
         foreach ($array as $data) {
             $rule = $data["rule"];
             $score = ($mode === "score")
-                ? TotalController::scoreForTotal((int)$rule, (int)$data["score"])
+                ? TotalController::scoreForTotal((int)$rule, (int)$data["score"], isset($data["stage"]) ? (int) $data["stage"] : null)
                 : $data["rps"];
 
             // 各ruleごとに初期化
@@ -904,7 +904,7 @@ class UserTotalController extends Controller
                 }
                 $output["30"] += $score;
             }
-            if($rule === 41 || $rule === 42 || $rule === 43){
+            if($rule === 41 || $rule === 42 || $rule === 43 || $rule === 48){
                 if(!isset($output["40"])){
                     $output["40"] = 0;
                 }

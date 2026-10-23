@@ -20,7 +20,7 @@ export default function Score({rule, score, stage, category, unit = "pts", showZ
         return stageTimes.time - (score - stageTimes.score)
     }
 
-    if (isEventTime) {
+    if (isEventTime || (Number(rule) === 48 && scoreType !== 'points')) {
         return <ScoreType className="score-type" as="span">{sec2time(Number(score))}</ScoreType>
     }
     if( category === "battle"){

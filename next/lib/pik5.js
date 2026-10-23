@@ -143,6 +143,7 @@ export function truncateSmart(str) {
 }
 
 export const stageId2seriesId = (stageId) => {
+    if (/^4[A-Z][0-9A-Z]$/i.test(String(stageId))) return 4
     const id = Number(stageId)
     if (!Number.isFinite(id)) return null
     if (id < 100 || id >= 500) return null

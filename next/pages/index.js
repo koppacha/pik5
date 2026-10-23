@@ -1,3 +1,4 @@
+import MonthlyDandori from '../components/top/MonthlyDandori'
 import Link from "next/link";
 import {Box, Grid, Typography} from "@mui/material";
 import React, {useState} from "react";
@@ -62,12 +63,14 @@ export async function getServerSideProps(context) {
         props: {
             users,
             prev,
+            initialNow: Date.now(),
+            dandoriDevelopment: process.env.PIK5_DEPLOYMENT_ENV === 'development' || (process.env.PIK5_DEPLOYMENT_ENV !== 'production' && process.env.NODE_ENV !== 'production'),
             disablePickupVideoAutoplay: userSettings?.disablePickupVideoAutoplay ?? false,
         }
     }
 }
 
-export default function Home({users, prev, disablePickupVideoAutoplay}) {
+export default function Home({users, prev, disablePickupVideoAutoplay, initialNow, dandoriDevelopment}) {
 
     const {t,r} = useLocale()
     const {data: session, status: sessionStatus} = useSession()
@@ -179,6 +182,7 @@ export default function Home({users, prev, disablePickupVideoAutoplay}) {
                       <ModalIdeaPost editOpen={editOpen} uniqueId={uniqueId} handleEditClose={handleEditClose} handleEditOpen={handleEditOpen}/>
                   </WrapTopBox>
           }
+              <MonthlyDandori initialNow={initialNow} development={dandoriDevelopment} />
               <WrapTopBox item xs={12} sm={6} className="wrap-top-box top-split-column">
                   <Grid container spacing={1} className="top-split-column-grid">
                       <TricksActiveEvent>

@@ -23,6 +23,9 @@ class Func extends Facade
     // 順位づけのための並び変え条件
     public static function orderByRule($id, $rule): array
     {
+        if ((int) $rule === 48) {
+            return ['score', \App\Services\DandoriCatalog::settings((int) $id)?->score_order ?? 'DESC'];
+        }
         // イベントはカードから割り当てたステージの明示的な種別で判定する。
         if ((int) $id >= 1001 && (int) $id <= 1999 &&
             Stage::query()->where('stage_id', (int) $id)->value('display') === 'time') {
@@ -194,7 +197,7 @@ class Func extends Facade
     public static function rankPoint_calc($stage, $rank, $member, $max): float
     {
         // 期間限定ランキングのランクポイント計算式
-        if($stage > 1000) {
+        if($stage > 1000 && ! \App\Services\DandoriCatalog::settings((int) $stage)) {
             return $max - $rank + 1;
         }
         // 期間限定以外のランクポイント計算式

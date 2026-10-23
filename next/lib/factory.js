@@ -9,6 +9,7 @@ import {currentYear} from "./pik5";
 export function stageUrlOutput(stage, consoles, rule, year, parent){
 
     // 数値変換
+    if (/^4[A-Z][0-9A-Z]$/i.test(String(stage))) return `${String(stage).toUpperCase()}/${consoles || 0}/${rule || 48}/${year || currentYear()}`
     const s = Number(stage)
     const c = Number(consoles)
     const r = Number(rule)
@@ -47,10 +48,12 @@ function secondsToTime(value) {
     return `${hh ? `${hh}:`:""}${mm}:${ss}`
 }
 
-export function score2str(score, rule, stage) {
+export function score2str(score, rule, stage, scoreType = null) {
     const numericScore = Number(score)
     const numericRule = Number(rule)
     const numericStage = Number(stage)
+
+    if (numericRule === 48) return scoreType === 'points' ? `${numericScore.toLocaleString()} pts.` : secondsToTime(numericScore)
 
     if (remainingTimeStages.includes(numericStage)) {
         const stageTime = timeStageList.find(({stage: targetStage}) => targetStage === numericStage)

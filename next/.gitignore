@@ -10,6 +10,7 @@
 
 # next.js
 /.next/
+/.next-rule48-dev/
 /out/
 
 # production
