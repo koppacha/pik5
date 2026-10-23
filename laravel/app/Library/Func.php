@@ -137,7 +137,7 @@ class Func extends Facade
         return $memo[$cacheKey] = (array)$result;
     }
     // 順位とランクポイントを入力された配列内で再計算する（スコア降順であることが前提）
-    public static function rank_calc (string $mode, array $data, array $option): array
+    public static function rank_calc (string $mode, array $data, array $option, ?int $maxMembers = null): array
     {
         // オプションから親番号を取り出せたら、それを投稿者数集計対象にする
         [, $rule, ] = $option;
@@ -152,7 +152,7 @@ class Func extends Facade
         $member = count($data);
 
         // 最大の参加者数データを取得（取得に失敗した場合は当該ランキングの参加者数を最大値とする）
-        $max = ($memberCount = self::memberCount($totals, $option)) ? max($memberCount) : $member;
+        $max = $maxMembers ?? (($memberCount = self::memberCount($totals, $option)) ? max($memberCount) : $member);
 
         if($mode === "reverse") {
             $data = array_reverse($data);

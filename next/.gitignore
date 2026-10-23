@@ -36,3 +36,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 /prisma/data/
+
+# Public yearly RTA cache
+/.cache/year-records/
+/.next-year-build/

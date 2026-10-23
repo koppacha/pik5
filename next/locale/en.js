@@ -1,4 +1,14 @@
 export const en = {
+    yearRecords: {
+        title: "Yearly records", normal: "Standard", special: "Special", limited: "Limited events", rta: "RTA",
+        categories: "Ranking category", evidence: "Video filter", videosOnly: "With video evidence", all: "Show all",
+        asOf: "As of", updated: "RTA retrieved", records: "records", detail: "Record details", video: "Video evidence", more: "Show more",
+        description: "Personal bests as of year-end (now for the current year), submitted in that year. 2014 also includes older submissions. The video filter does not change ranks or RP.",
+        empty: "No records found.", noVideos: "No records with video evidence. Select Show all to see the remaining records.",
+        rtaLoading: "Loading yearly RTA records…", rtaError: "Could not retrieve RTA records.", retry: "Retry",
+        rtaCache: "Cached for up to 10 minutes this year, or 30 days for past years.", stale: "RTA refresh failed. Showing the previously retrieved records.",
+        unknownDates: "RTA records excluded because the submission date is unknown",
+    },
     g: {
         welcome: "Welcome to the Pikmin Challenge Leaderboards",
         pikmin: "Pikmin",

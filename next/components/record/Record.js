@@ -52,7 +52,13 @@ export default function Record({
     rankPointUnit = null,
     hideRankProgress = false,
     stampItems = null,
-    showZeroScore = false
+    stageHref = null,
+    stageLabel = null,
+    userEntries = null,
+    detailHref = null,
+    showRankPoints = true,
+    showZeroScore = false,
+    scoreText = null
 }) {
 
     const router = useRouter()
@@ -96,7 +102,7 @@ export default function Record({
 
     // ステージへのリンク
     const stageUrl = stageUrlOutput(data.stage_id, 0, data.rule, currentYear(), parent?.stage_id)
-    const stageLink = (stageUrl) ? '/stage/'+stageUrl : ""
+    const stageLink = stageHref ?? ((stageUrl) ? '/stage/'+stageUrl : "")
 
     // 総合ランキングのステージ数
     // 特殊ランキングは同一キーの全総合と通常総合の差分を算出
@@ -169,15 +175,18 @@ export default function Record({
                         <RankEdge className="rank-edge" as="span">{t.g.rankHead} </RankEdge>
                         <RankType className="rank-type" as="span">{data?.post_rank ?? "?"}</RankType>
                         <RankEdge className="rank-edge" as="span"> {t.g.rankTail}</RankEdge>
-                        {(!mini || showMiniRps) && <RankPointType className="rank-point-type">[{rankPointLabel}]</RankPointType>}
+                        {showRankPoints && (!mini || showMiniRps) && <RankPointType className="rank-point-type">[{rankPointLabel}]</RankPointType>}
                     </div>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={3.4} sm={3}>
-                    <UserType style={{fontSize:mini && "0.9em"}} className="user-type" length={data.user_name?.length || 0}><Link href={userPageUrl}>{data.user_name}</Link></UserType>
+                    <UserType style={{fontSize:mini && "0.9em"}} className="user-type" length={data.user_name?.length || 0}>{userEntries ? userEntries.map((user, index) => <React.Fragment key={`${user.key}-${index}`}>
+                        {index > 0 && ' / '}{user.url ? <Link href={user.url}>{user.name}</Link> : <span>{user.name}</span>}
+                    </React.Fragment>) : <Link href={userPageUrl}>{data.user_name}</Link>}</UserType>
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={showZeroScore || Boolean(scoreUnit)} /><br className="pc-hidden"/>
+                    {scoreText !== null ? <ScoreType className="score-type" as="span">{scoreText}</ScoreType>
+                        : <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={showZeroScore || Boolean(scoreUnit)} />}<br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
@@ -198,8 +207,8 @@ export default function Record({
                         </Grid>
                         {!mini && <Grid item xs={12} sm={9} style={{textAlign:'right'}}>
                             {data.stage_id &&
-                                <Link href={stageLink}>{data.stage_id + '#' + ((Number(data.stage_id) >= 1000 && data.stage_name) || t.stage[data.stage_id] || data.stage_name || `#${data.stage_id}`)}
-                                    {(!hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
+                                <Link href={stageLink}>{stageLabel ?? (data.stage_id + '#' + ((Number(data.stage_id) >= 1000 && data.stage_name) || t.stage[data.stage_id] || data.stage_name || `#${data.stage_id}`))}
+                                    {(stageLabel === null && !hideRuleNames.includes(data.rule) && data.rule < 100) && <span style={{fontSize:'0.85em'}}> ({t.rule[data.rule]})</span>}
                                 </Link>
                             }
                             {// シリーズ別総合ランキングは星取表へのリンクを表示する
@@ -263,9 +272,9 @@ export default function Record({
                                     </Link>
                                 </>}
                             {Number(data.rule) === 48 && data.is_certified && <Tooltip title="認定記録" arrow><span aria-label="認定記録"><FontAwesomeIcon icon={faCertificate} style={{marginRight: '0.25em', fontSize: '1.25em'}} /></span></Tooltip>}
-                            {data.unique_id &&
+                            {(detailHref || data.unique_id) &&
                                 <>
-                                    <Link href={"/record/"+data.unique_id}>
+                                    <Link href={detailHref || ("/record/"+data.unique_id)}>
                                         <FontAwesomeIcon icon={faTag} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                     </Link>
                                 </>}

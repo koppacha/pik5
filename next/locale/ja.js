@@ -1,4 +1,14 @@
 export const ja = {
+    yearRecords: {
+        title: "年別記録", normal: "通常ランキング", special: "特殊ランキング", limited: "期間限定", rta: "RTA",
+        categories: "ランキングのカテゴリ", evidence: "証拠動画フィルター", videosOnly: "証拠動画あり", all: "すべて表示",
+        asOf: "集計基準", updated: "RTA取得日時", records: "件", detail: "記録詳細", video: "証拠動画", more: "さらに表示",
+        description: "年末時点（当年は現在時刻）の自己ベストのうち、その年に投稿された記録を表示します。2014年は以前の投稿も含みます。順位・RPは動画フィルターでは変わりません。",
+        empty: "該当する記録はありません。", noVideos: "証拠動画付きの記録はありません。「すべて表示」で確認できます。",
+        rtaLoading: "RTAの年別記録を読み込んでいます。", rtaError: "RTAの取得に失敗しました。", retry: "再試行",
+        rtaCache: "当年は最大10分、過去年は30日キャッシュします。", stale: "RTAを更新できないため、前回取得した記録を表示しています。",
+        unknownDates: "投稿日時が不明のため対象外となったRTA記録",
+    },
     g: {
         welcome: "ピクチャレ大会へようこそ",
         pikmin: "ピクミン",

@@ -12,6 +12,7 @@ export default async function handler(req, res) {
 
         try {
             // ページ種別とステージIDは必須
+            if (page === "date") return res.status(403).json({message: "Use the administrator year cache endpoint"})
             if(id && page){
                 if (page === "user") {
                     const user = await prisma.user.findFirst({

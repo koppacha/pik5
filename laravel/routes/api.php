@@ -230,3 +230,6 @@ Route::middleware(['api'])->group(function () {
 
 Route::middleware(['api'])->match(['get', 'post'], 'security/events', [\App\Http\Controllers\SecurityEventController::class, 'handle']);
 
+// 年別投稿一覧・管理者によるキャッシュ更新
+Route::get('date/{year}', [\App\Http\Controllers\YearRecordController::class, 'show']);
+Route::post('date/{year}/refresh', [\App\Http\Controllers\YearRecordController::class, 'refresh']);
