@@ -7,13 +7,7 @@ import {useTheme} from "next-themes";
 export const range = (start, end) => [...Array((end - start) + 1)].map((_, i) => start + i);
 
 // Fetcher本体
-export async function fetcher(url){
-    const res = await fetch(url)
-    if(!res.ok){
-        res.status(500).end()
-    }
-    return res.json()
-}
+export {fetcher} from "./clientFetchJson.mjs"
 // 翻訳データ読み込み（SSRでは使用不可）（現在の言語はt、現在の言語でない方はrに格納される）
 export const useLocale = () => {
     const { locale } = useRouter()

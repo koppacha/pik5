@@ -181,6 +181,27 @@ class TrickRecordVisibilityTest extends TestCase
         }
     }
 
+    public function test_recent_records_include_event_score_types_without_overriding_regular_time_rules(): void
+    {
+        $now = CarbonImmutable::now()->startOfSecond();
+        [$event] = $this->fixture($now, 1314);
+        $event->update(['state' => 'ended', 'end_at' => $now->subHour()]);
+        $this->fixture($now, 1474, $event);
+        $this->fixture($now, 399, $event);
+        Stage::where('stage_id', 1314)->update(['display' => 'time']);
+        $time = $this->record(1314, 1, $now, 123);
+        $points = $this->record(1474, 1, $now, 456);
+        $regular = $this->record(399, 35, $now, 789);
+
+        foreach (['/api/new?limit=200', '/api/new?after_post_id='.($time->post_id - 1)] as $url) {
+            $rows = collect($this->getJson($url)->assertOk()->json())->keyBy('post_id');
+            self::assertSame('time', $rows[$time->post_id]['score_type']);
+            self::assertSame('points', $rows[$points->post_id]['score_type']);
+            self::assertArrayNotHasKey('score_type', $rows[$regular->post_id]);
+            self::assertArrayNotHasKey('stage_display', $rows[$time->post_id]);
+        }
+    }
+
     private function fixture(CarbonImmutable $now, int $stageId, ?TrickEvent $event = null): array
     {
         $event ??= TrickEvent::create([

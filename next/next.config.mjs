@@ -3,6 +3,7 @@
  */
 
 const nextConfig = {
+  distDir: process.env.NEXT_DIST_DIR || '.next',
   staticPageGenerationTimeout: 180,
   reactStrictMode: true,
   async headers() {

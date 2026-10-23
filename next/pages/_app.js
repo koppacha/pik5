@@ -4,7 +4,7 @@ import '@/styles/styles.scss';
 import Layout from '../components/Layout';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import {ThemeProvider} from "next-themes";
-import {SessionProvider} from "next-auth/react";
+import {SessionProvider, useSession} from "next-auth/react"
 import {GlobalStyle} from "../styles/pik5.css";
 import {useEffect, useState} from "react";
 import Script from "next/script";
@@ -24,6 +24,21 @@ import {googleFontVariables} from "../lib/googleFonts"
 
 const clientSideEmotionCache = createEmotionCache()
 const analyticsEnabled = process.env.NODE_ENV === "production" && Boolean(ga)
+
+// Keep the server-rendered screen blocked until hydration and the initial session check finish.
+function InitialLoadingGate() {
+    const {status} = useSession()
+    const router = useRouter()
+
+    useEffect(() => {
+        if (!router.isReady || status === "loading") return
+        document.getElementById("__initial-loading")?.setAttribute("hidden", "")
+        const root = document.getElementById("__next")
+        if (root) root.inert = false
+    }, [router.isReady, status])
+
+    return null
+}
 
 export default function App(props) {
     const {Component, emotionCache = clientSideEmotionCache, pageProps: {session, ...pageProps}} = props
@@ -89,6 +104,11 @@ export default function App(props) {
         const handleBeforeUnload = () => {
             showUnloadLoadingLayer()
         }
+        const handlePageShow = () => {
+            document.getElementById("__reload-loading-backdrop")?.remove()
+            setPageLoading(false)
+        }
+        window.addEventListener("pageshow", handlePageShow)
         router.events.on("routeChangeStart", handleStart)
         router.events.on("routeChangeComplete", handleComplete)
         router.events.on("routeChangeComplete", handleRouterChange)
@@ -102,6 +122,7 @@ export default function App(props) {
             router.events.off("routeChangeError", handleComplete)
             window.removeEventListener("beforeunload", handleBeforeUnload)
             window.removeEventListener("pagehide", handleBeforeUnload)
+            window.removeEventListener("pageshow", handlePageShow)
         }
     }, [router.asPath, router.events])
 
@@ -166,6 +187,7 @@ export default function App(props) {
             <GlobalStyle/>
             <CacheProvider value={emotionCache}>
                 <SessionProvider session={session}>
+                    <InitialLoadingGate />
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
                         {Component.disableLayout ? pageContent : (
                             <Layout hideFooter={Component.hideFooter}>

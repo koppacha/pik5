@@ -25,12 +25,23 @@ export default function MyDocument(props) {
                       `,
                   }}
               />
+              <style>{`
+                  #__initial-loading { position: fixed; inset: 0; z-index: 2147483647; display: grid; place-items: center; background: var(--color-loading-overlay, rgba(0,0,0,.8)); color: white }
+                  #__initial-loading[hidden] { display: none }
+                  #__initial-loading span { display: block; width: 40px; height: 40px; margin: 0 auto 12px; border: 3px solid #777; border-top-color: white; border-radius: 50%; animation: initial-loading-spin .8s linear infinite }
+                  @keyframes initial-loading-spin { to { transform: rotate(360deg) } }
+              `}</style>
+              <noscript><style>{`#__initial-loading { display: none }`}</style></noscript>
               {styledComponentsStyleTags}
               {emotionStyleTags}
               <link rel="icon" href="/favicon.ico" />
           </Head>
           <body>
             <Main />
+            <div id="__initial-loading" role="status" aria-live="polite">
+                <div style={{textAlign: 'center'}}><span aria-hidden="true" />Loading...</div>
+            </div>
+            <script dangerouslySetInnerHTML={{__html: `document.getElementById('__next').inert = true`}} />
             <NextScript />
           </body>
         </Html>

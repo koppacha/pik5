@@ -17,12 +17,14 @@ import Compressor from "compressorjs";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faCheck} from "@fortawesome/free-solid-svg-icons";
 import useSWR from "swr";
+import {useRouter} from "next/router"
 import {createRecordValidationSchema} from "../../lib/recordValidation";
 
 export default function RecordForm({info, rule, mode, open, setOpen, handleClose, initialData = null, onSuccess = null, onPosted = null}) {
 
     // 送信イベント判定
     const isSubmit = useRef(false)
+    const router = useRouter()
 
     const tricksEventId = info?.tricks_event_id || initialData?.tricks_event_id
     const isTricksStage = Number(info?.stage_id) >= 1001 && Number(info?.stage_id) <= 1999
@@ -52,6 +54,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [img, setImg] = useState(null)
     const [userAgent, setUserAgent] = useState("")
     const [isProcessing, setIsProcessing] = useState(false)
+    const [submitError, setSubmitError] = useState("")
 
     const [pikmin, setPikmin] = useState(0)
     const [treasure, setTreasure] = useState(0)
@@ -133,6 +136,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         // ここから送信処理
         isSubmit.current = true
         setIsProcessing(true)
+        setSubmitError("")
         try {
             const formData = new FormData()
             const isEditMode = mode === "edit" && initialData
@@ -183,7 +187,12 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 body: formData,
             })
             if (!res.ok) {
-                console.error("Record post failed", res.status, await res.text().catch(() => ""))
+                const messages = {
+                    401: "ログイン状態を確認できません。再度ログインしてからお試しください。",
+                    403: "この記録は編集できません。編集期限・権限をご確認ください。",
+                    429: "アクセスが集中しています。しばらく待ってからお試しください。",
+                }
+                setSubmitError(messages[res.status] || "投稿できませんでした。入力内容と通信状態をご確認ください。")
                 return
             }
             // 投稿後の処理
@@ -193,10 +202,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 onSuccess()
             }
 
-            // ISR再検証はバックグラウンドで投げる（UI更新は onPosted / reload 側で担当）
-            void (async () => {
+            // 再検証が完了してから表示を更新する。フルリロードによる認証再取得を避ける。
+            await (async () => {
                 try {
                     const tokenRes = await fetch('/api/token')
+                    if (!tokenRes.ok) throw new Error("revalidate token unavailable")
                     const { token } = await tokenRes.json()
                     const getYear = currentYear()
 
@@ -222,11 +232,11 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         revalidateReq(`/api/revalidate?page=user&id=${session.user.userId}`),
                     ])
 
-                    if (resStage.status === 'rejected' || resTotal.status === 'rejected' || resUser.status === 'rejected') {
-                        console.error("Page Cache Clear Failed", {resStage, resTotal, resUser})
+                    if ([resStage, resTotal, resUser].some(result => result.status === 'rejected' || !result.value.ok)) {
+                        console.error("Page Cache Clear Failed")
                     }
-                } catch (e) {
-                    console.error("Background revalidate failed", e)
+                } catch {
+                    console.error("Page Cache Clear Failed")
                 }
             })()
 
@@ -240,7 +250,9 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                 return
             }
 
-            window.location.reload()
+            await router.replace(router.asPath, undefined, {scroll: false})
+        } catch {
+            setSubmitError("通信に失敗しました。記録が保存されているか確認してからお試しください。")
         } finally {
             setIsProcessing(false)
             // ここまで送信処理
@@ -363,6 +375,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             <Dialog open={open} onClose={handleDialogRequestClose} disableEscapeKeyDown={isProcessing}>
                 <DialogTitle>{mode === "edit" ? `${t.post.title}（再編集）` : t.post.title}</DialogTitle>
                 <DialogContent>
+                    {submitError && <Typography role="alert" color="error">{submitError}</Typography>}
                     <TextField
                         id="stage"
                         label={t.g.stageName}

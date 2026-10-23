@@ -27,7 +27,7 @@ class NewRecordController extends Controller
             ->leftJoin('stages', 'records.stage_id', '=', 'stages.stage_id')
             ->select(array_merge(
                 array_map(static fn ($column) => 'records.' . $column, config('const.selected')),
-                ['users.user_name as user_name', 'stages.stage_name as stage_name']
+                ['users.user_name as user_name', 'stages.stage_name as stage_name', 'stages.display as stage_display']
             ))
             ->where('records.stage_id', "<", 10000)
             ->where('records.flg','<', 2)
@@ -57,6 +57,11 @@ class NewRecordController extends Controller
             ->get(['links.record_id', 'decks.origin_stage_id', 'decks.rule_name', 'origins.stage_name'])
             ->keyBy('record_id');
         foreach ($dataset as &$row) {
+            // Score can render event records without one extra request per stage.
+            if ((int) $row['stage_id'] >= 1001 && (int) $row['stage_id'] <= 1999) {
+                $row['score_type'] = $row['stage_display'] === 'time' ? 'time' : 'points';
+            }
+            unset($row['stage_display']);
             $card = $eventCards->get($row['post_id']);
             if ($card !== null) {
                 $row['event_origin_stage_id'] = $card->origin_stage_id;

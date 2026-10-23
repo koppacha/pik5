@@ -34,6 +34,7 @@ import LimitedIdeas from "../components/top/LimitedIdeas"
 import MonthlyMnp from "../components/top/MonthlyMnp"
 
 export async function getServerSideProps(context) {
+    context.res.setHeader("Cache-Control", "private, no-store")
     const { getCachedUsers } = await import("../lib/usersCache")
     const {getServerSession} = await import("next-auth/next")
     const {authOptions} = await import("./api/auth/[...nextauth]")
@@ -61,6 +62,7 @@ export async function getServerSideProps(context) {
 
     return {
         props: {
+            session,
             users,
             prev,
             initialNow: Date.now(),

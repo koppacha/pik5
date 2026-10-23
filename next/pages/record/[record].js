@@ -15,6 +15,9 @@ import RecordForm from "../../components/modal/RecordForm"
 // recordsではページキャッシュを作らないようにSSRで動的に生成する
 export async function getServerSideProps(ctx) {
     const { getCachedUsersWithRole } = await import("../../lib/usersCache")
+    const {getServerSession} = await import("next-auth/next")
+    const {authOptions} = await import("../api/auth/[...nextauth]")
+    const session = await getServerSession(ctx.req, ctx.res, authOptions)
 
     const { params, res } = ctx
 
@@ -56,7 +59,7 @@ export async function getServerSideProps(ctx) {
 
     return {
         props: {
-            users, data, history
+            users, data, history, session
         },
     }
 }
