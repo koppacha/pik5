@@ -155,7 +155,7 @@ export default function Stage(param){
     useEffect(() => {
         setDisplayedRule(initialDisplayedRule)
         setIsStageListSwitching(false)
-    }, [initialDisplayedRule])
+    }, [initialDisplayedRule, param.stage, param.rule, param.consoles, param.year])
 
     const handleClose = () => setOpen(false)
 
@@ -246,7 +246,7 @@ export default function Stage(param){
     const totalRuleId = (rule) => rule === SPECIAL_STAGES_RULE ? 91 : rule
 
     const handleConventionalRuleClick = (event, rule, isActive) => {
-        if(isStageListSwitching){
+        if(isStageListSwitching || (!isActive && Number(rule) === Number(param.rule))){
             event.preventDefault()
             setDisplayedRule(rule)
             setIsStageListSwitching(false)

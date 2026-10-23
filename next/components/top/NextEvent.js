@@ -3,7 +3,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome"
 import {faCalendarDays, faImage} from "@fortawesome/free-solid-svg-icons"
 import useSWR from "swr"
 import {fetcher} from "../../lib/pik5"
-import {TopBox, TopBoxContent, TopBoxHeader} from "../../styles/pik5.css"
+import {TopBox, TopBoxContent, TopBoxHeader, WrapTopBox} from "../../styles/pik5.css"
 
 const DISCORD_GUILD_ID = "418790157500678164"
 
@@ -50,38 +50,10 @@ const truncateDescription = (value) => {
 }
 
 export default function NextEvent() {
-    const {data, error} = useSWR("/api/server/discord/events", fetcher)
+    const {data} = useSWR("/api/server/discord/events", fetcher)
     const event = data?.data ?? null
 
-    if (error) {
-        return (
-            <TopBox className="top-box">
-                <TopBoxHeader className="top-box-header">
-                    <span><FontAwesomeIcon icon={faCalendarDays}/> 次のイベント</span>
-                </TopBoxHeader>
-                <TopBoxContent className="top-box-content">
-                    <Typography style={{fontSize: "0.9em", color: "#999"}}>
-                        イベント情報を取得できませんでした。
-                    </Typography>
-                </TopBoxContent>
-            </TopBox>
-        )
-    }
-
-    if (!event) {
-        return (
-            <TopBox className="top-box">
-                <TopBoxHeader className="top-box-header">
-                    <span><FontAwesomeIcon icon={faCalendarDays}/> 次のイベント</span>
-                </TopBoxHeader>
-                <TopBoxContent className="top-box-content">
-                    <Typography style={{fontSize: "0.9em", color: "#999"}}>
-                        予定されているイベントはありません。
-                    </Typography>
-                </TopBoxContent>
-            </TopBox>
-        )
-    }
+    if (!event?.id) return null
 
     const eventUrl = getEventUrl(event)
     const href = isUrl(event.location) ? event.location : eventUrl
@@ -89,6 +61,7 @@ export default function NextEvent() {
     const statusText = isActive ? "ただいま開催中！" : `開催まで ${formatRemaining(event.scheduled_start_time)}`
 
     return (
+        <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
         <TopBox
             className="top-box"
             component="a"
@@ -152,5 +125,6 @@ export default function NextEvent() {
                 </Box>
             </TopBoxContent>
         </TopBox>
+        </WrapTopBox>
     )
 }

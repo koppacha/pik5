@@ -253,7 +253,7 @@ export default function Series(param){
             }
             {
                 param.series > 9 &&
-                <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} />
+                <StageList stages={stages} consoles={param.consoles} rule={param.rule} year={param.year} limitRows />
             }
             {
                 ["10", "20", "30", "40"].includes(param.series) && param.rule === param.series &&

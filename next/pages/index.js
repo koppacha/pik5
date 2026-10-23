@@ -188,9 +188,7 @@ export default function Home({users, prev, disablePickupVideoAutoplay, initialNo
               <WrapTopBox item xs={12} sm={6} className="wrap-top-box top-split-column">
                   <Grid container spacing={1} className="top-split-column-grid">
                       <TricksActiveEvent>
-                          <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
-                              <NextEvent/>
-                          </WrapTopBox>
+                          <NextEvent/>
                           <LimitedIdeas/>
                       </TricksActiveEvent>
                       <WrapTopBox item xs={12} className="wrap-top-box top-split-column-item">
