@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
+        $schedule->command('security:prune')->daily()->withoutOverlapping();
         $schedule->command('tricks:maintenance')->everyMinute()->withoutOverlapping();
         $schedule->command('telescope:prune --hours=8')->hourly()->withoutOverlapping();
 

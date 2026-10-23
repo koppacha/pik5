@@ -1,3 +1,5 @@
+import {authRequestContext, checkAuthLimit, recordLoginEvent} from '../../../lib/authSecurity'
+import {resolveClientIp} from '../../../lib/requestContext'
 import NextAuth from 'next-auth'
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
@@ -67,14 +69,19 @@ export const authOptions = {
                         },
                     })
 
-                    if(!user) return null
+                    if(!user) {
+                        await recordLoginEvent('failure')
+                        return null
+                    }
 
                     // ここで入力されたパスワードをDB上のハッシュと比較する（sync は避ける）
                     const ok = await bcrypt.compare(password, user.password)
-                    if(ok) return user
+                    if(ok) return {id: user.id, userId: user.userId, name: user.name, role: user.role, email: user.email, emailVerified: user.emailVerified}
+                    await recordLoginEvent('failure', user.id)
 
                     return null
                 } catch (e) {
+                    await recordLoginEvent('error')
                     return null
                 }
                 // const user = await fetch(
@@ -103,6 +110,9 @@ export const authOptions = {
             },
         })
     ],
+    events: {
+        async signIn({user}) { await recordLoginEvent('success', user.id) },
+    },
     callbacks: {
         async session({session, token}){
             if(token && session?.user){
@@ -137,6 +147,7 @@ export const authOptions = {
         },
         async jwt({token, user, trigger, session}){
             // サインイン直後: DB主キー(id)を token.id に載せる（=基準を主キーにする）
+            delete token.email
             if(user){
                 token.id = user.id
                 token.userId = user.userId
@@ -271,6 +282,17 @@ export const authOptions = {
     },
 }
 
-const authHandler = (req, res) => NextAuth(req, res, authOptions);
+const authHandler = async (req, res) => {
+    const context = {ip: resolveClientIp(req), userAgent: String(req.headers['user-agent'] || '').slice(0, 256)}
+    return authRequestContext.run(context, async () => {
+        if (req.method === 'POST' && req.query.nextauth?.includes('credentials')) {
+            if (!await checkAuthLimit(req, res, 'login', req.body?.userId)) {
+                await recordLoginEvent('limited')
+                return
+            }
+        }
+        return NextAuth(req, res, authOptions)
+    })
+}
 
 export default authHandler;

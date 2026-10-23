@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { useSession, signIn, signOut } from "next-auth/react"
 import SeoHead from "../components/SeoHead"
 
@@ -67,7 +68,13 @@ const DownloadCsvButton = ({ record }) => {
     )
 }
 
-export async function getServerSideProps() {
+export async function getServerSideProps({req, res: response}) {
+    response.setHeader('Cache-Control', 'private, no-store')
+    const {getServerSession} = await import('next-auth/next')
+    const {authOptions} = await import('./api/auth/[...nextauth]')
+    const {currentManagementUser} = await import('../lib/dandoriServer')
+    const currentUser = await currentManagementUser(await getServerSession(req, response, authOptions))
+    if (Number(currentUser?.role) !== 10) return {props: {data: [], users: []}}
     const { getCachedUsersWithRole } = await import("../lib/usersCache")
 
     const users = await getCachedUsersWithRole()
@@ -108,6 +115,7 @@ export default function Admin({data, users}){
                 noindex={true}
             />
             <h1>全記録ダウンロード</h1>
+            <p><Link href="/admin/stages">だれでもダンドリ検定 ステージ管理</Link></p>
             <DownloadCsvButton record={data}/>
         </div>
     );

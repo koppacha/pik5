@@ -1,3 +1,4 @@
+import {checkAuthLimit} from '../../../lib/authSecurity'
 import prisma from "../../../lib/prisma"
 import { logger } from "../../../lib/logger"
 import sha256 from "crypto-js/sha256"
@@ -7,7 +8,8 @@ import {isValidPassword} from "../../../lib/passwordPolicy"
 
 export default async function handle(req, res) {
     if (req.method === "POST") {
-        await handlePOST(res, req);
+        if (!await checkAuthLimit(req, res, 'register', req.body?.userId)) return
+        await handlePOST(res, req)
     } else {
         return res.status(400).json({error: "不正なリクエストです。"})
     }
@@ -53,6 +55,6 @@ async function handlePOST(res, req) {
             data: {name, userId, password: hashPassword(password)},
         })
         invalidateUsersCache()
-        res.status(200).json(user);
+        res.status(200).json({id: user.id, userId: user.userId, name: user.name})
     }
 }

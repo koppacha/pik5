@@ -152,6 +152,7 @@ export default function Home({users, prev, disablePickupVideoAutoplay}) {
                           </>
                       ) : (
                           <>
+                              <AuthButton component={Link} href="/auth/history">ログイン履歴</AuthButton>
                               <AuthButton component={Link} href="/auth/config">{t.g.userConfig}</AuthButton>
                               <AuthButton onClick={() => signOut()}>{t.g.logout}</AuthButton>
                           </>

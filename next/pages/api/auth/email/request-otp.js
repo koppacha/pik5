@@ -1,3 +1,4 @@
+import {checkAuthLimit} from '../../../../lib/authSecurity'
 import { getServerSession } from 'next-auth/next'
 import crypto from 'crypto'
 import prisma from '../../../../lib/prisma'
@@ -17,6 +18,7 @@ function hashOtp(emailHash, otp) {
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ ok: false })
+    if (!await checkAuthLimit(req, res, 'otp-send', req.body?.email)) return
 
     const session = await getServerSession(req, res, authOptions)
     if (!session?.user) return res.status(401).json({ ok: false, message: 'Unauthorized' })

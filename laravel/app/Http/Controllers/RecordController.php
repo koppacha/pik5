@@ -370,9 +370,7 @@ class RecordController extends Controller
             DB::transaction(function () use ($request, $comment, $fileName, $targetUniqueId, $postMemo, $isEdit, $current, $newUniqueIdForCurrent, $score, $rule, $console, $difficulty, $region, $videoUrl, $trickRecords) {
                 $clientIp = $request->ip() ?: '';
                 $clientHost = '';
-                if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
-                    $clientHost = gethostbyaddr($clientIp) ?: '';
-                }
+
 
                 if ($isEdit && $current) {
                     $current->fill([
@@ -406,6 +404,9 @@ class RecordController extends Controller
                     $posts->created_at = $current->created_at;
                 }
                 $posts->save();
+                if (filter_var($clientIp, FILTER_VALIDATE_IP)) {
+                    DB::afterCommit(fn () => \App\Jobs\ResolveRecordHost::dispatchAfterResponse($posts->post_id, $clientIp));
+                }
                 $trickRecords->saved($posts, $current, $request);
             });
         } catch (HttpResponseException $e) {

@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'management_secret' => env('TRICKS_INTERNAL_SECRET', ''),
 
     /*
     |--------------------------------------------------------------------------

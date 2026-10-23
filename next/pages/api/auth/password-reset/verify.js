@@ -1,3 +1,4 @@
+import {checkAuthLimit} from '../../../../lib/authSecurity'
 import crypto from 'crypto'
 import prisma from '../../../../lib/prisma'
 
@@ -7,6 +8,7 @@ function hashToken(token) {
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ ok: false })
+    if (!await checkAuthLimit(req, res, 'reset-verify', req.body?.token)) return
 
     const token = String(req.body?.token || '').trim()
     if (!token) return res.status(400).json({ ok: false })

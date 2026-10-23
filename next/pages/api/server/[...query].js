@@ -1,3 +1,5 @@
+import {clientIpHeaders} from '../../../lib/clientIpSignature'
+import {resolveClientIp} from '../../../lib/requestContext'
 export const config = {
   api: {
     bodyParser: false,
@@ -75,10 +77,7 @@ async function parseUpstreamResponse(upstreamRes) {
 }
 
 function getForwardedFor(req) {
-  const forwarded = req.headers['x-forwarded-for']
-  if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded
-  if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded.join(', ')
-  return req.socket?.remoteAddress || ''
+    return resolveClientIp(req) || ''
 }
 
 export default async function handle(req, res){
@@ -114,7 +113,8 @@ export default async function handle(req, res){
   }
 
   // 記録更新は認証と本人性を強制する専用 /api/server/post だけに限定する
-  if (req.method === 'POST' && (path === 'record' || path.startsWith('record/'))) {
+  if ((req.method === 'POST' && (path === 'record' || path.startsWith('record/'))) ||
+      (req.method !== 'GET' && (path === 'world-records' || path.startsWith('world-records/')))) {
     res.status(405).json({error: true, message: 'use authenticated record endpoint'})
     return
   }
@@ -135,7 +135,7 @@ export default async function handle(req, res){
   try {
     switch (req.method) {
       case "GET": {
-        const upstreamRes = await fetch(upstreamUrl, {headers: identityHeaders})
+        const upstreamRes = await fetch(upstreamUrl, {headers: {...identityHeaders, ...clientIpHeaders(req, new URL(upstreamUrl).pathname)}})
         const data = await parseUpstreamResponse(upstreamRes)
 
         if (!upstreamRes.ok) {
@@ -165,6 +165,7 @@ export default async function handle(req, res){
             headers: {
               'content-type': req.headers['content-type'] || '',
               ...(req.headers['content-length'] ? { 'content-length': req.headers['content-length'] } : {}),
+              ...clientIpHeaders(req, new URL(upstreamUrl).pathname),
               'x-forwarded-for': getForwardedFor(req),
               'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
               'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
@@ -185,6 +186,7 @@ export default async function handle(req, res){
             method: 'POST',
             headers: {
               ...(req.headers['content-type'] ? { 'content-type': req.headers['content-type'] } : {}),
+              ...clientIpHeaders(req, new URL(upstreamUrl).pathname),
               'x-forwarded-for': getForwardedFor(req),
               'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
               'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),

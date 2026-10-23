@@ -218,3 +218,5 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::post('tricks/debug/fixtures', [TrickFixtureController::class, 'create']);
     Route::post('tricks/debug/fixtures/{eventId}/teardown', [TrickFixtureController::class, 'teardown']);
 });
+Route::middleware(['api'])->match(['get', 'post'], 'security/events', [\App\Http\Controllers\SecurityEventController::class, 'handle']);
+

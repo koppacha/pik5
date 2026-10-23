@@ -1,3 +1,4 @@
+import {checkAuthLimit} from '../../../../lib/authSecurity'
 import crypto from 'crypto'
 import prisma from '../../../../lib/prisma'
 import { normalizeEmail, hashEmail, decryptEmail } from '../../../../lib/emailCrypto'
@@ -12,6 +13,7 @@ function hashToken(token) {
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ ok: false })
+    if (!await checkAuthLimit(req, res, 'reset-send', req.body?.email)) return
 
     const email = normalizeEmail(req.body?.email)
     if (!email) return res.status(200).json({ ok: true }) // 推測防止

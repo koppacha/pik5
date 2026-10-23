@@ -11,7 +11,11 @@ class GetImageController extends Controller
 {
     public function show(Request $request): BinaryFileResponse
     {
-        return response()->file(Storage::path("public/img/".$request["file"]));
+        $file = (string) $request['file'];
+        abort_unless(preg_match('/\A[A-Za-z0-9_.-]+\z/', $file) && ! str_contains($file, '..'), 404);
+        $disk = Storage::disk('public');
+        abort_unless($disk->exists('img/'.$file), 404);
+        return response()->file($disk->path('img/'.$file));
     }
     public function showAny(Request $request): Response
     {

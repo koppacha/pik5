@@ -1,9 +1,11 @@
+import {clientIpHeaders} from '../../../lib/clientIpSignature'
+import {resolveClientIp} from '../../../lib/requestContext'
 /*
  *  バイナリデータを含むPOST専用のAPI
  */
 import {getServerSession} from "next-auth/next";
 import fs from "fs";
-import formidable from "formidable";
+import {parseForm, getFieldValue} from '../../../lib/recordUpload'
 import {authOptions} from "../auth/[...nextauth]";
 import {prismaLogging} from "./[...query]";
 import {ensureServerApiAccess} from "../../../lib/serverApiAccess";
@@ -13,42 +15,11 @@ import {createRecordValidationSchema} from "../../../lib/recordValidation";
 import {findRecordForMutation, findTricksStageEvent, ensureRecordStagingAccess} from "../../../lib/tricks/recordContext"
 
 const LARAVEL_API_BASE = process.env.TRICKS_LARAVEL_API_BASE || "http://laravel:8000/api"
-const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
 
 export const config = {
     api: {
         bodyParser: false,
     },
-}
-
-function getFieldValue(value) {
-    if (Array.isArray(value)) return value[0]
-    return value
-}
-
-async function parseForm(req) {
-    const form = formidable({
-        maxFields: 32,
-        maxFieldsSize: 64 * 1024,
-        maxFiles: 1,
-        maxFileSize: MAX_UPLOAD_BYTES,
-        maxTotalFileSize: MAX_UPLOAD_BYTES,
-        filter: ({mimetype}) => !mimetype || [
-            "image/jpeg",
-            "image/png",
-            "image/gif",
-            "image/webp",
-        ].includes(mimetype),
-    })
-    return new Promise((resolve, reject) => {
-        form.parse(req, (error, fields, files) => {
-            if (error) {
-                reject(error)
-                return
-            }
-            resolve({fields, files})
-        })
-    })
 }
 
 async function parseUpstreamResponse(upstreamRes) {
@@ -73,10 +44,7 @@ async function fetchLaravelJson(path) {
 }
 
 function getForwardedFor(req) {
-    const forwarded = req.headers['x-forwarded-for']
-    if (typeof forwarded === 'string' && forwarded.length > 0) return forwarded
-    if (Array.isArray(forwarded) && forwarded.length > 0) return forwarded.join(', ')
-    return req.socket?.remoteAddress || ''
+    return resolveClientIp(req) || ''
 }
 
 function canEditRecord(sessionUserId, role, createdAt, ownerUserId, metadataOnly = false) {
@@ -245,6 +213,7 @@ export default async function handler(req, res){
         }
 
         const proxyHeaders = {
+            ...clientIpHeaders(req, new URL(`${LARAVEL_API_BASE}/record`).pathname),
             'x-forwarded-for': getForwardedFor(req),
             'x-real-ip': String(req.headers['x-real-ip'] || req.socket?.remoteAddress || ''),
             'x-forwarded-proto': String(req.headers['x-forwarded-proto'] || (req.socket?.encrypted ? 'https' : 'http')),
