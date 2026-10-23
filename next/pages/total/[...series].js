@@ -204,7 +204,7 @@ export default function Series(param){
                 <Totals props={{...param, info: {series: 0}}}/>
                 <CategoryList currentEvent={param.category} events={eventCategoryIds} type="event"/>
                 {Number(param.category) !== 0 && eventCategoriesWithStageList.includes(Number(param.category)) &&
-                    <EventList events={param.events}/>}
+                    <EventList events={param.events} limitedGroups={categoryId === 151}/>}
                 <Grid container style={{marginBottom:'1em'}}>
                     <Grid className="rule-wrapper" container item xs={12} style={{marginTop: "24px",justifyContent: 'flex-end',alignContent: 'center'}}>
                         <Box className={"rule-box active"}

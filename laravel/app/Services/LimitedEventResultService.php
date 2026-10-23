@@ -75,7 +75,20 @@ class LimitedEventResultService
 
     public function recalculatePastLimitedResults(bool $persist = true): array
     {
-        $eventIds = self::EVENT_IDS;
+        return $this->recalculateResults(self::EVENT_IDS, $persist);
+    }
+
+    public function recalculateEvent(int $eventId): array
+    {
+        if (!in_array($eventId, self::EVENT_IDS, true)) {
+            throw new \InvalidArgumentException('Unsupported limited event.');
+        }
+
+        return $this->recalculateResults([$eventId], true);
+    }
+
+    private function recalculateResults(array $eventIds, bool $persist): array
+    {
         $results = collect();
         $holders = [];
 

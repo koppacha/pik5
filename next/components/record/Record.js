@@ -51,7 +51,8 @@ export default function Record({
     scoreUnit = null,
     rankPointUnit = null,
     hideRankProgress = false,
-    stampItems = null
+    stampItems = null,
+    showZeroScore = false
 }) {
 
     const router = useRouter()
@@ -176,7 +177,7 @@ export default function Record({
                 </RecordGridWrapper>
                 <RecordGridWrapper className="record-grid-wrapper" item xs={2.8} sm={3}>
                     <div style={{fontSize:mini && "0.9em"}}>
-                    <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={Boolean(scoreUnit)} /><br className="pc-hidden"/>
+                    <Score scoreType={data.score_type} rule={data.rule} score={data.score} stage={data.stage_id} category={data.category} unit={scoreUnit ?? (swapScoreRpsLabel ? "rps" : "pts")} showZero={showZeroScore || Boolean(scoreUnit)} /><br className="pc-hidden"/>
                     <CompareType className="compare-type" as="span" style={recordAccentColor ? {color: recordAccentColor} : undefined}> {compare}</CompareType>
                     {
                         // 総合ランキングの場合は投稿ステージ数を表示
