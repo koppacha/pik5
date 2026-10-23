@@ -57,6 +57,10 @@ Route::group ([ 'middleware' => [ 'api', 'cors' ]], static function () {
     Route::get ( 'record/top/{stage_id}/{console}/{rule}/{difficulty?}' , [ RecordController::class, 'getTopRecord' ]);
     Route::get ( 'record/{id}/{console?}/{rule?}/{year?}/{difficulty?}/{compare?}' , [ RecordController::class, 'show' ]);
     Route::post ( 'record' , [ RecordController::class, 'create' ]);
+    Route::get('world-records/{stage}/{rule}', [\App\Http\Controllers\WorldRecordController::class, 'show']);
+    Route::get('world-records/capabilities', [\App\Http\Controllers\WorldRecordController::class, 'capabilities']);
+    Route::delete('world-records/{id}', [\App\Http\Controllers\WorldRecordController::class, 'destroy']);
+    Route::post('world-records', [\App\Http\Controllers\WorldRecordController::class, 'store'])->middleware('throttle:20,1');
     Route::patch ( 'record/{id}' , [ RecordController::class, 'update' ]);
     Route::delete ( 'record/{id}' , [ RecordController::class, 'destroy' ]);
 });

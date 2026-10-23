@@ -189,6 +189,11 @@ export default async function handler(req, res){
         formData.append('stage_id', stageId)
         if (tricksEventId) formData.append('tricks_event_id', String(tricksEventId))
         formData.append('rule', payloadRule)
+        if (getFieldValue(fields.certified) !== undefined) {
+            const certified = getFieldValue(fields.certified)
+            if (!['0', '1'].includes(certified)) return res.status(400).json({message: '認定記録の指定が不正です'})
+            formData.append('certified', certified)
+        }
         formData.append('region', String(getFieldValue(fields.region)))
         formData.append('score', payloadScore)
         formData.append('user_id', currentUserId)

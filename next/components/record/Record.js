@@ -4,7 +4,7 @@ import {Box, Grid, Tooltip, Typography} from "@mui/material";
 import Link from "next/link";
 import {
     faArrowDownUpAcrossLine,
-    faComment,
+    faComment, faCertificate,
     faImage, faPeopleArrows,
     faScaleUnbalanced,
     faScaleUnbalancedFlip,
@@ -261,6 +261,7 @@ export default function Record({
                                         <FontAwesomeIcon icon={faYoutube} style={{marginRight:"0.25em",fontSize:"1.25em"}}/>
                                     </Link>
                                 </>}
+                            {Number(data.rule) === 48 && data.is_certified && <Tooltip title="認定記録" arrow><span aria-label="認定記録"><FontAwesomeIcon icon={faCertificate} style={{marginRight: '0.25em', fontSize: '1.25em'}} /></span></Tooltip>}
                             {data.unique_id &&
                                 <>
                                     <Link href={"/record/"+data.unique_id}>

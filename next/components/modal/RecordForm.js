@@ -8,7 +8,7 @@ import {yupResolver} from "@hookform/resolvers/yup";
 import TextField from "@mui/material/TextField";
 import DialogTitle from "@mui/material/DialogTitle";
 import {convertToSeconds, currentYear, fetcher, sec2time, rule2consoles, useLocale} from "../../lib/pik5";
-import {Backdrop, Box, CircularProgress, MenuItem, ToggleButton, Typography} from "@mui/material";
+import {Backdrop, Box, Checkbox, FormControlLabel, CircularProgress, MenuItem, ToggleButton, Typography} from "@mui/material";
 import {useSession} from "next-auth/react";
 import GetRank from "./GetRank"
 import Link from "next/link";
@@ -48,6 +48,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
     const [difficulty, setDifficulty] = useState(0)
     const [videoUrl, setVideoUrl] = useState("")
     const [comment, setComment] = useState("")
+    const [certified, setCertified] = useState(false)
     const [img, setImg] = useState(null)
     const [userAgent, setUserAgent] = useState("")
     const [isProcessing, setIsProcessing] = useState(false)
@@ -118,6 +119,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
         setScore(defaultScore)
         setVideoUrl(defaultVideoUrl)
         setComment(defaultComment)
+        setCertified(isEditMode && Boolean(initialData.is_certified))
         setRegion(defaultRegion)
         setRegionSelected(defaultRegion > 0)
         setTimeValue(defaultTime)
@@ -156,6 +158,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
             formData.append('stage_id', info.stage_id)
             if (info.tricks_event_id) formData.append('tricks_event_id', info.tricks_event_id)
             formData.append('rule', payloadRule)
+            formData.append('certified', Number(payloadRule) === 48 && certified ? '1' : '0')
             formData.append('region', payloadRegion)
             formData.append('score', payloadScore)
             formData.append('user_id', session.user.userId)
@@ -557,6 +560,7 @@ export default function RecordForm({info, rule, mode, open, setOpen, handleClose
                         disabled={Boolean(info?.metadata_only_edit) || isTime() || [25].includes(rule) || isRegion()}
                     />
                     <GetRank stage={info?.stage_id} rule={rule} score={score} eventId={tricksEventId}/>
+                    {Number(rule) === 48 && <FormControlLabel control={<Checkbox checked={certified} onChange={event => setCertified(event.target.checked)} />} label="認定記録" />}
                     <TextField
                         {...register('img')}
                         id="img"

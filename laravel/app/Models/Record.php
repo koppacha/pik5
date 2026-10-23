@@ -20,6 +20,13 @@ class Record extends Model
     protected $primaryKey = 'post_id';
     public $incrementing = true;
     protected $keyType = 'int';
+    protected $hidden = ['post_memo'];
+    protected $appends = ['is_certified'];
+
+    public function getIsCertifiedAttribute(): bool
+    {
+        return \App\Services\RecordCertification::isCertified((int) $this->rule, $this->post_memo);
+    }
 
     /**
      * 複数代入可能な属性

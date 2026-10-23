@@ -30,6 +30,7 @@ import PullDownDifficulty from "../../components/form/PullDownDifficulty";
 import SpecialStages, {SPECIAL_STAGES_RULE} from "../../components/record/SpecialStages";
 import {useRouter} from "next/router";
 import TreasureSimulator from "../../components/modal/TreasureSimulator";
+import WorldRecordReport from '../../components/modal/WorldRecordReport'
 
 
 // サーバーサイドの処理
@@ -233,6 +234,9 @@ export default function Stage(param){
         {fallbackData: {data: param.posts}}
     )
     const rankingPosts = stageRecordRes?.data ?? param.posts
+    const worldRecordKey = [31, 32, 33, 34, 36, 48].includes(Number(param.rule))
+        ? `/api/world-records?stage=${encodeURIComponent(param.stage)}&rule=${param.rule}` : null
+    const {data: worldRecordData, mutate: refreshWorldRecord} = useSWR(worldRecordKey, fetcher)
     const stageListKey = displayedRule !== SPECIAL_STAGES_RULE && Number(displayedRule) !== Number(param.rule)
         ? `/api/server/stages/${displayedRule}`
         : null
@@ -389,6 +393,7 @@ export default function Stage(param){
                                     onPosted={handleRecordPosted}/>
                             }
                         </Box>
+                        {worldRecordKey && <Box><WorldRecordReport info={param.info} rule={param.rule} onReported={refreshWorldRecord} /></Box>}
                         <Box>
                             <Button
                                 variant="contained"
@@ -410,7 +415,7 @@ export default function Stage(param){
                     </Stack>
                 </Box>
             </Box>
-            <RankingStandard parent={param.parent} posts={rankingPosts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year}/>
+            <RankingStandard parent={param.parent} posts={rankingPosts} users={param.users} borders={borders} stage={param.stage} console={param.consoles} rule={param.rule} year={param.year} worldRecords={worldRecordData?.records || []} onWorldRecordDeleted={refreshWorldRecord} />
             <ModalKeyword open={open} uniqueId={keywordId} users={param.users} handleClose={handleClose} handleEditOpen={handleEditOpen}/>
         </>
     )

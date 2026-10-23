@@ -252,6 +252,7 @@ class RecordController extends Controller
             'post_comment' => ['nullable', 'string', 'max:128'],
             'video_url' => ['nullable', 'string', 'max:128'],
             'user_agent' => ['nullable', 'string', 'max:512'],
+            'certified' => ['sometimes', 'boolean'],
             'file' => ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
         ]);
         $isEdit = ($request['mode'] === 'edit') && ! empty($request['edit_unique_id']);
@@ -366,6 +367,10 @@ class RecordController extends Controller
                 $fileName = (string) ($current->img_url ?: $request['old_img_url'] ?: '');
             }
         }
+
+        $certified = $request->has('certified') ? $request->boolean('certified')
+            : \App\Services\RecordCertification::isCertified($rule, $current?->post_memo);
+        $postMemo = \App\Services\RecordCertification::memo($postMemo, $rule, $certified);
 
         // 簡易バリデーション
         if ($score < 1 || $rule < 1 || $console < 1) {
