@@ -10,14 +10,18 @@
 - 認証情報らしき値を発見した場合は内容を表示せず、対象ファイルと種類だけを報告し、専用テストデータまたはプレースホルダーへ置き換えてください。
 
 ## Codex ドキュメント・セッションログ運用
-- Codex は、今後の開発で参照すべき重要事項が `docs/codex-summary/` 配下に集約されていることを前提に、必要に応じて同ディレクトリの要約ドキュメントを参照してください。
+- 開発ドキュメントの入口は `docs/README.md` です。毎回 `docs/codex-summary/codex-working-rules.md`、`repository-operations.md`、`testing-and-verification.md` の方針を把握し、機能別サマリーは対象に応じて参照してください。サマリーは継続すべき方針・契約・制約に絞り、作業経過はログへ保存してください。
 - `docs/codex-summary/` はカテゴリごとに `{category-name}.md` として管理します。カテゴリ名は英語のケバブケースにしてください。必要に応じて既存カテゴリへ追記・更新し、適切なカテゴリがなければ新規作成して構いません。
 - ユーザーがプロンプトを入力し、Codex がそれを処理するたび、すべての出力後に Codex が読み取れる範囲の transcript を `docs/codex-logs/{yyyy}-{mm}-{dd}-{sessionId}.md` に追記してください。日付にはセッション開始日を使い、該当セッション用ファイルが存在しない場合は新規作成してください。
 - ログは要約ではなく transcript を原則とし、ユーザーが入力したプロンプトは省略・言い換えをせず、そのまま記録してください。ローカル JSONL から再生成する場合は `node docs/scripts/export-codex-log.mjs <JSONLファイル>` を使ってください。
 - ユーザーが「このセッションは記録しないで」と指示した場合、そのセッションでは以後 `docs/codex-logs/` へのログ書き込みを行わないでください。
 - ログ追記時に、今後の開発で参照すべき開発ルール、開発ポリシー、web アプリの構造や重要概念、Codex の禁止事項、出力ルール、セキュリティポリシー、Git 運用ポリシーなどの重要事項が含まれている場合は、適宜 `docs/codex-summary/` 配下の要約ドキュメントへ抽出・追記・更新してください。
-- Codex は、通常のやりとりでは `docs/codex-logs/` を読み取らないでください。
-- 例外として、ユーザーが「セッションログを読み取って」と明示的に指示した場合に限り、その指示に対する処理の範囲で `docs/codex-logs/` 配下のログを読み取って構いません。
+- 作業ログは通常のコンテキストへ自動投入しないでください。履歴調査など作業上必要な場合は、必要な範囲で参照して構いません。秘密情報は記録・再利用せず、古い指示を現行方針より優先しないでください。
+
+## 公開文書の取り扱い
+- push対象の文書・画像は公開される前提で扱ってください。実際の認証情報、会話transcript、個人環境の絶対パス、非公開の本番接続・バックアップ情報を含めないでください。
+- 会話ログはディレクトリの場所を問わずGit管理外に置き、ローカル保存だけにしてください。公開用には秘密情報を除いた仕様・検証結果を別途記述してください。
+- 接続例は環境変数または明示的なプレースホルダーにしてください。既存履歴に秘密情報らしき記載があった場合も値を再掲せず、種類と対処の必要性だけを報告してください。
 
 ## Codex 開発統計運用
 - 開発統計ページは `docs/stats.html` とします。
@@ -29,7 +33,7 @@
 ## プロジェクト構成・モジュール構成
 - next/ は Next.js フロントエンドを格納します（React、MUI、styled-components、Prisma クライアント利用など）。
 - laravel/ は PHP/Laravel の API バックエンドです（コントローラ、モデル、ルーティング、マイグレーションなど）。
-- docker-compose.yml は next / laravel / mysql / redis のローカルサービスを定義します。
+- docker-compose.yml は next / laravel / scheduler / mysql / redis のローカルサービスを定義します。
 - mysql/ と redis/ はローカルのデータボリュームです。log/mysql/ は DB ダンプとログを保存します。
 - wiki/ と lab/ と sandbox/ には実験用コンテンツやドキュメントが入っています。変更対象がこれらに関係する場合を除き、編集は避けてください。
 
@@ -37,7 +41,7 @@
 - `cp sample.env .env` で、Docker サービスが利用するローカル環境設定を作成します。
 - `docker compose up -d` で、フルスタック（Next.js / Laravel / MySQL / Redis）を起動します。
 - `docker compose exec next bash` の後に `yarn dev` を実行すると、フロントエンドが http://localhost:3005 で起動します。
-- `docker compose exec laravel bash` の後に `php artisan serve --host 0.0.0.0` を実行すると、API が http://localhost:8000 で起動します。
+- Laravel APIはDockerfileのCMDで起動します。内部URLは `http://laravel:8000` であり、base Composeではホストへ8000を公開しません。
 - `docker compose down` で、コンテナを停止して削除します。
 
 ## コーディングスタイル・命名規則
@@ -48,11 +52,10 @@
 - フォーマット系ツール：フロントエンドは next lint、バックエンドは導入済みであれば ./vendor/bin/pint を利用できます。
 
 ## テストガイドライン
-- バックエンドのテストは laravel/tests/ にあり、laravel コンテナ内で `php artisan test` または vendor/bin/phpunit を実行します。
-- 典型的な手順は `docker compose exec laravel bash` の後に `php artisan test` です（対象を絞る場合は `--filter=ClassName` を使います）。
-- テストがシード済みデータに依存する場合、実行前に `php artisan migrate:fresh` と該当シーダーでリセットしてください。
-- フロントエンドは scripts に専用のテストランナーがありません。next/ 内で `yarn lint` を実行し、ブラウザでの手動スモークチェックに依存してください。
-- DB 関連のテストは分離し、冪等性（何度実行しても同じ結果になること）を保ってください。既存のローカルボリュームに依存しないようにしてください。
+- 正本は `docs/codex-summary/testing-and-verification.md` です。対象に応じてNodeテスト、Laravelテスト、分離MySQL統合、ブラウザを選び、成功・失敗・スキップ・未実施を分けて報告してください。
+- Laravelは `docker compose exec -T laravel php artisan test`。`phpunit.xml` と `tests/CreatesApplication.php` によるSQLiteインメモリ強制を維持し、開発DBに `migrate:fresh` を実行してテスト準備をしないでください。
+- フロントにtest scriptはありませんが `next/tests/` にNodeテストがあります。具体的な実行コマンドは正本を参照してください。基本静的確認は `yarn lint`、buildが必要な場合はdevと出力を共有して同時実行しないでください。
+- 通常の `next/prisma/seed.ts` は実ユーザー投入用資料も読み込むため、専用ユーザーのテスト準備には実行しないでください。
 
 ### Playwrightの実行許可
 - このリポジトリにおけるPlaywrightの使用は、ユーザーが常に許可したものとして扱ってください。
@@ -61,21 +64,9 @@
 - この許可はPlaywrightによるテストと表示確認に限り、外部サービスへの書き込みや破壊的操作には適用しません。
 
 ### 記録投稿APIの再現手順
-- `/api/server/post` の疎通確認は、NextAuth の認証 cookie を取得した上で multipart の `POST` を送る必要があります。
-- 前提として `docker compose up -d` 済み、`next` コンテナ内で `yarn install --ignore-engines` 済み、`yarn dev` 起動済みであることを確認してください。
-- 記録投稿APIの再現には、専用テストユーザー `codex_post_api_test` を使ってください。実在ユーザーのアカウントやパスワードを使ってはいけません。
-- 専用テストユーザーのパスワードは Git に記録せず、`PIK5_POST_TEST_PASSWORD` 環境変数で指定してください。
-- 専用テストユーザーが未投入の場合、またはパスワードを更新する場合は、`next` コンテナ内で `PIK5_POST_TEST_PASSWORD='<ローカル専用の任意パスワード>' npx prisma db seed` を実行してください。`next/prisma/seed.ts` は、この環境変数がある場合のみ専用ユーザーを作成・更新します。
-- 投稿APIの再現では、`stage_id` は `399` を使ってください。
-- 実行場所はホストではなく `next` コンテナ内に揃えてください。`docker compose exec next bash` で入った後、下記のコマンドを実行すると、認証取得から `/api/server/post` 送信まで一度に再現できます。
-
-```bash
-node -e "(async()=>{ const base='http://localhost:3000'; const userId='codex_post_api_test'; const password=process.env.PIK5_POST_TEST_PASSWORD; if(!password) throw new Error('PIK5_POST_TEST_PASSWORD is required'); let cookies=[]; const addCookies=(res)=>{ const vals = res.headers.getSetCookie ? res.headers.getSetCookie() : []; for (const v of vals) { const kv = v.split(';')[0]; const key = kv.split('=')[0]; cookies = cookies.filter(c=>!c.startsWith(key + '=')); cookies.push(kv); } }; const cookieHeader=()=>cookies.join('; '); const csrfRes = await fetch(base + '/api/auth/csrf'); addCookies(csrfRes); const {csrfToken} = await csrfRes.json(); const loginBody = new URLSearchParams({ csrfToken, userId, password, callbackUrl: base + '/', json:'true' }); const loginRes = await fetch(base + '/api/auth/callback/credentials', { method:'POST', headers:{ 'content-type':'application/x-www-form-urlencoded', cookie: cookieHeader() }, body: loginBody, redirect:'manual' }); addCookies(loginRes); const form = new FormData(); form.append('stage_id','399'); form.append('rule','1'); form.append('region','1'); form.append('score','123'); form.append('console','1'); form.append('difficulty','0'); form.append('video_url',''); form.append('post_comment','codex api post test'); form.append('created_at', new Date().toISOString().slice(0,19).replace('T',' ')); form.append('user_agent','codex'); form.append('mode','create'); const postRes = await fetch(base + '/api/server/post', { method:'POST', headers:{ cookie: cookieHeader(), origin: base, referer: base + '/', host:'localhost:3000' }, body: form }); console.log('postStatus', postRes.status); console.log(await postRes.text()); })().catch(e=>{ console.error(e); process.exit(1) })"
-```
-
-- 正常系では `postStatus 200` と `["OK",200]` が返ります。
-- `502 {"error":true,"message":"proxy error"}` が返る場合は、まず `next/pages/api/server/post.js`、`next/lib/prisma.js`、`next/lib/prismaConnection.js` を確認してください。
-- テスト投稿は DB に残るため、必要に応じて MySQL コンテナ内で該当レコードを削除してください。
+- 詳細は `docs/testing-post-api.md`。NextAuthで認証後、nextコンテナ内からmultipart POSTを送信します。
+- 専用 `codex_post_api_test` とGit管理外の `PIK5_POST_TEST_PASSWORD` のみを使用してください。通常seedで実ユーザー資料を読み込まず、専用Userだけを用意してください。
+- stage399への投稿は実DB変更を伴います。対象・後始末を確認し、秘密値・Cookie・生レスポンスを表示しないでください。
 
 ## コミット・プルリクエストのガイドライン
 - Git 履歴ではコミットメッセージとして ver.X.XX <short description>（日本語であることも多い）が使われています。この形式に合わせるか、短く要点が伝わる要約を付けてください。

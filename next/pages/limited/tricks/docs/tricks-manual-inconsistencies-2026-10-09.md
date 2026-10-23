@@ -2,7 +2,7 @@
 
 2026-10-09確認。ユーザー指示に従い、この一覧の作成のみ行い、元PDF・ルール仕様書・ユーザーマニュアルの内容は変更していない。
 
-参照対象：画面が実際に開く [limited_19_manual.pdf](next/public/limited/tricks/limited_19_manual.pdf)、[ルール仕様書](next/pages/limited/tricks/docs/tricks-rules.md)、[ユーザーマニュアル本文](next/pages/keyword/tricks-manual.md)、[システム設計書](next/pages/limited/tricks/docs/tricks-system.md)。別名のPDFを更新しても、画面の表示PDFが自動で置き換わるわけではない。
+参照対象：画面が実際に開く [limited_19_manual.pdf](../../../../public/limited/tricks/limited_19_manual.pdf)、[ルール仕様書](tricks-rules.md)、[ユーザーマニュアル本文](../../../keyword/tricks-manual.md)、[システム設計書](tricks-system.md)。別名のPDFを更新しても、画面の表示PDFが自動で置き換わるわけではない。
 
 ## 明確な相違
 
@@ -22,7 +22,7 @@
 
 | 項目 | 仕様書 | ユーザーマニュアル | 必要な決定 |
 |---|---|---|---|
-| テイク前の練習で出した記録の持越し | [2.5](next/pages/limited/tricks/docs/tricks-rules.md:135)：テイクまで回数・期間の制限なく練習でき、「練習成果は、テイク後のスコア投稿に利用できる」 | [練習と手札の返却](next/pages/keyword/tricks-manual.md:93)：練習記録の温存は禁止、投稿可能になってからプレイした記録だけ提出できる | 「成果」が知識・習熟だけを指すのか、得た記録も含むのか明示する。記録持越しの可否を両文書で同じ言葉で説明する |
+| テイク前の練習で出した記録の持越し | [2.5](tricks-rules.md)：テイクまで回数・期間の制限なく練習でき、「練習成果は、テイク後のスコア投稿に利用できる」 | [練習と手札の返却](../../../keyword/tricks-manual.md)：練習記録の温存は禁止、投稿可能になってからプレイした記録だけ提出できる | 「成果」が知識・習熟だけを指すのか、得た記録も含むのか明示する。記録持越しの可否を両文書で同じ言葉で説明する |
 
 PDF3ページも「こそ練」は許可するが、記録の持越し可否までは書いていない。システムはオフラインでのプレイ日時を検証していないため、記録持越しの可否は運営ルールとして確定する必要がある。
 

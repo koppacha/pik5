@@ -13,8 +13,8 @@
 `tests/tricks-polling-smoke.cjs` はPlaywright CLIの `run-code` 用関数。ローカルNextを3005番で起動した状態で実行する。全APIリクエストを架空データで置き換え、認証情報や実DBへの書き込みを使わない。
 
 ```sh
-<LOCAL_HOME>/.codex/skills/playwright/scripts/playwright_cli.sh --session tricks-polling open http://localhost:3005/limited/tricks
-<LOCAL_HOME>/.codex/skills/playwright/scripts/playwright_cli.sh --session tricks-polling run-code "$(cat next/pages/limited/tricks/tests/tricks-polling-smoke.cjs)"
+<CODEX_HOME>/skills/playwright/scripts/playwright_cli.sh --session tricks-polling open http://localhost:3005/limited/tricks
+<CODEX_HOME>/skills/playwright/scripts/playwright_cli.sh --session tricks-polling run-code "$(cat next/pages/limited/tricks/tests/tricks-polling-smoke.cjs)"
 docker compose exec -T next yarn lint --file pages/limited/tricks/index.js
 ```
 

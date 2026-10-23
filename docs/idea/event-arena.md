@@ -1,3 +1,5 @@
+> 企画・機能仕様書です。2026-10-15時点で `next/pages/limited/arena.js`、Next専用proxy、Laravel `NewArenaController`、arena系テーブルの基盤実装があります。以下の「作成」は当初の指定であり未実装の意味ではありません。継続開発では実装と照合し、旧Arena系から分離する契約を維持してください。運用の入口は [イベントサマリー](../codex-summary/events-and-rankings.md)。
+
 # イベント「ピクチャレアリーナ対戦」
 
 ## 概要

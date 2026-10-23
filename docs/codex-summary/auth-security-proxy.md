@@ -1,57 +1,26 @@
-# Auth Security Proxy
+# 認証・認可・proxy
 
-## Next API Proxy
+## 認証DBと返却情報
 
-- `next/pages/api/server/[...query].js` は Laravel API への汎用 proxy。
-- `next/pages/api/server/post.js` は記録投稿用の専用 proxy。
-- 共通アクセス制御は `next/lib/serverApiAccess.js` に集約する。
-- `/api/server/*` は `ensureServerApiAccess()` で保護する。
+- 主認証はNextAuth / Prisma。パスワードはbcrypt、メールはAES-256-GCMと検索用HMAC。実在ユーザーの復号・秘密情報の再利用は禁止。
+- 改修方針：新規登録・パスワード変更/再設定はArgon2id、既存bcryptは今後の通常ログイン成功時に自動移行する。ユーザーの追加作業・ログイン工程変更・強制再設定は不要とする。未ログインユーザーはbcryptのまま残る。現時点では未実装。[引き継ぎ正本](../security-argon2id-kms-plan.md)を参照する。
+- KMSはCodexが対象AWS環境を操作できる場合に導入する方針。操作可否は未確認。アプリの安全なKMS認証・最小権限も確認し、条件未成立でもArgon2id改修は進める。第一候補は既存メール鍵・HMAC鍵のKMS保護で、実行権限侵害やメモリ内鍵の窃取への限界を区別する。
+- 新規設定パスワードは半角英数記号8〜72文字。bcryptの72バイト切捨てを考慮し、フロントとサーバー双方で検証する。
+- 現行作業ツリーでは登録APIのUser返却を許可項目に限定し、旧 `/api/user/check-credentials` と `/api/user/[id]` は410。`/admin` と管理APIはデータ取得前に現在のUserを照会する。本番適用は別途確認する。
+- ログイン履歴・原子的制限・トークン消費は `authSecurity.js` とLaravel `SecurityEventController`。成功90日・その他30日の履歴を `security:prune` で整理する。認証制限APIへ到達できないときは503。[実装詳細](../security-and-rule48-implementation.md)を参照する。
 
-## Same-Origin / Token
+## Next → Laravel
 
-- `serverApiAccess.js` は `Origin`、`Referer`、`Sec-Fetch-Site`、`Sec-Fetch-Mode`、`Host`、`X-Forwarded-Host`、`X-Forwarded-Proto` を使って same-origin / same-site を判定する。
-- 初回アクセス時に同一オリジンと判断できれば、短命アクセストークンを Cookie で発行する。
-- アクセストークン Cookie は `HttpOnly`、`SameSite=Strict`、短期 TTL が前提。
-- 本番プロキシで `X-Forwarded-Proto` が欠けると、TLS 終端後の Next 側では `http` 扱いになり、403 になることがある。
-- 対策として `Origin` / `Referer` から protocol を推定し、`Sec-Fetch-Site` が `same-origin` / `same-site` かつ host 一致なら許可する緩和が入っている。
-- Cross-site は引き続き拒否する。
+- 汎用proxyは `next/pages/api/server/[...query].js`、投稿専用は `post.js`。`serverApiAccess.js` のsame-origin判定と短命HttpOnly Cookieはユーザー認証とは別のアクセス制御。
+- パスの `..` / `/` / `?` / `#`、汎用proxy経由の記録更新迂回等を拒否する。専用経路のNextAuth・権限・本文検証を維持する。
+- 管理要求は `ManagementIdentity`、大会要求は `TrickRequestIdentity` 等の署名検証を使う。入力のuserId / roleを信用しない。署名の主体・時刻・パス・本文・nonce等の契約は用途ごとに確認する。
+- 接続元は `requestContext.js` で信頼CIDRを辿って正規化し、`clientIpSignature.js` → `VerifiedClientIp` で転送する。現行 `TrustProxies` は全proxy信頼ではなく設定CIDRのみ。
+- 国情報は信頼peerと明示した `TRUSTED_COUNTRY_HEADER` がある場合のみ使用する。信頼proxyの上書きとNext直通不可が前提。現行ソースの国外短期限界と、本番WAF / Nginxの設定を混同しない。
+- `Kernel.php` の通常API枠は `throttle:1800,1`。`RouteServiceProvider` の名前付き60回/分は定義だけで、このグループには接続されていない。実効middlewareと429 / Retry-Afterを確認する。
+- `Origin` / `Referer` / `Host` / forwarded proto不一致による403、DB例外をauthorizeがnullへ変換する401、上流障害の502を分けて調べる。例外やヘッダの全文を診断ログへ追加しない。
+- NextAuthのセッション取得は通信エラーもnullへ変換するため、429で未ログイン表示になってもJWT失効と断定しない。トップのSSRセッション引き継ぎと、Nginxの認証API制限枠の分離を維持する。Nginx枠分離・転送ヘッダ上書きは2026-10-24に本番反映済み。Next/Laravelのローカル修正の配備とは区別する。[調査・反映手順](../top-reload-429.md)。
 
-## Proxy 入力検証
+## 旧Laravel認証
 
-- proxy のパスセグメントでは `..`、`/`、`?`、`#` を拒否する。
-- Laravel からのステータスコードは可能な限り伝播する。
-- proxy でログに残す情報は最小化する。生ヘッダやレスポンス本文を広く記録しない。
-- `GET` の初回アクセスで token cookie が無い場合、`Origin` または `Referer` の一致が重要。
-
-## 投稿 API の保護
-
-- `/api/server/post` は NextAuth セッションと `ensureServerApiAccess()` で保護する。
-- ただしブラウザ側 yup は回避可能。投稿拒否に関わる重要バリデーションは Next API 側にも入れる。
-- Laravel まで同じ検証を入れる必要が薄いケースでも、少なくとも Next API proxy でサーバー側検証する。
-- 投稿APIの再現手順には実在ユーザーの認証情報を使わない。専用テストユーザーと環境変数のパスワードを使い、平文パスワードを AGENTS や Git 管理ファイルに載せない。
-
-## IP / Host 記録
-
-- `user_ip` / `user_host` をクライアントボディから信用して保存しない。
-- Laravel 側では `Request::ip()` を使う。
-- Next -> Laravel の内部通信で `X-Forwarded-For` と必要に応じて `X-Real-IP` を転送する。
-- Laravel の `TrustProxies` は本番 proxy 構成に合わせて設定する。ログ上は `protected $proxies = '*'` に変更した経緯がある。
-- 本番 nginx では `proxy_set_header Host`、`X-Real-IP`、`X-Forwarded-For`、`X-Forwarded-Proto` を設定する。
-
-## NextAuth / Prisma 障害切り分け
-
-- NextAuth credentials の `authorize` が例外を握りつぶして `null` を返すと、DB接続・bcrypt・Prisma例外でも画面上は「ID/パスワード不一致」になる。
-- bcryptは入力の先頭72バイトだけを照合対象にする。多バイト文字や72文字超を許可すると異なる入力が同一パスワードとして照合されうるため、新規登録・パスワード変更・パスワードリセットでは、安全な半角英数記号8文字以上72文字以下に制限する。
-- 本番ログイン 401 とサインアップ 500 が同時に起きる場合は、Prisma疎通、DB migration、環境変数、Next プロセス再起動を優先的に確認する。
-- 一時的に `authorize` の catch へ `logger.error('credentials authorize failed', e)` を入れると、401 の背後の例外を取れる。
-- Prisma migration 未適用の場合、`emailHash` などのカラム不足でサインアップ/ログインが失敗する。
-- 本番では `npx prisma migrate deploy` の成功、`_prisma_migrations`、`User` テーブルのカラム、`NODE_ENV=production`、Next プロセス再起動を確認する。
-
-## Laravel 標準認証の扱い
-
-- 現行の主認証は NextAuth / Prisma。画面の登録、ログイン、パスワードリセットは Next.js API を使用する。
-- `laravel/routes/auth.php`、`app/Http/Controllers/Auth/*`、`next/hooks/auth.js` は現行画面から参照されない旧 Laravel Breeze / Sanctum 系経路。
-- Laravel 標準認証ルートは nginx から直接外部公開されず、Laravel コンテナも `ports` ではなく `expose` のみ。ただし内部ネットワークでは登録されている。
-- 標準認証ルートを廃止する場合、`routes/auth.php` だけでなく、未使用の `auth:sanctum /api/user`、`Authenticate::redirectTo()` の名前付き `login` 依存、旧 Auth コントローラ・Request・テスト・Blade・`next/hooks/auth.js` を一括整理する。
-- Laravel の `App\Models\User` と lowercase `users` テーブルは `UserNameController` や `Record::user()` で現役のため、標準認証廃止時も削除しない。
-- リリース直前は、外部公開されておらず緊急の権限昇格経路も確認されていないため静観可能。廃止は独立した整理タスクとして実施する。
+- Breeze / Sanctumの認証ルート・テストが残るが、現在の画面の主認証ではない。`App\Models\User` と小文字 `users` は業務コードでも使うため一括削除しない。
+- 廃止時は `routes/auth.php`、旧Controller / Request / middleware / factory / テスト / フロントhookの依存をまとめて調査する。旧認証テスト7件の既知失敗は [テスト方針](testing-and-verification.md)を参照する。

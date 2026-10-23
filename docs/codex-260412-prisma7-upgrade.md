@@ -1,3 +1,5 @@
+> 過去の移行記録（2026-04）。依存の現在値はpackage.json / lockfile、現行方針はcodex-summary/data-and-prisma.mdを参照。
+
 # Prisma 7 アップグレード引き継ぎメモ
 
 更新日: 2026-04-13
@@ -41,7 +43,7 @@ IDE 警告の発端は `schema.prisma` の `datasource.url` を将来的に `pri
 
 ### 依存関係
 
-[next/package.json](next/package.json)
+[next/package.json](../next/package.json)
 
 - `prisma: 7.7.0`
 - `@prisma/client: 7.7.0`
@@ -72,7 +74,7 @@ IDE 警告の発端は `schema.prisma` の `datasource.url` を将来的に `pri
 
 ### Prisma 設定
 
-[next/prisma/schema.prisma](next/prisma/schema.prisma)
+[next/prisma/schema.prisma](../next/prisma/schema.prisma)
 
 - `generator client` を Prisma 7 方式へ変更
 - 現在は以下の構成
@@ -91,7 +93,7 @@ datasource db {
 }
 ```
 
-[next/prisma.config.ts](next/prisma.config.ts)
+[next/prisma.config.ts](../next/prisma.config.ts)
 
 - `schema: "prisma/schema.prisma"`
 - `datasource.url = env("DATABASE_URL")`
@@ -99,7 +101,7 @@ datasource db {
 
 ### Prisma Client 初期化
 
-[next/lib/prisma.js](next/lib/prisma.js)
+[next/lib/prisma.js](../next/lib/prisma.js)
 
 - `@prisma/client` 直 import を廃止
 - generated client を参照
@@ -114,18 +116,18 @@ import { PrismaClient } from '../generated/prisma/client'
 
 ### seed
 
-- [next/prisma/seed.js](next/prisma/seed.js) を削除
-- [next/prisma/seed.ts](next/prisma/seed.ts) を追加
+- [next/prisma/seed.js](../next/prisma/seed.js) を削除
+- [next/prisma/seed.ts](../next/prisma/seed.ts) を追加
 - generated client + adapter を使う実装へ変更
 
 ### Next.js 設定
 
-- [next/next.config.js](next/next.config.js) を削除
-- [next/next.config.mjs](next/next.config.mjs) を追加
+- [next/next.config.js](../next/next.config.js) を削除
+- [next/next.config.mjs](../next/next.config.mjs) を追加
 
 ### TypeScript 設定
 
-[next/tsconfig.json](next/tsconfig.json)
+[next/tsconfig.json](../next/tsconfig.json)
 
 - `target: "ES2022"`
 - `module: "ESNext"`
@@ -137,11 +139,11 @@ import { PrismaClient } from '../generated/prisma/client'
 
 ### その他の関連修正
 
-[next/pages/api/server/post.js](next/pages/api/server/post.js)
+[next/pages/api/server/post.js](../next/pages/api/server/post.js)
 
 - `require("formidable")` を `import formidable from "formidable"` に変更
 
-[next/lib/discordCastom.ts](next/lib/discordCastom.ts)
+[next/lib/discordCastom.ts](../next/lib/discordCastom.ts)
 
 - `next-auth/providers` からの型 import を `next-auth/providers/oauth` に変更
 - `profile` の型注釈を追加
@@ -238,7 +240,7 @@ Module parse failed: Cannot use 'import.meta' outside a module
 
 原因:
 
-- [next/Dockerfile](next/Dockerfile) が `node:18.17.0-alpine` のままだった
+- [next/Dockerfile](../next/Dockerfile) が `node:18.17.0-alpine` のままだった
 - Prisma 7 は `Node 20.19+` 必須
 
 対処:
@@ -264,11 +266,11 @@ DriverAdapterError: pool timeout: failed to retrieve a connection from pool afte
 
 対処:
 
-- [next/lib/prismaConnection.js](next/lib/prismaConnection.js) を追加
+- [next/lib/prismaConnection.js](../next/lib/prismaConnection.js) を追加
 - `mysql://` を `mariadb://` に変換
 - `schema` クエリを除去
 - `allowPublicKeyRetrieval=true` を補完
-- [next/lib/prisma.js](next/lib/prisma.js) と [next/prisma/seed.ts](next/prisma/seed.ts) から共通利用するよう変更
+- [next/lib/prisma.js](../next/lib/prisma.js) と [next/prisma/seed.ts](../next/prisma/seed.ts) から共通利用するよう変更
 
 確認結果:
 
@@ -283,7 +285,7 @@ DriverAdapterError: pool timeout: failed to retrieve a connection from pool afte
 
 原因:
 
-- [next/pages/api/server/post.js](next/pages/api/server/post.js) の `parseForm()` が `new formidable.IncomingForm()` を使っていた
+- [next/pages/api/server/post.js](../next/pages/api/server/post.js) の `parseForm()` が `new formidable.IncomingForm()` を使っていた
 - `formidable@3.5.3` ではこの形が崩れ、実際の例外は以下だった
 
 ```txt
@@ -358,7 +360,8 @@ PATH=/opt/homebrew/opt/node@20/bin:$PATH yarn build
 
 ### 2. `next/generated/` を VCS 管理するか決定
 
-現状は `prisma generate` によって [next/generated](next/generated) が作成されている。  
+現状は `prisma generate` によって `next/generated` が作成されている。
+
 運用上は以下のどちらかを決める必要がある。
 
 - 生成物を commit する
@@ -386,7 +389,7 @@ yarn dev
 
 ### 5. 本番ビルド時の Prisma generate 実行順
 
-- Prisma 7 では generated client を [next/generated/prisma](next/generated/prisma) に出力する構成へ変わっている
+- Prisma 7 では generated client を [next/generated/prisma](../next/generated/prisma) に出力する構成へ変わっている
 - そのため、本番ビルド時に generated client が無いと `../generated/prisma/client` の import で失敗する
 - `next/generated` を commit しない運用にする場合は、install/build の途中で必ず `prisma generate` を実行する必要がある
 

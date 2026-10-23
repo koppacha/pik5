@@ -94,8 +94,8 @@ R7/R8は元文書を変更せず、[不整合一覧](./tricks-manual-inconsisten
 
 正式なセキュリティ記録（完了・sealed）：
 
-- [コミット範囲：high 1 / medium 1](<LOCAL_HOME>/.codex/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_trv1amtr/report.md)
-- [未コミット範囲：新規確定0、HEAD既存2件は上記に集約](<LOCAL_HOME>/.codex/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_hu55sdop/report.md)
-- [隔離API検査の実出力](<LOCAL_HOME>/.codex/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_trv1amtr/artifacts/03_validation/rule-boundaries-result.txt)
+- [コミット範囲：high 1 / medium 1](<CODEX_HOME>/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_trv1amtr/report.md)
+- [未コミット範囲：新規確定0、HEAD既存2件は上記に集約](<CODEX_HOME>/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_hu55sdop/report.md)
+- [隔離API検査の実出力](<CODEX_HOME>/state/plugins/codex-security/scans/pik5/50236f1c472f0e8cd03cdfba801a45cf1b8ea890_20261009T044821Z_trv1amtr/artifacts/03_validation/rule-boundaries-result.txt)
 
 推奨順序は R1 → R2 → R3/R4 → R5/R6 → R7/R8。修正後は否定ケースを恒久テスト化し、公開導線から投稿・編集・削除を専用ユーザーで確認する。
