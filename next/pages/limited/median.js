@@ -76,6 +76,8 @@ const Shell = styled.div`
 const columns = count => Math.max(1, count <= 10 ? count : Math.ceil(count / 2))
 const phaseNames = {waiting: '出題待ち', answering: '回答受付中', closing: '回答を回収中', closed: '締切済み', revealed: '回答開示'}
 
+const answerFeedback = own => !String(own.raw ?? '').trim() ? '未回答（採点対象外）' : own.error || `保存済み：${own.display}`
+
 function AnswerCard({answer, highlight, children}) {
     return <motion.div layout transition={{duration: 0.25}} className={`answer ${highlight && answer.minimum ? 'minimum' : ''} ${highlight && answer.maximum ? 'maximum' : ''} ${highlight && answer.median ? 'median' : ''}`}>
         <span>{answer.name}</span>
@@ -190,7 +192,7 @@ export default function Median() {
         rawRef.current = own?.raw || ''
         dirtyAnswer.current = false
         answerVersion.current++
-        setAnswerStatus(own ? (own.error || `保存済み：${own.display}`) : '')
+        setAnswerStatus(own ? answerFeedback(own) : '')
         setAnswerError(own?.valid === false)
     }, [roundKey])
 
@@ -216,7 +218,7 @@ export default function Median() {
         task.then(next => {
             if (answerVersion.current !== version) return
             const own = next.round.own
-            setAnswerStatus(own.error || `保存済み：${own.display}`)
+            setAnswerStatusanswerFeedback(own)
             setAnswerError(!own.valid)
         }).catch(e => {
             if (answerVersion.current !== version) return
@@ -345,7 +347,8 @@ export default function Median() {
             <div className={`prompt ${promptFont.className}`} aria-hidden={!game.ended && !game.round?.prompt}>{game.ended ? 'ゲーム終了' : game.round?.prompt || ''}</div>
             {game.phase === 'revealed' && <section className="panel results-panel" aria-labelledby="median-results-title">
                 <h2 id="median-results-title">みんなの回答</h2>
-                {sortDone && <p className="legend"><span>青緑：最小値 −1</span><span>赤：最大値 −1</span><span>黄：中央値 +2（優先）</span></p>}
+                {sortDone && answers.length > 0 && <p className="legend"><span>青緑：最小値 −1</span><span>赤：最大値 −1</span><span>黄：中央値 +2（優先）</span></p>}
+                {!answers.length && <p className="muted">回答はありません（未入力の回答は採点対象外です）。</p>}
                 <div className="answers results-grid" style={{'--columns': columns(answers.length)}}>
                     {sortDone ? groups.map(group => <div className="answer-group" role="group" aria-label={`回答 ${group[0].display}`} key={group[0].value}>{group.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight />)}</div>)
                         : answers.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight={false} />)}
@@ -369,7 +372,8 @@ export default function Median() {
                 <section className="panel"><h2>過去のお題</h2><div className="history">
                     {!game.history.length && <p className="muted">開示したお題がここに並びます。</p>}
                     {game.history.filter(round => game.phase !== 'revealed' || sortDone || round.id !== game.round.id).map(round => <article key={round.id}><b>{round.id}. {round.prompt}</b>
-                        {[['minimum', '最小値'], ['median', '中央値'], ['maximum', '最大値']].map(([field, label]) => <div key={field}>{label}：{round.answers.filter(a => a[field]).map(a => a.name).join('、')}</div>)}
+                        {!round.answers.length && <p className="muted">回答なし</p>}
+                        {!!round.answers.length && [['minimum', '最小値'], ['median', '中央値'], ['maximum', '最大値']].map(([field, label]) => <div key={field}>{label}：{round.answers.filter(a => a[field]).map(a => a.name).join('、')}</div>)}
                     </article>)}
                 </div></section>
             </div>
@@ -394,7 +398,7 @@ export default function Median() {
                         <b>{ownPlayer.name}</b>
                         <TextField label="あなたの回答" value={raw} fullWidth
                             disabled={game.phase !== 'answering' || !game.round?.eligible || busy} error={answerError} inputProps={{maxLength: 512}}
-                            helperText={game.phase === 'waiting' ? 'お題が表示されるまでお待ちください' : ['closed', 'revealed'].includes(game.phase) ? '回答は締め切られています' : answerStatus || '未入力は0として扱います。回答は開示まで他の参加者・主催には見えません。'}
+                            helperText={game.phase === 'waiting' ? 'お題が表示されるまでお待ちください' : ['closed', 'revealed'].includes(game.phase) ? '回答は締め切られています' : answerStatus || '未入力の回答は採点対象に含めません。回答は開示まで他の参加者・主催には見えません。'}
                             onChange={e => {setRaw(e.target.value); rawRef.current = e.target.value; dirtyAnswer.current = true; answerVersion.current++; setAnswerStatus('保存待ち…'); setAnswerError(false)}} />
                         {leaveButton(ownPlayer.id)}
                     </div>

@@ -127,6 +127,9 @@ class MedianGameTest extends TestCase
         $this->requestAs($this->guest, 'leave')->assertOk();
         $this->requestAs($this->host, 'show')->assertOk();
         $this->requestAs($this->guest, 'join', ['host'=>false])->assertOk();
+        $this->answer($this->host, '1e+0')->assertOk();
+        $this->answer($this->guest, '2e+0')->assertOk();
+        $this->answer($third, '3e+0')->assertOk();
         $this->requestAs($this->host, 'close')->assertOk();
         $this->finishDisconnectedClose();
         $game = $this->requestAs($this->host, 'reveal')->assertOk()->json('game');
@@ -144,10 +147,34 @@ class MedianGameTest extends TestCase
         $this->finishDisconnectedClose();
         $tooLate = ['kind'=>'guest', 'name'=>'Next round'];
         $this->requestAs($tooLate, 'join', ['host'=>false])->assertOk()->assertJsonPath('game.round.eligible', false);
-        $this->requestAs($this->host, 'reveal')->assertOk()->assertJsonCount(3, 'game.round.answers')->assertJsonPath('game.players.3.score', 0);
+        $this->requestAs($this->host, 'reveal')->assertOk()->assertJsonCount(0, 'game.round.answers')->assertJsonPath('game.players.3.score', 0);
         $this->requestAs($this->host, 'next')->assertOk();
         $this->requestAs($this->host, 'show')->assertOk();
         $this->requestAs($tooLate)->assertOk()->assertJsonPath('game.round.eligible', true);
+    }
+
+    public function test_blank_and_whitespace_are_excluded_but_explicit_zero_is_scored(): void
+    {
+        $answers = [
+            ['raw' => '', 'value' => '0e+0'],
+            ['raw' => " \t\n　", 'value' => '0e+0'],
+            ['raw' => null, 'value' => '0e+0'],
+            ['raw' => '０', 'value' => '0e+0'],
+            ['raw' => '-2', 'value' => '-2e+0'],
+        ];
+        $scored = MedianNumbers::score($answers);
+        $this->assertSame(['０', '-2'], array_column($scored, 'raw'));
+        $this->assertSame([2, -1], array_column($scored, 'points'));
+        $this->assertSame([], MedianNumbers::score(array_slice($answers, 0, 3)));
+        $this->start();
+        $this->requestAs($this->host, 'show')->assertOk();
+        $this->answer($this->host, '0e+0', '0')->assertOk();
+        $this->answer($this->guest, '0e+0', '　 ')->assertOk();
+        $this->requestAs($this->host, 'close')->assertOk();
+        $this->finishDisconnectedClose();
+        $game = $this->requestAs($this->host, 'reveal')->assertOk()->json('game');
+        $this->assertCount(1, $game['round']['answers']);
+        $this->assertSame([2, 0], array_column($game['players'], 'score'));
     }
 
     public function test_same_name_guest_reentry_and_same_name_distinct_users(): void

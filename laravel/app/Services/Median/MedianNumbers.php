@@ -19,8 +19,16 @@ class MedianNumbers
         return $aSign * (($aExp <=> $bExp) ?: strcmp($aDigits, $bDigits));
     }
 
+    public static function isUnanswered(array $answer): bool
+    {
+        // A missing raw field in legacy data is not evidence of a blank submission.
+        return array_key_exists('raw', $answer)
+            && preg_match('/\A[\s\p{Z}\x{FEFF}]*\z/u', (string) ($answer['raw'] ?? '')) === 1;
+    }
+
     public static function score(array $answers): array
     {
+        $answers = array_values(array_filter($answers, fn ($answer) => !self::isUnanswered($answer)));
         $values = array_values(array_unique(array_column($answers, 'value')));
         usort($values, [self::class, 'compare']);
         if (!$values) return [];
