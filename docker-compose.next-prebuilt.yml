@@ -1,0 +1,5 @@
+# Use only after the matching production build, dependencies and Prisma client
+# have been prepared and checked together. See docs/next-security-upgrade-2026-10-24.md.
+services:
+  next:
+    command: ["yarn", "start"]

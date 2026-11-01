@@ -4,6 +4,8 @@
 
 const nextConfig = {
   distDir: process.env.NEXT_DIST_DIR || '.next',
+  // Next 15.5.28's Pages Router indicator can run before the router is ready.
+  devIndicators: false,
   staticPageGenerationTimeout: 180,
   reactStrictMode: true,
   async headers() {

@@ -7,6 +7,7 @@ use App\Http\Controllers\DiscordEventController;
 use App\Http\Controllers\EventResultController;
 use App\Http\Controllers\GetImageController;
 use App\Http\Controllers\KeywordController;
+use App\Http\Controllers\MedianController;
 use App\Http\Controllers\NewArenaController;
 use App\Http\Controllers\NewRecordController;
 use App\Http\Controllers\PlayerController;
@@ -36,6 +37,8 @@ use Illuminate\Support\Facades\Route;
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
+Route::match(['get', 'post'], 'median', [MedianController::class, 'handle']);
 
 Route::middleware(['auth:sanctum'])->get('/user', function (Request $request) {
     return $request->user();

@@ -20,6 +20,7 @@ services:
         max-file: '100'
     environment:
       - FRONTEND_URL=next
+      - MEDIAN_INTERNAL_SECRET=${MEDIAN_INTERNAL_SECRET:-}
       - DB_CONNECTION=${DB_CONNECTION}
       - DB_HOST=mysql
       - DB_DATABASE=${DB_NAME}
@@ -128,5 +129,6 @@ services:
         max-file: '100'
     environment:
       - TRICKS_INTERNAL_SECRET=${TRICKS_INTERNAL_SECRET}
+      - MEDIAN_INTERNAL_SECRET=${MEDIAN_INTERNAL_SECRET:-}
       - TRICKS_EVENT_ID=${TRICKS_EVENT_ID:-}
       - TRICKS_TEST_EVENT_PASSWORD=${TRICKS_TEST_EVENT_PASSWORD:-}

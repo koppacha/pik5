@@ -20,6 +20,7 @@
 | SSR・通信・キャッシュ・描画 | [caching-and-performance](codex-summary/caching-and-performance.md) |
 | 記録・スコア・証拠 | [records-and-scoring](codex-summary/records-and-scoring.md) |
 | イベント成績・アリーナ・スイス式 | [events-and-rankings](codex-summary/events-and-rankings.md) |
+| Median・匿名参加の中央値ゲーム | [median-game](codex-summary/median-game.md) |
 | ルール応募 | [limited-ideas](codex-summary/limited-ideas.md) |
 | ルール48・拡張コード・管理 | [security-and-rule48-planning](codex-summary/security-and-rule48-planning.md) |
 | お宝シミュレーター | [treasure-simulator](codex-summary/treasure-simulator.md) |

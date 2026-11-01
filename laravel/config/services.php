@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'median_secret' => env('MEDIAN_INTERNAL_SECRET', ''),
     'management_secret' => env('TRICKS_INTERNAL_SECRET', ''),
 
     /*

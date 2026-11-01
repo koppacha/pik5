@@ -155,7 +155,7 @@ export default function App(props) {
 
     const pageContent = (
         <>
-            <RecordNotificationCenter initialUsers={pageProps?.users || []} />
+            {!Component.disableRecordNotifications && <RecordNotificationCenter initialUsers={pageProps?.users || []} />}
             {pageLoading && <Loading/>}
             <DevSupport ComponentPreviews={ComponentPreviews}
                         useInitialHook={useInitial}
@@ -190,7 +190,7 @@ export default function App(props) {
                     <InitialLoadingGate />
                     <ThemeProvider attribute="data-theme" defaultTheme="dark" enableSystem={false}>
                         {Component.disableLayout ? pageContent : (
-                            <Layout hideFooter={Component.hideFooter}>
+                            <Layout hideFooter={Component.hideFooter} fullWidth={Component.fullWidth}>
                                 {pageContent}
                             </Layout>
                         )}

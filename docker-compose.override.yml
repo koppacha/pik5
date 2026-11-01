@@ -1,0 +1,19 @@
+# Development only: automatically loaded by `docker compose` without -f.
+# Production explicitly selects its Compose files and does not load this file.
+services:
+  next:
+    volumes:
+      - type: volume
+        source: next_dev_node_modules
+        target: /var/www/next/node_modules
+        volume:
+          nocopy: true
+      - type: volume
+        source: next_dev_output
+        target: /var/www/next/.next
+        volume:
+          nocopy: true
+
+volumes:
+  next_dev_node_modules:
+  next_dev_output:

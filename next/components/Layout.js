@@ -11,12 +11,12 @@ import Link from "next/link";
 import {Box, Container, Grid, Typography} from "@mui/material";
 import MobileFooter from "./menu/MobileFooter";
 
-export default function Layout({children, hideFooter = false}) {
+export default function Layout({children, hideFooter = false, fullWidth = false}) {
 
     return (
         <>
             <HeaderMenu users={children?.props?.users}/>
-                    <Container className="offset-container">
+                    <Container className="offset-container" maxWidth={fullWidth ? false : undefined} style={fullWidth ? {maxWidth: 'none', width: '100%', padding: 0} : undefined}>
                         <main>{children}</main>
                     </Container>
             {!hideFooter && <Footer/>}
