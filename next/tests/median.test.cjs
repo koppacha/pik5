@@ -34,3 +34,17 @@ test('reject scripting, property access, assignments, non-scalars and non-finite
         assert.equal(result.value, '0e+0', input)
     }
 })
+
+test('decimal literal fast path preserves exact comparison and display without math startup', () => {
+    const {evaluateLiteral} = require('../lib/median/literal.cjs')
+    const inputs = ['123', '１２３', '−45', '-0', '.001', '+001.2300', '1e21', '1e-7', '1e100000', '1e-100000', '', '   ', '-1.2345678901234567890123456789019']
+    for (let i = 0; i < 200; i++) inputs.push(`${i % 2 ? '-' : ''}000${i}.001234567890123456789012345678901e${i - 100}`)
+    for (const input of inputs) {
+        const actual = evaluateLiteral(input), expected = evaluate(input)
+        assert.equal(actual.value, expected.value, input)
+        assert.equal(actual.display, expected.display, input)
+        assert.equal(actual.valid, expected.valid, input)
+    }
+    assert.equal(evaluateLiteral('1+2'), null)
+    assert.equal(evaluateLiteral('1e100001').valid, false)
+})

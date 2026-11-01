@@ -1,6 +1,7 @@
 import {createHash, createHmac, randomBytes, timingSafeEqual} from 'crypto'
 import {Worker} from 'worker_threads'
 import {createEvaluator} from './evaluator.cjs'
+import {evaluateLiteral} from './literal.cjs'
 
 export const medianSecret = () => process.env.MEDIAN_INTERNAL_SECRET || process.env.TRICKS_INTERNAL_SECRET || ''
 const cookieName = 'pik5_median_guest'
@@ -43,19 +44,34 @@ export async function medianRequest(identity, method, payload) {
 
 let running = 0
 export async function evaluateAnswer(input) {
-    if (running >= 8) throw new Error('EVALUATOR_BUSY')
+    const literal = evaluateLiteral(input)
+    if (literal) return literal
+    if (running >= 2) throw new Error('EVALUATOR_BUSY')
     running += 1
     try {
         return await new Promise((resolve, reject) => {
             // Resolve mathjs inside Node's worker, outside webpack's module resolver.
-            const worker = new Worker(`const {parentPort,workerData}=require('worker_threads'); const createEvaluator=(${createEvaluator.toString()}); parentPort.postMessage(createEvaluator(require('mathjs'))(workerData.input))`, {
-                eval: true, workerData: {input}, resourceLimits: {maxOldGenerationSizeMb: 128},
+            const worker = new Worker(`const {parentPort,workerData}=require('worker_threads'); const createEvaluator=(${createEvaluator.toString()}); const evaluate=createEvaluator(require('mathjs')); parentPort.postMessage({ready:true}); parentPort.once('message',input=>parentPort.postMessage({result:evaluate(input)}))`, {
+                eval: true, resourceLimits: {maxOldGenerationSizeMb: 128},
             })
-            const timer = setTimeout(() => {
+            let timer = setTimeout(() => {
                 worker.terminate()
-                resolve({raw: input, value: '0e+0', display: '0', valid: false, error: '計算時間の上限を超えました'})
-            }, 2000)
-            worker.once('message', value => {clearTimeout(timer); worker.terminate(); resolve(value)})
+                reject(new Error('EVALUATOR_UNAVAILABLE'))
+            }, 15000)
+            worker.on('message', message => {
+                clearTimeout(timer)
+                if (message.ready) {
+                    // The computation budget starts after loading math.js, not during startup.
+                    timer = setTimeout(() => {
+                        worker.terminate()
+                        reject(new Error('EVALUATOR_TIMEOUT'))
+                    }, 2000)
+                    worker.postMessage(input)
+                } else {
+                    worker.terminate()
+                    resolve(message.result)
+                }
+            })
             worker.once('error', error => {
                 clearTimeout(timer)
                 reject(new Error(error.code === 'MODULE_NOT_FOUND' ? 'EVALUATOR_UNAVAILABLE' : 'EVALUATOR_FAILED'))

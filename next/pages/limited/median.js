@@ -57,6 +57,7 @@ const Shell = styled.div`
     .answer-group { display: contents; }
     .round-status { display: flex; align-items: center; justify-content: center; min-height: 72px; box-sizing: border-box; text-align: center; padding: 12px; margin-bottom: 16px; }
     .next-controls { margin-top: 20px; }
+    .results-panel { position: relative; scroll-margin-top: 16px; }
     .input-dock { position: fixed; inset: auto 0 0; z-index: 40; margin: 0; border-radius: 16px 16px 0 0; background: var(--color-bg-base); box-shadow: 0 -4px 20px #0003; max-height: 45vh; max-height: 45dvh; overflow-y: auto; padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
     .dock-tabs { margin-bottom: 12px; border-bottom: 1px solid #7775; }
     .dock-tabs .MuiTab-root { color: var(--median-input-label); }
@@ -342,6 +343,15 @@ export default function Median() {
         </div>}
         {game && <>
             <div className={`prompt ${promptFont.className}`} aria-hidden={!game.ended && !game.round?.prompt}>{game.ended ? 'ゲーム終了' : game.round?.prompt || ''}</div>
+            {game.phase === 'revealed' && <section className="panel results-panel" aria-labelledby="median-results-title">
+                <h2 id="median-results-title">みんなの回答</h2>
+                {sortDone && <p className="legend"><span>青緑：最小値 −1</span><span>赤：最大値 −1</span><span>黄：中央値 +2（優先）</span></p>}
+                <div className="answers results-grid" style={{'--columns': columns(answers.length)}}>
+                    {sortDone ? groups.map(group => <div className="answer-group" role="group" aria-label={`回答 ${group[0].display}`} key={group[0].value}>{group.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight />)}</div>)
+                        : answers.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight={false} />)}
+                </div>
+                {game.me && game.isHost && !game.ended && <div className="controls next-controls"><Button variant="contained" disabled={busy || !sortDone} onClick={() => act('next')}>次の問題へ</Button></div>}
+            </section>}
             <div role="status" className="round-status" aria-hidden={!roundMessage}>{roundMessage}</div>
             {game.ended && <Alert severity="info">終了したゲームは終了後24時間保持されます。{game.expiresAt && ` 保持期限：${new Date(game.expiresAt).toLocaleString('ja-JP')}`}</Alert>}
             {game.me && !game.ended && <>
@@ -354,15 +364,7 @@ export default function Median() {
                     </>}
                 </div>
             </>}
-            {game.phase === 'revealed' && <section className="panel results-panel" aria-labelledby="median-results-title">
-                <h2 id="median-results-title">みんなの回答</h2>
-                {sortDone && <p className="legend"><span>青緑：最小値 −1</span><span>赤：最大値 −1</span><span>黄：中央値 +2（優先）</span></p>}
-                <div className="answers results-grid" style={{'--columns': columns(answers.length)}}>
-                    {sortDone ? groups.map(group => <div className="answer-group" role="group" aria-label={`回答 ${group[0].display}`} key={group[0].value}>{group.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight />)}</div>)
-                        : answers.map(answer => <AnswerCard key={answer.playerId} answer={answer} highlight={false} />)}
-                </div>
-                {game.me && game.isHost && !game.ended && <div className="controls next-controls"><Button variant="contained" disabled={busy || !sortDone} onClick={() => act('next')}>次の問題へ</Button></div>}
-            </section>}
+
             <div className="subarea">
                 <section className="panel"><h2>過去のお題</h2><div className="history">
                     {!game.history.length && <p className="muted">開示したお題がここに並びます。</p>}

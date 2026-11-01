@@ -68,3 +68,11 @@ test('origin, anonymous evaluation and upstream exception details are rejected',
     assert.ok(!result.data.message.includes('exception'))
     assert.equal(result.headers['Cache-Control'], 'no-store, private')
 })
+
+test('calculation timeout does not save a zero answer upstream', async () => {
+    const fixture = load({guest: {kind: 'guest', name: 'Synthetic'}, evaluationError: 'EVALUATOR_TIMEOUT'})
+    const result = await run(fixture, {action: 'answer', raw: '123', roundId: 1})
+    assert.equal(result.statusCode, 503)
+    assert.equal(fixture.calls.filter(call => Array.isArray(call) && typeof call[0] === 'object').length, 0)
+    assert.match(result.data.message, /上書きしていません/)
+})

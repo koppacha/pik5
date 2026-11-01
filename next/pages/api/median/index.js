@@ -41,6 +41,7 @@ export default async function handler(req, res) {
         if (data.action === 'join' && identity?.kind === 'guest' && result.status < 300) setGuestCookie(res, identity.name)
         return res.status(result.status).json(result.data)
     } catch (error) {
+        if (error.message === 'EVALUATOR_TIMEOUT') return res.status(503).json({message: '計算が完了しませんでした。回答は上書きしていません。再度お試しください'})
         if (error.message === 'EVALUATOR_UNAVAILABLE') return res.status(503).json({message: '計算機能を利用できません。管理者にお問い合わせください'})
         return res.status(error.message === 'EVALUATOR_BUSY' ? 429 : 503).json({message: '処理できませんでした。少し待って再度お試しください'})
     }
