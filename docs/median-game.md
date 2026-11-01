@@ -136,3 +136,5 @@ docker compose exec -T next node --test tests/median.test.cjs tests/medianApi.te
 自動承認レビューは、未検証宛先へのソース転送、管理用資格情報でのバックアップ、候補への本番環境ファイル参照、管理接続設定の所在調査をそれぞれ当初却下した。接続先の追加検証、通常権限の対象テーブル退避、合成設定のみの候補検証へ切り替え、管理migrationと設定所在確認は明示承認を得て実行した。
 
 公開本番の新規未ログインPlaywrightブラウザで、参加フォーム、Loading/inert解除、PC・390px幅の横はみ出しなしを確認し、console error/warningは0件。ゲーム参加・投稿は行わず、検証ブラウザと候補コンテナは終了した。稼働Nextは再起動回数0、新build・mathjsのロードを確認した。
+
+2026-11-01の追加表示条件：「有効な定数・関数」はNODE_ENVがproductionの場合に描画しない。開発環境では表示する。評価器の対応範囲やゲーム進行は変更しない。

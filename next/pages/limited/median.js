@@ -375,10 +375,10 @@ export default function Median() {
                 <Button disabled={busy} variant="outlined" onClick={() => setConfirm({action: 'restart', title: '得点をリセットして新しいゲームを始めますか？'})}>新しくゲームを始める</Button>
             </div>}
         </>}
-        <details className="panel"><summary>有効な定数・関数</summary>
+        {process.env.NODE_ENV !== 'production' && <details className="panel"><summary>有効な定数・関数</summary>
             <p>定数：pi（π）、e、tau、phi</p>
             <p>関数：abs、sqrt、cbrt、nthRoot、exp、log、log10、log2、sin、cos、tan、asin、acos、atan、atan2、sinh、cosh、tanh、asinh、acosh、atanh、floor、ceil、round、sign、min、max、factorial、combinations、permutations、gamma</p>
-        </details>
+        </details>}
         {showInputDock && <section ref={inputDockRef} className="panel input-dock" aria-label="イベント操作">
             <Tabs className="dock-tabs" value={visibleDockTab} onChange={(_, value) => setDockTab(value)} variant="scrollable" scrollButtons="auto" aria-label="イベント操作の切り替え">
                 <Tab value="answer" label="回答入力" id="median-tab-answer" aria-controls="median-panel-answer" />
