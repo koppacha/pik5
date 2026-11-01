@@ -138,3 +138,7 @@ docker compose exec -T next node --test tests/median.test.cjs tests/medianApi.te
 公開本番の新規未ログインPlaywrightブラウザで、参加フォーム、Loading/inert解除、PC・390px幅の横はみ出しなしを確認し、console error/warningは0件。ゲーム参加・投稿は行わず、検証ブラウザと候補コンテナは終了した。稼働Nextは再起動回数0、新build・mathjsのロードを確認した。
 
 2026-11-01の追加表示条件：「有効な定数・関数」はNODE_ENVがproductionの場合に描画しない。開発環境では表示する。評価器の対応範囲やゲーム進行は変更しない。
+
+上記の本番限定非表示をcommit `8bc2ee99d` としてpushし、build `qIygM5wz8PzpuDJDewWe6` を本番へ反映した。開発環境のHTMLに説明ブロックが残ること、対象ページlint、本番x64 build、生成された日英HTMLからの除去を確認。旧静的アセット85件と旧buildを保持し、ページソースとbuildだけを切り替えた。依存・Prisma生成物・DB・PHP・環境設定の変更はない。切替後に専用APIの200応答を確認した。
+
+公開本番の未ログインブラウザで日英両ページを確認し、hydration後も「有効な定数・関数」がDOMに存在しないこと、390px幅の横はみ出しなし、consoleエラー0件を確認した。検証ブラウザは終了し、本番ゲームの参加・投稿は行っていない。
